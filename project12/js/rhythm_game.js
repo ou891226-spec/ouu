@@ -34,6 +34,9 @@ let perfectCount = 0, goodCount = 0, missCount = 0;
 let currentDifficulty = 'easy';
 let noteTimeoutId = null;
 
+document.getElementById('back-btn').addEventListener('click', () => {
+  window.location.href = 'index.php';
+});
 
 highScoreDisplay.textContent = highScore;
 
@@ -99,7 +102,7 @@ function moveNotes() {
   notes.forEach((note, index) => {
     const spawnTime = parseInt(note.dataset.spawnTime);
     const elapsed = currentTime - spawnTime;
-    let moveDuration = currentDifficulty === 'easy' ? 2000 : currentDifficulty === 'normal' ? 1500 : 1000;
+    let moveDuration = currentDifficulty === 'easy' ? 3000 : currentDifficulty === 'normal' ? 2500 : 2000;
     const progress = elapsed / moveDuration;
     const x = 600 - progress * 560;
     note.style.left = `${x}px`;
@@ -312,3 +315,31 @@ function showEndModal(success, score, levelStr) {
   modal.style.display = 'flex';
 }
 
+
+document.addEventListener("DOMContentLoaded", function () {
+  const hitZone = document.getElementById("hitZone");
+  const bat = document.getElementById("bat");
+
+  hitZone.addEventListener("click", function () {
+    bat.classList.add("swing");
+
+    // 揮棒完移除 class，恢復原狀
+    setTimeout(() => {
+      bat.classList.remove("swing");
+    }, 150); // 跟 CSS transition 時間一致
+  });
+});
+
+const bat = document.getElementById('bat');
+
+function swingBat() {
+  bat.classList.add('swing');
+
+  // 動畫結束後移除 class 以便下次可以再觸發
+  setTimeout(() => {
+    bat.classList.remove('swing');
+  }, 300); // 要跟 animation 的 duration 對應（0.3 秒）
+}
+
+// 例如你想在按下按鈕或點某區塊揮棒
+document.addEventListener('click', swingBat);
