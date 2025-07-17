@@ -36,6 +36,7 @@ body {
     color: #fff;
   }
 
+
   #easy-btn {
     background-color: #f4a261;
   }
@@ -121,6 +122,16 @@ body {
     bottom: 10px;
   }
   
+  .hole .police {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  display: none; /* 預設不顯示 */
+  z-index: 2;
+  }
+
   .score-board {
     background-color: #eee;
     padding: 10px 20px;
@@ -230,6 +241,7 @@ body {
   /* 各別難度的背景顏色 */
 .difficulty-option.easy {
   background-color: #40F55B; /* 淺綠色 */
+  margin-bottom: 20px;
 }
 
 .difficulty-option.easy:hover {
@@ -238,6 +250,7 @@ body {
 
 .difficulty-option.medium {
   background-color: #FFE75C; /* 黃色 */
+  margin-bottom: 20px;
 }
 
 .difficulty-option.medium:hover {
@@ -526,6 +539,49 @@ body {
     }
 }
 
+/* 返回按鈕容器 */
+  .back-button {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    text-align: center;
+    z-index: 10;
+  }
+
+  /* 按鈕樣式：圓形、黑框、白底 */
+  .back-arrow {
+    width: 2.7rem!important;
+    height: 2.7rem!important;
+    border-radius: 50%!important;
+    border: 3px solid #000!important;
+    background-color: #fff!important;
+    font-size: 24px!important;
+    cursor: pointer!important;
+    display: flex!important;
+    align-items: center!important;
+    justify-content: center!important;
+  }
+
+  /* 文字說明 */
+  .btn-label {
+    font-size: 1.15rem;
+    color: #888;
+    margin-top: 0.18rem;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  /* 箭頭樣式（可再客製） */
+  .arrow {
+    font-weight: 700!important;
+    color: #000!important;
+    font-size: 2.5rem!important;
+    text-align: center!important;
+    margin-top: 1px;
+    line-height: 1.1;
+  }
 
 
   
