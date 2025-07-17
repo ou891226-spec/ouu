@@ -60,19 +60,30 @@ try {
         <h2>剩餘時間: <span id="timer">60</span> 秒</h2>
     </div>
 
-    <!-- 難度選擇 Modal -->
-    <div id="difficulty-modal" class="modal">
-        <div class="modal-content" style="position:relative;">
-            <div style="position:absolute; top:1.2rem; right:1.2rem; text-align:center; z-index:10;">
-                <button class="help-btn" id="info-btn" title="說明">?</button>
-                <div class="help-label">說明</div>
-            </div>
-            <h2>難度選擇</h2>
-            <div class="difficulty-option easy" data-level="3">簡單 (3個)</div>
-            <div class="difficulty-option medium" data-level="5">普通 (5個)</div>
-            <div class="difficulty-option hard" data-level="7">困難 (7個)</div>
-        </div>
-    </div>
+  <!-- 難度選擇 Modal -->
+  <div id="difficulty-modal" class="modal">
+      <div class="modal-content" style="position:relative;">
+          <!-- 🔙 返回鍵：左上角 -->
+          <div class="back-button">
+            <button class="back-arrow" id="back-btn" title="返回">
+              <span class="arrow">&larr;</span>
+            </button>
+            <div class="btn-label">返回</div>
+          </div>
+
+          <!-- ❓ 說明鍵：右上角 -->
+          <div style="position:absolute; top:1.2rem; right:1.2rem; text-align:center; z-index:10;">
+              <button class="help-btn" id="info-btn" title="說明">?</button>
+              <div class="help-label">說明</div>
+          </div>
+
+          <h2>難度選擇</h2>
+          <div class="difficulty-option easy" data-level="3">簡單 (3個)</div>
+          <div class="difficulty-option medium" data-level="5">普通 (5個)</div>
+          <div class="difficulty-option hard" data-level="7">困難 (7個)</div>
+      </div>
+  </div>
+
 
     <!-- 🟡 新增：遊戲說明彈窗 -->
     <div id="info-modal" class="modal" style="display:none;">
@@ -121,31 +132,40 @@ try {
 
     <div class="holes">
       <div class="hole" id="hole1">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole2">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole3">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole4">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole5">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole6">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole7">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole8">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
       <div class="hole" id="hole9">
-        <img src="img/prisoner.png" class="mole" /> <!-- 這是地鼠 -->
+        <img src="img/prisoner.png" class="mole" /> <!-- 這是犯人 -->
+        <img class="police" src="img/police.png" alt="警察">
       </div>
     </div>
 
