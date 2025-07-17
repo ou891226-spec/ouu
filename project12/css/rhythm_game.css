@@ -55,18 +55,19 @@ h1 {
 
 #gameArea {
   position: relative;
-  width: 600px;
-  height: 150px;
+  width: 700px;
+  height: 200px;
   margin: 0 auto 20px;
   border: 2px solid #333;
   overflow: hidden;
-  background-color: #f9f9f9;
+  background-color: #ffcf4a;
 }
 
 .note img {
   width: 100px;
   height: 100px;
   pointer-events: none;
+  z-index: 2;
 }
 
 #noteTrack .note {
@@ -75,20 +76,60 @@ h1 {
 }
 
 #hitZone {
-  position: absolute;
-  top: 25px;
+  position: relative;  /* ⬅️ 必加，讓內部元素可以定位 */
+  top: 50px;
   left: 20px;
   width: 100px;
   height: 100px;
   border: 2px dashed red;
   z-index: 10;
-  pointer-events: none;
-  font-size: 20px;
-  font-weight: bold;
-  background-color: rgba(255, 0, 0, 0.05);
-  border: 2px dashed red;
-  border-radius: 12px;
-  transition: background-color 0.3s ease;
+
+   /* 加入本壘板圖片 */
+  background-image: url('../img/home.png');  /* 換成你的圖片路徑 */
+  background-size: 200%;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.8;
+  z-index: 1;
+
+  /* 移除紅框與透明背景 */
+  border: none;
+  background-color: transparent;
+
+  pointer-events: auto; /* 要讓點擊有效 */
+  cursor: pointer;
+}
+
+.hit-label {
+  writing-mode: horizontal-tb;  /* 強制橫排（預設是這個，但保險起見加上） */
+  white-space: nowrap;          /* 不要換行 */
+  display: inline-block;        /* 保持 inline，方便定位 */
+  position: absolute;
+  top: -30px;           /* 控制「打擊區」距離上方多少 */
+  left: 50%;            /* 置中 */
+  transform: translateX(-50%);
+  font-size: 28px;      /* 字變大 */
+  color: white;         /* 可改為你喜歡的顏色 */
+  text-shadow: 1px 1px 2px black; /* 加陰影讓字更清楚 */
+}
+
+
+#bat img {
+  width: 80px;
+  transform: rotate(0deg);
+  transform-origin: left center;
+  transition: transform 0.15s ease;
+  z-index: 3;
+}
+
+#bat.swing img {
+  transform: rotate(60deg);
+}
+
+
+/* 揮棒動畫的 class */
+.swing {
+  transform: translateX(50%) rotate(60deg);
 }
 
 .button-group {
@@ -146,6 +187,7 @@ h1 {
   /* 各別難度的背景顏色 */
 .difficulty-option.easy {
   background-color: #40F55B; /* 淺綠色 */
+  margin-bottom: 20px;
 }
 
 .difficulty-option.easy:hover {
@@ -154,6 +196,7 @@ h1 {
 
 .difficulty-option.medium {
   background-color: #FFE75C; /* 黃色 */
+  margin-bottom: 20px;
 }
 
 .difficulty-option.medium:hover {
@@ -454,3 +497,47 @@ h1 {
         font-size: 0.95rem;
     }
 }
+
+/* 返回按鈕容器 */
+  .back-button {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    text-align: center;
+    z-index: 10;
+  }
+
+  /* 按鈕樣式：圓形、黑框、白底 */
+  .back-arrow {
+    width: 2.7rem!important;
+    height: 2.7rem!important;
+    border-radius: 50%!important;
+    border: 3px solid #000!important;
+    background-color: #fff!important;
+    font-size: 24px!important;
+    cursor: pointer!important;
+    display: flex!important;
+    align-items: center!important;
+    justify-content: center!important;
+  }
+
+  /* 文字說明 */
+  .btn-label {
+    font-size: 1.15rem;
+    color: #888;
+    margin-top: 0.18rem;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  /* 箭頭樣式（可再客製） */
+  .arrow {
+    font-weight: 700!important;
+    color: #000!important;
+    font-size: 2.5rem!important;
+    text-align: center!important;
+    margin-top: 1px;
+    line-height: 1.1;
+  }
