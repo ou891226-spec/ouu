@@ -63,10 +63,20 @@ try {
         <!-- 難度選擇 Modal -->
         <div id="difficulty-modal" class="modal">
             <div class="modal-content" style="position:relative;">
+                <!-- 🔙 返回鍵：左上角 -->
+                <div class="back-button">
+                    <button class="back-arrow" id="back-btn" title="返回">
+                        <span class="arrow">&larr;</span>
+                    </button>
+                    <div class="btn-label">返回</div>
+                </div>
+
+                <!-- ❓ 說明鍵：右上角 -->
                 <div style="position:absolute; top:1.2rem; right:1.2rem; text-align:center; z-index:10;">
                     <button class="help-btn" id="info-btn" title="說明">?</button>
                     <div class="help-label">說明</div>
                 </div>
+
                 <h2>難度選擇</h2>
                 <div class="difficulty-option easy" data-difficulty="easy">簡單 (3個)</div>
                 <div class="difficulty-option medium" data-difficulty="normal">普通 (5個)</div>
@@ -118,7 +128,12 @@ try {
 
         <div id="gameArea">
             <div id="noteTrack"></div>
-            <div id="hitZone">打擊區</div>
+            <div id="hitZone">
+                <span class="hit-label">打擊區</span>
+                <div id="bat">
+                    <img src="img/bat.png" alt="球棒" />
+                </div> <!-- ← 球棒圖案 -->
+            </div>
         </div>
 
         <div class="button-group">
