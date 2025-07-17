@@ -1,0 +1,165 @@
+body {
+    background: #faf9f6;
+    font-family: 'Noto Sans TC', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* 隱藏頁面滾輪 */
+}
+.ranking-container {
+    max-width: 480px;
+    margin: 32px auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 0 0 32px 0;
+    margin-top: 20px;
+    height: calc(100vh - 140px); /* 設定固定高度，減去header和status-bar的高度 */
+    display: flex;
+    flex-direction: column;
+}
+.ranking-title {
+    font-size: 2.6em;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+    padding: 24px 0 12px 0;
+    letter-spacing: 2px;
+}
+.tab-bar {
+    display: flex;
+    border-bottom: 2px solid #eee;
+    background: #f8f6e7;
+    margin: 0 0 18px 0;
+    flex-shrink: 0; /* 防止壓縮 */
+}
+.tab-bar button {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    background: none;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 4px solid transparent;
+}
+.tab-bar .active {
+    background: #ffe082;
+    border-bottom: 4px solid #ffd54f;
+    color: #222;
+}
+.ranking-list {
+    margin: 0;
+    padding: 0 24px;
+    flex: 1;
+    overflow-y: auto; /* 只有排名列表可以滾動 */
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ranking-row {
+    display: flex;
+    align-items: center;
+    background: #fff8e1;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 10px 16px;
+    font-size: 1.15em;
+    position: relative;
+}
+.ranking-row.me {
+    border: 2px solid #ffb300;
+    background: #fffde7;
+    margin-bottom: 12px;
+}
+.ranking-rank {
+    font-size: 1.3em;
+    font-weight: bold;
+    width: 36px;
+    text-align: center;
+    color: #bfa13a;
+}
+.ranking-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 16px 0 0;
+    border: 2px solid #fffde7;
+    background: #fff;
+}
+.ranking-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    flex-grow: 1;
+}
+.ranking-username {
+    font-weight: 500;
+    color: #333;
+}
+.ranking-account {
+    font-size: 0.9em;
+    color: #555;
+}
+.ranking-score {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #222;
+    margin-left: 12px;
+}
+.ranking-score::after {
+    content: '分';
+    font-size: 0.9em;
+    color: #888;
+    margin-left: 2px;
+}
+.ranking-avatar.generated-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #039be5;
+    color: #fff;
+    font-size: 1.3em;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border: none;
+}
+@media (max-width: 600px) {
+    .ranking-container { max-width: 98vw; }
+    .ranking-list { padding: 0 4vw; }
+}
+
+/* 讓 header 固定在最上方 */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+}
+
+/* 讓狀態列固定在 header 下方 */
+.status-bar {
+  position: sticky;
+  top: 60px; /* 根據 header 實際高度調整 */
+  z-index: 99;
+}
+
+#my-ranking-row {
+  display: flex;
+  align-items: center;
+  background: #fff8e1;
+  border: 2px solid #ffb300;
+  border-radius: 8px;
+  padding: 10px 20px 10px 15px;
+  margin: 10px 35px 10px 20px;
+  font-size: 1.15em;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
