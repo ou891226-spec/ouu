@@ -21,14 +21,19 @@ let isPaused = false;
 const memberIdInput = document.getElementById('member-id'); 
 const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
 
+document.getElementById('back-btn').addEventListener('click', () => {
+  window.location.href = 'index.php';
+});
+
+
 startBtn.addEventListener('click', startGame);
 
 function startGame() {
   if (level === 3) {
-    gameTime = 60;
+    gameTime = 80;
     passScore = 20;
   } else if (level === 5) {
-    gameTime = 60;
+    gameTime = 80;
     passScore = 10;
   } else if (level === 7) {
     gameTime = 120;
@@ -66,6 +71,10 @@ function nextRound() {
   playerSequence = [];
   sequence = getRandomHoles(level);
   showSequence();
+  holes.forEach(hole => {
+  const police = hole.querySelector('.police');
+  if (police) police.style.display = 'none';
+  });
 }
 
 function getRandomHoles(num) {
@@ -91,16 +100,16 @@ function showSequence() {
       setTimeout(() => {
         mole.style.bottom = '-105px';
         hole.classList.remove('active');
-      }, 500);
+      }, 1200);
     }
     i++;
     if (i >= sequence.length) {
       clearInterval(sequenceInterval);
       setTimeout(() => {
         playerTurn();
-      }, 500);
+      }, 1000);
     }
-  }, 800);
+  }, 1200);
 }
 
 function playerTurn() {
@@ -111,18 +120,25 @@ function playerTurn() {
 }
 
 function checkPlayerHit(event) {
-  const holeIndex = Array.from(holes).indexOf(event.target);
+  const hole = event.currentTarget;
+  const holeIndex = Array.from(holes).indexOf(hole);
+
+  // 如果已經點過就跳過
+  if (playerSequence.includes(holeIndex)) return;
+
   playerSequence.push(holeIndex);
-  event.target.classList.add('clicked');
-  setTimeout(() => {
-    event.target.classList.remove('clicked');
-  }, 200);
+
+  // 顯示警察圖片
+  const police = hole.querySelector('.police');
+  if (police) police.style.display = 'block';
 
   if (playerSequence.length === sequence.length) {
-    holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
+    holes.forEach(h => h.removeEventListener('click', checkPlayerHit));
     checkSequence();
   }
 }
+
+
 
 function checkSequence() {
   messageDiv.textContent = '';
