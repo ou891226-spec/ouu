@@ -211,9 +211,10 @@ document.getElementById('end-btn').addEventListener('click', () => {
 });
 
 document.getElementById('restart-btn').addEventListener('click', () => {
-  clearInterval(gameInterval);
-  resetGame();
-  startGame();
+  clearInterval(gameInterval);         // 停止計時
+  resetGame();                         // 重設遊戲內容
+  document.getElementById('result-modal').style.display = 'none'; // 關掉結果彈窗
+  difficultyModal.style.display = 'flex'; // 再次顯示難度選擇彈窗
 });
 
 document.getElementById('info-btn').addEventListener('click', () => {
