@@ -13,6 +13,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
+  <link rel="stylesheet" href="css/global-invitation.css" />
   
 </head>
 <body>
@@ -233,6 +234,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>
 <script src="js/get-score.js"></script>
+<script src="js/global-invitation-checker.js"></script>
 
 
 </body>
