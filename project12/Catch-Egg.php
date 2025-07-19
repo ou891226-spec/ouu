@@ -110,22 +110,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <!-- 難度選擇彈窗 -->
     <div id="difficulty-modal" class="modal">
         <div class="modal-content">
-            <div class="difficulty-selection">
-                <h2>接金蛋遊戲</h2>
-                <button class="help-button" onclick="showEggHelp()">
-                    <span class="help-icon">?</span>
-                    <div class="help-label">說明</div>
+            <!-- 🔙 返回鍵：左上角 -->
+            <div class="back-button">
+                <button class="back-arrow" id="back-btn" title="返回">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="15" stroke="black" stroke-width="2.5" fill="white"/>
+                        <polygon points="20,9 12,16 20,23 20,18 25,18 25,14 20,14" fill="black"/>
+                    </svg>
                 </button>
-                <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
-                    簡單 目標：200分
-                </button>
-                <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
-                    普通 目標：450分
-                </button>
-                <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
-                    困難 目標：600分
-                </button>
+                <div class="btn-label">返回</div>
             </div>
+            <!-- ❓ 說明鍵：右上角 -->
+            <button class="help-button" onclick="showEggHelp()">
+                <span class="help-icon">?</span>
+                <div class="help-label">說明</div>
+            </button>
+            <h2>難度選擇</h2>
+            <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
+                簡單 目標：200分
+            </button>
+            <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
+                普通 目標：450分
+            </button>
+            <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
+                困難 目標：600分
+            </button>
         </div>
     </div>
 
