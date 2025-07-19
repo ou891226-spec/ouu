@@ -525,3 +525,45 @@ button {
   line-height: 2.1;
 }
 
+/* 返回按鈕容器 */
+  .back-button {
+    position: absolute;
+    top: 1.2rem;
+    left: -1.3rem;
+    text-align: center;
+    z-index: 10;
+  }
+
+  /* 按鈕樣式：圓形、黑框、白底 */
+  .back-arrow {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+  }
+
+  /* 文字說明 */
+  .btn-label {
+    font-size: 1.15rem;
+    color: #888;
+    margin-top: 0.18rem;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  /* 箭頭樣式（可再客製） */
+  .arrow {
+    font-weight: 700!important;
+    color: #000!important;
+    font-size: 2.5rem!important;
+    text-align: center!important;
+    margin-top: 1px;
+    line-height: 1.1;
+  }
