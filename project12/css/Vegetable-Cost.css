@@ -257,5 +257,292 @@ button:hover {
   background-color: #00695c;
 }
 
+/* 難度選擇 Modal Header */
+.difficulty-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.2rem;
+  position: relative;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: #222;
+  font-size: 18px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.difficulty-title {
+  flex: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #222;
+  letter-spacing: 1px;
+}
+
+.help-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #222;
+  font-size: 18px;
+  font-weight: 500;
+  gap: 0;
+  padding: 0;
+}
+.help-btn span {
+  font-size: 15px;
+  margin-top: -2px;
+}
+
+/* 難度按鈕群組 */
+.difficulty-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+.difficulty-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 20px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  padding: 28px 0 18px 0;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.difficulty-btn .diff-main {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.difficulty-btn .diff-sub {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+.easy-mode {
+  background: #7bc96f;
+  color: #222;
+}
+.easy-mode:hover {
+  background: #6bb85e;
+}
+.normal-mode {
+  background: #ffe066;
+  color: #222;
+}
+.normal-mode:hover {
+  background: #ffd23b;
+}
+.hard-mode {
+  background: #f25f5c;
+  color: #fff;
+}
+.hard-mode:hover {
+  background: #d94340;
+}
+
+@media (max-width: 600px) {
+  .difficulty-btn {
+    font-size: 1.1rem;
+    padding: 18px 0 12px 0;
+  }
+  .difficulty-title {
+    font-size: 1.3rem;
+  }
+}
+
+/* 主卡片標題 */
+.main-title {
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: bold;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  letter-spacing: 2px;
+}
+
+/* 新分數區塊 */
+.new-score-board {
+  display: flex;
+  justify-content: space-between;
+  background: #fafbfc;
+  border-radius: 16px;
+  padding: 18px 0 10px 0;
+  margin-bottom: 18px;
+  box-shadow: none;
+}
+.score-green {
+  color: #2ecc40;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.score-red {
+  color: #f44336;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* 題目區塊 */
+.main-question-container {
+  text-align: center;
+  margin-bottom: 24px;
+}
+#question {
+  font-size: 1.2rem;
+  color: #222;
+  margin-bottom: 18px;
+  line-height: 2.1;
+  white-space: pre-line;
+}
+
+/* 選項按鈕區塊 */
+.main-options-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.main-options-container button {
+  background: #fff;
+  color: #222;
+  border: 2px solid #e0e0e0;
+  border-radius: 14px;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 22px 0;
+  transition: box-shadow 0.2s, border 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.main-options-container button:hover {
+  border: 2px solid #b2dfdb;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* 底部控制按鈕 */
+.main-control-btns {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.main-btn {
+  flex: 1;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 12px;
+  padding: 16px 0;
+  border: none;
+  cursor: pointer;
+  margin: 0 2px;
+  transition: background 0.2s;
+}
+.pause-btn {
+  background: #ffb74d;
+  color: #fff;
+}
+.pause-btn:hover {
+  background: #ffa726;
+}
+.end-btn {
+  background: #f44336;
+  color: #fff;
+}
+.end-btn:hover {
+  background: #d32f2f;
+}
+.restart-btn {
+  background: #2196f3;
+  color: #fff;
+}
+.restart-btn:hover {
+  background: #1976d2;
+}
+
+@media (max-width: 600px) {
+  .main-title { font-size: 1.3rem; }
+  .main-options-container { grid-template-columns: 1fr; }
+  .main-btn { font-size: 1rem; padding: 12px 0; }
+}
+
+/* Game Over Modal 美化 */
+.gameover-modal-content {
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  background: #fff;
+  text-align: center;
+  min-width: 320px;
+  min-height: 220px;
+}
+.gameover-title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #111;
+  margin-bottom: 1.2rem;
+  letter-spacing: 2px;
+}
+.gameover-desc {
+  margin-bottom: 1.8rem;
+}
+.gameover-msg {
+  font-size: 1.15rem;
+  color: #222;
+  line-height: 2.1;
+  margin: 0;
+}
+.gameover-btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 0.5rem;
+}
+.gameover-btn {
+  min-width: 110px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 12px 0;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.retry-btn {
+  background: #e53935;
+  color: #fff;
+}
+.retry-btn:hover {
+  background: #b71c1c;
+}
+.home-btn {
+  background: #26324a;
+  color: #fff;
+}
+.home-btn:hover {
+  background: #1a2233;
+}
+
 
 
