@@ -1,0 +1,144 @@
+.invitation-modal {
+    background: #e0dbd7;
+    border: 2px solid #888;
+    border-radius: 12px;
+    max-width: 520px;
+    margin: 60px auto;
+    padding: 36px 28px 28px 28px;
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+.invitation-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 28px;
+}
+.invitation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.invitation-row {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 2.5px solid #e0e0e0;
+    border-radius: 16px;
+    padding: 14px 22px;
+    gap: 18px;
+}
+.invitation-avatar-block {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.invitation-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+.invitation-status-dot {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    width: 12px;
+    height: 12px;
+    background: #19e219;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+}
+.invitation-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.invitation-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+.invitation-score {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-right: 18px;
+}
+.invitation-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+.invitation-accept-btn, .invitation-reject-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.invitation-accept-btn {
+    background: #aaffb0;
+    color: #222;
+}
+.invitation-accept-btn:hover {
+    background: #7be27b;
+}
+.invitation-reject-btn {
+    background: #ffb0b0;
+    color: #222;
+}
+.invitation-reject-btn:hover {
+    background: #ff6b6b;
+    color: #fff;
+}
+.invitation-result-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.invitation-result-content {
+    background: #d8d6d2;
+    border: 2px solid #888;
+    border-radius: 12px;
+    padding: 48px 36px 36px 36px;
+    min-width: 420px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.invitation-result-text {
+    font-size: 2.3rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 38px;
+    text-align: center;
+}
+.back-friendlist-btn {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 16px 44px;
+    border-radius: 12px;
+    border: none;
+    background: #cce6ff;
+    color: #222;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+.back-friendlist-btn:hover {
+    background: #99ccff;
+} 

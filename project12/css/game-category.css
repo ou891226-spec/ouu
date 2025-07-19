@@ -1,0 +1,134 @@
+/* 主體背景與排版 */
+body {
+  margin: 0;
+  font-family: "Microsoft JhengHei", sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* 頁面上方的分數條區塊 */
+.score-bar {
+  background-color: #add8ff;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+}
+
+.score-bar .score {
+  background-color: #f1ffbf;
+  padding: 5px 15px;
+  border-radius: 25px;
+  color: green;
+  font-weight: bold;
+}
+
+.score-bar .timer {
+  color: #f5a623;
+  font-weight: bold;
+}
+
+/* 分類按鈕樣式 */
+.category-buttons {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.category-buttons button {
+  background-color: #ffc107;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 10px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  transition: background-color 0.2s;
+}
+
+.category-buttons button:hover {
+  background-color: #ffca2c;
+}
+
+/* 區塊標題 */
+.section-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 40px 0 20px 60px;
+  color: #333;
+  text-shadow: 1px 1px 2px #ccc;
+}
+
+/* 遊戲卡片區塊 */
+.game-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  padding: 0 40px 40px 40px;
+}
+
+/* 單一遊戲卡片樣式 */
+.game-card {
+  width: 200px;
+  height: 250px;
+  background-color: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: scale(1.05);
+}
+
+.game-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+.game-card p {
+  margin: 15px 0 0 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #444;
+}
+
+/* 切換按鈕區塊 */
+.mode-switch {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+/* 切換按鈕樣式 */
+.mode-btn {
+  background-color: #ffd966;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.mode-btn:hover {
+  background-color: #ffcc00;
+  transform: scale(1.05);
+}
+
+.mode-btn.active {
+  background-color: #ffa500;
+  color: #fff;
+}
+

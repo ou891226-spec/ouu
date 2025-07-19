@@ -1,0 +1,543 @@
+body {
+  font-family: "Microsoft JhengHei", sans-serif;
+  text-align: center;
+  background-color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding-top: 40px;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.score-board {
+  background-color: #eee;
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.score-board h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+#score {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+#high-score{
+  font-size: 24px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+#timer {
+  font-size: 24px;
+  font-weight: bold;
+  color: red;
+}
+
+#gameArea {
+  position: relative;
+  width: 700px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border: 2px solid #333;
+  overflow: hidden;
+  background-color: #ffcf4a;
+}
+
+.note img {
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#noteTrack .note {
+  position: absolute;
+  top: 25px;
+}
+
+#hitZone {
+  position: relative;  /* ⬅️ 必加，讓內部元素可以定位 */
+  top: 50px;
+  left: 20px;
+  width: 100px;
+  height: 100px;
+  border: 2px dashed red;
+  z-index: 10;
+
+   /* 加入本壘板圖片 */
+  background-image: url('../img/home.png');  /* 換成你的圖片路徑 */
+  background-size: 200%;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.8;
+  z-index: 1;
+
+  /* 移除紅框與透明背景 */
+  border: none;
+  background-color: transparent;
+
+  pointer-events: auto; /* 要讓點擊有效 */
+  cursor: pointer;
+}
+
+.hit-label {
+  writing-mode: horizontal-tb;  /* 強制橫排（預設是這個，但保險起見加上） */
+  white-space: nowrap;          /* 不要換行 */
+  display: inline-block;        /* 保持 inline，方便定位 */
+  position: absolute;
+  top: -30px;           /* 控制「打擊區」距離上方多少 */
+  left: 50%;            /* 置中 */
+  transform: translateX(-50%);
+  font-size: 28px;      /* 字變大 */
+  color: white;         /* 可改為你喜歡的顏色 */
+  text-shadow: 1px 1px 2px black; /* 加陰影讓字更清楚 */
+}
+
+
+#bat img {
+  width: 80px;
+  transform: rotate(0deg);
+  transform-origin: left center;
+  transition: transform 0.15s ease;
+  z-index: 3;
+}
+
+#bat.swing img {
+  transform: rotate(60deg);
+}
+
+
+/* 揮棒動畫的 class */
+.swing {
+  transform: translateX(50%) rotate(60deg);
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.control-btn {
+  padding: 10px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+#pause-btn {
+  background-color: #FFA500;
+}
+
+#end-btn {
+  background-color: #E00000;
+}
+
+#restart-btn {
+  background-color: #57B6FF;
+}
+
+.control-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+
+.status {
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.difficulty-option {
+    color: black;
+    margin: 10px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 40px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* 各別難度的背景顏色 */
+.difficulty-option.easy {
+  background-color: #40F55B; /* 淺綠色 */
+  margin-bottom: 20px;
+}
+
+.difficulty-option.easy:hover {
+  background-color: #29b33e; /* 深綠色 */
+}
+
+.difficulty-option.medium {
+  background-color: #FFE75C; /* 黃色 */
+  margin-bottom: 20px;
+}
+
+.difficulty-option.medium:hover {
+  background-color: #bea30e; /* 深黃色 */
+}
+
+.difficulty-option.hard {
+  background-color: #FF2A2A; /* 淺紅色 */
+}
+
+.difficulty-option.hard:hover {
+  background-color: #e17055; /* 橘紅 */
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 背景半透明 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .modal-content h2 {
+    font-size: 40px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .modal-content p {
+    font-size: 20px;
+    margin: 8px 0;
+  }
+  
+  .modal-content button {
+    padding: 10px 20px;
+    margin: 15px 10px 0;
+    font-size: 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.2s ease;
+  }
+  
+  .modal-content button:first-child {
+    background-color: #F91519; /* 再玩一次（紅色） */
+  }
+  
+  .modal-content button:last-child {
+    background-color: #1d3557; /* 返回主頁（藍色） */
+  }
+  
+  .modal-content button:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+
+   /* 確保整個視窗居中 */
+#end-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;                /* 讓內容可以置中 */
+  align-items: center;         /* 垂直置中 */
+  justify-content: center;     /* 水平置中 */
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+  z-index: 9999;               /* 確保浮在最上層 */
+}
+
+/* 彈窗內容樣式 */
+#end-modal .modal-content {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+/* === 遊戲說明 info-modal 樣式（與翻牌遊戲一致）=== */
+#info-modal .modal-content {
+    background: #fff;
+    padding: 2.8rem 2.8rem 2.2rem 2.8rem;
+    border-radius: 2rem;
+    text-align: left;
+    width: 95%;
+    max-width: 480px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    position: relative;
+    margin: 0 auto;
+    font-family: 'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;
+}
+
+#info-modal h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin-bottom: 2rem;
+    letter-spacing: 0.05em;
+    color: #222;
+    line-height: 1.2;
+}
+
+#info-modal .help-content {
+    text-align: left;
+    margin: 1.5rem 0 0.5rem 0;
+}
+
+#info-modal .help-content h3 {
+    font-size: 1.18rem;
+    font-weight: 700;
+    margin: 1.2rem 0 0.5rem 0;
+    color: #222;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+}
+
+#info-modal .help-content ul {
+    list-style: disc inside;
+    padding-left: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#info-modal .help-content ul li {
+    color: #222;
+    line-height: 2.1;
+    margin-bottom: 0.5rem;
+    font-size: 1.08rem;
+    font-weight: 400;
+    position: relative;
+    padding-left: 0.5em;
+    word-break: break-all;
+}
+
+#info-modal .help-content ul li::marker {
+    color: #ff69b4;
+    font-size: 1.1em;
+}
+
+#info-modal .help-content p {
+    font-size: 1.08rem;
+    color: #222;
+    margin-bottom: 0.8rem;
+    margin-left: 0.2rem;
+    line-height: 2.1;
+}
+
+#info-modal .close-btn {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    width: 2.7rem;
+    height: 2.7rem;
+    font-size: 2.7rem;
+    color: #111;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    line-height: 2.7rem;
+    text-align: center;
+    font-weight: 900;
+    z-index: 10;
+}
+
+#info-modal .close-btn:hover {
+    background: #eee;
+    color: #ff69b4;
+}
+
+/* === help-btn 樣式（與翻牌遊戲一致）=== */
+.help-btn {
+  width: 2.7rem;
+  height: 2.7rem;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #222;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #222;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  line-height: 1;
+}
+.help-btn:hover {
+  background: #f0f0f0;
+  color: #1976D2;
+  border-color: #1976D2;
+}
+.help-btn:active {
+  background: #e3f0fd;
+  color: #1976D2;
+  border-color: #1976D2;
+}
+
+/* 確保在難度選擇視窗中的說明按鈕樣式一致 */
+#difficulty-modal .help-btn,
+#difficulty-modal .help-btn:focus {
+  background: #fff !important;
+  border: 3px solid #222 !important;
+  color: #222 !important;
+  box-shadow: none !important;
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  aspect-ratio: 1/1 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+#difficulty-modal .help-btn:hover {
+  background: #f0f0f0 !important;
+  color: #1976D2 !important;
+  border-color: #1976D2 !important;
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  aspect-ratio: 1/1 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+#difficulty-modal .help-btn:active {
+  background: #e3f0fd !important;
+  color: #1976D2 !important;
+  border-color: #1976D2 !important;
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  aspect-ratio: 1/1 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+
+.help-label {
+  font-size: 1.15rem;
+  color: #888;
+  margin-top: 0.18rem;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+    #info-modal .modal-content {
+        padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+        max-width: 98vw;
+    }
+    #info-modal h2 {
+        font-size: 1.3rem;
+    }
+    #info-modal .close-btn {
+        width: 2rem;
+        height: 2rem;
+        font-size: 2rem;
+        line-height: 2rem;
+    }
+    #info-modal .help-content h3 {
+        font-size: 1rem;
+    }
+    #info-modal .help-content ul li,
+    #info-modal .help-content p {
+        font-size: 0.95rem;
+    }
+}
+
+/* 返回按鈕容器 */
+  .back-button {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    text-align: center;
+    z-index: 10;
+  }
+
+  /* 按鈕樣式：圓形、黑框、白底 */
+  .back-arrow {
+    width: 2.7rem!important;
+    height: 2.7rem!important;
+    border-radius: 50%!important;
+    border: 3px solid #000!important;
+    background-color: #fff!important;
+    font-size: 24px!important;
+    cursor: pointer!important;
+    display: flex!important;
+    align-items: center!important;
+    justify-content: center!important;
+  }
+
+  /* 文字說明 */
+  .btn-label {
+    font-size: 1.15rem;
+    color: #888;
+    margin-top: 0.18rem;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  /* 箭頭樣式（可再客製） */
+  .arrow {
+    font-weight: 700!important;
+    color: #000!important;
+    font-size: 2.5rem!important;
+    text-align: center!important;
+    margin-top: 1px;
+    line-height: 1.1;
+  }

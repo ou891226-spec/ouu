@@ -1,0 +1,428 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+.game-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.score-board {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    background-color: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.score-item {
+    font-size: 18px;
+    color: #333;
+}
+
+#buttonContainer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.color-btn {
+    width: 150px;
+    height: 150px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+.color-btn:hover {
+    transform: scale(1.05);
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#targetColorText {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.distraction {
+    position: absolute;
+    font-size: 20px;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: float 3s infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+}
+
+.difficulty-buttons {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.difficulty-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.difficulty-btn.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.difficulty-select {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.difficulty-select label {
+    font-size: 16px;
+    margin-right: 10px;
+    color: #333;
+}
+
+.difficulty-dropdown {
+    padding: 8px 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.difficulty-dropdown:hover {
+    border-color: #4CAF50;
+}
+
+.difficulty-dropdown:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes gradient {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.color-btn.pulse {
+    animation: pulse 0.3s infinite;
+}
+
+.color-btn.shake {
+    animation: shake 0.2s infinite;
+}
+
+.color-btn.rotate {
+    animation: rotate 1s infinite;
+}
+
+.modal {
+    display: none; /* 預設隱藏 */
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.18);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content img {
+    max-width: 120px;
+    max-height: 120px;
+    display: block;
+    margin: 0 auto 18px auto;
+}
+
+.question-icon {
+    max-width: 120px;
+    max-height: 120px;
+    display: block;
+    margin: 0 auto 18px auto;
+}
+
+/* 難度選擇彈窗專屬樣式 */
+#difficultyModal .modal-content {
+    max-width: 340px;
+    padding: 32px 18px 28px 18px;
+    border-radius: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    border-bottom: 4px solid #2196f3;
+    margin: 48px auto 0 auto;
+    background: #fff;
+    position: relative;
+}
+#difficultyModal .difficulty-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+#difficultyModal .difficulty-modal-title {
+    font-size: 2.1em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-align: left;
+}
+#difficultyModal .help-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    position: absolute;
+    right: 18px;
+    top: 18px;
+    padding: 0;
+}
+#difficultyModal .help-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 2px;
+}
+#difficultyModal .help-label {
+    font-size: 0.95em;
+    color: #222;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+#difficultyModal .difficulty-btn {
+    width: 100%;
+    display: block;
+    margin: 18px 0 0 0;
+    padding: 18px 0;
+    font-size: 1.3em;
+    font-weight: bold;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: none;
+    letter-spacing: 2px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+#difficultyModal .difficulty-btn.easy {
+    background: #27ef4b;
+    color: #111;
+}
+#difficultyModal .difficulty-btn.normal {
+    background: #ffe34d;
+    color: #111;
+}
+#difficultyModal .difficulty-btn.hard {
+    background: #f44336;
+    color: #fff;
+}
+#difficultyModal .difficulty-btn:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+
+#helpModal .modal-content {
+    max-width: 420px;
+    padding: 38px 28px 32px 28px;
+    border-radius: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    margin: auto;
+    background: #fff;
+    position: relative;
+    text-align: center;
+}
+#helpModal .modal-content h2 {
+    font-size: 2.1em;
+    font-weight: bold;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+#helpModal .modal-content .icon {
+    font-size: 1.5em;
+    margin-right: 6px;
+}
+#helpModal .modal-content p {
+    font-size: 1.15em;
+    margin: 10px 0 6px 0;
+    line-height: 1.7;
+    text-align: left;
+}
+#helpModal .modal-content ol {
+    text-align: left;
+    font-size: 1.15em;
+    margin: 10px 0 0 18px;
+    line-height: 1.7;
+}
+#helpModal .close-btn {
+    position: absolute;
+    right: 18px;
+    top: 18px;
+    font-size: 2.3em;
+    color: #111;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+#endGameModal .modal-content {
+    max-width: 420px;
+    padding: 38px 28px 32px 28px;
+    border-radius: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    margin: auto;
+    background: #fff;
+    position: relative;
+    text-align: center;
+}
+#endGameModal .modal-content h2 {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 18px;
+}
+#endGameModal .modal-content p {
+    font-size: 1.3em;
+    margin: 10px 0 6px 0;
+    line-height: 1.7;
+}
+#endGameModal .modal-content button {
+    background: #f44336;
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-radius: 8px;
+    margin: 18px 10px 0 10px;
+    padding: 12px 32px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-block;
+}
+#endGameModal .modal-content button:hover {
+    background: #d32f2f;
+}
+
+/* 主畫面底部三顏色按鈕 */
+.red-btn {
+    background: #f44336 !important;
+    color: #fff !important;
+}
+.red-btn:hover {
+    background: #d32f2f !important;
+}
+.blue-btn {
+    background: #2196f3 !important;
+    color: #fff !important;
+}
+.blue-btn:hover {
+    background: #1976d2 !important;
+}
+.orange-btn {
+    background: #ffa500 !important;
+    color: #fff !important;
+}
+.orange-btn:hover {
+    background: #ff8c00 !important;
+}
+
+#difficultyModal .modal-content,
+#endGameModal .modal-content {
+    max-width: 420px;
+    padding: 38px 28px 32px 28px;
+    border-radius: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    margin: 48px auto 0 auto;
+    background: #fff;
+    position: relative;
+    text-align: center;
+}

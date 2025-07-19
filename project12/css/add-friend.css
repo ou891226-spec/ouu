@@ -1,0 +1,185 @@
+body {
+    background: #fff;
+    font-family: 'Microsoft JhengHei Bold', 'Microsoft JhengHei', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+.add-friend-modal {
+    background: #e0dbd7;
+    border: 2px solid #888;
+    border-radius: 12px;
+    max-width: 520px;
+    margin: 60px auto;
+    padding: 36px 28px 28px 28px;
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+.add-friend-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 28px;
+}
+.add-friend-searchbox {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 10px;
+    border: 2px solid #bbb;
+    padding: 12px 20px;
+    margin-bottom: 28px;
+}
+.add-friend-searchbox input {
+    border: none;
+    outline: none;
+    font-size: 1.5rem;
+    flex: 1;
+    background: transparent;
+    margin-left: 14px;
+}
+.add-friend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.add-friend-row {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 2.5px solid #e0e0e0;
+    border-radius: 16px;
+    padding: 14px 22px;
+    gap: 18px;
+    justify-content: space-between;
+}
+.add-friend-avatar-block {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.add-friend-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+.add-friend-status-dot {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    width: 12px;
+    height: 12px;
+    background: #19e219;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+}
+.add-friend-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.add-friend-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+.add-friend-account {
+    font-size: 1.3rem;
+    color: #555;
+}
+.add-friend-score {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-right: 18px;
+}
+.add-friend-invite-btn {
+    background: #fff;
+    border: 2px solid #888;
+    border-radius: 10px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 8px 22px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: auto;
+}
+.add-friend-invite-btn:hover {
+    background: #ffe066;
+}
+.add-friend-searchbox span {
+    font-size: 2rem;
+    color: #888;
+}
+.invite-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.invite-modal-content {
+    background: #e0dbd7;
+    border: 2.5px solid #888;
+    border-radius: 12px;
+    padding: 60px 48px 48px 48px;
+    min-width: 480px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.invite-modal-text {
+    font-size: 2.6rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 48px;
+    text-align: center;
+}
+.back-friendlist-btn {
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 18px 48px;
+    border-radius: 12px;
+    border: none;
+    background: #cce6ff;
+    color: #222;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: background 0.2s;
+}
+.back-friendlist-btn:hover {
+    background: #99ccff;
+}
+.invite-modal-btns {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+}
+.invite-modal-yes, .invite-modal-no {
+    font-size: 2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 16px;
+    padding: 18px 38px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.invite-modal-yes {
+    background: #aaffb0;
+    color: #222;
+}
+.invite-modal-yes:hover {
+    background: #7be27b;
+}
+.invite-modal-no {
+    background: #fff;
+    color: #222;
+    border: 2.5px solid #888;
+}
+.invite-modal-no:hover {
+    background: #eee;
+} 
