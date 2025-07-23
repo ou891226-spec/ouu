@@ -552,8 +552,22 @@ window.onload = function() {
     // 添加返回按鈕事件
     const backBtn = document.getElementById('back-btn');
     if (backBtn) {
-        backBtn.addEventListener('click', () => {
+        console.log('找到返回按鈕，添加事件監聽器');
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('返回按鈕被點擊');
             window.location.href = 'index.php';
         });
+        
+        // 也添加 onclick 事件作為備用
+        backBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('返回按鈕 onclick 被觸發');
+            window.location.href = 'index.php';
+        };
+    } else {
+        console.log('找不到返回按鈕元素');
     }
 };
