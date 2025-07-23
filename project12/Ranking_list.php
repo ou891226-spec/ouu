@@ -33,27 +33,31 @@ switch ($current_tab) {
         $score_field = 'total_score';
 }
 
-// 改用 PDO 查詢排行榜
-$sql = "SELECT member_id, member_name, account, $score_field, avatar FROM member ORDER BY $score_field DESC LIMIT 100";
-$stmt = $pdo->query($sql);
-if (!$stmt) {
-    die('查詢失敗: ' . print_r($pdo->errorInfo(), true));
-}
+try {
+    // 改用 PDO 查詢排行榜
+    $sql = "SELECT member_id, member_name, account, $score_field, avatar FROM member ORDER BY $score_field DESC LIMIT 100";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
 
-$rankings = [];
-$rank = 1;
-$my_member_id = isset($_SESSION['member_id']) ? $_SESSION['member_id'] : null;
+    $rankings = [];
+    $rank = 1;
+    $my_member_id = isset($_SESSION['member_id']) ? $_SESSION['member_id'] : null;
 
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $is_me = ($my_member_id && $row['member_id'] == $my_member_id);
-    $rankings[] = [
-        'rank' => $rank++,
-        'avatar' => !empty($row['avatar']) ? $row['avatar'] : null,
-        'username' => $row['member_name'],
-        'account' => $row['account'],
-        'score' => $row[$score_field],
-        'is_me' => $is_me
-    ];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $is_me = ($my_member_id && $row['member_id'] == $my_member_id);
+        $rankings[] = [
+            'rank' => $rank++,
+            'avatar' => !empty($row['avatar']) ? $row['avatar'] : null,
+            'username' => $row['member_name'],
+            'account' => $row['account'],
+            'score' => $row[$score_field],
+            'is_me' => $is_me
+        ];
+    }
+} catch (Exception $e) {
+    // 如果查詢失敗，使用空陣列
+    $rankings = [];
+    error_log('排行榜查詢錯誤：' . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
