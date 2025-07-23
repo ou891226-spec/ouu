@@ -65,7 +65,7 @@ if (
             <button class="difficulty-btn hard" data-target="10000" type="button">困難 目標：10000分</button>
         </div>
     </div>
-
+echo 
     <!-- 遊戲主畫面 -->
     <div id="game-page" class="container" style="display:none;">
         <div class="title">2048</div>
