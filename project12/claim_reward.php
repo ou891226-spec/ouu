@@ -17,6 +17,17 @@ if (!$member_id || !$task_id) {
 }
 
 try {
+  // 首先檢查任務是否存在於 daily_tasks 表中
+  $check_task_sql = "SELECT task_id FROM daily_tasks WHERE task_id = ?";
+  $check_task_stmt = $pdo->prepare($check_task_sql);
+  $check_task_stmt->execute([$task_id]);
+  $task_exists = $check_task_stmt->fetch();
+
+  if (!$task_exists) {
+    echo json_encode(['success' => false, 'message' => '任務不存在']);
+    exit;
+  }
+
   // 先檢查是否有這個任務記錄
   $check_stmt = $pdo->prepare("SELECT status FROM member_tasks WHERE member_id = ? AND task_id = ?");
   $check_stmt->execute([$member_id, $task_id]);
