@@ -29,7 +29,7 @@ let currentDifficulty = 'easy';
 // 選擇難度
 function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
-    fetch("Catch-Egg.php", {
+    fetch("Catch-Egg Game.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -484,7 +484,7 @@ function endGame() {
     }
     
     // 只保存獎勵分數到資料庫
-    fetch("Catch-Egg.php", {
+    fetch("Catch-Egg Game.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -548,4 +548,12 @@ window.onload = function() {
     if (resumeBtn) resumeBtn.onclick = resumeGame;
     if (endBtn) endBtn.onclick = endGame;
     if (resetBtn) resetBtn.onclick = resetGame;
+    
+    // 添加返回按鈕事件
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'index.php';
+        });
+    }
 };
