@@ -15,24 +15,28 @@ if ($receiver_id <= 0 || $receiver_id == $sender_id) {
     exit('參數錯誤');
 }
 
-// 檢查是否已經有邀請
-$sql = "SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = 'pending'";
-$stmt = $link->prepare($sql);
-$stmt->bind_param("ii", $sender_id, $receiver_id);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result->num_rows > 0) {
-    exit('已送出邀請');
-}
+try {
+    // 檢查是否已經有邀請
+    $sql = "SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = 'pending'";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$sender_id, $receiver_id]);
+    $result = $stmt->fetch();
+    
+    if ($result) {
+        exit('已送出邀請');
+    }
 
-// 寫入邀請
-$sql = "INSERT INTO friend_requests (sender_id, receiver_id, status, created_at) VALUES (?, ?, 'pending', NOW())";
-$stmt = $link->prepare($sql);
-$stmt->bind_param("ii", $sender_id, $receiver_id);
-if ($stmt->execute()) {
-    echo 'success';
-} else {
+    // 寫入邀請
+    $sql = "INSERT INTO friend_requests (sender_id, receiver_id, status, created_at) VALUES (?, ?, 'pending', NOW())";
+    $stmt = $pdo->prepare($sql);
+    if ($stmt->execute([$sender_id, $receiver_id])) {
+        echo 'success';
+    } else {
+        http_response_code(500);
+        echo 'fail';
+    }
+} catch (PDOException $e) {
     http_response_code(500);
-    echo 'fail';
+    echo '資料庫錯誤：' . $e->getMessage();
 }
 ?>
