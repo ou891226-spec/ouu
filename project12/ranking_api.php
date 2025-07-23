@@ -7,6 +7,22 @@ require_once "DB_open.php";
 session_start();
 header('Content-Type: application/json');
 
+// 檢查頭像檔案是否存在
+function getValidAvatar($avatar) {
+    if (empty($avatar)) {
+        return null;
+    }
+    
+    // 檢查檔案是否存在
+    $avatar_path = "img/avatars/" . $avatar;
+    if (file_exists($avatar_path)) {
+        return $avatar;
+    }
+    
+    // 如果檔案不存在，返回預設頭像或null
+    return null;
+}
+
 try {
     $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
     $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
@@ -39,7 +55,7 @@ try {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $rankings[] = [
             'rank' => $rank++,
-            'avatar' => !empty($row['avatar']) ? $row['avatar'] : null,
+            'avatar' => getValidAvatar($row['avatar']),
             'username' => $row['member_name'],
             'account' => $row['account'],
             'score' => intval($row['score']), // 確保是整數
@@ -64,7 +80,7 @@ try {
             
             $my_ranking = [
                 'rank' => $rank,
-                'avatar' => !empty($row['avatar']) ? $row['avatar'] : null,
+                'avatar' => getValidAvatar($row['avatar']),
                 'username' => $row['member_name'],
                 'account' => $row['account'],
                 'score' => intval($row['score']), // 確保是整數
