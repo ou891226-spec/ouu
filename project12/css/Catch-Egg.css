@@ -531,7 +531,8 @@ button {
     top: 1.2rem;
     left: -1.3rem;
     text-align: center;
-    z-index: 10;
+    z-index: 1000;
+    pointer-events: auto;
   }
 
   /* 按鈕樣式：圓形、黑框、白底 */
@@ -545,6 +546,8 @@ button {
     align-items: center;
     justify-content: center;
     box-shadow: none;
+    pointer-events: auto;
+    z-index: 1000;
   }
 
   /* 文字說明 */
@@ -556,6 +559,7 @@ button {
     font-weight: 700;
     line-height: 1.1;
     text-align: center;
+    pointer-events: none;
   }
 
   /* 箭頭樣式（可再客製） */
