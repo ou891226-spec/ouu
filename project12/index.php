@@ -30,13 +30,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
-    <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
-      <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
-        <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-        <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
-      </div>
-    </div>
+    <a href="an.php" class="jelly-btn jelly-yellow">分析圖表</a>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>
   </div>
