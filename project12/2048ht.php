@@ -101,7 +101,6 @@ if (
     <div id="win-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <h2>恭喜破關</h2>
-            <h3>TomchenHello</h3>
             <p>難度：<span id="win-difficulty"></span></p>
             <p>獲得分數：<span id="win-score"></span></p>
             <p>最高分數：<span id="win-best-score"></span></p>
