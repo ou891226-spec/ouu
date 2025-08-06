@@ -1,4 +1,9 @@
 <?php
+// 防止瀏覽器緩存
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // 如果是API請求，禁用錯誤輸出
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ini_set('display_errors', 0);
@@ -51,6 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'is_single_player' => 0,
             'opponent_id' => $data['player1_id']
         ]);
+
+        // 更新玩家1的總分數和記憶力分數
+        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
+        $update_stmt->execute([
+            'score' => $data['player1_score'],
+            'member_id' => $data['player1_id']
+        ]);
+
+        // 更新玩家2的總分數和記憶力分數
+        $update_stmt->execute([
+            'score' => $data['player2_score'],
+            'member_id' => $data['player2_id']
+        ]);
        
         // 提交交易
         $pdo->commit();
@@ -89,6 +107,10 @@ $difficulties = $stmt->fetchAll();
 // 獲取遊戲顏色
 $stmt = $pdo->query("SELECT * FROM memory_game_colors WHERE is_active = true");
 $colors = $stmt->fetchAll();
+
+// 獲取遊戲顏色
+$stmt = $pdo->query("SELECT * FROM memory_game_colors WHERE is_active = true");
+$colors = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -97,11 +119,12 @@ $colors = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>翻牌對對樂 - 雙人模式</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-    <link rel="stylesheet" href="css/Memory-Game.css">
-    <link rel="stylesheet" href="css/Memory-Game-2P.css">
+    <link rel="stylesheet" href="css/Memory-Game.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/Memory-Game-2P.css?v=<?php echo time(); ?>">
     
     <!-- 隱藏的用戶ID -->
     <input type="hidden" name="member_id" value="<?php echo $_SESSION['member_id']; ?>">
+    <meta name="member_id" content="<?php echo $_SESSION['member_id']; ?>">
 
 </head>
 <body>
@@ -320,7 +343,7 @@ $colors = $stmt->fetchAll();
                 </button>
                 <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
                     <span class="difficulty-name">困難模式</span>
-                    <span class="difficulty-desc">(6x6 網格)</span>
+                    <span class="difficulty-desc">(8x4 網格)</span>
                 </button>
             </div>
         </div>
@@ -475,6 +498,24 @@ $colors = $stmt->fetchAll();
         </div>
     </div>
     
+    <!-- 退出對戰確認視窗 -->
+    <div id="exit-battle-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">退出對戰</h2>
+            </div>
+            <div class="exit-battle-content">
+                <div class="exit-battle-icon">🚪</div>
+                <p class="exit-battle-message">您已退出對戰</p>
+                <p class="exit-battle-subtitle">對戰已結束，您可以重新開始新的對戰。</p>
+            </div>
+            <div class="exit-battle-buttons">
+                <button onclick="hideExitBattleModal()" class="confirm-btn">確定</button>
+                <button onclick="hideExitBattleModal()" class="cancel-btn">關閉</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // 將PHP變數傳遞給JavaScript
         const themes = <?php echo json_encode($themes); ?>;
@@ -489,7 +530,7 @@ $colors = $stmt->fetchAll();
             localStorage.setItem('member_id', phpCurrentUserId);
         }
     </script>
-    <script src="js/Memory-Game-2P.js"></script>
-    <script src="js/auto-save-time.js"></script>
+    <script src="js/Memory-Game-2P.js?v=<?php echo time(); ?>"></script>
+    <script src="js/auto-save-time.js?v=<?php echo time(); ?>"></script>
 </body>
 </html> 
