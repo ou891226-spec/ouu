@@ -28,6 +28,7 @@ $image_path = 'img/two people-1_0.jpg';
          data-display-time="<?= (int)$question['display_time'] ?>"
          data-correct-answer="<?= htmlspecialchars($question['correct_answer_text']) ?>">
         <h2>請仔細觀察下方圖片，10秒後將進行提問！</h2>
+        <h3>test test</h3>
         <div id="image-block">
             <img src="<?= htmlspecialchars($image_path) ?>" alt="題目圖片">
         </div>
