@@ -52,3 +52,6 @@ $image_path = 'img/two people-1_0.jpg';
     </div>
 </body>
 </html> 
+<body>
+    
+</body>
