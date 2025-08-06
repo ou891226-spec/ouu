@@ -50,6 +50,5 @@ $image_path = 'img/two people-1_0.jpg';
             <button id="resetBtn" class="blue-btn">重新開始</button>
         </div>
     </div>
-    echo
 </body>
 </html> 
