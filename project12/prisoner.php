@@ -1,6 +1,6 @@
 <?php
 require_once 'check_login.php';
-require_once 'prisoner_db.php';
+require_once 'db.php';
  
 // 獲取難度設定
 $difficulties = [];
@@ -51,7 +51,7 @@ try {
 </head>
 <body>
   <div class="game-container">
-    <input type="hidden" id="member-id" value="8">
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
     <h1>追蹤犯人遊戲</h1>
 
     <div class="score-board">
@@ -79,8 +79,8 @@ try {
 
           <h2>難度選擇</h2>
           <div class="difficulty-option easy" data-level="3">簡單 (3個)</div>
-          <div class="difficulty-option medium" data-level="5">普通 (5個)</div>
-          <div class="difficulty-option hard" data-level="7">困難 (7個)</div>
+          <div class="difficulty-option medium" data-level="4">普通 (4個)</div>
+          <div class="difficulty-option hard" data-level="5">困難 (5個)</div>
       </div>
   </div>
 
@@ -181,5 +181,6 @@ try {
 
   <script src="js/prisoner.js"></script>
   <script src="js/auto-save-time.js"></script>
+  <script src="js/achievements.js"></script>
 </body>
 </html>

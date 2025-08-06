@@ -541,3 +541,32 @@ h1 {
     margin-top: 1px;
     line-height: 1.1;
   }
+
+  .dual-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 10px;
+}
+
+.player-area {
+  border: 2px solid #ccc;
+  padding: 20px;
+  position: relative;
+  height: 200px;
+}
+
+.note-track {
+  position: relative;
+  height: 80px;
+  background-color: #eee;
+  overflow: hidden;
+}
+
+.hit-zone {
+  height: 50px;
+  background-color: rgba(255, 0, 0, 0.1);
+  text-align: center;
+  line-height: 50px;
+  font-weight: bold;
+}

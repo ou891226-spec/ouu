@@ -15,9 +15,39 @@ header {
 }
 
 .menu {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  display: flex !important;
+  align-items: center !important;
+  background: #ffe082 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10) !important;
+  padding: 8px 22px 8px 14px !important;
+  cursor: pointer !important;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s !important;
+  border: 2px solid #ffd54f !important;
+  outline: none !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  gap: 10px !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  flex-direction: row !important;
+}
+
+.menu:hover {
+  background: #ffd54f;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.18);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.menu-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  transition: transform 0.2s;
+}
+
+.menu:hover .menu-icon {
+  transform: scale(1.12) rotate(-6deg);
 }
 
 .menu-icon, .profile {
@@ -28,6 +58,13 @@ header {
 
 .menu-text {
     font-size: 18px;
+    font-weight: 500 !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    flex-direction: row !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
 }
 
 .search-bar {
@@ -207,6 +244,18 @@ header {
 
 /* 響應式調整 */
 @media (max-width: 768px) {
+    /* 遊戲網格調整 */
+    .game-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .game-item img {
+        height: 150px;
+    }
+    
+    /* 頁首調整 */
     .search-bar {
         width: 100%;
         margin: 10px 0;
@@ -219,6 +268,32 @@ header {
 
     .sidebar {
         width: 200px;
+    }
+    
+    /* 按鈕調整 */
+    .mode-btn {
+        padding: 8px 16px;
+        font-size: 16px;
+        margin: 0 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 手機版調整 */
+    .game-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .game-item img {
+        height: 120px;
+    }
+    
+    .mode-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+        margin: 0 3px;
     }
 }
 

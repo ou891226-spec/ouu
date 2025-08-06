@@ -5,9 +5,16 @@ $password = 'Test12345'; // 你的密碼
 $dbname   = 'myproject'; // 你的資料庫名稱
 $ssl_ca   = __DIR__ . '/BaltimoreCyberTrustRoot.crt.pem';
 
+// 在API請求中禁用錯誤輸出，避免破壞JSON響應
+if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || strpos($_SERVER['REQUEST_URI'], 'sync') !== false || strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false) {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(0);
+} else {
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+}
 
 try {
     $pdo = new PDO(
@@ -22,7 +29,16 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
-    echo "連接失敗: " . $e->getMessage();
-    die();
+    // 檢查是否在API請求中
+    if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || strpos($_SERVER['REQUEST_URI'], 'sync') !== false || strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false) {
+        // 在API請求中，返回JSON錯誤
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => '資料庫連接失敗: ' . $e->getMessage()]);
+        exit;
+    } else {
+        // 在一般頁面中，顯示錯誤
+        echo "連接失敗: " . $e->getMessage();
+        die();
+    }
 }
 ?> 

@@ -503,11 +503,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('win-best-score').textContent = this.bestScore;
             document.getElementById('win-target').textContent = this.targetScore;
             
-            // 自動呼叫 saveGameRecord
-            if (typeof saveGameRecord === 'function') {
-                console.log('遊戲勝利，呼叫 saveGameRecord');
-                saveGameRecord(8, this.score, this.difficulty, 60);
-            }
+                            // 自動呼叫 saveGameRecord
+                if (typeof saveGameRecord === 'function') {
+                    console.log('遊戲勝利，呼叫 saveGameRecord');
+                    saveGameRecord(memberId, this.score, this.difficulty, 60);
+                }
             this.winModal.style.display = 'block';
         }
 
@@ -525,11 +525,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('bestScore', this.bestScore);
                 document.getElementById('game-over-best-score').textContent = this.bestScore;
             }
-            // 自動呼叫 saveGameRecord
-            if (typeof saveGameRecord === 'function') {
-                console.log('遊戲失敗，呼叫 saveGameRecord');
-                saveGameRecord(8, this.score, this.difficulty, 60);
-            }
+                            // 自動呼叫 saveGameRecord
+                if (typeof saveGameRecord === 'function') {
+                    console.log('遊戲失敗，呼叫 saveGameRecord');
+                    saveGameRecord(memberId, this.score, this.difficulty, 60);
+                }
             this.gameOverModal.style.display = 'block';
         }
 
@@ -626,6 +626,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 if (data.success) {
                     console.log('任務狀態已更新');
+                    // 清除成就快取，確保下次打開個人資訊時顯示最新成就
+                    if (typeof clearAchievementsCache === 'function') {
+                        clearAchievementsCache();
+                    }
                 } else {
                     console.error('更新任務狀態失敗:', data.message);
                 }

@@ -28,6 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'opponent_id' => null
         ]);
        
+        // 更新會員總分數和反應力分數
+        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, reaction_score = reaction_score + :score WHERE member_id = :member_id");
+        $update_stmt->execute([
+            'score' => $data['score'],
+            'member_id' => $data['member_id']
+        ]);
+       
         // 提交交易
         $pdo->commit();
        

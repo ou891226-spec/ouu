@@ -1,5 +1,5 @@
 <?php
-require_once "DB_open.php";
+require_once "db.php";
 session_start();
 
 $my_id = $_SESSION['member_id'];
@@ -52,6 +52,11 @@ $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="add-friend-modal">
+        <!-- 返回按鈕 -->
+        <button class="back-button" onclick="window.location.href='friend.php'" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
+            <span class="back-arrow">⬅</span>
+            <div class="back-label">返回</div>
+        </button>
         <div class="add-friend-title">請輸入好友姓名或帳號：</div>
         <form class="add-friend-searchbox" method="get" action="">
             <span style="font-size:1.5rem; color:#888;">&#128269;</span>

@@ -136,4 +136,107 @@ body {
 }
 .delete-friend-btn:hover {
     color: #e74c3c;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .friend-container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+    
+    .friend-title {
+        font-size: 1.6rem;
+        padding: 10px 24px;
+    }
+    
+    .friend-actions {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .add-friend-btn, .invite-btn {
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 1.3rem;
+    }
+    
+    .friend-row {
+        padding: 8px 12px;
+        gap: 12px;
+    }
+    
+    .friend-avatar-block {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .friend-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .friend-name {
+        font-size: 1.1rem;
+    }
+    
+    .friend-score {
+        font-size: 1rem;
+        margin-right: 12px;
+    }
+    
+    .delete-friend-btn {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .friend-container {
+        margin: 15px auto;
+        padding: 0 10px;
+    }
+    
+    .friend-title {
+        font-size: 1.4rem;
+        padding: 8px 20px;
+    }
+    
+    .friend-actions {
+        gap: 10px;
+    }
+    
+    .add-friend-btn, .invite-btn {
+        padding: 8px 16px;
+        font-size: 1.1rem;
+    }
+    
+    .friend-row {
+        padding: 6px 10px;
+        gap: 10px;
+    }
+    
+    .friend-avatar-block {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .friend-avatar {
+        width: 26px;
+        height: 26px;
+    }
+    
+    .friend-name {
+        font-size: 1rem;
+    }
+    
+    .friend-score {
+        font-size: 0.9rem;
+        margin-right: 8px;
+    }
+    
+    .delete-friend-btn {
+        font-size: 1.1rem;
+    }
 } 

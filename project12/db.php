@@ -1,8 +1,8 @@
 <?php
 $host = 'smartfun-senior.mysql.database.azure.com';
 $user = 's1411131021';
-$pass = 'Test12345'; 
-$dbname = 'myproject'; 
+$pass = 'Test12345'; // 變數名要和下面一致
+$dbname = 'myproject'; // 你的資料庫名稱
 
 try {
   $pdo = new PDO(
@@ -17,6 +17,6 @@ try {
     ]
   );
 } catch (PDOException $e) {
-  var_dump($e);
-  die("資料庫連線錯誤：" . $e->getMessage());
+  error_log("資料庫連線錯誤：" . $e->getMessage());
+  throw new Exception("資料庫連線錯誤：" . $e->getMessage());
 }

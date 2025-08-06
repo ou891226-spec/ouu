@@ -1,0 +1,115 @@
+/* 歷史紀錄頁面響應式設計 */
+
+/* 平板設備 (≤768px) */
+@media (max-width: 768px) {
+    .section {
+        padding: 15px;
+    }
+    
+    .section h2 {
+        font-size: 24px !important;
+        margin-bottom: 15px;
+    }
+    
+    /* 成就牆調整 */
+    .section > div > div {
+        padding: 20px !important;
+    }
+    
+    .section h3 {
+        font-size: 1.3em !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* 網格調整 */
+    .section div[style*="grid-template-columns"] {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+        gap: 12px !important;
+    }
+    
+    /* 卡片調整 */
+    .section div[style*="background: white"] {
+        padding: 12px !important;
+    }
+    
+    .section div[id] {
+        font-size: 1.5em !important;
+    }
+    
+    .section div[style*="color: #6c757d"] {
+        font-size: 0.8em !important;
+    }
+}
+
+/* 手機設備 (≤480px) */
+@media (max-width: 480px) {
+    .section {
+        padding: 10px;
+    }
+    
+    .section h2 {
+        font-size: 20px !important;
+        margin-bottom: 10px;
+    }
+    
+    /* 成就牆調整 */
+    .section > div > div {
+        padding: 15px !important;
+    }
+    
+    .section h3 {
+        font-size: 1.1em !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* 網格調整 */
+    .section div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    /* 卡片調整 */
+    .section div[style*="background: white"] {
+        padding: 10px !important;
+    }
+    
+    .section div[id] {
+        font-size: 1.3em !important;
+    }
+    
+    .section div[style*="color: #6c757d"] {
+        font-size: 0.75em !important;
+    }
+    
+    /* 最大寬度調整 */
+    .section > div {
+        max-width: 100% !important;
+    }
+}
+
+/* 超小螢幕 (≤320px) */
+@media (max-width: 320px) {
+    .section {
+        padding: 8px;
+    }
+    
+    .section h2 {
+        font-size: 18px !important;
+    }
+    
+    .section > div > div {
+        padding: 12px !important;
+    }
+    
+    .section h3 {
+        font-size: 1em !important;
+    }
+    
+    .section div[id] {
+        font-size: 1.2em !important;
+    }
+    
+    .section div[style*="color: #6c757d"] {
+        font-size: 0.7em !important;
+    }
+} 

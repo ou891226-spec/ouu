@@ -23,7 +23,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 20px;
+    padding: 8px 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     position: relative;
     z-index: 10;
@@ -31,21 +31,43 @@ header {
 
 /* 側邊欄按鈕 */
 .menu {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    gap: 5px;
+  display: flex;
+  align-items: center;
+  background: #ffe082;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  padding: 8px 22px 8px 14px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  border: 2px solid #ffd54f;
+  outline: none;
+  font-size: 18px;
+  font-weight: 500;
+  gap: 10px;
+  min-width: unset;
+  min-height: unset;
 }
-
+.menu:hover {
+  background: #ffd54f;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.18);
+  transform: translateY(-2px) scale(1.04);
+}
 .menu-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 8px;
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  transition: transform 0.2s;
+}
+.menu:hover .menu-icon {
+  transform: scale(1.12) rotate(-6deg);
 }
 
 .menu-text {
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
 }
 
 /* 搜尋欄樣式 */
@@ -111,6 +133,10 @@ header {
 #scoreValue, #timeValue {
   color: red !important;
   font-weight: bold;
+}
+
+.status-bar .score, .status-bar .time, #scoreValue, #timeValue {
+  font-weight: 500 !important;
 }
 
 /* ========== 側邊欄 ========== */
@@ -253,7 +279,7 @@ header {
 }
 .game-title {
     margin-top: 10px;
-    font-size: 18px;
+    font-size: 26px !important;
     font-weight: bold;
     color: #333;
     text-align: center;
@@ -261,18 +287,148 @@ header {
 
 /* ========== 響應式調整 ========== */
 @media (max-width: 768px) {
+    /* 頁首調整 */
+    header {
+        padding: 8px 15px;
+        flex-wrap: wrap;
+    }
+    
+    .menu {
+        padding: 6px 18px 6px 12px;
+        font-size: 16px;
+    }
+    
+    .menu-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
     .search-bar {
         width: 100%;
         margin: 10px 0;
+        order: 3;
+        flex-basis: 100%;
+    }
+    
+    .user-icons {
+        gap: 8px;
+    }
+    
+    .notification-bell {
+        font-size: 1.2em;
+    }
+    
+    .profile {
+        width: 35px;
+        height: 35px;
     }
 
+    /* 狀態列調整 */
     .status-bar {
         flex-direction: column;
         gap: 10px;
+        padding: 10px 15px;
+    }
+    
+    .score, .time {
+        font-size: 14px;
     }
 
+    /* 側邊欄調整 */
+    .sidebar {
+        width: 250px;
+    }
+    
+    .sidebar a {
+        font-size: 18px;
+        padding: 12px 20px;
+    }
+    
+    /* 遊戲網格調整 */
+    .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .game-block {
+        padding: 15px;
+    }
+    
+    .game-item img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .game-title {
+        font-size: 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 手機版調整 */
+    header {
+        padding: 6px 10px;
+    }
+    
+    .menu {
+        padding: 5px 15px 5px 10px;
+        font-size: 14px;
+    }
+    
+    .menu-text {
+        font-size: 14px !important;
+    }
+    
+    .search-bar {
+        margin: 8px 0;
+    }
+    
+    .search-bar input {
+        font-size: 14px;
+    }
+    
+    .profile {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .status-bar {
+        padding: 8px 10px;
+    }
+    
+    .score, .time {
+        font-size: 12px;
+    }
+    
+    /* 側邊欄手機版 */
     .sidebar {
         width: 200px;
+    }
+    
+    .sidebar a {
+        font-size: 16px;
+        padding: 10px 15px;
+    }
+    
+    /* 遊戲網格手機版 */
+    .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .game-block {
+        padding: 10px;
+    }
+    
+    .game-item img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .game-title {
+        font-size: 16px !important;
     }
 }
 
@@ -458,21 +614,21 @@ header {
   z-index: auto;
 }
 .sub-btn {
-  background: #f5f5f5 !important;
-  color: #bfa100 !important;
-  border: 1.5px solid #e0e0e0;
+  background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 100%) !important;
+  color: #1565c0 !important;
+  border: 2px solid #2196f3;
   font-size: 12px;
-  font-weight: normal;
+  font-weight: 600;
   border-radius: 8px;
-  box-shadow: none;
-  opacity: 0.92;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+  opacity: 1;
   padding: 5px 12px 5px 24px;
   min-width: 60px;
   width: 90px;
   margin-left: 18px;
   text-align: left;
   position: relative;
-  transition: background 0.2s, color 0.2s, border 0.2s, opacity 0.2s;
+  transition: background 0.2s, color 0.2s, border 0.2s, opacity 0.2s, box-shadow 0.2s;
 }
 .sub-btn::before {
   content: '';
@@ -485,10 +641,12 @@ header {
   vertical-align: middle;
 }
 .sub-btn:hover {
-  background: #fffbe6 !important;
-  color: #ffb300 !important;
-  border-color: #ffb300;
+  background: linear-gradient(180deg, #bbdefb 0%, #90caf9 100%) !important;
+  color: #0d47a1 !important;
+  border-color: #1976d2;
   opacity: 1;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  transform: translateY(-1px);
 }
 
 .sidebar .jelly-btn {

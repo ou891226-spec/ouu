@@ -31,6 +31,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["member_id"] = $row['member_id'];
             $_SESSION["account"] = $row['account'];
             $_SESSION["member_name"] = $row['member_name'];
+            $_SESSION["name"] = $row['name'] ?? $row['member_name'];
+            $_SESSION["avatar_url"] = $row['avatar_url'] ?? $row['avatar'] ?? 'img/big.jpg';
 
             // ✅ 登入任務（task_id = 52）
             $member_id = $row['member_id'];

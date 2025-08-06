@@ -29,6 +29,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'opponent_id' => null
         ]);
        
+        // 更新會員總分數和記憶力分數
+        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
+        $update_stmt->execute([
+            'score' => $data['score'],
+            'member_id' => $data['member_id']
+        ]);
+       
         // 提交交易
         $pdo->commit();
        
@@ -85,8 +92,12 @@ $colors = $stmt->fetchAll();
     <!-- 主題選擇視窗 -->
     <div id="theme-modal" class="modal">
         <div class="modal-content">
+            <button class="back-button" onclick="handleBackButton()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
+                <span class="back-arrow">⬅</span>
+                <div class="back-label">返回</div>
+            </button>
             <h2>選擇主題</h2>
-            <button class="help-button" onclick="showHelp()">?
+            <button class="help-button" onclick="showHelp()" style="position:absolute;top:1rem;right:1.2rem;z-index:10;">?
                 <div class="help-label">說明</div>
             </button>
             <div class="theme-buttons">
@@ -182,10 +193,9 @@ $colors = $stmt->fetchAll();
         const themes = <?php echo json_encode($themes); ?>;
         const difficulties = <?php echo json_encode($difficulties); ?>;
         const colors = <?php echo json_encode($colors); ?>;
-        // 如果 localStorage 沒有 member_id，就自動設一個（這裡用 8，請改成你自己的會員ID）
-        if (!localStorage.getItem('member_id')) {
-            localStorage.setItem('member_id', 8);
-        }
+        // 設置正確的會員ID
+        const memberId = <?php echo $_SESSION['member_id'] ?? 0; ?>;
+        localStorage.setItem('member_id', memberId);
     </script>
     <script src="js/Memory-Game.js"></script>
     <script src="js/auto-save-time.js"></script>

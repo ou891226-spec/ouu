@@ -112,5 +112,122 @@
   cursor: default;
 }
 
+/* 獎勵領取成功彈窗樣式 */
+.reward-success-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reward-success-modal.show {
+  opacity: 1;
+}
+
+.reward-success-content {
+  background: linear-gradient(135deg, #fff099 0%, #ffd700 100%);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+  max-width: 400px;
+  width: 90%;
+}
+
+.reward-success-modal.show .reward-success-content {
+  transform: scale(1);
+}
+
+.reward-success-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  animation: bounce 0.6s ease-in-out;
+}
+
+.reward-success-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+}
+
+.reward-success-message {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.reward-success-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.reward-success-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.reward-success-btn:active {
+  transform: translateY(0);
+}
+
+/* 彈跳動畫 */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+  .reward-success-content {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .reward-success-icon {
+    font-size: 50px;
+  }
+  
+  .reward-success-title {
+    font-size: 20px;
+  }
+  
+  .reward-success-message {
+    font-size: 14px;
+  }
+  
+  .reward-success-btn {
+    padding: 10px 25px;
+    font-size: 14px;
+  }
+}
+
 
 

@@ -1,3 +1,54 @@
+/* 返回按鈕樣式 */
+.back-button {
+    position: absolute;
+    top: 1rem;
+    left: 1.2rem;
+    width: 2.8rem !important;
+    height: 2.8rem !important;
+    border-radius: 50%;
+    border: 2px solid #000 !important;
+    background: #fff;
+    color: #222;
+    font-size: 2.2rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.back-button .back-arrow {
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.back-button .back-label {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    color: #666;
+    margin-top: 0.1rem;
+    letter-spacing: 0.05em;
+    user-select: none;
+    white-space: nowrap;
+    line-height: 1.1;
+}
+
+.back-button:hover {
+    background: #f2f2f2;
+    color: #111;
+    border-color: #000 !important;
+}
+
 .invitation-modal {
     background: #e0dbd7;
     border: 2px solid #888;

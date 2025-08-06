@@ -13,8 +13,8 @@ body {
     padding: 48px 36px 36px 36px;
 }
 #image-block img {
-    max-width: 100%;
-    max-height: 360px;
+    max-width: 600px;
+    max-height: 450px;
     border-radius: 16px;
     box-shadow: 0 4px 18px rgba(0,0,0,0.13);
 }
@@ -112,4 +112,28 @@ body {
 #result-block button:hover {
     background: #1251a3;
     transform: scale(1.06);
+} 
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+  justify-items: center;
+  margin: 0 auto 18px auto;
+  max-width: 420px;
+} 
+
+.options-flex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 24px;
+  max-width: 700px;
+  margin: 0 auto 18px auto;
+}
+.options-flex .option-btn {
+  flex: 1 1 180px;
+  max-width: 320px;
+  min-width: 120px;
+  white-space: normal;
 } 

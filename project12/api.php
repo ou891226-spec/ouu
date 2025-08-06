@@ -56,6 +56,13 @@ switch ($method) {
                 'is_single_player' => 1,
                 'opponent_id' => null
             ]);
+
+            // 更新會員總分數和邏輯分數
+            $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
+            $update_stmt->execute([
+                'score' => $data['score'],
+                'member_id' => $data['member_id']
+            ]);
             
             // 提交交易
             $pdo->commit();

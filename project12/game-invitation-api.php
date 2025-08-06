@@ -1,11 +1,18 @@
 <?php
+// 避免任何輸出緩衝問題
+ob_start();
+
 require_once 'check_login.php';
 require_once 'db_connect.php';
+
+// 清除任何可能的輸出
+ob_clean();
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, Accept, Authorization');
+header('Access-Control-Allow-Credentials: true');
 
 // 處理 OPTIONS 請求
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -49,6 +56,22 @@ try {
             handleGetPendingInvitations($pdo);
             break;
             
+        case 'get_friends':
+            handleGetFriends($pdo, $input);
+            break;
+            
+        case 'update_invitation_settings':
+            handleUpdateInvitationSettings($pdo, $input);
+            break;
+            
+        case 'update_invitation_status':
+            handleUpdateInvitationStatus($pdo, $input);
+            break;
+            
+        case 'find_users':
+            handleFindUsers($pdo, $input);
+            break;
+            
         default:
             echo json_encode(['success' => false, 'message' => '無效的操作']);
     }
@@ -58,7 +81,8 @@ try {
 }
 
 function handleSendInvitation($pdo, $input) {
-    $fromUserId = $_SESSION['member_id'];
+    // 支持指定發送者ID（用於測試），否則使用當前登入用戶
+    $fromUserId = $input['from_user_id'] ?? $_SESSION['member_id'];
     $toUserId = $input['to_user_id'] ?? 0;
     $gameType = $input['game_type'] ?? 'memory_game_2p';
     
@@ -75,14 +99,21 @@ function handleSendInvitation($pdo, $input) {
         return;
     }
     
-    // 檢查是否已有待處理的邀請
+    // 檢查是否已有待處理的邀請（只檢查未過期的）
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM game_invitations 
-                          WHERE from_user_id = ? AND to_user_id = ? AND status = 'pending'");
+                          WHERE from_user_id = ? AND to_user_id = ? AND status = 'pending' 
+                          AND expires_at > NOW()");
     $stmt->execute([$fromUserId, $toUserId]);
     if ($stmt->fetchColumn() > 0) {
         echo json_encode(['success' => false, 'message' => '已有待處理的邀請']);
         return;
     }
+    
+    // 清理過期的邀請
+    $stmt = $pdo->prepare("UPDATE game_invitations SET status = 'expired' 
+                          WHERE from_user_id = ? AND to_user_id = ? AND status = 'pending' 
+                          AND expires_at <= NOW()");
+    $stmt->execute([$fromUserId, $toUserId]);
     
     // 生成邀請ID
     $invitationId = 'invite_' . time() . '_' . bin2hex(random_bytes(8));
@@ -135,11 +166,25 @@ function handleCheckInvitation($pdo, $input) {
         $invitation['status'] = 'expired';
     }
     
-    echo json_encode([
+    // 解析遊戲設定
+    $gameSettings = null;
+    if ($invitation['game_settings']) {
+        $gameSettings = json_decode($invitation['game_settings'], true);
+    }
+    
+    // 構建響應
+    $response = [
         'success' => true,
         'status' => $invitation['status'],
-        'invitation' => $invitation
-    ]);
+        'invitation' => array_merge($invitation, ['game_settings' => $gameSettings])
+    ];
+    
+    // 如果有遊戲設定，直接返回
+    if ($gameSettings) {
+        $response['game_settings'] = $gameSettings;
+    }
+    
+    echo json_encode($response);
 }
 
 function handleAcceptInvitation($pdo, $input) {
@@ -165,10 +210,23 @@ function handleAcceptInvitation($pdo, $input) {
     $stmt = $pdo->prepare("UPDATE game_invitations SET status = 'accepted', accepted_at = NOW() WHERE invitation_id = ?");
     $stmt->execute([$invitationId]);
     
+    // 獲取更新後的完整邀請信息
+    $stmt = $pdo->prepare("
+        SELECT gi.*, 
+               m1.member_name as from_user_name,
+               m2.member_name as to_user_name
+        FROM game_invitations gi
+        JOIN member m1 ON gi.from_user_id = m1.member_id
+        JOIN member m2 ON gi.to_user_id = m2.member_id
+        WHERE gi.invitation_id = ?
+    ");
+    $stmt->execute([$invitationId]);
+    $updatedInvitation = $stmt->fetch(PDO::FETCH_ASSOC);
+    
     echo json_encode([
         'success' => true,
         'message' => '邀請已接受',
-        'invitation' => $invitation
+        'invitation' => $updatedInvitation
     ]);
 }
 
@@ -213,14 +271,14 @@ function handleCancelInvitation($pdo, $input) {
 function handleGetPendingInvitations($pdo) {
     $currentUserId = $_SESSION['member_id'];
     
-    // 獲取待處理的邀請
+    // 獲取待處理的邀請（包括 quit 狀態的邀請，用於調試）
     $stmt = $pdo->prepare("
         SELECT gi.*, 
                m.member_name as from_user_name,
                m.avatar as from_user_avatar
         FROM game_invitations gi
         JOIN member m ON gi.from_user_id = m.member_id
-        WHERE gi.to_user_id = ? AND gi.status = 'pending'
+        WHERE gi.to_user_id = ? AND (gi.status = 'pending' OR gi.status = 'accepted' OR gi.status = 'quit')
         ORDER BY gi.created_at DESC
     ");
     $stmt->execute([$currentUserId]);
@@ -229,6 +287,128 @@ function handleGetPendingInvitations($pdo) {
     echo json_encode([
         'success' => true,
         'invitations' => $invitations
+    ]);
+}
+
+function handleGetFriends($pdo, $input) {
+    $currentUserId = $_SESSION['member_id'];
+    
+    // 獲取好友列表
+    $stmt = $pdo->prepare("
+        SELECT m.member_id as id, m.member_name as name, m.avatar
+        FROM friends f
+        JOIN member m ON f.friend_id = m.member_id
+        WHERE f.member_id = ?
+        ORDER BY m.member_name
+    ");
+    $stmt->execute([$currentUserId]);
+    $friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode([
+        'success' => true,
+        'friends' => $friends
+    ]);
+}
+
+function handleUpdateInvitationSettings($pdo, $input) {
+    $invitationId = $input['invitation_id'] ?? 0;
+    $gameSettings = $input['game_settings'] ?? [];
+    
+    if (!$invitationId) {
+        echo json_encode(['success' => false, 'message' => '缺少邀請ID']);
+        return;
+    }
+    
+    if (empty($gameSettings)) {
+        echo json_encode(['success' => false, 'message' => '缺少遊戲設定']);
+        return;
+    }
+    
+    // 檢查邀請是否存在且屬於當前用戶
+    $stmt = $pdo->prepare("SELECT * FROM game_invitations WHERE invitation_id = ? AND (from_user_id = ? OR to_user_id = ?)");
+    $stmt->execute([$invitationId, $_SESSION['member_id'], $_SESSION['member_id']]);
+    $invitation = $stmt->fetch();
+    
+    if (!$invitation) {
+        echo json_encode(['success' => false, 'message' => '邀請不存在或無權限']);
+        return;
+    }
+    
+    // 更新遊戲設定
+    $gameSettingsJson = json_encode($gameSettings);
+    $stmt = $pdo->prepare("UPDATE game_invitations SET game_settings = ?, last_updated = NOW() WHERE invitation_id = ?");
+    $stmt->execute([$gameSettingsJson, $invitationId]);
+    
+    echo json_encode(['success' => true, 'message' => '遊戲設定已更新']);
+}
+
+function handleUpdateInvitationStatus($pdo, $input) {
+    $invitationId = $input['invitation_id'] ?? 0;
+    $status = $input['status'] ?? '';
+    
+    if (!$invitationId || !$status) {
+        echo json_encode(['success' => false, 'message' => '缺少必要參數']);
+        return;
+    }
+    
+    // 檢查邀請是否存在且屬於當前用戶
+    $stmt = $pdo->prepare("SELECT * FROM game_invitations WHERE invitation_id = ? AND (from_user_id = ? OR to_user_id = ?)");
+    $stmt->execute([$invitationId, $_SESSION['member_id'], $_SESSION['member_id']]);
+    $invitation = $stmt->fetch();
+    
+    if (!$invitation) {
+        echo json_encode(['success' => false, 'message' => '邀請不存在或無權限']);
+        return;
+    }
+    
+    // 更新邀請狀態
+    $stmt = $pdo->prepare("UPDATE game_invitations SET status = ?, last_updated = NOW() WHERE invitation_id = ?");
+    $stmt->execute([$status, $invitationId]);
+    
+    echo json_encode(['success' => true, 'message' => '邀請狀態已更新']);
+}
+
+function handleFindUsers($pdo, $input) {
+    $senderName = $input['sender_name'] ?? '';
+    $receiverName = $input['receiver_name'] ?? '';
+    
+    if (!$senderName || !$receiverName) {
+        echo json_encode(['success' => false, 'message' => '請提供發送者和接收者用戶名']);
+        return;
+    }
+    
+    // 查找發送者
+    $stmt = $pdo->prepare("SELECT member_id, member_name FROM member WHERE member_name = ?");
+    $stmt->execute([$senderName]);
+    $sender = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // 查找接收者
+    $stmt = $pdo->prepare("SELECT member_id, member_name FROM member WHERE member_name = ?");
+    $stmt->execute([$receiverName]);
+    $receiver = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$sender) {
+        echo json_encode(['success' => false, 'message' => '找不到發送者用戶: ' . $senderName]);
+        return;
+    }
+    
+    if (!$receiver) {
+        echo json_encode(['success' => false, 'message' => '找不到接收者用戶: ' . $receiverName]);
+        return;
+    }
+    
+    // 檢查是否為好友關係
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM friends WHERE member_id = ? AND friend_id = ?");
+    $stmt->execute([$sender['member_id'], $receiver['member_id']]);
+    $isFriend = $stmt->fetchColumn() > 0;
+    
+    echo json_encode([
+        'success' => true,
+        'sender_id' => $sender['member_id'],
+        'receiver_id' => $receiver['member_id'],
+        'sender_name' => $sender['member_name'],
+        'receiver_name' => $receiver['member_name'],
+        'is_friend' => $isFriend
     ]);
 }
 ?> 

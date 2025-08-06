@@ -1,11 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("開始載入每日任務...");
   fetch("get_daily_tasks.php")
-    .then(response => response.json())
+    .then(response => {
+      console.log("收到回應:", response);
+      return response.json();
+    })
     .then(tasks => {
+      console.log("解析的任務:", tasks);
       const container = document.getElementById("daily-tasks-container");
+      if (!container) {
+        console.error("找不到 daily-tasks-container 元素");
+        return;
+      }
       container.innerHTML = "";
 
       tasks.forEach(task => {
+        console.log("處理任務:", task);
         const status = task.status || "pending";
         const isCompleted = status === "completed";
         const isClaimed = status === "claimed";

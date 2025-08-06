@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "DB_open.php";
+require_once "db.php";
 
 // 從資料庫讀取顏色
 $colors_query = "SELECT * FROM text_color_colors";
@@ -224,6 +224,10 @@ function recordGameResult($score, $playTime, $difficulty) {
                         // 更新會員反應分數
                         $update_reaction_query = "UPDATE member SET reaction_score = reaction_score + $pass_bounce WHERE member_id = $member_id";
                         $pdo->query($update_reaction_query);
+                        
+                        // 檢查並授予成就
+                        require_once 'check_and_grant_achievements.php';
+                        checkAndGrantAchievements($member_id, 'reaction_game', $pass_bounce, $playTime);
                     }
                 }
 
@@ -343,6 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="css/text-color-1.css">
 </head>
 <body>
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
     <!-- 難度選擇彈跳視窗 -->
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
@@ -768,6 +773,21 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: 'action=record_game&score=' + score + '&play_time=' + playTime + '&difficulty=' + difficulty
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log('遊戲結果已記錄:', result);
+                // 清除成就快取
+                if (typeof clearAchievementsCache === 'function') {
+                    clearAchievementsCache();
+                }
+                // 立即刷新分數顯示
+                if (typeof fetchUserScore === 'function') {
+                    fetchUserScore();
+                }
+            })
+            .catch(error => {
+                console.error('記錄遊戲結果時發生錯誤:', error);
             });
             
             // 取得過關分數
@@ -943,7 +963,8 @@ closeBtns.forEach(function(btn){
     btn.onclick = function(){
         document.getElementById('helpModal').style.display = 'none';
     };
-});
+    });
     </script>
+    <script src="js/achievements.js"></script>
 </body>
 </html>

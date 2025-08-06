@@ -1,11 +1,24 @@
 .analysis-section {
-    max-width: 800px;
-    margin: 30px auto;
-    background-color: #fdfdfd;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 30px auto;
+  background-color: #fdfdfd;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .analysis-section {
+    margin: 15px;
+    padding: 20px;
+    max-width: none;
   }
+  
+  .analysis-section > h2 {
+    font-size: 24px !important;
+  }
+}
   
   .analysis-section > h2 {
     text-align: center;
@@ -17,9 +30,23 @@
   
   
   .radar-chart-container {
-    max-width: 500px;
-    margin: 0 auto;
+  max-width: 700px;
+  margin: 0 auto;
+  height: 500px;
+}
+
+@media (max-width: 768px) {
+  .radar-chart-container {
+    max-width: 100%;
+    height: 400px;
   }
+}
+
+@media (max-width: 480px) {
+  .radar-chart-container {
+    height: 350px;
+  }
+}
   
   .dropdown-area {
     margin-top: 30px;
@@ -48,6 +75,13 @@
   box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
 
+@media (max-width: 768px) {
+  .mode-btn {
+    padding: 8px 20px;
+    font-size: 16px;
+  }
+}
+
 .mode-btn:hover {
   background-color: #ffcc00;
   transform: scale(1.05);
@@ -56,5 +90,110 @@
 .mode-btn.active {
   background-color: #ffa500;
   color: #fff;
+}
+
+/* 分析報告樣式 */
+.analysis-report {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  border-radius: 15px;
+  color: white;
+}
+
+.analysis-report h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.8em;
+  text-align: center;
+  font-weight: bold;
+}
+
+.report-content {
+  line-height: 1.8;
+  font-size: 1.2em;
+}
+
+@media (max-width: 768px) {
+  .report-content {
+    font-size: 1.1em;
+    line-height: 1.6;
+  }
+  
+  .analysis-report h3,
+  .detailed-stats h3 {
+    font-size: 1.5em;
+  }
+  
+  .stat-label {
+    font-size: 1em;
+  }
+  
+  .stat-value {
+    font-size: 1.5em;
+  }
+}
+
+.report-content div {
+  margin-bottom: 15px;
+}
+
+.report-content ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.report-content li {
+  margin-bottom: 5px;
+}
+
+/* 詳細統計樣式 */
+.detailed-stats {
+  margin-top: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffb3d9 0%, #ff80ab 100%);
+  border-radius: 15px;
+  color: #333;
+}
+
+.detailed-stats h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.8em;
+  text-align: center;
+  font-weight: bold;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.stat-item {
+  background: rgba(255, 255, 255, 0.4);
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.stat-label {
+  display: block;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.8em;
+  font-weight: bold;
 }
   

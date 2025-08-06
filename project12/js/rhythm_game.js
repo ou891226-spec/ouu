@@ -127,10 +127,10 @@ function handleHit() {
     if (center >= zoneLeft - tolerance && center <= zoneRight + tolerance) {
       flashHitZone();
       const diff = Math.abs(center - (zoneLeft + hitZone.offsetWidth / 2));
-      if (diff < 10) {
+      if (diff < 20) {
         score += 20; perfectCount++;
         statusText.textContent = `🎯 Perfect！+20（目前：${score}）`;
-      } else if (diff < 25) {
+      } else if (diff < 50) {
         score += 10; goodCount++;
         statusText.textContent = `👍 Good！+10（目前：${score}）`;
       } else {
@@ -187,7 +187,7 @@ function endGame() {
   `;
   clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
 
-  let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 8;
+  let sendMemberId = document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8;
   let recordScore = 0; // 初始化 recordScore
 
   // 計算 recordScore，無論是否過關

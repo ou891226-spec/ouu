@@ -65,19 +65,24 @@ colors.forEach(color => {
  
 // 卡片符號
 const symbols = {
-    fruit: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍈', '🍒', '🍑', '🥭',
-           '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🌽', '🥕'],
+    fruit: ['papaya.png', 'starfruit.png', 'passionfruit.png', 'durian.png', 'mangosteen.png', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇',
+           '🍓', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍋‍🟩', '🍏', '🥑', '🫐'],
     animal: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮',
             '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗'],
-    daily: ['⌚', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '🗜️', '💽', '💾',
-           '💿', '📀', '📼', '📷', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠'],
-    vegetable: ['🥬', '🥦', '🥒', '🌶️', '🌽', '🥕', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯',
-               '🥖', '🥨', '🧀', '🥚', '🍳', '🧈', '🥞', '🧇', '🥓', '🥩', '🍗', '🍖']
+    daily: ['⌚', '📱', '🧯', '📺', '🖥️', '🖨️', '🖱️', '🖊️', '💉', '🪥', '🧢', '🩴',
+           '💿', '👓', '💰', '📷', '💡', '🔑', '📽️', '✂️', '📞', '☎️', '🔨', '🧦'],
+    vegetable: ['green_pepper.png', 'white_radish.png', 'red_pepper.png', 'scallion.png', 'napa_cabbage.png', '🥬', '🥦', '🥒', '🌶️', '🌽', '🥕', '🧄',
+               '🧅', '🥔', '🍅', '🥩', '🎃', '🫛', '🫑', '🧀', '🥚', '🫚', '🍄‍🟫', '🍆']
 };
  
 // 顯示遊戲說明彈窗
 function showHelp() {
     document.getElementById('help-modal').classList.remove('hidden');
+}
+
+// 處理返回按鈕
+function handleBackButton() {
+    window.location.href = 'index.php';
 }
  
 // 選擇主題
@@ -213,10 +218,27 @@ function initializeGame() {
 function createCard(symbol, index) {
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `
-        <div class="card-front">${symbol}</div>
-        <div class="card-back"></div>
-    `;
+    
+    // 檢查是否為圖片檔案（包含.png副檔名）
+    const isImage = symbol.includes('.png');
+    
+    if (isImage) {
+        // 如果是圖片，使用img標籤，設定較小的尺寸
+        console.log('創建圖片卡片:', symbol, '路徑:', `img/${symbol}`);
+        card.innerHTML = `
+            <div class="card-front">
+                <img src="img/${symbol}" alt="${symbol}" style="width: 70%; height: 70%; object-fit: contain; margin: auto; display: block;" onerror="console.error('圖片載入失敗:', this.src)">
+            </div>
+            <div class="card-back"></div>
+        `;
+    } else {
+        // 如果是emoji，直接顯示，設定較大的字體
+        card.innerHTML = `
+            <div class="card-front" style="font-size: 5.5rem; display: flex; align-items: center; justify-content: center;">${symbol}</div>
+            <div class="card-back"></div>
+        `;
+    }
+    
     card.dataset.symbol = symbol;
     card.dataset.index = index;
    

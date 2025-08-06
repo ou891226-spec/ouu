@@ -22,6 +22,14 @@ if (
             'play_time' => $data['play_time'],
             'game_type' => '邏輯力'
         ]);
+        
+        // 更新會員總分數和邏輯分數
+        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
+        $update_stmt->execute([
+            'score' => $data['score'],
+            'member_id' => $data['member_id']
+        ]);
+        
         error_log('寫入成功');
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
@@ -65,6 +73,7 @@ if (
             <button class="difficulty-btn hard" data-target="10000" type="button">困難 目標：10000分</button>
         </div>
     </div>
+
     <!-- 遊戲主畫面 -->
     <div id="game-page" class="container" style="display:none;">
         <div class="title">2048</div>
@@ -127,8 +136,15 @@ if (
         </div>
     </div>
 
+    <!-- 隱藏的會員ID -->
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
+    
     <!-- 引入遊戲腳本 -->
     <script>
+        // 獲取會員ID
+        const memberIdElement = document.getElementById("member-id");
+        const memberId = memberIdElement ? parseInt(memberIdElement.value) : 1;
+        
         // 確保 DOM 加載完成後再執行遊戲界面初始化
         function initGameUI() {
             debugLog('開始初始化遊戲界面');

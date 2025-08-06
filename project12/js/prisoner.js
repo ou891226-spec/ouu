@@ -32,10 +32,10 @@ function startGame() {
   if (level === 3) {
     gameTime = 80;
     passScore = 20;
-  } else if (level === 5) {
+  } else if (level === 4) {
     gameTime = 80;
     passScore = 10;
-  } else if (level === 7) {
+  } else if (level === 5) {
     gameTime = 120;
     passScore = 20;
   }
@@ -170,7 +170,7 @@ difficultyOptions.forEach(option => {
 function endGame(success) {
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
   clearInterval(gameInterval);
-  const finalScore = success ? score : 0;
+  const finalScore = score; // 總是保存實際獲得的分數
   sendScoreToServer(finalScore, level);
   showEndModal(success, finalScore, level);
 }
@@ -182,7 +182,7 @@ function showEndModal(success, score, level) {
   const message = document.getElementById('result-score');
 
   title.textContent = success ? '恭喜破關' : '遊戲失敗';
-  difficulty.textContent = '難度：' + (level === 3 ? '簡單' : level === 5 ? '普通' : '困難');
+  difficulty.textContent = '難度：' + (level === 3 ? '簡單' : level === 4 ? '普通' : '困難');
   message.textContent = success ? '得分：' + score : '未在時間內達成分數';
 
   modal.style.display = 'flex';
@@ -217,6 +217,7 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   difficultyModal.style.display = 'flex'; // 再次顯示難度選擇彈窗
 });
 
+
 document.getElementById('info-btn').addEventListener('click', () => {
   document.getElementById('info-modal').style.display = 'flex';
 });
@@ -235,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function sendScoreToServer(score, level) {
-  const difficultyText = level === 3 ? '簡單' : level === 5 ? '普通' : '困難';
+  const difficultyText = level === 3 ? '簡單' : level === 4 ? '普通' : '困難';
 
   const data = {
     member_id: memberId,
@@ -255,6 +256,14 @@ function sendScoreToServer(score, level) {
     .then(result => {
       if (result.success) {
         console.log("✅ 成績已儲存");
+        // 清除成就快取
+        if (typeof clearAchievementsCache === 'function') {
+          clearAchievementsCache();
+        }
+        // 立即刷新分數顯示
+        if (typeof fetchUserScore === 'function') {
+          fetchUserScore();
+        }
       } else {
         console.error("❌ 儲存失敗：", result.message);
       }
