@@ -170,7 +170,7 @@ difficultyOptions.forEach(option => {
 function endGame(success) {
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
   clearInterval(gameInterval);
-  const finalScore = score; // 總是保存實際獲得的分數
+  const finalScore = success ? score : 0;
   sendScoreToServer(finalScore, level);
   showEndModal(success, finalScore, level);
 }
@@ -188,21 +188,33 @@ function showEndModal(success, score, level) {
   modal.style.display = 'flex';
 }
 
-pauseBtn.addEventListener('click', () => {
-  if (!isPaused) {
+pauseBtn.addEventListener('click', togglePause);
+function togglePause() {
+  isPaused = !isPaused; // 切換暫停狀態
+
+  if (isPaused) {
+    // 遊戲暫停時的邏輯
     clearInterval(gameInterval);
     holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
     messageDiv.textContent = '已暫停，請按繼續遊戲';
+
+    // 暫停按鈕的樣式切換
     pauseBtn.textContent = '繼續遊戲';
-    isPaused = true;
+    pauseBtn.classList.remove('pause-btn');
+    pauseBtn.classList.add('resume-btn');
+
   } else {
+    // 遊戲恢復時的邏輯
     gameInterval = setInterval(updateTimer, 1000);
     playerTurn();
     messageDiv.textContent = '';
+
+    // 繼續按鈕的樣式切換
     pauseBtn.textContent = '暫停遊戲';
-    isPaused = false;
+    pauseBtn.classList.remove('resume-btn');
+    pauseBtn.classList.add('pause-btn');
   }
-});
+}
 
 document.getElementById('end-btn').addEventListener('click', () => {
   clearInterval(gameInterval);
@@ -256,14 +268,6 @@ function sendScoreToServer(score, level) {
     .then(result => {
       if (result.success) {
         console.log("✅ 成績已儲存");
-        // 清除成就快取
-        if (typeof clearAchievementsCache === 'function') {
-          clearAchievementsCache();
-        }
-        // 立即刷新分數顯示
-        if (typeof fetchUserScore === 'function') {
-          fetchUserScore();
-        }
       } else {
         console.error("❌ 儲存失敗：", result.message);
       }
