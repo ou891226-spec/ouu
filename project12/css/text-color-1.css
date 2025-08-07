@@ -213,9 +213,38 @@ button:hover {
     position: fixed;
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.18);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
     justify-content: center;
     align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes modalPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 確保按鈕在active狀態下的樣式 */
+.back-button:active,
+.help-button:active {
+    background: #e0e0e0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.18) inset, 0 0px 0px rgba(0,0,0,0.05);
+    transform: scale(0.93);
+    border-color: #888 !important;
 }
 
 .modal-content img {
@@ -234,125 +263,243 @@ button:hover {
 
 /* 難度選擇彈窗專屬樣式 */
 #difficultyModal .modal-content {
-    max-width: 340px;
-    padding: 32px 18px 28px 18px;
-    border-radius: 20px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
-    border-bottom: 4px solid #2196f3;
-    margin: 48px auto 0 auto;
-    background: #fff;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
     position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: modalPop 0.3s ease-out;
 }
-#difficultyModal .difficulty-modal-header {
+
+#difficultyModal h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.back-button {
+    position: absolute;
+    top: 1.4rem;
+    left: 1.2rem;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    border-radius: 50%;
+    border: 2px solid #000 !important;
+    background: #fff;
+    color: #000;
+    font-size: 1.6rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: background 0.2s, color 0.2s, border 0.2s;
+    margin: 0 auto;
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 18px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-direction: column;
 }
-#difficultyModal .difficulty-modal-title {
-    font-size: 2.1em;
+
+.back-button .back-arrow {
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1;
+    color: #000;
+}
+
+.back-button .back-label {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    font-size: 0.95rem;
+    color: #000;
+    margin-top: 0.1rem;
+    letter-spacing: 0.05em;
+    user-select: none;
+    white-space: nowrap;
+    line-height: 1.1;
+}
+
+.back-button:hover {
+    background: #f2f2f2;
+    color: #000;
+    border-color: #000 !important;
+}
+
+.help-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    border-radius: 50%;
+    border: 2px solid #000 !important;
+    background: #fff;
+    color: #000;
+    font-size: 1.6rem;
     font-weight: bold;
-    letter-spacing: 2px;
-    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
-#difficultyModal .help-btn {
-    background: none;
+
+.help-button .help-label {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    font-size: 0.95rem;
+    color: #000;
+    margin-top: 0.1rem;
+    letter-spacing: 0.05em;
+    user-select: none;
+    white-space: nowrap;
+    line-height: 1.1;
+}
+
+.help-button:hover {
+    background: #f2f2f2;
+    color: #000;
+    border-color: #000 !important;
+}
+
+.difficulty-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.difficulty-btn {
+    padding: 20px;
     border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
-    position: absolute;
-    right: 18px;
-    top: 18px;
-    padding: 0;
-}
-#difficultyModal .help-icon {
-    width: 28px;
-    height: 28px;
-    margin-bottom: 2px;
-}
-#difficultyModal .help-label {
-    font-size: 0.95em;
-    color: #222;
-    font-weight: bold;
-    margin: 0;
-    padding: 0;
-}
-#difficultyModal .difficulty-btn {
-    width: 100%;
-    display: block;
-    margin: 18px 0 0 0;
-    padding: 18px 0;
-    font-size: 1.3em;
-    font-weight: bold;
-    border-radius: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: none;
-    letter-spacing: 2px;
-    transition: transform 0.15s, box-shadow 0.15s;
-}
-#difficultyModal .difficulty-btn.easy {
-    background: #27ef4b;
-    color: #111;
-}
-#difficultyModal .difficulty-btn.normal {
-    background: #ffe34d;
-    color: #111;
-}
-#difficultyModal .difficulty-btn.hard {
-    background: #f44336;
-    color: #fff;
-}
-#difficultyModal .difficulty-btn:hover {
-    transform: scale(1.04);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    justify-content: center;
+    gap: 5px;
 }
 
-#helpModal .modal-content {
-    max-width: 420px;
-    padding: 38px 28px 32px 28px;
-    border-radius: 20px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+.difficulty-btn .difficulty-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.difficulty-btn .difficulty-desc {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.difficulty-btn.easy {
+    background: #4CAF50;
+    color: rgb(0, 0, 0);
+}
+
+.difficulty-btn.normal {
+    background: #FF9800;
+    color: #000;
+}
+
+.difficulty-btn.hard {
+    background: #F44336;
+    color: #000;
+}
+
+.difficulty-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#help-modal .modal-content {
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
     margin: auto;
     background: #fff;
     position: relative;
     text-align: center;
 }
-#helpModal .modal-content h2 {
-    font-size: 2.1em;
+
+#help-modal h2 {
+    font-size: 24px;
     font-weight: bold;
-    margin-bottom: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+#help-modal .help-content {
+    text-align: left;
+    margin-top: 20px;
+}
+
+#help-modal .help-content h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+#help-modal .help-content ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+#help-modal .help-content ul li {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+#help-modal .help-content ul li::marker {
+    color: #3b82f6;
+}
+
+#help-modal .help-content p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+#help-modal .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
 }
-#helpModal .modal-content .icon {
+
+#help-modal .close-btn:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+#help-modal .modal-content .icon {
     font-size: 1.5em;
     margin-right: 6px;
-}
-#helpModal .modal-content p {
-    font-size: 1.15em;
-    margin: 10px 0 6px 0;
-    line-height: 1.7;
-    text-align: left;
-}
-#helpModal .modal-content ol {
-    text-align: left;
-    font-size: 1.15em;
-    margin: 10px 0 0 18px;
-    line-height: 1.7;
-}
-#helpModal .close-btn {
-    position: absolute;
-    right: 18px;
-    top: 18px;
-    font-size: 2.3em;
-    color: #111;
-    cursor: pointer;
-    background: none;
-    border: none;
 }
 
 #endGameModal .modal-content {
@@ -376,7 +523,7 @@ button:hover {
     line-height: 1.7;
 }
 #endGameModal .modal-content button {
-    background: #f44336;
+    background: #1d3557;
     color: #fff;
     font-size: 1.1em;
     font-weight: bold;
@@ -389,7 +536,7 @@ button:hover {
     display: inline-block;
 }
 #endGameModal .modal-content button:hover {
-    background: #d32f2f;
+    background: #152a47;
 }
 
 /* 主畫面底部三顏色按鈕 */
@@ -401,10 +548,19 @@ button:hover {
     background: #d32f2f !important;
 }
 .blue-btn {
-    background: #2196f3 !important;
+    background: #1d3557 !important;
     color: #fff !important;
 }
 .blue-btn:hover {
+    background: #152a47 !important;
+}
+
+/* 重新開始按鈕保持原來的藍色 */
+#resetBtn {
+    background: #2196f3 !important;
+    color: #fff !important;
+}
+#resetBtn:hover {
     background: #1976d2 !important;
 }
 .orange-btn {
@@ -415,7 +571,6 @@ button:hover {
     background: #ff8c00 !important;
 }
 
-#difficultyModal .modal-content,
 #endGameModal .modal-content {
     max-width: 420px;
     padding: 38px 28px 32px 28px;

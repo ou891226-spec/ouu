@@ -344,34 +344,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>看字選色遊戲</title>
-    <link rel="stylesheet" href="css/text-color-1.css">
+    <link rel="stylesheet" href="css/text-color-1.css?v=16">
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
-    <!-- 難度選擇彈跳視窗 -->
+    <!-- 難度選擇視窗 -->
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
-            <div class="difficulty-modal-header">
-                <span class="difficulty-modal-title">難度選擇</span>
-                <button id="openHelpModal" class="help-btn">
-                    <img src="img/info.png" alt="說明" class="help-icon">
-                    <span class="help-label">說明</span>
+            <button class="back-button" onclick="handleBackButton()">
+                <span class="back-arrow">⬅</span>
+                <div class="back-label">返回</div>
+            </button>
+            <h2>選擇難度</h2>
+            <button class="help-button" id="helpBtn">?
+                <div class="help-label">說明</div>
+            </button>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
+                    <span class="difficulty-name">簡單模式</span>
+                    <span class="difficulty-desc">(60秒)</span>
+                </button>
+                <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
+                    <span class="difficulty-name">普通模式</span>
+                    <span class="difficulty-desc">(50秒)</span>
+                </button>
+                <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
+                    <span class="difficulty-name">困難模式</span>
+                    <span class="difficulty-desc">(40秒)</span>
                 </button>
             </div>
-            <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">簡單（60秒）</button>
-            <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">普通（50秒）</button>
-            <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">困難（40秒）</button>
         </div>
     </div>
-    <!-- 新增說明彈跳視窗 -->
-    <div id="helpModal" class="modal">
+    <!-- 遊戲說明視窗 -->
+    <div id="help-modal" class="modal">
         <div class="modal-content">
-            <button class="close-btn" aria-label="關閉">&times;</button>
-            <h2><span class="icon">🎮</span>遊戲說明</h2>
-            <p>畫面上會出現一個字，像是「紅」、「藍」、「綠」、「黃」這些顏色的名字。</p>
-            <p>要注意哦！我們不是看字的顏色，是看字的「意思」來選答案。</p>
-            <p>比方說，畫面上寫著「紅」，不管這個字是什麼顏色，我們就是要選「紅色」的選項。</p>
-            <p>每一題都有好幾個顏色可以選，請在時間內找出正確的那個來點一下。</p>
+            <h2 style="text-align:center;">
+                <span style="font-size:2rem;vertical-align:middle;">🎮</span>
+                <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
+            </h2>
+            <div class="help-content" style="margin-top:1.5rem;">
+                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
+                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
+                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+                </div>
+                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
+                    根據文字的意思選擇正確的顏色，在時間內獲得高分！
+                </div>
+                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
+                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
+                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                </div>
+                <ul style="margin-left:2.2rem;">
+                    <li>畫面上會出現一個顏色名稱，如「紅」、「藍」、「綠」</li>
+                    <li>注意：我們看的是字的「意思」，不是字的顏色</li>
+                    <li>例如：寫著「紅」字，就要選「紅色」選項</li>
+                    <li>在時間內選擇正確的顏色獲得分數</li>
+                </ul>
+            </div>
+            <span class="close-btn" onclick="closeHelpModal()">×</span>
         </div>
     </div>
 
@@ -693,6 +723,8 @@ function togglePauseGame() {
         // 繼續遊戲
         gamePaused = false;
         pauseBtn.textContent = '暫停遊戲';
+        pauseBtn.style.backgroundColor = '#ffa500 !important'; // 變回橘色
+        pauseBtn.style.setProperty('background-color', '#ffa500', 'important');
 
         // 恢復計時器
         timer = setInterval(() => {
@@ -722,6 +754,7 @@ function togglePauseGame() {
         // 暫停遊戲
         gamePaused = true;
         pauseBtn.textContent = '繼續遊戲';
+        pauseBtn.style.setProperty('background-color', '#4CAF50', 'important');
 
         // 暫停計時器
         clearInterval(timer);
@@ -829,7 +862,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>獲得分數：${passBonus}</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="red-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
                 `;
             } else {
                 // 失敗
@@ -838,7 +871,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>未在時間內達成分數</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="red-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
                 `;
             }
             document.getElementById('endGameContent').innerHTML = modalHtml;
@@ -881,7 +914,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     document.getElementById('targetColorText').textContent = '';
                     
                     // 顯示難度選擇視窗
-                    document.getElementById('difficultyModal').style.display = 'block';
+                    document.getElementById('difficultyModal').classList.add('show');
                 });
             }
         };
@@ -896,18 +929,12 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         // 新增難度選擇相關的 JavaScript
         window.onload = function() {
             const modal = document.getElementById('difficultyModal');
-            modal.style.display = 'block';
-
-            // 關閉按鈕功能
-            document.querySelector('.close-btn').onclick = function() {
-                modal.style.display = 'none';
-            }
-
-            // 點擊視窗外關閉
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
+            modal.classList.add('show');
+            
+            // 強制刷新CSS
+            const link = document.querySelector('link[href*="text-color-1.css"]');
+            if (link) {
+                link.href = link.href.split('?')[0] + '?v=' + Date.now();
             }
         }
 
@@ -915,55 +942,74 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             console.log('Selecting difficulty: ' + level); // 除錯用
             setDifficulty(level);
             const modal = document.getElementById('difficultyModal');
-            modal.style.display = 'none';
+            modal.classList.remove('show');
             startGame();
         }
 
-        // 綁定說明按鈕和關閉按鈕
-document.getElementById('openHelpModal').addEventListener('click', function() {
-    const helpModal = document.getElementById('helpModal');
-    helpModal.style.display = 'block';
-});
-
-document.querySelectorAll('.close-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => modal.style.display = 'none');
-    });
-});
-
-// 點擊視窗外關閉彈跳視窗
-window.onclick = function(event) {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (event.target == modal) {
-            modal.style.display = 'none';
+        function handleBackButton() {
+            window.location.href = 'index.php';
         }
-    });
-};
 
-// 綁定難度按鈕點擊事件，開始對應難度遊戲
-['easy','normal','hard'].forEach(function(level){
-    document.querySelector('.difficulty-btn.'+level).onclick = function(){
-        selectDifficulty(level);
-        document.getElementById('difficultyModal').style.display = 'none';
-        startGame();
-    };
-});
-// 說明按鈕顯示說明彈窗
-const helpBtn = document.getElementById('openHelpModal');
-if(helpBtn){
-    helpBtn.onclick = function(){
-        document.getElementById('helpModal').style.display = 'flex';
-    };
-}
-// 關閉說明彈窗
-const closeBtns = document.querySelectorAll('.close-btn');
-closeBtns.forEach(function(btn){
-    btn.onclick = function(){
-        document.getElementById('helpModal').style.display = 'none';
-    };
-    });
+        function showHelp() {
+            console.log('showHelp function called'); // 除錯用
+            const helpModal = document.getElementById('help-modal');
+            if (helpModal) {
+                helpModal.classList.remove('hidden');
+                helpModal.classList.add('show');
+                console.log('Help modal should be visible now');
+            } else {
+                console.error('Help modal not found');
+            }
+        }
+
+        function closeHelpModal() {
+            const helpModal = document.getElementById('help-modal');
+            if (helpModal) {
+                helpModal.classList.remove('show');
+                helpModal.classList.add('hidden');
+            }
+        }
+
+        // 點擊視窗外關閉彈跳視窗
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target == modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        };
+
+        // 確保說明按鈕事件綁定
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded event fired'); // 除錯用
+            
+            const helpBtn = document.getElementById('helpBtn');
+            console.log('Help button found:', helpBtn); // 除錯用
+            
+            if(helpBtn){
+                // 移除所有舊的事件監聽器
+                helpBtn.replaceWith(helpBtn.cloneNode(true));
+                const newHelpBtn = document.getElementById('helpBtn');
+                
+                newHelpBtn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Help button clicked'); // 除錯用
+                    showHelp();
+                });
+            }
+            
+            // 關閉說明彈窗
+            const closeBtns = document.querySelectorAll('.close-btn');
+            closeBtns.forEach(function(btn){
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeHelpModal();
+                });
+            });
+        });
     </script>
     <script src="js/achievements.js"></script>
 </body>
