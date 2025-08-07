@@ -20,7 +20,7 @@ body {
 
 /* 遊戲容器 */
 .game-container {
-  background-color: #ffffff;
+  background-color: #ecffdc;
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -58,6 +58,8 @@ h1 {
 .score-item span:first-child {
   font-weight: bold;
   margin-bottom: 5px;
+  margin-right: 5px;
+  margin-left: 5px;
 }
 
 .score-item span:last-child {
@@ -123,7 +125,6 @@ button:hover {
 /* 暫停遊戲 (橘色) */
 #pause-btn {
   background-color: #fbc02d;
-  color: #333;
 }
 
 #pause-btn:hover {
@@ -471,7 +472,7 @@ button:hover {
   margin: 0 2px;
   transition: background 0.2s;
   position: relative;
-  z-index: 1000;
+  z-index: 500;
   pointer-events: auto;
 }
 .pause-btn {
@@ -558,6 +559,38 @@ button:hover {
 .home-btn:hover {
   background: #1a2233;
 }
+/* 新增的 CSS 樣式 */
 
+/* 蔬果清單的容器，用 Flexbox 實現左右兩欄 */
+.item-list-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px; /* 調整兩欄之間的間距 */
+}
 
+/* 蔬果清單的每一欄 */
+.item-list-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
 
+/* 每一行蔬果的樣式 */
+.item-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px; /* 調整行距 */
+}
+
+.item-line img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-right: 8px; /* 圖片和文字的間距 */
+}
+
+/* 為了避免舊樣式衝突，確保 #question 內的 img 繼承新樣式 */
+#question img {
+    vertical-align: middle;
+    margin-right: 8px;
+}

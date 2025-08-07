@@ -89,6 +89,7 @@ function generateEasyQuestion() {
     // 題型隨機：1. 指定物品總價 2. 固定預算能買哪些
     const type = Math.random() < 0.6 ? '指定物品' : '預算組合';
     let selectedItems = [];
+
     if (type === '預算組合') {
         // 預算組合題固定5種蔬果
         const numItems = Math.min(5, allItems.length);
@@ -102,6 +103,7 @@ function generateEasyQuestion() {
             }
             tries++;
         }
+        
         const budget = [40, 50, 60, 70, 80][Math.floor(Math.random() * 5)];
         let combos = [];
         for (let i = 0; i < selectedItems.length; i++) {
@@ -111,21 +113,30 @@ function generateEasyQuestion() {
             }
         }
         if (combos.length === 0) combos.push([selectedItems[0], selectedItems[1]]);
-        // 只選一組作為正確答案
         const answerCombo = combos[Math.floor(Math.random() * combos.length)];
-        let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>我只有 $${budget}元，可以買「哪兩種蔬菜組合」？`;
-        // 選項
+        
+        // **修正這裡：將5種蔬果清單分成兩欄**
+        let itemsHTML = '';
+        const firstThree = selectedItems.slice(0, 3);
+        const remaining = selectedItems.slice(3);
+        
+        const firstThreeHTML = firstThree.map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
+        const remainingHTML = remaining.map(item => `<div class="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
+        
+        itemsHTML = `<div class="item-list-container"><div class="item-list-column">${firstThreeHTML}</div><div class="item-list-column">${remainingHTML}</div></div>`;
+        
+        let questionText = itemsHTML + `<br><br>我只有 $${budget}元，可以買「哪兩種蔬果組合」？`;
+        
         let options = [answerCombo];
         let comboTries = 0;
         while (options.length < 4 && comboTries < 20) {
             let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
+            // 檢查是否已存在相同的組合
             if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
                 options.push(fakeCombo);
             }
             comboTries++;
         }
-        // 若還是不足4個，隨機補假組合
         while (options.length < 4) {
             let fakeCombo = [];
             let tries = 0;
@@ -138,15 +149,17 @@ function generateEasyQuestion() {
                 options.push(fakeCombo);
             }
         }
+        
+        // **修正選項的格式，並保持正確答案為純文字**
         options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
+        
         return {
             question: questionText,
             options: options,
-            correctAnswer: answerCombo.map(i => i.name).join('＋'),
+            correctAnswer: answerCombo.map(i => i.name).join('＋'), // 正確答案是純文字，用於比對
             items: selectedItems
         };
-    } else {
-        // 其他題型維持2~3種
+    } else { // type === '指定物品'
         const numItems = Math.min(Math.floor(Math.random() * 2) + 2, allItems.length); // 2~3種
         let usedNames = new Set();
         let tries = 0;
@@ -158,9 +171,7 @@ function generateEasyQuestion() {
             }
             tries++;
         }
-    }
-    if (type === '指定物品') {
-        // 隨機選2樣要買的物品
+        
         const buyCount = Math.min(2, selectedItems.length);
         const buyItems = [];
         let buyNames = new Set();
@@ -173,10 +184,11 @@ function generateEasyQuestion() {
             }
             buyTries++;
         }
+        
         const total = buyItems.reduce((sum, item) => sum + item.price, 0);
         let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
         questionText += `<br><br>如果我要買「${buyItems.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋')}」，請問要多少錢？`;
-        // 選項
+        
         const options = [total];
         let offsetTries = 0;
         while (options.length < 4 && offsetTries < 20) {
@@ -185,58 +197,16 @@ function generateEasyQuestion() {
             if (fake > 0 && !options.includes(fake)) options.push(fake);
             offsetTries++;
         }
+        
         return {
             question: questionText,
             options: options.map(v => ({ text: `$${v}` })).sort(() => Math.random() - 0.5),
-            correctAnswer: `$${total}`,
-            items: selectedItems
-        };
-    } else {
-        // 預算組合題
-        const budget = [40, 50, 60, 70, 80][Math.floor(Math.random() * 5)];
-        let combos = [];
-        for (let i = 0; i < selectedItems.length; i++) {
-            for (let j = i + 1; j < selectedItems.length; j++) {
-                let sum = selectedItems[i].price + selectedItems[j].price;
-                if (sum <= budget) combos.push([selectedItems[i], selectedItems[j]]);
-            }
-        }
-        if (combos.length === 0) combos.push([selectedItems[0], selectedItems[1]]);
-        const answerCombo = combos[Math.floor(Math.random() * combos.length)];
-        let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>我只有 $${budget}，可以買「哪些組合」？`;
-        // 選項
-        let options = [answerCombo];
-        let comboTries = 0;
-        while (options.length < 4 && comboTries < 20) {
-            let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
-            }
-            comboTries++;
-        }
-        // 若還是不足4個，隨機補假組合
-        while (options.length < 4) {
-            let fakeCombo = [];
-            let tries = 0;
-            while (fakeCombo.length < 2 && tries < 10) {
-                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
-                if (!fakeCombo.includes(item)) fakeCombo.push(item);
-                tries++;
-            }
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
-            }
-        }
-        options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
-        return {
-            question: questionText,
-            options: options,
-            correctAnswer: answerCombo.map(i => i.name).join('＋'),
+            correctAnswer: `$${total}`, // 正確答案是純文字，用於比對
             items: selectedItems
         };
     }
 }
+
 
 
 // 生成普通題目
