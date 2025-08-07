@@ -344,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>看字選色遊戲</title>
-    <link rel="stylesheet" href="css/text-color-1.css?v=16">
+    <link rel="stylesheet" href="css/text-color-1.css?v=19">
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
@@ -412,14 +412,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="score-item">最高分數：<span id="highScore" style="color: #2ecc71; font-weight: bold;"><?php echo $high_score; ?></span></div>
             <div class="score-item">剩餘時間：<span id="time" style="color: #e74c3c; font-weight: bold;">0</span></div>
         </div>
-        <div class="difficulty-select">
-            <label for="difficulty">選擇難度：</label>
-            <select id="difficulty" class="difficulty-dropdown">
-                <option value="easy">簡單</option>
-                <option value="normal" selected>普通</option>
-                <option value="hard">困難</option>
-            </select>
-        </div>
+
         <h2 style="font-size: 1.2em; margin: 18px 0 10px 0;">請選擇這個顏色：<span id="targetColorText"></span></h2>
         <div id="buttonContainer"></div>
         <div id="distractionContainer"></div>
@@ -460,7 +453,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const timeEl = document.getElementById('time');
         const startBtn = document.getElementById('startBtn');
         const endBtn = document.getElementById('endBtn');
-        const difficultySelect = document.getElementById('difficulty');
+
         const distractionContainer = document.getElementById('distractionContainer');
 
         // 初始化分數顯示
@@ -645,9 +638,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             difficulty = level || 'normal'; // 預設為普通難度
             distractionContainer.innerHTML = '';
             timeLeft = difficultySettings[level].time_limit;
-            
-            // 更新難度選擇下拉選單
-            document.getElementById('difficulty').value = level;
             
             // 從後端獲取新難度的最高分數
             fetch('text-color.php', {
@@ -883,9 +873,6 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         }
 
         endBtn.addEventListener('click', endGame);
-        difficultySelect.addEventListener('change', (e) => {
-            setDifficulty(e.target.value);
-        });
 
         // 預設選擇普通難度
         setDifficulty('normal');
