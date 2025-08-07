@@ -157,16 +157,16 @@ $colors = $stmt->fetchAll();
             <div class="help-content" style="margin-top:1.5rem;">
                 <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
                     <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+                    <span style="font-weight:bold;font-size:1.2rem;">目標</span>
                 </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
+                <div style="margin-left:2.2rem;margin-bottom:1.2rem;font-size:20px;">
                     時間內翻開卡片找出一樣的兩張，全部配對成功就過關！
                 </div>
                 <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
                     <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                    <span style="font-weight:bold;font-size:1.2rem;">玩法</span>
                 </div>
-                <ul style="margin-left:2.2rem;">
+                <ul style="margin-left:2.2rem;font-size:20px;">
                     <li>選主題、選難度</li>
                     <li>點卡片翻面，比對圖案</li>
                     <li>時間內完成配對！</li>

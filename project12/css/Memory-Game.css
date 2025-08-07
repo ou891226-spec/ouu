@@ -209,7 +209,7 @@ h2 {
 .card-front {
     background-color: var(--card-front-color);
     transform: rotateY(180deg);
-    font-size: 2.5rem !important;  /* 加大圖示 */
+    font-size: 3.5rem !important;  /* 加大圖示 */
 }
  
 .card-back {
@@ -221,7 +221,7 @@ h2 {
 }
  
 .theme-icon {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
 }
  
 .theme-name {
@@ -837,7 +837,7 @@ h1 {
     }
     
     .card-front {
-        font-size: 2rem !important;
+        font-size: 2.8rem !important;
     }
 }
  
@@ -848,18 +848,19 @@ h1 {
     }
     
     .card-front {
-        font-size: 1.5rem !important;
+        font-size: 2.2rem !important;
     }
 }
  
 /* === 遊戲說明 help modal 樣式（完全比照 HTML 版）=== */
 #help-modal .modal-content {
     background: #fff;
-    padding: 2.8rem 2.8rem 2.2rem 2.8rem;
+    padding: 3.8rem 3.2rem 3.2rem 3.2rem;
     border-radius: 2rem;
     text-align: left;
     width: 95%;
-    max-width: 480px;
+    max-width: 700px;
+    min-height: 600px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18);
     position: relative;
     margin: 0 auto;
@@ -867,9 +868,9 @@ h1 {
 }
 #help-modal h2 {
     text-align: center;
-    font-size: 2.2rem;
+    font-size: 2.6rem;
     font-weight: 900;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     letter-spacing: 0.05em;
     color: #222;
     line-height: 1.2;
@@ -879,9 +880,9 @@ h1 {
     margin: 1.5rem 0 0.5rem 0;
 }
 #help-modal .help-content h3 {
-    font-size: 1.18rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    margin: 1.2rem 0 0.5rem 0;
+    margin: 1.5rem 0 0.8rem 0;
     color: #222;
     letter-spacing: 0.01em;
     line-height: 1.5;
@@ -894,8 +895,8 @@ h1 {
 #help-modal .help-content ul li {
     color: #222;
     line-height: 2.1;
-    margin-bottom: 0.5rem;
-    font-size: 1.08rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
     font-weight: 400;
     position: relative;
     padding-left: 0.5em;
@@ -906,9 +907,9 @@ h1 {
     font-size: 1.1em;
 }
 #help-modal .help-content p {
-    font-size: 1.08rem;
+    font-size: 1.5rem;
     color: #222;
-    margin-bottom: 0.8rem;
+    margin-bottom: 1.2rem;
     margin-left: 0.2rem;
     line-height: 2.1;
 }
@@ -949,7 +950,7 @@ h1 {
         line-height: 2rem;
     }
     #help-modal .help-content h3 {
-        font-size: 1rem;
+        font-size: 1.4rem;
     }
     #help-modal .help-content ul li,
     #help-modal .help-content p {
@@ -958,11 +959,12 @@ h1 {
 }
 #help-modal .modal-content {
     background: #fff !important;
-    padding: 2.8rem 2.8rem 2.2rem 2.8rem !important;
+    padding: 3.8rem 3.2rem 3.2rem 3.2rem !important;
     border-radius: 2rem !important;
     text-align: left !important;
     width: 95% !important;
-    max-width: 480px !important;
+    max-width: 700px !important;
+    min-height: 600px !important;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18) !important;
     position: relative !important;
     margin: 0 auto !important;
