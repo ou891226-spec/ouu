@@ -158,10 +158,12 @@ function togglePause() {
   if (paused) {
     bgm.pause();
     pauseButton.textContent = "繼續遊戲";
+    pauseButton.classList.add('resume-btn');
     clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
   } else {
     bgm.play();
     pauseButton.textContent = "暫停遊戲";
+    pauseButton.classList.remove('resume-btn');
     spawnNoteWithRhythm(); // ← 重新開始節奏
   }
 }

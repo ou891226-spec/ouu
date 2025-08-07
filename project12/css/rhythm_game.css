@@ -154,6 +154,10 @@ h1 {
   background-color: #FFA500;
 }
 
+#pause-btn.resume-btn {
+  background-color: #4CAF50;
+}
+
 #end-btn {
   background-color: #E00000;
 }

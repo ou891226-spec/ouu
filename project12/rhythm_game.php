@@ -145,6 +145,6 @@ try {
         <audio id="bgm" preload="auto"></audio>
     </div>    
     <script src="js/rhythm_game.js"></script>
-    <script src="js/auto-save-time.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>
