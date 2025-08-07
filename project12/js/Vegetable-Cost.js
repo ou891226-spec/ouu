@@ -12,8 +12,8 @@ let gameStarted = false;
 let currentDifficulty = null;
 let isPaused = false;
 
-// 獲取會員ID（已在HTML中宣告）
-// const memberId = document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 1;
+// 獲取會員ID
+let memberId = window.phpMemberId || 8;
 
 // 食材資料庫（從資料庫 AJAX 取得）
 let ingredients = {};
@@ -588,6 +588,12 @@ function pauseGame() {
     for (let button of buttons) {
         button.disabled = true;
     }
+    
+    // 添加 resume-btn 類別，讓按鈕變為綠色
+    const pauseBtn = document.getElementById('pause-btn');
+    if (pauseBtn) {
+        pauseBtn.classList.add('resume-btn');
+    }
 }
 
 function resumeGame() {
@@ -602,10 +608,23 @@ function resumeGame() {
         button.disabled = false;
     }
     startTimer();
+    
+    // 移除 resume-btn 類別，讓按鈕變回橘色
+    const pauseBtn = document.getElementById('pause-btn');
+    if (pauseBtn) {
+        pauseBtn.classList.remove('resume-btn');
+    }
 }
 
 async function saveGameResult(bonusScore, playTime) {
     try {
+        console.log('儲存遊戲結果:', {
+            member_id: memberId,
+            difficulty: currentDifficulty,
+            score: bonusScore,
+            play_time: playTime
+        });
+        
         const response = await fetch('Vegetable-Cost.php', {
             method: 'POST',
             headers: {
@@ -614,13 +633,16 @@ async function saveGameResult(bonusScore, playTime) {
             body: JSON.stringify({
                 member_id: memberId,
                 difficulty: currentDifficulty,
-                score: score,
+                score: bonusScore,
                 play_time: playTime
             })
         });
         const result = await response.json();
+        console.log('儲存結果回應:', result);
         if (!result.success) {
             console.error('儲存遊戲結果失敗:', result.message);
+        } else {
+            console.log('遊戲結果儲存成功');
         }
     } catch (error) {
         console.error('儲存遊戲結果時發生錯誤:', error);
@@ -641,13 +663,20 @@ function endGame() {
     if (currentDifficulty === 'easy') passScore = 15;
     else if (currentDifficulty === 'normal') passScore = 20;
     else if (currentDifficulty === 'hard') passScore = 25;
+    
+    // 獎勵分數設定
+    let rewardScore = 0;
+    if (currentDifficulty === 'easy') rewardScore = 20;
+    else if (currentDifficulty === 'normal') rewardScore = 50;
+    else if (currentDifficulty === 'hard') rewardScore = 100;
+    
     // 顯示 modal
     const modal = document.getElementById('game-over-modal');
     let title = '';
     let msg = '';
     if (score >= passScore) {
         title = '恭喜破關';
-        msg = `難度：${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br>獲得分數：${score}`;
+        msg = `難度：${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br>獲得分數：${rewardScore}`;
     } else {
         title = '遊戲失敗';
         msg = `難度：${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br>未在時間內達成分數`;
@@ -656,7 +685,22 @@ function endGame() {
     modal.querySelector('.gameover-msg').innerHTML = msg;
     modal.classList.remove('hidden');
     const playTime = (currentDifficulty === 'easy' ? 80 : currentDifficulty === 'normal' ? 150 : 200) - timer;
-    saveGameResult(0, playTime);
+    
+    // 傳遞獎勵分數而不是實際遊戲分數
+    let finalRewardScore = 0;
+    if (score >= passScore) {
+        if (currentDifficulty === 'easy') finalRewardScore = 20;
+        else if (currentDifficulty === 'normal') finalRewardScore = 50;
+        else if (currentDifficulty === 'hard') finalRewardScore = 100;
+    }
+    saveGameResult(finalRewardScore, playTime);
+    
+    // 立即更新主頁面分數
+    if (window.updateScoreImmediately) {
+        setTimeout(() => {
+            window.updateScoreImmediately();
+        }, 1000); // 1秒後更新，確保資料庫已保存
+    }
 }
 
 function restartGame() {
@@ -679,6 +723,9 @@ function closeHelpModal() {
     document.getElementById('help-modal').classList.add('hidden');
 }
 
+// 設為全局可訪問
+window.closeHelpModal = closeHelpModal;
+
 // 選擇難度
 function selectDifficulty(difficulty) {
     debugLog('選擇難度: ' + difficulty);
@@ -692,6 +739,10 @@ function selectDifficulty(difficulty) {
 // 只做事件綁定，不自動開始或結束遊戲
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // 正確設定會員ID
+    memberId = window.phpMemberId || document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8;
+    console.log('會員ID設定為:', memberId);
+    
     document.getElementById('help-modal').classList.add('hidden'); // 強制一開始隱藏
     await fetchIngredients();
     debugLog('初始化完成，隱藏結束視窗與遊戲主體，只顯示難度選擇');
@@ -725,16 +776,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     const endBtn = document.getElementById('end-btn');
     if (endBtn) endBtn.addEventListener('click', endGame);
 
-    // 簡化後的 pauseBtn 事件監聽器
+    // 暫停按鈕事件監聽器
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) {
         pauseBtn.addEventListener('click', function() {
-            if (gamePaused) { // 使用現有的 gamePaused 變數
+            console.log('暫停按鈕被點擊，gamePaused:', gamePaused);
+            if (gamePaused) {
                 resumeGame();
-                pauseBtn.textContent = '暫停遊戲';
+                this.textContent = '暫停遊戲';
             } else {
                 pauseGame();
-                pauseBtn.textContent = '繼續遊戲';
+                this.textContent = '繼續遊戲';
             }
         });
     }
