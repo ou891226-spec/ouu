@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
             this.winModal = document.getElementById('win-modal');
             this.gameOverModal = document.getElementById('game-over-modal');
             
+            // 觸控相關變數
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            this.touchEndX = 0;
+            this.touchEndY = 0;
+            this.minSwipeDistance = 30; // 最小滑動距離
+            
             console.log('遊戲實例基本屬性已初始化');
             
             // 初始化遊戲板
@@ -26,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 設置事件監聽器
             this.setupEventListeners();
+            this.setupTouchEvents(); // 新增觸控事件
             this.setupWinModalListeners();
             this.setupGameOverModalListeners();
         }
@@ -72,6 +80,96 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             console.log('遊戲板創建完成');
+        }
+
+        setupTouchEvents() {
+            console.log('設置觸控事件監聽器...');
+            
+            const gameBoard = document.getElementById('board');
+            if (!gameBoard) {
+                console.error('找不到遊戲板元素，無法設置觸控事件');
+                return;
+            }
+            
+            // 觸控開始事件
+            gameBoard.addEventListener('touchstart', (e) => {
+                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                    return;
+                }
+                
+                e.preventDefault(); // 防止頁面滾動
+                const touch = e.touches[0];
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
+                console.log('觸控開始:', this.touchStartX, this.touchStartY);
+            }, { passive: false });
+            
+            // 觸控結束事件
+            gameBoard.addEventListener('touchend', (e) => {
+                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                    return;
+                }
+                
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                console.log('觸控結束:', this.touchEndX, this.touchEndY);
+                this.handleSwipe();
+            }, { passive: false });
+            
+            // 防止觸控時選中文字
+            gameBoard.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+            
+            console.log('觸控事件監聽器設置完成');
+        }
+        
+        handleSwipe() {
+            const deltaX = this.touchEndX - this.touchStartX;
+            const deltaY = this.touchEndY - this.touchStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            console.log('滑動距離:', distance, 'deltaX:', deltaX, 'deltaY:', deltaY);
+            
+            if (distance < this.minSwipeDistance) {
+                console.log('滑動距離太小，忽略');
+                return;
+            }
+            
+            let moved = false;
+            
+            // 判斷滑動方向
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // 水平滑動
+                if (deltaX > 0) {
+                    console.log('向右滑動');
+                    moved = this.moveRight();
+                } else {
+                    console.log('向左滑動');
+                    moved = this.moveLeft();
+                }
+            } else {
+                // 垂直滑動
+                if (deltaY > 0) {
+                    console.log('向下滑動');
+                    moved = this.moveDown();
+                } else {
+                    console.log('向上滑動');
+                    moved = this.moveUp();
+                }
+            }
+            
+            if (moved) {
+                console.log('移動有效，添加新方塊');
+                this.addNewTile();
+                this.updateDisplay();
+                this.checkGameStatus();
+            } else {
+                console.log('移動無效');
+            }
         }
 
         setupEventListeners() {

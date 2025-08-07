@@ -6,6 +6,14 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    /* 觸控優化 */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
 }
 .main-bg {
     width: 100vw;
@@ -16,6 +24,8 @@ body {
     align-items: center;
     justify-content: flex-start;
     background: #ededed;
+    /* 觸控優化 */
+    touch-action: manipulation;
 }
 .main-title {
     font-size: 64px;
@@ -58,6 +68,10 @@ body {
     background: none;
     border: none;
     outline: none;
+    /* 觸控優化 */
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px;
 }
 .help-icon {
     display: inline-block;
@@ -84,6 +98,9 @@ body {
     color: #fff;
     cursor: pointer;
     transition: transform 0.1s;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
 }
 .difficulty-btn:active {
     transform: scale(0.97);
@@ -118,6 +135,9 @@ body {
     cursor: pointer;
     margin: 0 4px;
     transition: background 0.2s;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
 }
 .bottom-btn.pause {
     background: #ffe066;
@@ -144,6 +164,8 @@ body {
     box-shadow: 0 2px 8px #ccc;
     padding: 20px;
     text-align: center;
+    /* 觸控優化 */
+    touch-action: manipulation;
 }
 .title {
     font-size: 40px;
@@ -176,6 +198,12 @@ body {
     margin: 0 auto;
     width: 280px;
     height: 280px;
+    /* 觸控優化 */
+    touch-action: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .cell {
     background: #ede4d8;
@@ -189,6 +217,12 @@ body {
     height: 60px;
     width: 60px;
     transition: background 0.2s, color 0.2s;
+    /* 觸控優化 */
+    touch-action: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .btn-group {
     display: flex;
@@ -206,6 +240,9 @@ body {
     color: #fff;
     cursor: pointer;
     transition: background 0.2s;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
 }
 .btn.pause { background: #ffc107; color: #fff; }
 .btn.end { background: #f44336; color: #fff; }
@@ -221,6 +258,8 @@ body {
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
     background: rgba(0,0,0,0.2);
+    /* 觸控優化 */
+    touch-action: manipulation;
 }
 .modal-content {
     background: #fff;
@@ -230,6 +269,8 @@ body {
     width: 350px;
     position: relative;
     box-shadow: 0 4px 16px #aaa;
+    /* 觸控優化 */
+    touch-action: manipulation;
 }
 .close-button {
     position: absolute;
@@ -239,6 +280,12 @@ body {
     color: #888;
     cursor: pointer;
     font-weight: bold;
+    /* 觸控優化 */
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 添加數字方塊樣式 */
@@ -319,6 +366,9 @@ body {
     color: #fff;
     cursor: pointer;
     transition: background 0.2s;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .red-button {
@@ -328,6 +378,9 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
 }
 
 .dark-blue-button {
@@ -337,4 +390,98 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    /* 觸控優化 */
+    min-height: 44px;
+    touch-action: manipulation;
+}
+
+/* 觸控提示樣式 */
+.touch-hint {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #666;
+    display: none; /* 預設隱藏 */
+}
+
+/* 在觸控設備上顯示提示 */
+@media (hover: none) and (pointer: coarse) {
+    .touch-hint {
+        display: block;
+    }
+}
+
+/* 平板和手機的響應式設計 */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        max-width: 400px;
+        margin: 20px auto;
+        padding: 15px;
+    }
+    
+    .board {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+        aspect-ratio: 1;
+        gap: 8px;
+        padding: 8px;
+    }
+    
+    .cell {
+        height: auto;
+        width: auto;
+        aspect-ratio: 1;
+        font-size: 20px;
+        min-height: 50px;
+    }
+    
+    .difficulty-btn {
+        width: 90%;
+        max-width: 300px;
+        height: 60px;
+        font-size: 20px;
+    }
+    
+    .btn {
+        font-size: 16px;
+        padding: 12px 0;
+    }
+    
+    .title {
+        font-size: 36px;
+    }
+    
+    .score-bar {
+        font-size: 16px;
+        padding: 10px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 48px;
+        margin-top: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .difficulty-modal {
+        padding: 20px;
+        min-width: 280px;
+    }
+    
+    .difficulty-title {
+        font-size: 28px;
+    }
+    
+    .cell {
+        font-size: 18px;
+        min-height: 45px;
+    }
+    
+    .btn {
+        font-size: 14px;
+        padding: 10px 0;
+    }
 }

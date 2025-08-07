@@ -114,7 +114,7 @@ function generateEasyQuestion() {
         // 只選一組作為正確答案
         const answerCombo = combos[Math.floor(Math.random() * combos.length)];
         let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>我只有 $${budget}，可以買「哪一組」？`;
+        questionText += `<br><br>我只有 $${budget}元，可以買「哪兩種蔬菜組合」？`;
         // 選項
         let options = [answerCombo];
         let comboTries = 0;
@@ -238,6 +238,7 @@ function generateEasyQuestion() {
     }
 }
 
+
 // 生成普通題目
 function generateNormalQuestion() {
     // 顯示3~5種蔬果
@@ -254,44 +255,54 @@ function generateNormalQuestion() {
         }
         tries++;
     }
-    // 題型隨機：1. 促銷價計算 2. 預算可買數量
-    const type = Math.random() < 0.5 ? '促銷' : '預算';
+
+    // 題型隨機：1. 促銷價計算（包含新的組合計算） 2. 預算可買數量
+    const type = Math.random() < 0.6 ? '促銷' : '預算';
+
     if (type === '促銷') {
-        // 促銷：買4送1、3盒100元
         const veg = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
         const egg = ingredients.others.find(i => i.name.includes('蛋')) || ingredients.others[Math.floor(Math.random() * ingredients.others.length)];
-        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}，買4把送1把。<br><img src="img/${egg.image}" alt="${egg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}，買3${egg.unit}共100元。<br><br>`;
-        // 隨機數量
-        const vegCount = Math.floor(Math.random() * 3) + 2; // 2~4
-        const eggCount = Math.floor(Math.random() * 2) + 2; // 2~3
-        // 計算價格
-        let vegTotal = veg.price * vegCount;
-        if (vegCount >= 5) vegTotal = veg.price * (vegCount - 1); // 買4送1
-        let eggTotal = egg.price * eggCount;
-        if (eggCount === 3) eggTotal = 100;
-        const total = vegTotal + eggTotal;
-        let options = [total];
+
+        // 原始促銷資訊
+        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}，買4把送1把。<br>`;
+        questionText += `<img src="img/${egg.image}" alt="${egg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}，買3${egg.unit}共100元。<br><br>`;
+        
+        // **修改這裡，在阿嬤的題目文字中加上圖片**
+        const buyVegCount = Math.floor(Math.random() * 3) + 1; // 1~3把
+        const buyEggCount = Math.floor(Math.random() * 2) + 1; // 1~2盒
+
+        questionText += `如果阿嬤要買 ${buyVegCount}${veg.unit} <img src="img/${veg.image}" alt="${veg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg.name} 和 ${buyEggCount}${egg.unit} <img src="img/${egg.image}" alt="${egg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${egg.name}，請問總共要花多少錢？`;
+        
+        // 計算總價（這裡只計算組合，不考慮促銷）
+        const total = (veg.price * buyVegCount) + (egg.price * buyEggCount);
+        
+        // 生成選項
+        const options = [total];
         let offsetTries = 0;
         while (options.length < 4 && offsetTries < 20) {
-            let offset = (Math.floor(Math.random() * 3) + 1) * 10;
+            let offset = (Math.floor(Math.random() * 5) + 1) * 5; // 隨機生成5的倍數
             let fake = Math.random() < 0.5 ? total + offset : total - offset;
             if (fake > 0 && !options.includes(fake)) options.push(fake);
             offsetTries++;
         }
-        // 補足4個選項
+        
+        // 確保有4個選項
         while (options.length < 4) {
-            let fake = total + (Math.floor(Math.random() * 8) + 2) * 5 * (Math.random() < 0.5 ? 1 : -1);
+            let fake = total + (Math.floor(Math.random() * 10) + 1) * (Math.random() < 0.5 ? 1 : -1);
             fake = Math.abs(fake);
             if (fake > 0 && !options.includes(fake)) options.push(fake);
         }
+
+        // 回傳新問題物件
         return {
             question: questionText,
             options: options.map(v => ({ text: `$${v}` })).sort(() => Math.random() - 0.5),
             correctAnswer: `$${total}`,
-            items: selectedItems.length ? selectedItems : [veg, egg]
+            items: [veg, egg]
         };
-    } else {
-        // 預算可買數量
+
+    } else { // type === '預算'
+        // ... (預算題邏輯保持不變) ...
         const veg = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
         const budget = [100, 120, 150, 200][Math.floor(Math.random() * 4)];
         const promo = Math.random() < 0.5;
@@ -311,7 +322,6 @@ function generateNormalQuestion() {
             if (fake > 0 && !options.includes(fake)) options.push(fake);
             offsetTries++;
         }
-        // 補足4個選項
         while (options.length < 4) {
             let fake = maxCount + (Math.floor(Math.random() * 8) + 2) * (Math.random() < 0.5 ? 1 : -1);
             fake = Math.abs(fake);
@@ -325,6 +335,7 @@ function generateNormalQuestion() {
         };
     }
 }
+
 
 // 生成困難題目
 function generateHardQuestion() {
@@ -744,17 +755,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     const endBtn = document.getElementById('end-btn');
     if (endBtn) endBtn.addEventListener('click', endGame);
 
+    // 簡化後的 pauseBtn 事件監聽器
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) {
         pauseBtn.addEventListener('click', function() {
-            if (!isPaused) {
-                pauseGame();
-                pauseBtn.textContent = '繼續遊戲';
-            } else {
+            if (gamePaused) { // 使用現有的 gamePaused 變數
                 resumeGame();
                 pauseBtn.textContent = '暫停遊戲';
+            } else {
+                pauseGame();
+                pauseBtn.textContent = '繼續遊戲';
             }
-            isPaused = !isPaused;
         });
     }
 

@@ -532,5 +532,17 @@ $colors = $stmt->fetchAll();
     </script>
     <script src="js/Memory-Game-2P.js?v=<?php echo time(); ?>"></script>
     <script src="js/auto-save-time.js?v=<?php echo time(); ?>"></script>
+    <script src="js/sync-optimization.js?v=<?php echo time(); ?>"></script>
+    <script>
+        // 在遊戲開始時初始化同步優化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 等待遊戲初始化完成後再啟用優化
+            setTimeout(() => {
+                if (typeof initSyncOptimization === 'function') {
+                    initSyncOptimization();
+                }
+            }, 2000);
+        });
+    </script>
 </body>
 </html> 

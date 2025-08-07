@@ -1159,6 +1159,11 @@ function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
     console.log('選擇難度:', difficulty, '遊戲模式:', gameMode, '邀請ID:', invitationId);
     
+    // 立即同步困難度設定
+    if (gameMode === 'online' && invitationId) {
+        syncDifficultyImmediately();
+    }
+    
     // 如果是線上模式，立即更新邀請設定
     if (gameMode === 'online' && invitationId) {
         updateInvitationSettings().then(() => {
@@ -1187,6 +1192,12 @@ function selectDifficulty(difficulty) {
             
             // 設定完成後開始遊戲
             startGame();
+            
+            // 強制重新整理確保困難度正確應用
+            setTimeout(() => {
+                forceRefreshGameBoard();
+                console.log('困難度設定已強制應用:', currentDifficulty);
+            }, 300);
         }).catch(error => {
             console.error('同步難度設定失敗:', error);
             // 即使失敗也嘗試開始遊戲
@@ -1267,6 +1278,11 @@ function initializeGame() {
     
     // 調整遊戲板大小
     adjustGameBoardSize();
+    
+    // 強制重新整理確保困難度正確應用
+    setTimeout(() => {
+        forceRefreshGameBoard();
+    }, 100);
     
     // 強制確保所有卡片都是蓋著的
     cards.forEach(card => {
@@ -1419,11 +1435,10 @@ function flipCard(card) {
         isMatched: card.classList.contains('matched'),
         gameMode: gameMode,
         isMyTurn: isMyTurn,
-        currentPlayer: currentPlayer,
-        currentUserId: currentUserId,
-        invitationData: invitationData
+        currentPlayer: currentPlayer
     });
     
+    // 檢查翻牌條件
     if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
         console.log('翻牌被阻止:', {
             canFlip: canFlip,
@@ -1433,34 +1448,21 @@ function flipCard(card) {
         return;
     }
     
-    // 如果是線上模式，檢查是否輪到自己
+    // 線上模式檢查回合
     if (gameMode === 'online') {
-        // 強制檢查並修復回合狀態
         const isInviter = getCurrentMemberId() == invitationData?.from_user_id;
         const shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
         
-        console.log('回合檢查:', {
-            currentPlayer,
-            isInviter,
-            shouldBeMyTurn,
-            isMyTurn,
-            currentUserId: getCurrentMemberId(),
-            fromUserId: invitationData?.from_user_id
-        });
-        
-        // 如果回合狀態不一致，強制修復
+        // 強制修復回合狀態
         if (shouldBeMyTurn !== isMyTurn) {
             console.log('檢測到回合狀態不一致，強制修復');
             isMyTurn = shouldBeMyTurn;
             updateCurrentPlayer();
         }
         
-        // 檢查是否輪到自己
         if (!isMyTurn) {
-            console.log('不是你的回合，無法翻牌，當前回合:', isMyTurn, '遊戲模式:', gameMode, '當前玩家:', currentPlayer);
-            return; // 不是我的回合，不允許翻牌
-        } else {
-            console.log('是當前玩家的回合，允許翻牌');
+            console.log('不是你的回合，無法翻牌');
+            return;
         }
     }
     
@@ -1468,18 +1470,17 @@ function flipCard(card) {
     card.classList.add('flipped');
     flippedCards.push(card);
     
+    // 立即向伺服器發送翻牌動作
+    if (gameMode === 'online' && invitationId) {
+        syncCardFlipToServer(card.dataset.index);
+    }
+    
     // 如果是第一次翻牌，開始計時器
     if (flippedCards.length === 1 && !isTurnActive) {
         startTurnTimer();
     }
     
-    // 如果是線上模式，同步翻牌動作
-    if (gameMode === 'online') {
-        console.log('同步翻牌動作');
-        // 立即同步，確保對手能收到
-        syncGameState('flip_card');
-    }
-    
+    // 檢查配對
     if (flippedCards.length === 2) {
         canFlip = false;
         totalMoves++;
@@ -1487,8 +1488,69 @@ function flipCard(card) {
         
         setTimeout(() => {
             checkMatchSync();
-        }, 1200); // 從800ms增加到1200ms
+        }, 1200);
     }
+}
+
+// 新增：將翻牌動作發送給伺服器
+function syncCardFlipToServer(cardIndex) {
+    fetch('game-sync-api.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'update_game_state',
+            invitation_id: invitationId,
+            game_state: {
+                lastAction: 'flip_card',
+                lastActionBy: getCurrentMemberId(),
+                card_index: cardIndex,
+                currentPlayer: currentPlayer,
+                flippedCards: flippedCards.map(card => card.dataset.index)
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('翻牌同步成功:', data);
+    })
+    .catch(error => {
+        console.error('翻牌同步失敗:', error);
+    });
+}
+
+// 新增：將配對結果發送給伺服器
+function sendMatchResultToServer(isMatch) {
+    fetch('game-sync-api.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'update_game_state',
+            invitation_id: invitationId,
+            game_state: {
+                lastAction: 'check_match',
+                lastActionBy: getCurrentMemberId(),
+                is_match: isMatch,
+                flipped_card_indexes: flippedCards.map(card => card.dataset.index),
+                currentPlayer: currentPlayer,
+                matchedPairs: matchedPairs,
+                player1Score: player1Score,
+                player2Score: player2Score,
+                player1Pairs: player1Pairs,
+                player2Pairs: player2Pairs
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('配對結果同步成功:', data);
+    })
+    .catch(error => {
+        console.error('配對結果同步失敗:', error);
+    });
 }
 
 // 檢查配對
@@ -1496,6 +1558,9 @@ function checkMatchSync() {
     // 確保有兩張翻開的卡片
     if (flippedCards.length !== 2) {
         console.error('翻開的卡片數量不正確:', flippedCards.length);
+        // 重設狀態以防萬一
+        flippedCards = [];
+        canFlip = true;
         return;
     }
     
@@ -1535,7 +1600,7 @@ function checkMatchSync() {
     });
     
     if (match) {
-        // 配對成功
+        // --- 配對成功區塊 ---
         console.log('配對成功！');
         card1.classList.add('matched');
         card2.classList.add('matched');
@@ -1552,107 +1617,55 @@ function checkMatchSync() {
         
         consecutiveMatches++;
         
-        // 停止計時器
-        stopTurnTimer();
+        // 清理翻牌狀態，讓玩家可以繼續翻牌
+        flippedCards = [];
+        canFlip = true; // 配對成功，允許繼續翻牌
         
-        // 如果是線上模式，同步配對結果
-        if (gameMode === 'online') {
-            console.log('同步配對成功:', { matchedPairs, player1Pairs, player2Pairs, currentPlayer });
-            // 立即同步配對結果
-            syncGameState('match_check');
+        // 更新玩家顯示
+        updatePlayerDisplay();
+        
+        // 檢查遊戲是否結束
+        checkWin();
+
+        // 在配對成功後，立即發送同步請求
+        if (gameMode === 'online' && invitationId) {
+            console.log('配對成功，同步遊戲狀態');
+            sendMatchResultToServer(true);
         }
-        
-        // 配對成功可以繼續翻牌 - 保持當前玩家不變
-        setTimeout(() => {
-            updatePlayerDisplay();
-            canFlip = true;
-            
-            // 確保回合狀態正確
-            if (gameMode === 'online') {
-                const isInviter = getCurrentMemberId() == invitationData?.from_user_id;
-                isMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
-                console.log('配對成功後確認回合狀態:', { currentPlayer, isMyTurn, isInviter });
-            }
-            
-            // 重新開始計時器（如果是我方回合）
-            if (gameMode === 'local' || (gameMode === 'online' && isMyTurn)) {
-                startTurnTimer();
-            }
-            
-            // 更新顯示
-            updateCurrentPlayer();
-        }, 800);
-        
+
     } else {
-        // 配對失敗，換對方翻
-        console.log('配對失敗，換對方翻');
+        // --- 配對失敗區塊 ---
+        console.log('配對失敗！');
         
+        // 將兩張卡片翻回去，給予玩家1.2秒時間看牌
         setTimeout(() => {
-            console.log('開始處理配對失敗...');
-            
-            // 先蓋回卡片
             card1.classList.remove('flipped');
             card2.classList.remove('flipped');
             
-            // 停止計時器並切換玩家
-            stopTurnTimer();
+            // 清理翻牌狀態
+            flippedCards = [];
+            canFlip = true; // 允許下次翻牌
             
-            console.log('切換玩家前的狀態:', {
-                currentPlayer,
-                isMyTurn,
-                canFlip,
-                flippedCards: flippedCards.length
-            });
-            
-            // 切換玩家並同步
+            // 在配對失敗後，切換玩家回合
             if (gameMode === 'online') {
-                // 線上模式：先切換玩家，然後同步
-                switchPlayer();
-                // 同步配對失敗和玩家切換狀態
-                syncGameState('switch_player');
-                
-                // 延遲更新顯示，確保同步完成
-                setTimeout(() => {
-                    // 強制更新顯示，確保雙方畫面一致
-                    updatePlayerDisplay();
-                    forceUpdatePlayerNames();
-                    updateCurrentPlayer();
-                    
-                    console.log('配對失敗處理完成，最終狀態:', {
-                        currentPlayer,
-                        isMyTurn,
-                        canFlip,
-                        flippedCards: flippedCards.length
-                    });
-                }, 500);
+                isMyTurn = false; // 你的回合結束
+                currentPlayer = (currentPlayer === 1) ? 2 : 1; // 切換 currentPlayer
+                updateCurrentPlayer(); // 更新 UI 顯示
+                updatePlayerDisplay(); // 更新分數顯示
+                console.log('回合已切換為玩家:', currentPlayer);
             } else {
-                // 本地模式：直接切換玩家
-                switchPlayer();
-                
-                // 強制更新顯示，確保雙方畫面一致
-                updatePlayerDisplay();
-                forceUpdatePlayerNames();
+                // 本地模式也要切換玩家
+                currentPlayer = (currentPlayer === 1) ? 2 : 1;
                 updateCurrentPlayer();
-                
-                console.log('配對失敗處理完成，最終狀態:', {
-                    currentPlayer,
-                    isMyTurn,
-                    canFlip,
-                    flippedCards: flippedCards.length
-                });
+                updatePlayerDisplay();
             }
-        }, 2000);
-    }
-    
-    flippedCards = [];
-    
-    // 檢查遊戲是否結束
-    const totalPairs = cards.length / 2;
-    if (matchedPairs === totalPairs) {
-        console.log('遊戲結束！配對完成:', { matchedPairs, totalPairs });
-        setTimeout(() => {
-            endGame();
-        }, 500);
+            
+            // 立即發送同步請求，確保對手收到回合切換
+            if (gameMode === 'online' && invitationId) {
+                console.log('配對失敗，切換回合並同步遊戲狀態');
+                sendMatchResultToServer(false);
+            }
+        }, 1200);
     }
 }
 
@@ -2096,24 +2109,7 @@ function syncGameEnd(winner, playTime) {
 function syncGameState(actionType = 'flip_card') {
     if (gameMode !== 'online' || !invitationId) return;
     
-    // 檢查是否需要同步（避免重複同步）
-    const currentState = {
-        flippedCards: flippedCards.map(card => card.dataset.index),
-        matchedPairs: matchedPairs,
-        totalMoves: totalMoves,
-        currentPlayer: currentPlayer,
-        player1Score: player1Score,
-        player2Score: player2Score,
-        player1Pairs: player1Pairs,
-        player2Pairs: player2Pairs
-    };
-    
-    // 如果狀態沒有變化，仍然進行同步（確保對手能收到）
-    if (JSON.stringify(currentState) === JSON.stringify(lastSyncState)) {
-        console.log('狀態未變化，但仍進行同步以確保對手收到');
-        // 不return，繼續同步
-    }
-    
+    // 簡化同步邏輯，移除複雜的狀態比較
     const gameState = {
         cards: cards.map(card => ({
             symbol: card.dataset.symbol,
@@ -2138,10 +2134,7 @@ function syncGameState(actionType = 'flip_card') {
         theme: currentTheme
     };
     
-    // 保存當前狀態用於比較
-    lastSyncState = currentState;
-    
-    console.log('同步遊戲狀態:', gameState);
+    console.log('同步遊戲狀態:', actionType, gameState);
     
     fetch('game-sync-api.php', {
         method: 'POST',
@@ -2159,8 +2152,8 @@ function syncGameState(actionType = 'flip_card') {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log('遊戲狀態已同步');
-    } else {
+            console.log('遊戲狀態同步成功');
+        } else {
             console.error('同步失敗:', data.message);
         }
     })
@@ -2169,24 +2162,126 @@ function syncGameState(actionType = 'flip_card') {
     });
 }
 
-    // 開始遊戲同步輪詢
-    function startGameSync() {
-        if (gameMode !== 'online' || !invitationId) return;
-        
-        console.log('開始遊戲同步，邀請ID:', invitationId);
-        
-                // 延遲進行退出檢測，確保遊戲已經初始化
+// 新增：防止重複處理的旗標
+let isProcessingSync = false;
+
+// 強制重新整理遊戲板
+function forceRefreshGameBoard() {
+    console.log('強制重新整理遊戲板');
+    
+    // 強制重新計算所有卡片
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        // 觸發重排
+        card.offsetHeight;
+        card.style.display = 'block';
+    });
+    
+    // 重新調整遊戲板大小
+    adjustGameBoardSize();
+    
+    // 強制重新繪製
+    const board = document.getElementById('game-board');
+    if (board) {
+        board.style.display = 'none';
         setTimeout(() => {
-            checkForPlayerQuit();
-        }, 10000); // 增加到10秒
+            board.style.display = 'grid';
+            console.log('遊戲板重新顯示完成');
+        }, 50);
+    }
+}
+
+// 手動同步困難度
+function manualSyncDifficulty() {
+    if (gameMode === 'online' && invitationId) {
+        console.log('手動同步困難度:', currentDifficulty);
         
-        // 延遲啟動積極的退出檢測（已完全禁用）
+        // 立即同步
+        syncDifficultyImmediately();
+        
+        // 強制重新整理
         setTimeout(() => {
-            console.log('積極退出檢測已完全禁用，避免誤判');
-            // aggressiveQuitCheck(); // 完全禁用
-        }, 15000); // 增加到15秒
+            forceRefreshGameBoard();
+            console.log('手動同步完成');
+        }, 200);
+    }
+}
+
+// 立即同步困難度設定
+function syncDifficultyImmediately() {
+    if (gameMode === 'online' && invitationId) {
+        console.log('立即同步困難度設定:', currentDifficulty);
         
-        gameSyncInterval = setInterval(() => {
+        // 立即同步到邀請設定
+        fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update_invitation_settings',
+                invitation_id: invitationId,
+                game_settings: {
+                    theme: currentTheme,
+                    difficulty: currentDifficulty
+                }
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('困難度立即同步成功:', data);
+        })
+        .catch(error => {
+            console.error('困難度立即同步失敗:', error);
+        });
+        
+        // 同時通過遊戲同步API發送
+        fetch('game-sync-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'update_game_state',
+                invitation_id: invitationId,
+                game_state: {
+                    difficulty: currentDifficulty,
+                    theme: currentTheme,
+                    lastAction: 'difficulty_change',
+                    lastActionBy: getCurrentMemberId()
+                }
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('困難度遊戲同步成功:', data);
+        })
+        .catch(error => {
+            console.error('困難度遊戲同步失敗:', error);
+        });
+    }
+}
+
+// 開始遊戲同步輪詢
+function startGameSync() {
+    if (gameMode !== 'online' || !invitationId) return;
+    
+    console.log('開始遊戲同步，邀請ID:', invitationId);
+    
+    // 延遲進行退出檢測，確保遊戲已經初始化
+    setTimeout(() => {
+        checkForPlayerQuit();
+    }, 10000);
+    
+    // 提高同步頻率到每500ms一次，確保即時同步
+    gameSyncInterval = setInterval(() => {
+        if (isProcessingSync) {
+            console.log('正在處理同步，跳過本次輪詢');
+            return;
+        }
+        
+        isProcessingSync = true;
+        
         fetch('game-sync-api.php', {
             method: 'POST',
             headers: {
@@ -2200,31 +2295,37 @@ function syncGameState(actionType = 'flip_card') {
         })
         .then(response => response.json())
         .then(data => {
-            // 移除遊戲開始檢查，讓同步立即開始
-            console.log('進行同步檢查');
-            
-            // 優先檢查是否有玩家退出（暫時禁用，避免誤判）
-            if (data.success && data.player_quit) {
-                console.log('玩家退出檢測已禁用，避免誤判');
-            }
-            
-            if (data.success && data.game_state) {
-                console.log('收到遊戲狀態更新:', data.game_state);
-                
-                // 檢查是否是遊戲結束狀態
-                if (data.is_game_end) {
-                    console.log('收到遊戲結束狀態，停止同步');
-                    clearInterval(gameSyncInterval);
-                    gameSyncInterval = null;
+            if (data.success) {
+                // 檢查是否有玩家退出
+                if (data.player_quit) {
+                    console.log('檢測到玩家退出');
+                    showPlayerQuitModal();
+                    return;
                 }
                 
-                updateGameFromSync(data.game_state);
+                // 檢查遊戲是否結束
+                if (data.is_game_end) {
+                    console.log('遊戲已結束');
+                    const gameEndState = data.game_state;
+                    showGameOver(gameEndState.winner, gameEndState.playTime);
+                    return;
+                }
+                
+                // 更新遊戲狀態
+                if (data.game_state) {
+                    updateGameFromSync(data.game_state);
+                }
+            } else {
+                console.error('獲取遊戲狀態失敗:', data.message);
             }
         })
         .catch(error => {
-            console.error('獲取遊戲狀態錯誤:', error);
+            console.error('同步錯誤:', error);
+        })
+        .finally(() => {
+            isProcessingSync = false; // 處理結束，重置旗標
         });
-            }, 30); // 進一步增加同步頻率，確保即時同步
+    }, 500);
 }
 
 // 快速檢查玩家退出狀態 - 暫時禁用
@@ -2396,303 +2497,96 @@ function aggressiveQuitCheck() {
 function updateGameFromSync(gameState) {
     console.log('收到遊戲狀態更新:', gameState);
     
-    // 防抖機制：避免重複的翻牌動畫（進一步降低限制以確保同步）
+    // 簡化防抖機制，降低到100ms
     const now = Date.now();
-    if (now - lastSyncTime < 10) { // 降低到10ms，確保同步
+    if (now - lastSyncTime < 100) {
         console.log('防抖：跳過重複的同步更新');
         return;
     }
     lastSyncTime = now;
     
-    // 檢查是否是最新的動作
+    // 檢查是否是我的動作
     const isMyAction = gameState.lastActionBy === getCurrentMemberId();
     console.log('是否是我的動作:', isMyAction, '最後動作:', gameState.lastAction);
     
-    // 更新遊戲狀態 - 處理所有同步情況（包括翻牌）
-    if (gameState.lastAction === 'flip' || gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch' || gameState.lastAction === 'player_quit_signal' || gameState.lastAction === 'match_check' || gameState.lastAction === 'flip_card') {
-        console.log('更新翻牌狀態:', gameState);
+    // 對於翻牌和配對動作，即使是自己的也要處理，確保同步
+    if (isMyAction && (gameState.lastAction === 'flip_card' || gameState.lastAction === 'check_match')) {
+        console.log('處理自己的翻牌/配對動作同步');
+    } else if (isMyAction) {
+        console.log('跳過自己的其他動作同步');
+        return;
+    }
+    
+    // 處理翻牌動作
+    if (gameState.lastAction === 'flip_card' && gameState.card_index !== undefined) {
+        const flippedCard = cards[gameState.card_index];
+        if (flippedCard && !flippedCard.classList.contains('flipped')) {
+            flippedCard.classList.add('flipped');
+            flippedCards.push(flippedCard);
+            console.log('同步翻牌:', gameState.card_index, '由玩家:', gameState.lastActionBy);
+        }
+    }
+    
+    // 處理配對結果
+    if (gameState.lastAction === 'check_match' && gameState.flipped_card_indexes) {
+        const opponentFlippedCards = gameState.flipped_card_indexes.map(index => cards[index]);
         
-        // 更新翻牌狀態 - 強制同步所有卡片狀態，確保雙方畫面一致
-        if (gameState.cards && Array.isArray(gameState.cards)) {
-            gameState.cards.forEach((cardData, index) => {
-                const card = cards[index];
+        if (gameState.is_match) {
+            // 對手配對成功，將卡片標記為配對
+            opponentFlippedCards.forEach(card => {
                 if (card) {
-                    // 確保符號同步
-                    if (cardData.symbol && card.dataset.symbol !== cardData.symbol) {
-                        card.dataset.symbol = cardData.symbol;
-                        const cardFront = card.querySelector('.card-front');
-                        if (cardFront) {
-                            cardFront.textContent = cardData.symbol;
-                        }
-                    }
-                    console.log('同步卡片符號:', index, cardData.symbol);
-                    
-                    // 強制同步卡片狀態，確保雙方畫面完全一致
-                    const shouldBeFlipped = cardData.flipped;
-                    const shouldBeMatched = cardData.matched;
-                    const isCurrentlyFlipped = card.classList.contains('flipped');
-                    const isCurrentlyMatched = card.classList.contains('matched');
-                    
-                    // 同步翻牌狀態
-                    if (shouldBeFlipped && !isCurrentlyFlipped) {
-                        card.classList.add('flipped');
-                        console.log('同步翻開卡片:', index, cardData.symbol);
-                        // 立即更新flippedCards數組
-                        if (!flippedCards.includes(card)) {
-                            flippedCards.push(card);
-                        }
-                    } else if (!shouldBeFlipped && isCurrentlyFlipped) {
-                        card.classList.remove('flipped');
-                        console.log('同步蓋回卡片:', index, cardData.symbol);
-                        // 從flippedCards數組中移除
-                        const cardIndex = flippedCards.indexOf(card);
-                        if (cardIndex > -1) {
-                            flippedCards.splice(cardIndex, 1);
-                        }
-                    }
-                    
-                    // 強制更新flippedCards數組，確保與視覺狀態一致
-                    if (shouldBeFlipped !== isCurrentlyFlipped) {
-                        console.log('強制更新flippedCards數組:', index, '從', isCurrentlyFlipped, '到', shouldBeFlipped);
-                        // 重新構建flippedCards數組
-                        flippedCards = cards.filter(card => card.classList.contains('flipped'));
-                    }
-                    
-                    // 強制更新卡片顯示，確保視覺效果同步
-                    if (shouldBeFlipped !== isCurrentlyFlipped) {
-                        console.log('強制更新卡片顯示:', index, '從', isCurrentlyFlipped, '到', shouldBeFlipped);
-                    }
-                    
-                    // 如果是玩家切換，確保所有未配對的卡片都被蓋回
-                    if ((gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch') && !cardData.matched && isCurrentlyFlipped) {
-                        card.classList.remove('flipped');
-                        console.log('玩家切換時蓋回卡片:', index, cardData.symbol);
-                        // 從flippedCards數組中移除
-                        const cardIndex = flippedCards.indexOf(card);
-                        if (cardIndex > -1) {
-                            flippedCards.splice(cardIndex, 1);
-                        }
-                    }
-                    
-                    // 同步配對狀態
-                    if (shouldBeMatched && !isCurrentlyMatched) {
-                        card.classList.add('matched');
-                        console.log('同步配對卡片:', index, cardData.symbol);
-                        // 配對成功時，從flippedCards中移除
-                        const cardIndex = flippedCards.indexOf(card);
-                        if (cardIndex > -1) {
-                            flippedCards.splice(cardIndex, 1);
-                        }
-                    } else if (!shouldBeMatched && isCurrentlyMatched) {
-                        card.classList.remove('matched');
-                        console.log('移除配對狀態:', index, cardData.symbol);
-                    }
+                    card.classList.add('matched');
+                    console.log('同步對手配對成功:', card.dataset.index);
                 }
             });
-        }
-        
-        // 更新flippedCards數組（保持現有邏輯，但確保正確）
-        if (gameState.flippedCards && Array.isArray(gameState.flippedCards)) {
-            const newFlippedCards = gameState.flippedCards.map(index => cards[index]).filter(card => card);
-            flippedCards = newFlippedCards;
-            console.log('更新flippedCards數組:', flippedCards.length, '張卡片');
+            
+            // 更新對手分數
+            if (gameState.currentPlayer !== undefined) {
+                currentPlayer = gameState.currentPlayer;
+                if (currentPlayer === 1) {
+                    player1Score = gameState.player1Score || player1Score;
+                    player1Pairs = gameState.player1Pairs || player1Pairs;
+                } else {
+                    player2Score = gameState.player2Score || player2Score;
+                    player2Pairs = gameState.player2Pairs || player2Pairs;
+                }
+            }
         } else {
-            // 如果沒有flippedCards數據，根據卡片狀態重建
-            flippedCards = cards.filter(card => card.classList.contains('flipped'));
-            console.log('根據卡片狀態重建flippedCards數組:', flippedCards.length, '張卡片');
-        }
-        
-        // 如果是玩家切換，確保flippedCards為空
-        if (gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch') {
-            flippedCards = [];
-            console.log('玩家切換時清空flippedCards數組');
-        }
-        
-        // 強制同步分數和配對數，確保雙方畫面完全一致
-        if (gameState.player1Score !== undefined) {
-            player1Score = gameState.player1Score;
-            console.log('同步玩家1分數:', player1Score);
-        }
-        if (gameState.player2Score !== undefined) {
-            player2Score = gameState.player2Score;
-            console.log('同步玩家2分數:', player2Score);
-        }
-        if (gameState.player1Pairs !== undefined) {
-            player1Pairs = gameState.player1Pairs;
-            console.log('同步玩家1配對數:', player1Pairs);
-        }
-        if (gameState.player2Pairs !== undefined) {
-            player2Pairs = gameState.player2Pairs;
-            console.log('同步玩家2配對數:', player2Pairs);
-        }
-        if (gameState.totalMoves !== undefined) {
-            totalMoves = gameState.totalMoves;
-            console.log('同步總移動次數:', totalMoves);
-        }
-        if (gameState.matchedPairs !== undefined) {
-            matchedPairs = gameState.matchedPairs;
-            console.log('同步總配對數:', matchedPairs);
-        }
-        
-        // 更新當前玩家
-        if (gameState.currentPlayer !== undefined) currentPlayer = gameState.currentPlayer;
-        
-        // 重新計算回合狀態
-        if (gameMode === 'online' && invitationData) {
-            const isInviterSync = getCurrentMemberId() == invitationData?.from_user_id;
-            const newIsMyTurn = (currentPlayer === 1 && isInviterSync) || (currentPlayer === 2 && !isInviterSync);
-            
-            // 如果是玩家切換動作，強制更新回合狀態
-            if (gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch') {
-                console.log('玩家切換動作，強制更新回合狀態:', { 
-                    oldIsMyTurn: isMyTurn, 
-                    newIsMyTurn: newIsMyTurn,
-                    currentPlayer,
-                    isInviter: isInviterSync,
-                    currentUserId: getCurrentMemberId(),
-                    fromUserId: invitationData?.from_user_id
-                });
-                isMyTurn = newIsMyTurn;
-            } else if (isMyTurn !== newIsMyTurn) {
-                // 只有在狀態確實不同時才更新，避免不必要的更新
-                console.log('同步後更新回合狀態:', { 
-                    oldIsMyTurn: isMyTurn, 
-                    newIsMyTurn: newIsMyTurn,
-                    currentPlayer,
-                    isInviter: isInviterSync,
-                    currentUserId: getCurrentMemberId(),
-                    fromUserId: invitationData?.from_user_id
-                });
-                isMyTurn = newIsMyTurn;
-            } else {
-                console.log('同步後回合狀態未變化:', {
-                    currentPlayer,
-                    isInviter: isInviterSync,
-                    isMyTurn,
-                    currentUserId: getCurrentMemberId(),
-                    fromUserId: invitationData?.from_user_id
-                });
-            }
-        }
-        
-        // 重置翻牌權限（如果沒有翻開的卡片或是玩家切換，或是對手翻牌）
-        if (flippedCards.length === 0 || gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch' || gameState.lastAction === 'flip_card' || gameState.lastAction === 'flip') {
-            canFlip = true;
-            console.log('重置翻牌權限:', { 
-                flippedCardsLength: flippedCards.length, 
-                lastAction: gameState.lastAction,
-                canFlip: canFlip 
-            });
-        }
-        
-        // 如果是對手翻牌，確保能繼續翻牌
-        if ((gameState.lastAction === 'flip_card' || gameState.lastAction === 'flip') && !isMyAction) {
-            canFlip = true;
-            console.log('對手翻牌，重置翻牌權限');
-        }
-        
-        // 如果是對手切換玩家，確保能繼續翻牌
-        if ((gameState.lastAction === 'switch_player' || gameState.lastAction === 'switch') && !isMyAction) {
-            canFlip = true;
-            console.log('對手切換玩家，重置翻牌權限');
-        }
-        
-        // 如果是配對成功，確保當前玩家可以繼續翻牌
-        if (gameState.lastAction === 'match_check') {
-            canFlip = true;
-            console.log('配對成功，重置翻牌權限');
-            
-            // 配對成功時，確保回合狀態正確
-            if (gameMode === 'online' && invitationData) {
-                const isInviter = getCurrentMemberId() == invitationData?.from_user_id;
-                const shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
-                
-                if (isMyTurn !== shouldBeMyTurn) {
-                    console.log('配對成功後修正回合狀態:', { 
-                        oldIsMyTurn: isMyTurn, 
-                        newIsMyTurn: shouldBeMyTurn,
-                        currentPlayer,
-                        isInviter
-                    });
-                    isMyTurn = shouldBeMyTurn;
+            // 對手配對失敗，將卡片蓋回去
+            opponentFlippedCards.forEach(card => {
+                if (card) {
+                    card.classList.remove('flipped');
+                    console.log('同步對手配對失敗，蓋回卡片:', card.dataset.index);
                 }
+            });
+            
+            // 切換玩家回合
+            if (gameState.currentPlayer !== undefined) {
+                currentPlayer = gameState.currentPlayer;
+                const isInviter = getCurrentMemberId() == invitationData?.from_user_id;
+                isMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
+                console.log('同步回合切換:', currentPlayer, '是否我的回合:', isMyTurn);
             }
         }
         
-        // 確保回合狀態正確
-        if (gameMode === 'online' && invitationData) {
-            const isInviterFinal = getCurrentMemberId() == invitationData?.from_user_id;
-            const shouldBeMyTurnFinal = (currentPlayer === 1 && isInviterFinal) || (currentPlayer === 2 && !isInviterFinal);
-            if (shouldBeMyTurnFinal !== isMyTurn) {
-                console.log('同步後修正回合狀態:', { shouldBeMyTurn: shouldBeMyTurnFinal, isMyTurn });
-                isMyTurn = shouldBeMyTurnFinal;
-            }
-        }
-        
-        // 強制更新顯示，確保雙方畫面完全一致
-        updatePlayerDisplay();
-        forceUpdatePlayerNames(); // 強制更新玩家名字
-        updateCurrentPlayer();
-        
-        // 更新總配對次數顯示
-        const totalMatchesDisplay = document.getElementById('total-moves');
-        if (totalMatchesDisplay) {
-            totalMatchesDisplay.textContent = matchedPairs;
-        }
-        
-        console.log('同步後顯示更新完成:', {
-            player1Score,
-            player2Score,
-            player1Pairs,
-            player2Pairs,
-            matchedPairs,
-            currentPlayer,
-            isMyTurn
-        });
-        
-        // 檢查是否是退出信號（暫時禁用）
-        if (gameState.lastAction === 'player_quit_signal' || gameState.player_quit) {
-            console.log('退出信號檢測已禁用，避免誤判');
-            // 暫時禁用退出信號檢測
-            /*
-            console.log('收到退出信號，立即處理退出');
-            
-            // 立即停止所有計時器和同步
-            if (gameSyncInterval) {
-                clearInterval(gameSyncInterval);
-                gameSyncInterval = null;
-            }
-            if (turnTimer) {
-                clearInterval(turnTimer);
-                turnTimer = null;
-            }
-            if (invitationCheckInterval) {
-                clearInterval(invitationCheckInterval);
-                invitationCheckInterval = null;
-            }
-            
-            // 立即隱藏遊戲界面
-            const gameContainer = document.getElementById('game-container');
-            if (gameContainer) {
-                gameContainer.classList.add('hidden');
-            }
-            
-            // 立即隱藏所有其他視窗
-            hideAllModals();
-            
-            // 立即顯示玩家退出視窗
-            document.getElementById('player-quit-modal').classList.remove('hidden');
-            
-            // 重置遊戲狀態
-            gameMode = 'local';
-            invitationId = null;
-            invitationData = null;
-            isQuitting = false;
-            
-            console.log('退出信號處理完成');
-            return;
-            */
-        }
+        // 重置翻牌狀態
+        flippedCards = [];
+        canFlip = true;
+    }
+    
+    // 更新遊戲數據
+    if (gameState.matchedPairs !== undefined) matchedPairs = gameState.matchedPairs;
+    if (gameState.totalMoves !== undefined) totalMoves = gameState.totalMoves;
+    if (gameState.player1Score !== undefined) player1Score = gameState.player1Score;
+    if (gameState.player2Score !== undefined) player2Score = gameState.player2Score;
+    if (gameState.player1Pairs !== undefined) player1Pairs = gameState.player1Pairs;
+    if (gameState.player2Pairs !== undefined) player2Pairs = gameState.player2Pairs;
+    
+    // 更新顯示
+    updatePlayerDisplay();
+    updateCurrentPlayer();
+    console.log('遊戲狀態同步完成');
+}
         
         // 檢查是否是其他玩家的退出信號（已完全禁用）
         if (gameState.lastActionBy && gameState.lastActionBy !== getCurrentMemberId() && 
@@ -2859,7 +2753,6 @@ function updateGameFromSync(gameState) {
                 console.log('已重置翻牌權限');
             }
         }, 3000); // 延長到3秒，避免與配對失敗的2秒延遲衝突
-    }
     } else if (gameState.lastAction === 'game_end') {
         console.log('同步遊戲結束:', gameState);
         
@@ -2896,11 +2789,15 @@ function updateGameFromSync(gameState) {
         console.log('同步困難度設定:', { old: currentDifficulty, new: gameState.difficulty });
         currentDifficulty = gameState.difficulty;
         
-        // 根據困難度調整遊戲板大小
+        // 立即重新初始化遊戲
+        console.log('困難度改變，重新初始化遊戲');
+        initializeGame();
+        
+        // 強制重新調整遊戲板大小
         setTimeout(() => {
-            adjustGameBoardSize();
+            forceRefreshGameBoard();
             console.log('困難度設定已同步並應用');
-        }, 100);
+        }, 500); // 增加延遲確保DOM更新
     }
     
     // 同步主題設定
@@ -2923,13 +2820,18 @@ function updateGameFromSync(gameState) {
             console.log('主題已同步並應用:', currentTheme, themeStyle);
         }
     }
-}
+
 
 // 調整遊戲板大小
 function adjustGameBoardSize() {
     const container = document.querySelector('.game-container');
     const board = document.getElementById('game-board');
-    if (!container || !board) return;
+    if (!container || !board) {
+        console.error('找不到遊戲容器或遊戲板');
+        return;
+    }
+
+    console.log('開始調整遊戲板大小，當前困難度:', currentDifficulty);
 
     // 根據困難度設定卡片大小和排列
     let cols, rows, maxCardSize;
@@ -2946,18 +2848,22 @@ function adjustGameBoardSize() {
     const maxBoardWidth = Math.min(containerWidth, cols * maxCardSize + (cols - 1) * gap);
     const cardSize = Math.floor((maxBoardWidth - (cols - 1) * gap) / cols);
 
+    console.log('計算的佈局:', { cols, rows, cardSize, maxBoardWidth, containerWidth });
+
     // 設定每張卡片為正方形
-    document.querySelectorAll('.card').forEach(card => {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
         // 確保卡片是正方形
         card.style.width = cardSize + 'px';
         card.style.height = cardSize + 'px';
         card.style.maxWidth = cardSize + 'px';
         card.style.maxHeight = cardSize + 'px';
         card.style.paddingBottom = '0'; // 移除 padding-bottom 確保正方形
+        card.style.display = 'block'; // 確保卡片可見
         
         // 調試：檢查卡片是否為正方形
         const rect = card.getBoundingClientRect();
-        console.log('卡片尺寸檢查:', {
+        console.log(`卡片 ${index} 尺寸檢查:`, {
             width: rect.width,
             height: rect.height,
             isSquare: Math.abs(rect.width - rect.height) < 1,
@@ -2976,17 +2882,24 @@ function adjustGameBoardSize() {
     const boardWidth = board.offsetWidth;
     container.style.width = (boardWidth + 600) + 'px';
     
+    // 強制重新計算佈局
+    board.style.display = 'none';
+    board.offsetHeight; // 觸發重排
+    board.style.display = 'grid';
+    
     // 調試：檢查遊戲板尺寸
     console.log('遊戲板尺寸檢查:', {
         boardWidth: boardWidth,
         containerWidth: container.style.width,
         boardHeight: board.offsetHeight,
-        cardCount: document.querySelectorAll('.card').length,
+        cardCount: cards.length,
         difficulty: currentDifficulty,
         cols: cols,
         rows: rows,
         cardSize: cardSize
     });
+    
+    console.log('遊戲板大小調整完成');
 }
 
 // 顯示主題選擇視窗
@@ -3364,7 +3277,7 @@ function startGameSettingsPolling(invitationId) {
         checkGameSettings(invitationId, settingsInterval);
         // 同時檢查是否被取消
         checkInvitationCancelled();
-    }, 1500); // 每1.5秒檢查一次，平衡響應速度和伺服器負載
+    }, 500); // 提高到每0.5秒檢查一次，確保快速同步
 }
 
 // 檢查遊戲設定
@@ -3487,9 +3400,9 @@ function checkGameSettings(invitationId, interval) {
             
             // 根據困難度調整遊戲板大小
             setTimeout(() => {
-                adjustGameBoardSize();
+                forceRefreshGameBoard();
                 console.log('困難度設定已應用，遊戲板大小已調整');
-            }, 100);
+            }, 200);
             
             // 設定回合（邀請者先開始）
             const isInviter = getCurrentMemberId() == (window.currentInvitation?.from_user_id || data.invitation?.from_user_id);

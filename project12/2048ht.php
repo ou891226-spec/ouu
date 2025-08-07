@@ -97,7 +97,8 @@ if (
             <span class="close-button" id="close-instructions">&times;</span>
             <h2>遊戲說明</h2>
             <ul>
-                <li>使用鍵盤方向鍵移動方塊。</li>
+                <li>使用鍵盤方向鍵或觸控滑動手勢移動方塊。</li>
+                <li>在平板上：向上、下、左、右滑動來移動方塊。</li>
                 <li>相同數字的方塊合併會加分。</li>
                 <li>每次移動後會隨機出現新方塊（2或4）。</li>
                 <li>無法移動時遊戲結束。</li>
@@ -235,6 +236,24 @@ if (
                 document.getElementById('game-over-modal').style.display = 'block';
             }
         }
+    </script>
+    <script>
+        // 檢測觸控設備並顯示相應提示
+        function checkTouchDevice() {
+            const touchHint = document.querySelector('.touch-hint');
+            if (touchHint) {
+                // 檢測是否為觸控設備
+                const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                if (isTouchDevice) {
+                    touchHint.style.display = 'block';
+                } else {
+                    touchHint.style.display = 'none';
+                }
+            }
+        }
+        
+        // 頁面加載時檢測
+        document.addEventListener('DOMContentLoaded', checkTouchDevice);
     </script>
     <script src="js/game.js"></script>
     <script src="js/auto-save-time.js"></script>
