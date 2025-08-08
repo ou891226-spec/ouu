@@ -68,15 +68,15 @@ h1 {
 }
  
 #basket {
-  width: 100px;
-  height: 50px;
+  width: 150px;
+  height: 60px;
   background-image: url('../img/getttt.png');
   background-size: cover;
   background-position: center;
   position: absolute;
-  bottom: -2px;
-  left: 260px;
-  border-radius: 10px;
+  bottom: 0.3px;
+  left: 235px;
+  border-radius: 20px;
   cursor: grab;
   z-index: 1000;
 }
@@ -296,7 +296,7 @@ button {
   border-radius: 1rem;
   text-align: center;
   width: 90%;
-  max-width: 450px;
+  max-width: 550px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
 }

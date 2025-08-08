@@ -55,6 +55,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     'member_id' => $member_id
                 ]);
 
+                // 檢查並完成所有相關任務
+                require_once 'check_and_grant_achievements.php';
+                checkAndCompleteAllTasks($member_id, '反應力');
+                
                 $pdo->commit();
 
                 echo json_encode([
@@ -63,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     'difficulty' => $difficulty,
                     'status' => $status,
                     'score' => (int)$score,
-                    'play_time' => (int)$playTime
+                    'play_time' => (int)$playTime,
+                    'task_completed' => !empty($completed_tasks)
                 ]);
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -85,6 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>接金蛋遊戲</title>
     <link rel="stylesheet" href="css/Catch-Egg.css">
+    <script>
+        // 設置會員ID供JavaScript使用
+        window.memberId = <?php echo $_SESSION['member_id'] ?? 'null'; ?>;
+    </script>
 </head>
 <body>
     <!-- 遊戲主畫面 -->
@@ -167,8 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
                 </div>
                 <ul style="margin-left:2.2rem;">
-                    <li>左右拖曳籃子接蛋</li>
-                    <li>接到金蛋+10分，白蛋+3分，炸彈-20分</li>
+                    <li>動動手指左右拖曳籃子接蛋</li>
+                    <li>接到<span style="color:gold;font-size:1.2em;">🥚</span>金蛋+10分，<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分</li>
                     <li>時間內達到目標分數就過關！</li>
                 </ul>
             </div>
@@ -210,6 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         }
     </script>
     <script src="js/Catch-Egg.js"></script>
-    <script src="js/auto-save-time.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html> 
