@@ -57,20 +57,32 @@ if (
     </script>
 </head>
 <body>
-    <!-- 難度選擇畫面 -->
-    <div id="difficulty-page" class="main-bg">
-        <div class="main-title">2048</div>
-        <div class="difficulty-modal">
-            <div class="difficulty-header">
-                <span class="difficulty-title">難度選擇</span>
-                <button class="difficulty-help" id="show-instructions">
-                    <span class="help-icon">?</span>
-                    <span class="help-text">說明</span>
+    <!-- 難度選擇彈窗 -->
+    <div id="difficultyModal" class="modal">
+        <div class="modal-content">
+            <button class="back-button" onclick="handleBackButton()">
+                <span class="back-arrow">⬅</span>
+                <div class="back-label">返回</div>
+            </button>
+            <h2>選擇難度</h2>
+            <button class="difficulty-help" id="show-instructions">
+                <span class="help-icon">?</span>
+                <span class="help-text">說明</span>
+            </button>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn easy" data-target="1500" type="button">
+                    <span class="difficulty-name">簡單模式</span>
+                    <span class="difficulty-desc">(1500分)</span>
+                </button>
+                <button class="difficulty-btn normal" data-target="5000" type="button">
+                    <span class="difficulty-name">普通模式</span>
+                    <span class="difficulty-desc">(5000分)</span>
+                </button>
+                <button class="difficulty-btn hard" data-target="10000" type="button">
+                    <span class="difficulty-name">困難模式</span>
+                    <span class="difficulty-desc">(10000分)</span>
                 </button>
             </div>
-            <button class="difficulty-btn easy" data-target="1500" type="button">簡單 目標：1500分</button>
-            <button class="difficulty-btn normal" data-target="5000" type="button">普通 目標：5000分</button>
-            <button class="difficulty-btn hard" data-target="10000" type="button">困難 目標：10000分</button>
         </div>
     </div>
 
@@ -82,28 +94,45 @@ if (
             <span class="score" id="score" style="color:#43a047;">0</span>
             <span style="font-weight:bold; margin-left:16px;">最高分數：</span>
             <span class="best" id="best-score" style="color:#43a047;">0</span>
+            <span style="font-weight:bold; margin-left:16px;">目標分數：</span>
+            <span class="target-score" id="target-score" style="color:#f44336;">0</span>
         </div>
         <div class="board" id="board"></div>
-        <div class="btn-group">
+    </div>
+    <div class="btn-group">
             <button class="btn pause" id="pauseBtn">暫停遊戲</button>
             <button class="btn end" id="endBtn">結束遊戲</button>
             <button class="btn reset" id="resetBtn">重新開始</button>
-        </div>
     </div>
 
     <!-- 遊戲說明彈窗 -->
     <div id="instructions-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close-button" id="close-instructions">&times;</span>
-            <h2>遊戲說明</h2>
-            <ul>
-                <li>使用鍵盤方向鍵或觸控滑動手勢移動方塊。</li>
-                <li>在平板上：向上、下、左、右滑動來移動方塊。</li>
-                <li>相同數字的方塊合併會加分。</li>
-                <li>每次移動後會隨機出現新方塊（2或4）。</li>
-                <li>無法移動時遊戲結束。</li>
-                <li>達到目標分數即可破關。</li>
-            </ul>
+            <h2>
+                <span style="font-size:2rem;vertical-align:middle;">🎮</span>
+                <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
+            </h2>
+            <div class="help-content" style="margin-top:1.5rem;">
+                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
+                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
+                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+                </div>
+                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
+                    在時間內合併相同數字的方塊，達到目標分數即可破關！
+                </div>
+                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
+                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
+                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                </div>
+                <ul style="margin-left:2.2rem;">
+                    <li>選擇難度開始遊戲</li>
+                    <li>使用方向鍵或滑動手勢移動方塊</li>
+                    <li>相同數字的方塊合併會加分</li>
+                    <li>每次移動後會隨機出現新方塊（2或4）</li>
+                    <li>無法移動時遊戲結束</li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -114,9 +143,8 @@ if (
             <p>難度：<span id="win-difficulty"></span></p>
             <p>獲得分數：<span id="win-score"></span></p>
             <p>最高分數：<span id="win-best-score"></span></p>
-            <p>目標分數：<span id="win-target"></span></p>
             <div class="modal-buttons">
-                <button id="continue-game" class="btn red-button">繼續遊戲</button>
+                <button id="continue-game" class="btn red-button">再玩一次</button>
                 <button id="new-game" class="btn dark-blue-button">返回主頁</button>
             </div>
         </div>
@@ -125,11 +153,8 @@ if (
     <!-- 遊戲失敗彈窗 -->
     <div id="game-over-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h2>遊戲失敗</h2>
-            <p>難度：<span id="game-over-difficulty"></span></p>
+            <h2>遊戲失敗</h2> <p>難度：<span id="game-over-difficulty"></span></p>
             <p>獲得分數：<span id="game-over-score"></span></p>
-            <p>最高分數：<span id="game-over-best-score"></span></p>
-            <p>目標分數：<span id="game-over-target"></span></p>
             <div class="modal-buttons">
                 <button id="try-again" class="btn red-button">再玩一次</button>
                 <button id="back-to-menu" class="btn dark-blue-button">返回主頁</button>
@@ -194,15 +219,18 @@ if (
             if (showInstructionsBtn && closeInstructionsBtn && instructionsModal) {
                 showInstructionsBtn.onclick = () => {
                     instructionsModal.style.display = 'block';
+                    instructionsModal.classList.add('show');
                 };
                 
                 closeInstructionsBtn.onclick = () => {
                     instructionsModal.style.display = 'none';
+                    instructionsModal.classList.remove('show');
                 };
                 
                 window.onclick = (event) => {
                     if (event.target === instructionsModal) {
                         instructionsModal.style.display = 'none';
+                        instructionsModal.classList.remove('show');
                     }
                 };
             }
@@ -215,10 +243,14 @@ if (
             document.addEventListener('DOMContentLoaded', () => {
                 debugLog('DOM 加載完成，開始初始化遊戲界面');
                 initGameUI();
+                // 顯示難度選擇彈窗
+                document.getElementById('difficultyModal').classList.add('show');
             });
         } else {
             debugLog('DOM 已加載，立即初始化遊戲界面');
             initGameUI();
+            // 顯示難度選擇彈窗
+            document.getElementById('difficultyModal').classList.add('show');
         }
 
         // 修改遊戲結束時的處理
@@ -235,6 +267,11 @@ if (
             } else {
                 document.getElementById('game-over-modal').style.display = 'block';
             }
+        }
+
+        // 返回主頁按鈕處理
+        function handleBackButton() {
+            window.location.href = 'index.php';
         }
     </script>
     <script>

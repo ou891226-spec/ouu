@@ -17,6 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
             this.isContinuing = false;
             this.winModal = document.getElementById('win-modal');
             this.gameOverModal = document.getElementById('game-over-modal');
+            this.targetScoreElement = document.getElementById('target-score');
+            
+            // 觸控相關變數
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            this.touchEndX = 0;
+            this.touchEndY = 0;
+            this.minSwipeDistance = 30; // 最小滑動距離
             
             console.log('遊戲實例基本屬性已初始化');
             
@@ -26,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 設置事件監聽器
             this.setupEventListeners();
+            this.setupTouchEvents(); // 新增觸控事件
             this.setupWinModalListeners();
             this.setupGameOverModalListeners();
         }
@@ -74,6 +83,96 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('遊戲板創建完成');
         }
 
+        setupTouchEvents() {
+            console.log('設置觸控事件監聽器...');
+            
+            const gameBoard = document.getElementById('board');
+            if (!gameBoard) {
+                console.error('找不到遊戲板元素，無法設置觸控事件');
+                return;
+            }
+            
+            // 觸控開始事件
+            gameBoard.addEventListener('touchstart', (e) => {
+                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                    return;
+                }
+                
+                e.preventDefault(); // 防止頁面滾動
+                const touch = e.touches[0];
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
+                console.log('觸控開始:', this.touchStartX, this.touchStartY);
+            }, { passive: false });
+            
+            // 觸控結束事件
+            gameBoard.addEventListener('touchend', (e) => {
+                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                    return;
+                }
+                
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                console.log('觸控結束:', this.touchEndX, this.touchEndY);
+                this.handleSwipe();
+            }, { passive: false });
+            
+            // 防止觸控時選中文字
+            gameBoard.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+            
+            console.log('觸控事件監聽器設置完成');
+        }
+        
+        handleSwipe() {
+            const deltaX = this.touchEndX - this.touchStartX;
+            const deltaY = this.touchEndY - this.touchStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            console.log('滑動距離:', distance, 'deltaX:', deltaX, 'deltaY:', deltaY);
+            
+            if (distance < this.minSwipeDistance) {
+                console.log('滑動距離太小，忽略');
+                return;
+            }
+            
+            let moved = false;
+            
+            // 判斷滑動方向
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // 水平滑動
+                if (deltaX > 0) {
+                    console.log('向右滑動');
+                    moved = this.moveRight();
+                } else {
+                    console.log('向左滑動');
+                    moved = this.moveLeft();
+                }
+            } else {
+                // 垂直滑動
+                if (deltaY > 0) {
+                    console.log('向下滑動');
+                    moved = this.moveDown();
+                } else {
+                    console.log('向上滑動');
+                    moved = this.moveUp();
+                }
+            }
+            
+            if (moved) {
+                console.log('移動有效，添加新方塊');
+                this.addNewTile();
+                this.updateDisplay();
+                this.checkGameStatus();
+            } else {
+                console.log('移動無效');
+            }
+        }
+
         setupEventListeners() {
             console.log('開始設置事件監聽器...');
             
@@ -99,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('設置難度:', difficulty, '目標分數:', this.targetScore);
                     
                     // 切換到遊戲頁面
-                    const difficultyPage = document.getElementById('difficulty-page');
+                    const difficultyPage = document.getElementById('difficultyModal');
                     const gamePage = document.getElementById('game-page');
                     
                     if (difficultyPage && gamePage) {
@@ -111,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.isInitialized = false;
                         this.resetGame();
                         this.init();
+                        this.updateTargetScoreDisplay();
                     } else {
                         console.error('找不到必要的頁面元素');
                     }
@@ -200,17 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 結束遊戲按鈕
-            const endButton = document.getElementById('endBtn');
+             const endButton = document.getElementById('endBtn');
             if (endButton) {
                 console.log('找到結束按鈕，設置事件監聽器');
                 endButton.onclick = () => {
                     console.log('結束按鈕被點擊');
-                    if (confirm('確定要結束遊戲並返回選單嗎？')) {
-                        this.isContinuing = false;
-                        this.endGame();
-                        document.getElementById('game-page').style.display = 'none';
-                        document.getElementById('difficulty-page').style.display = 'flex';
-                    }
+                    // 直接呼叫 endGame 顯示彈窗
+                    this.isContinuing = false;
+                    this.endGame();
                 };
             } else {
                 console.error('錯誤：找不到結束按鈕 #endBtn');
@@ -222,10 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('找到重置按鈕，設置事件監聽器');
                 resetButton.onclick = () => {
                     console.log('重置按鈕被點擊');
-                    if (confirm('確定要重新開始遊戲嗎？')) {
-                        this.isContinuing = false;
-                        this.resetGame();
+            
+                    // 顯示難度選擇彈窗
+                    const difficultyModal = document.getElementById('difficultyModal');
+                    if (difficultyModal) {
+                        difficultyModal.style.display = 'flex';
                     }
+
+                    // 重置遊戲狀態
+                    this.resetGame();
+            
                 };
             } else {
                 console.error('錯誤：找不到重置按鈕 #resetBtn');
@@ -235,30 +338,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setupWinModalListeners() {
-            // 繼續遊戲按鈕
-            const continueButton = document.getElementById('continue-game');
-            if (continueButton) {
-                continueButton.addEventListener('click', () => {
-                    this.winModal.style.display = 'none';
-                    this.won = false;
-                    this.isPaused = false;
-                    this.isContinuing = true;
-                    const pauseButton = document.getElementById('pause');
-                    if (pauseButton) {
-                        pauseButton.textContent = '暫停遊戲';
-                        pauseButton.classList.remove('paused');
+            // 獲取「恭喜破關」彈窗中的「再玩一次」按鈕，ID為 'continue-game'
+            const tryAgainWinButton = document.getElementById('continue-game');
+            if (tryAgainWinButton) {
+                tryAgainWinButton.addEventListener('click', () => {
+                    console.log('遊戲勝利彈窗中的「再玩一次」按鈕被點擊');
+                    this.winModal.style.display = 'none'; // 隱藏勝利彈窗
+                    this.isContinuing = false;
+                    
+                    const gamePage = document.getElementById('game-page');
+                    if (gamePage) {
+                        gamePage.style.display = 'none'; // 隱藏遊戲主畫面
                     }
+
+                    const difficultyModal = document.getElementById('difficultyModal');
+                    if (difficultyModal) {
+                        difficultyModal.style.display = 'flex'; // 顯示難度選擇彈窗
+                    }
+                    
+                    this.resetGame(); // 重置遊戲狀態
                 });
             }
 
-            // 新遊戲按鈕
-            const newGameButton = document.getElementById('new-game');
-            if (newGameButton) {
-                newGameButton.addEventListener('click', () => {
-                    this.winModal.style.display = 'none';
-                    this.isContinuing = false;
-                    document.getElementById('game-page').style.display = 'none';
-                    document.getElementById('difficulty-page').style.display = 'flex';
+            // 獲取「恭喜破關」彈窗中的「返回主頁」按鈕，ID為 'new-game'
+            const backToMenuWinButton = document.getElementById('new-game');
+            if (backToMenuWinButton) {
+                backToMenuWinButton.addEventListener('click', () => {
+                    console.log('遊戲勝利彈窗中的「返回主頁」按鈕被點擊');
+                    window.location.href = 'index.php'; // 直接導向首頁
                 });
             }
         }
@@ -268,8 +375,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const tryAgainButton = document.getElementById('try-again');
             if (tryAgainButton) {
                 tryAgainButton.addEventListener('click', () => {
-                    this.gameOverModal.style.display = 'none';
+                    console.log('再玩一次按鈕被點擊');
+                    this.gameOverModal.style.display = 'none'; // 隱藏遊戲結束彈窗
                     this.isContinuing = false;
+                    
+                    // 顯示難度選擇彈窗
+                    const difficultyModal = document.getElementById('difficultyModal');
+                    if (difficultyModal) {
+                        difficultyModal.style.display = 'flex'; // 直接設定 display 為 'flex' 來顯示彈窗
+                    } else {
+                        console.error('錯誤：找不到難度選擇彈窗 #difficultyModal');
+                    }
+                    
+                    // 重置遊戲狀態
                     this.resetGame();
                 });
             }
@@ -278,15 +396,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const backToMenuButton = document.getElementById('back-to-menu');
             if (backToMenuButton) {
                 backToMenuButton.addEventListener('click', () => {
+                    console.log('返回主頁按鈕被點擊');
+                    // 直接將頁面導向至 index.php
                     window.location.href = 'index.php';
-                    this.gameOverModal.style.display = 'none';
-                    this.isContinuing = false;
-                    document.getElementById('game-page').style.display = 'none';
-                    document.getElementById('difficulty-page').style.display = 'flex';
                 });
             }
         }
 
+        updateTargetScoreDisplay() {
+            if (this.targetScoreElement) {
+                this.targetScoreElement.textContent = this.targetScore;
+                console.log(`更新目標分數顯示為: ${this.targetScore}`);
+            }
+        }
 
         addNewTile() {
             console.log('開始添加新方塊...');
@@ -501,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('win-score').textContent = this.score;
             document.getElementById('win-best-score').textContent = this.bestScore;
-            document.getElementById('win-target').textContent = this.targetScore;
             
                             // 自動呼叫 saveGameRecord
                 if (typeof saveGameRecord === 'function') {
@@ -512,26 +633,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         showGameOverModal() {
+            // ... (保留原始程式碼中的內容)
+
+            // 調整標題為「遊戲失敗」或更通用的「遊戲結束」
+            const modalTitle = this.gameOverModal.querySelector('h2');
+            if (modalTitle) {
+                if (this.score >= this.targetScore && this.won) {
+                    modalTitle.textContent = '恭喜破關';
+                } else {
+                    modalTitle.textContent = '遊戲失敗';
+                }
+            }
+
+            // 更新彈窗內的難度、分數等資訊
             const difficultyLabel = document.getElementById('game-over-difficulty');
             difficultyLabel.textContent = this.getDifficultyText();
             difficultyLabel.className = 'difficulty-label ' + this.difficulty;
             
-            document.getElementById('game-over-score').textContent = this.score;
-            document.getElementById('game-over-best-score').textContent = this.bestScore;
-            document.getElementById('game-over-target').textContent = this.targetScore;
+            document.getElementById('game-over-score').textContent = this.score;            
             
-            if (this.score > this.bestScore) {
-                this.bestScore = this.score;
-                localStorage.setItem('bestScore', this.bestScore);
-                document.getElementById('game-over-best-score').textContent = this.bestScore;
+            // 自動呼叫 saveGameRecord
+            if (typeof saveGameRecord === 'function') {
+                console.log('遊戲結束，呼叫 saveGameRecord');
+                // 這裡的 60 是範例，請根據實際遊戲時間調整
+                saveGameRecord(memberId, this.score, this.difficulty, 60);
             }
-                            // 自動呼叫 saveGameRecord
-                if (typeof saveGameRecord === 'function') {
-                    console.log('遊戲失敗，呼叫 saveGameRecord');
-                    saveGameRecord(memberId, this.score, this.difficulty, 60);
-                }
+
+            // 顯示彈窗
             this.gameOverModal.style.display = 'block';
         }
+    
 
         togglePause() {
             this.isPaused = !this.isPaused;
@@ -548,13 +679,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         endGame() {
+            console.log('結束遊戲流程...');
             this.gameOver = true;
             this.isInitialized = false;
+            
+            // 更新最高分
             if (this.score > this.bestScore) {
                 this.bestScore = this.score;
                 localStorage.setItem('bestScore', this.bestScore);
             }
-            alert(`遊戲結束！\n你的分數是: ${this.score}\n最高分數是: ${this.bestScore}`);
+            
+            // 直接顯示遊戲結束彈窗，而不是 alert
+            this.showGameOverModal();
+            console.log('顯示遊戲結束彈窗');
         }
 
         resetGame() {
@@ -580,6 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 更新顯示
             this.updateDisplay();
+            this.updateTargetScoreDisplay();
             console.log('遊戲重置完成');
         }
     }

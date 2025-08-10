@@ -44,9 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'is_single_player' => 1,
             'opponent_id' => null
         ]);
-        
-        // 記錄到控制台
-        error_log("算菜錢遊戲記錄: member_id={$data['member_id']}, score={$data['score']}, difficulty={$data['difficulty']}");
        
         // 更新會員總分數和邏輯力分數
         $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
@@ -54,9 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'score' => $data['score'],
             'member_id' => $data['member_id']
         ]);
-        
-        // 記錄更新結果
-        error_log("會員分數更新: member_id={$data['member_id']}, 增加分數={$data['score']}");
        
         // 提交交易
         $pdo->commit();
@@ -85,7 +79,7 @@ if (!isset($_COOKIE['member_id'])) {
     <link rel="stylesheet" href="css/Vegetable-Cost.css">
 </head>
 <body>
-    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 8; ?>">
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
 
 
     <div class="game-container" style="display:none;">
@@ -145,16 +139,16 @@ if (!isset($_COOKIE['member_id'])) {
             </div>
             <div class="difficulty-btn-group">
                 <button class="difficulty-btn easy-mode" data-difficulty="easy">
-                    <div class="diff-main">簡單模式（80秒）</div>
-                    <div class="diff-sub">15分過關</div>
+                    <div class="diff-main">簡單模式</div>
+                    <div class="diff-sub">60秒</div>
                 </button>
                 <button class="difficulty-btn normal-mode" data-difficulty="normal">
-                    <div class="diff-main">普通模式（150秒）</div>
-                    <div class="diff-sub">20分過關</div>
+                    <div class="diff-main">普通模式</div>
+                    <div class="diff-sub">60秒</div>
                 </button>
                 <button class="difficulty-btn hard-mode" data-difficulty="hard">
-                    <div class="diff-main">困難模式（200秒）</div>
-                    <div class="diff-sub">25分過關</div>
+                    <div class="diff-main">困難模式</div>
+                    <div class="diff-sub">60秒</div>
                 </button>
             </div>
         </div>
@@ -163,29 +157,27 @@ if (!isset($_COOKIE['member_id'])) {
     <!-- 遊戲說明視窗 -->
     <div id="help-modal" class="modal hidden">
         <div class="modal-content">
-            <h2 style="text-align:center;">
-                <span style="font-size:2rem;vertical-align:middle;">🎮</span>
-                <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
-            </h2>
-            <div class="help-content" style="margin-top:1.5rem;">
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
-                </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
-                    在60秒內完成盡可能多的題目，計算阿嬤買菜的總金額，看看你能得多少分！
-                </div>
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
-                </div>
-                <ul style="margin-left:2.2rem;">
+            <h2>🎮 遊戲說明</h2>
+            <div class="help-content">
+                <h3>🔹 遊戲目標</h3>
+                <p>在60秒內完成盡可能多的題目，計算阿嬤買菜的總金額，看看你能得多少分！</p>
+
+                <h3>🔹 遊戲規則</h3>
+                <ul>
                     <li>每答對一題得3分</li>
-                    <li>簡單模式：15分過關獲得20分獎勵</li>
-                    <li>中等模式：20分過關獲得50分獎勵</li>
-                    <li>困難模式：25分過關獲得100分獎勵</li>
+                    <li>簡單模式：達到200分可獲得20分獎勵</li>
+                    <li>中等模式：達到450分可獲得50分獎勵</li>
+                    <li>困難模式：達到600分可獲得100分獎勵</li>
                 </ul>
-            <span class="close-btn" onclick="closeHelpModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size: 30px;">×</span>
+
+                <h3>🔹 題型說明</h3>
+                <ul>
+                    <li>簡單模式：基本計算題，包含3-5個物品</li>
+                    <li>中等模式：包含優惠折扣和預算計算</li>
+                    <li>困難模式：包含多種食材組合和預算限制</li>
+                </ul>
+            </div>
+            <span class="close-btn">×</span>
         </div>
     </div>
 

@@ -34,52 +34,9 @@ async function fetchIngredients() {
     });
 }
 
-// 食材對應 emoji
-const ingredientEmojis = {
-    '小白菜': '🥬',
-    '高麗菜': '🥬',
-    '青江菜': '🥬',
-    '蘋果': '🍎',
-    '香蕉': '🍌',
-    '番茄': '🍅',
-    '胡蘿蔔': '🥕',
-    '馬鈴薯': '🥔',
-    '洋蔥': '🧅',
-    '葡萄': '🍇',
-    '西瓜': '🍉',
-    '鳳梨': '🍍',
-    '草莓': '🍓',
-    '南瓜': '🎃',
-    '玉米': '🌽',
-    '茄子': '🍆',
-    '辣椒': '🌶️',
-    '檸檬': '🍋',
-    '橘子': '🍊',
-    '芒果': '🥭',
-    '蘑菇': '🍄',
-    '雞蛋': '🥚',
-    '牛肉': '🥩',
-    '豬肉': '🥓',
-    '雞肉': '🍗',
-    '魚': '🐟',
-    '蝦': '🦐',
-    '螃蟹': '🦀',
-    '龍蝦': '🦞',
-    '章魚': '🐙',
-    '海膽': '🦑',
-    '起司': '🧀',
-    '其他': '🥗'
-};
-
-// 生成題目時，將食材名稱加上 emoji
-function getIngredientWithEmoji(name) {
-    return name + (ingredientEmojis[name] ? ' ' + ingredientEmojis[name] : '');
-}
-
-// 新增：去除 emoji 只留食材名稱
-function stripEmoji(str) {
-    // 去除 emoji 和多餘空白，只留食材名稱
-    return str.replace(/\s*[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+/gu, '').trim();
+// 清理食材名稱（移除多餘空白）
+function cleanIngredientName(str) {
+    return str.trim();
 }
 
 // 生成簡單題目
@@ -95,7 +52,7 @@ function generateEasyQuestion() {
         const numItems = Math.min(5, allItems.length);
         let usedNames = new Set();
         let tries = 0;
-        while (selectedItems.length < numItems && tries < 20) {
+        while (selectedItems.length < numItems && tries < 50) {
             const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
             if (!usedNames.has(randomItem.name)) {
                 selectedItems.push(randomItem);
@@ -104,51 +61,139 @@ function generateEasyQuestion() {
             tries++;
         }
         
-        const budget = [40, 50, 60, 70, 80][Math.floor(Math.random() * 5)];
-        let combos = [];
-        for (let i = 0; i < selectedItems.length; i++) {
-            for (let j = i + 1; j < selectedItems.length; j++) {
-                let sum = selectedItems[i].price + selectedItems[j].price;
-                if (sum <= budget) combos.push([selectedItems[i], selectedItems[j]]);
+        // 確保至少有5個項目，如果不足則重複選擇
+        while (selectedItems.length < 5 && allItems.length >= 5) {
+            for (let item of allItems) {
+                if (!usedNames.has(item.name) && selectedItems.length < 5) {
+                    selectedItems.push(item);
+                    usedNames.add(item.name);
+                }
+            }
+            // 如果還是沒有5個，就重複使用已有的項目
+            if (selectedItems.length < 5) {
+                const existingItems = [...selectedItems];
+                for (let item of existingItems) {
+                    if (selectedItems.length < 5) {
+                        selectedItems.push(item);
+                    }
+                }
             }
         }
-        if (combos.length === 0) combos.push([selectedItems[0], selectedItems[1]]);
-        const answerCombo = combos[Math.floor(Math.random() * combos.length)];
+        
+        // 重新設計：確保只有一個正確答案
+        // 先計算所有可能的組合
+        let allCombos = [];
+        for (let i = 0; i < selectedItems.length; i++) {
+            for (let j = i + 1; j < selectedItems.length; j++) {
+                allCombos.push([selectedItems[i], selectedItems[j]]);
+            }
+        }
+        
+        // 選擇一個組合作為正確答案
+        const answerCombo = allCombos[0];
+        const finalBudget = answerCombo[0].price + answerCombo[1].price;
+        
+        console.log('正確答案組合:', answerCombo.map(item => item.name).join(' + '), '總價:', finalBudget);
+        
+        // 生成其他不符合預算的選項
+        let combos = [answerCombo];
+        
+        // 從所有組合中選擇不符合預算的組合
+        for (let combo of allCombos) {
+            if (combos.length >= 4) break;
+            
+            const comboSum = combo[0].price + combo[1].price;
+            
+            // 如果這個組合不符合預算且不是正確答案
+            if (comboSum !== finalBudget) {
+                // 檢查是否已存在相同的組合（不管順序）
+                const isDuplicate = combos.some(opt => 
+                    (opt[0] === combo[0] && opt[1] === combo[1]) || 
+                    (opt[0] === combo[1] && opt[1] === combo[0])
+                );
+                if (!isDuplicate) {
+                    combos.push(combo);
+                    console.log('添加錯誤選項:', combo.map(item => item.name).join(' + '), '總價:', comboSum);
+                }
+            }
+        }
+        
+        // 如果還不夠4個選項，用隨機組合填充
+        while (combos.length < 4) {
+            let fakeCombo = [];
+            let fillTries = 0;
+            while (fakeCombo.length < 2 && fillTries < 10) {
+                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+                if (!fakeCombo.includes(item)) fakeCombo.push(item);
+                fillTries++;
+            }
+            if (fakeCombo.length === 2) {
+                const comboSum = fakeCombo[0].price + fakeCombo[1].price;
+                // 檢查是否已存在相同的組合（不管順序）且不符合預算
+                const isDuplicate = combos.some(opt => 
+                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+                );
+                if (!isDuplicate && comboSum !== finalBudget) {
+                    combos.push(fakeCombo);
+                    console.log('填充錯誤選項:', fakeCombo.map(item => item.name).join(' + '), '總價:', comboSum);
+                }
+            }
+        }
+        
+        // 如果還不夠4個選項，用隨機組合填充
+        while (combos.length < 4) {
+            let fakeCombo = [];
+            let fillTries = 0;
+            while (fakeCombo.length < 2 && fillTries < 10) {
+                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+                if (!fakeCombo.includes(item)) fakeCombo.push(item);
+                fillTries++;
+            }
+            if (fakeCombo.length === 2) {
+                // 檢查是否已存在相同的組合（不管順序）
+                const isDuplicate = combos.some(opt => 
+                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+                );
+                if (!isDuplicate) {
+                    combos.push(fakeCombo);
+                }
+            }
+        }
         
         // **修正這裡：將5種蔬果清單分成兩欄**
         let itemsHTML = '';
         const firstThree = selectedItems.slice(0, 3);
         const remaining = selectedItems.slice(3);
         
+        console.log('selectedItems:', selectedItems.length, selectedItems.map(item => item.name));
+        console.log('firstThree:', firstThree.length, firstThree.map(item => item.name));
+        console.log('remaining:', remaining.length, remaining.map(item => item.name));
+        
         const firstThreeHTML = firstThree.map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
-        const remainingHTML = remaining.map(item => `<div class="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
+        const remainingHTML = remaining.map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
         
-        itemsHTML = `<div class="item-list-container"><div class="item-list-column">${firstThreeHTML}</div><div class="item-list-column">${remainingHTML}</div></div>`;
+        // 確保兩欄都有內容，如果右邊沒有內容，從左邊移動一個過去
+        let finalFirstThreeHTML = firstThreeHTML;
+        let finalRemainingHTML = remainingHTML;
         
-        let questionText = itemsHTML + `<br><br>我只有 $${budget}元，可以買「哪兩種蔬果組合」？`;
-        
-        let options = [answerCombo];
-        let comboTries = 0;
-        while (options.length < 4 && comboTries < 20) {
-            let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            // 檢查是否已存在相同的組合
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
-            }
-            comboTries++;
+        if (remainingHTML === '' && firstThree.length > 2) {
+            // 如果右邊沒有內容且左邊有超過2個，從左邊移動一個到右邊
+            const lastItem = firstThree[firstThree.length - 1];
+            finalFirstThreeHTML = firstThree.slice(0, 2).map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
+            finalRemainingHTML = `<div class="item-line"><img src="img/${lastItem.image}" alt="${lastItem.name}">${lastItem.name} $${lastItem.price}</div>`;
+            console.log('移動項目到右邊:', lastItem.name);
         }
-        while (options.length < 4) {
-            let fakeCombo = [];
-            let tries = 0;
-            while (fakeCombo.length < 2 && tries < 10) {
-                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
-                if (!fakeCombo.includes(item)) fakeCombo.push(item);
-                tries++;
-            }
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
-            }
-        }
+        
+        console.log('finalFirstThreeHTML:', finalFirstThreeHTML);
+        console.log('finalRemainingHTML:', finalRemainingHTML);
+        
+        itemsHTML = `<div class="item-list-container"><div class="item-list-column">${finalFirstThreeHTML}</div><div class="item-list-column">${finalRemainingHTML}</div></div>`;
+        
+        let questionText = itemsHTML + `<br><br>我只有 $${finalBudget}元，可以買「哪兩種蔬果組合」？`;
+        
+        let options = combos;
         
         // **修正選項的格式，並保持正確答案為純文字**
         options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
@@ -364,7 +409,12 @@ function generateHardQuestion() {
         let comboTries = 0;
         while (options.length < 4 && comboTries < 30) {
             let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
+            // 檢查是否已存在相同的組合（不管順序）
+            const isDuplicate = options.some(opt => 
+                (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+            );
+            if (!isDuplicate) {
                 options.push(fakeCombo);
             }
             comboTries++;
@@ -377,8 +427,15 @@ function generateHardQuestion() {
                 if (!fakeCombo.includes(item)) fakeCombo.push(item);
                 tries++;
             }
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
+            if (fakeCombo.length === 2) {
+                // 檢查是否已存在相同的組合（不管順序）
+                const isDuplicate = options.some(opt => 
+                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+                );
+                if (!isDuplicate) {
+                    options.push(fakeCombo);
+                }
             }
         }
         options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
@@ -406,7 +463,12 @@ function generateHardQuestion() {
         let comboTries = 0;
         while (options.length < 4 && comboTries < 30) {
             let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
+            // 檢查是否已存在相同的組合（不管順序）
+            const isDuplicate = options.some(opt => 
+                (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+            );
+            if (!isDuplicate) {
                 options.push(fakeCombo);
             }
             comboTries++;
@@ -419,8 +481,15 @@ function generateHardQuestion() {
                 if (!fakeCombo.includes(item)) fakeCombo.push(item);
                 tries++;
             }
-            if (!options.some(opt => opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1])) {
-                options.push(fakeCombo);
+            if (fakeCombo.length === 2) {
+                // 檢查是否已存在相同的組合（不管順序）
+                const isDuplicate = options.some(opt => 
+                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
+                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
+                );
+                if (!isDuplicate) {
+                    options.push(fakeCombo);
+                }
             }
         }
         options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
@@ -472,11 +541,11 @@ function loadQuestion() {
             let matchedItem = null;
             if (question.items && question.items.length > 0) {
                 // 如果是組合題，option.text 可能是「A＋B」
-                let names = option.text.replace(/\$/g, '').split('＋').map(s => stripEmoji(s));
+                let names = option.text.replace(/\$/g, '').split('＋').map(s => cleanIngredientName(s));
                 matchedItem = question.items.find(item => names.includes(item.name));
                 // 如果是單一選項，直接比對
                 if (!matchedItem && names.length === 1) {
-                    matchedItem = question.items.find(item => stripEmoji(option.text).includes(item.name));
+                    matchedItem = question.items.find(item => cleanIngredientName(option.text).includes(item.name));
                 }
             }
             // 顯示圖片
@@ -540,12 +609,72 @@ function checkAnswer(selectedAnswer, correctAnswer) {
     const cleanSelectedAnswer = selectedAnswer.replace(/<[^>]*>/g, '').replace(/[^\w\s＋]/g, '');
     const cleanCorrectAnswer = correctAnswer.replace(/<[^>]*>/g, '').replace(/[^\w\s＋]/g, '');
     
-    if (cleanSelectedAnswer === cleanCorrectAnswer) {
+    const isCorrect = cleanSelectedAnswer === cleanCorrectAnswer;
+    
+    if (isCorrect) {
         score += 3;
         updateScore();
+        showAnswerFeedback(true);
+    } else {
+        showAnswerFeedback(false);
     }
     
-    loadQuestion();
+    // 延遲載入下一題，讓玩家看到反饋訊息
+    setTimeout(() => {
+        loadQuestion();
+    }, 1500);
+}
+
+// 顯示答案反饋
+function showAnswerFeedback(isCorrect) {
+    console.log('顯示答案反饋:', isCorrect ? '答對了' : '答錯了');
+    
+    const questionContainer = document.getElementById('question-container');
+    if (!questionContainer) {
+        console.error('找不到 question-container 元素');
+        return;
+    }
+    
+    const feedback = document.createElement('div');
+    feedback.id = 'answer-feedback';
+    feedback.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        font-weight: bold;
+        color: ${isCorrect ? '#4caf50' : '#f44336'};
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px 40px;
+        border-radius: 15px;
+        z-index: 9999;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        border: 3px solid ${isCorrect ? '#4caf50' : '#f44336'};
+        animation: feedbackFadeIn 0.3s ease-in;
+    `;
+    feedback.textContent = isCorrect ? '✓ 答對了！' : '✗ 答錯了！';
+    
+    // 添加動畫樣式
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes feedbackFadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(feedback);
+    
+    console.log('反饋元素已添加到頁面');
+    
+    setTimeout(() => {
+        if (document.body.contains(feedback)) {
+            document.body.removeChild(feedback);
+            console.log('反饋元素已移除');
+        }
+    }, 1500);
 }
 
 function updateScore() {
@@ -740,7 +869,7 @@ function selectDifficulty(difficulty) {
 
 document.addEventListener('DOMContentLoaded', async function() {
     // 正確設定會員ID
-    memberId = window.phpMemberId || document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8;
+    memberId = window.phpMemberId || (document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8);
     console.log('會員ID設定為:', memberId);
     
     document.getElementById('help-modal').classList.add('hidden'); // 強制一開始隱藏
