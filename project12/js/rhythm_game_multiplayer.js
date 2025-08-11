@@ -812,7 +812,7 @@ function showHitResult(player, result, score) {
   resultDiv.style.left = "50%";
   resultDiv.style.top = "50%";
   resultDiv.style.transform = "translate(-50%, -50%)";
-  resultDiv.style.fontSize = "24px";
+  resultDiv.style.fontSize = "35px";
   resultDiv.style.fontWeight = "bold";
   resultDiv.style.color = result === "Perfect" ? "#FFD700" : result === "Good" ? "#4CAF50" : "#FF5722";
   resultDiv.style.textShadow = "2px 2px 4px rgba(0,0,0,0.5)";
@@ -876,33 +876,6 @@ function saveGameResult(player1Score, player2Score) {
     play_time: gameTime - timeLeft
   });
   
-  // 如果需要保存，可以稍後實現
-  /*
-  fetch('save_rhythm_game.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      member_id: memberId,
-      player1_score: player1Score,
-      player2_score: player2Score,
-      difficulty: difficulty,
-      play_time: gameTime - timeLeft
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      console.log('遊戲結果已保存');
-    } else {
-      console.error('保存失敗:', data.message);
-    }
-  })
-  .catch(error => {
-    console.error('保存錯誤:', error);
-  });
-  */
 }
 
 function swingBat(player) {

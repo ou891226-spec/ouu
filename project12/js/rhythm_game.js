@@ -169,7 +169,7 @@ function showHitResult(result, score) {
   resultDiv.style.left = "50%";
   resultDiv.style.top = "50%";
   resultDiv.style.transform = "translate(-50%, -50%)";
-  resultDiv.style.fontSize = "24px";
+  resultDiv.style.fontSize = "35px";
   resultDiv.style.fontWeight = "bold";
   resultDiv.style.color = result === "Perfect" ? "#FFD700" : result === "Good" ? "#4CAF50" : "#FF5722";
   resultDiv.style.textShadow = "2px 2px 4px rgba(0,0,0,0.5)";
