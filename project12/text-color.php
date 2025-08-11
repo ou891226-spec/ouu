@@ -1,4 +1,9 @@
 <?php
+// 防止快取
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 session_start();
 require_once "db.php";
 
@@ -228,6 +233,9 @@ function recordGameResult($score, $playTime, $difficulty) {
                         // 檢查並授予成就
                         require_once 'check_and_grant_achievements.php';
                         checkAndGrantAchievements($member_id, 'reaction_game', $pass_bounce, $playTime);
+                        
+                        // 檢查並完成所有相關任務
+                        checkAndCompleteAllTasks($member_id, '看字選色遊戲');
                     }
                 }
 
@@ -344,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>看字選色遊戲</title>
-    <link rel="stylesheet" href="css/text-color-1.css?v=19">
+    <link rel="stylesheet" href="css/text-color-1.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
@@ -923,6 +931,15 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             if (link) {
                 link.href = link.href.split('?')[0] + '?v=' + Date.now();
             }
+            
+            // 清除可能的JavaScript快取
+            if (typeof clearAchievementsCache === 'function') {
+                clearAchievementsCache();
+            }
+            
+            // 強制重新載入顏色資料
+            console.log('載入的顏色資料：', colors);
+            console.log('顏色數量：', colors.length);
         }
 
         function selectDifficulty(level) {
