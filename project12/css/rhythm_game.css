@@ -154,10 +154,6 @@ h1 {
   background-color: #FFA500;
 }
 
-#pause-btn.resume-btn {
-  background-color: #4CAF50;
-}
-
 #end-btn {
   background-color: #E00000;
 }
@@ -573,4 +569,19 @@ h1 {
   text-align: center;
   line-height: 50px;
   font-weight: bold;
+}
+
+.hit-result {
+    position: absolute; /* 相對於父容器定位 */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: white; /* 預設顏色 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    z-index: 1000;
+    pointer-events: none; /* 讓點擊可以穿透 */
+    opacity: 1; /* 初始不透明 */
+    transition: all 0.5s ease-out; /* 增加過渡效果 */
 }

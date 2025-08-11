@@ -119,6 +119,8 @@ function handleHit() {
   if (!gameRunning || paused) return;
   const zoneLeft = hitZone.getBoundingClientRect().left;
   const zoneRight = zoneLeft + hitZone.offsetWidth;
+  let hitResult = ''; // 在這裡宣告 hitResult
+  let scoreToAdd = 0; // 在這裡宣告 scoreToAdd
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
     const noteBox = note.getBoundingClientRect();
@@ -128,25 +130,71 @@ function handleHit() {
       flashHitZone();
       const diff = Math.abs(center - (zoneLeft + hitZone.offsetWidth / 2));
       if (diff < 20) {
-        score += 20; perfectCount++;
-        statusText.textContent = `🎯 Perfect！+20（目前：${score}）`;
+        scoreToAdd = 20;
+        perfectCount++;
+        hitResult = 'Perfect';
       } else if (diff < 50) {
-        score += 10; goodCount++;
-        statusText.textContent = `👍 Good！+10（目前：${score}）`;
+        scoreToAdd = 10;
+        goodCount++;
+        hitResult = 'Good';
       } else {
-        missCount++; statusText.textContent = `❌ Miss！（目前：${score}）`;
+        missCount++;
+        hitResult = 'Miss';
+        scoreToAdd = 0;
       }
-      note.remove(); notes.splice(i, 1);
+      score += scoreToAdd;
       currentScoreDisplay.textContent = score;
       if (score > highScore) {
         highScore = score;
         highScoreDisplay.textContent = score;
         localStorage.setItem("rhythmHighScore", score);
       }
+      // 呼叫新的函式來顯示結果，並傳入正確的參數
+      showHitResult(hitResult, scoreToAdd); // 新增這行
+
+      note.remove();
+      notes.splice(i, 1);
       break;
     }
   }
 }
+
+function showHitResult(result, score) {
+  const resultDiv = document.createElement("div");
+  resultDiv.className = "hit-result";
+  resultDiv.textContent = `${result} +${score}`;
+
+  // 設定樣式
+  resultDiv.style.position = "absolute";
+  resultDiv.style.left = "50%";
+  resultDiv.style.top = "50%";
+  resultDiv.style.transform = "translate(-50%, -50%)";
+  resultDiv.style.fontSize = "24px";
+  resultDiv.style.fontWeight = "bold";
+  resultDiv.style.color = result === "Perfect" ? "#FFD700" : result === "Good" ? "#4CAF50" : "#FF5722";
+  resultDiv.style.textShadow = "2px 2px 4px rgba(0,0,0,0.5)";
+  resultDiv.style.zIndex = "1000";
+  resultDiv.style.pointerEvents = "none";
+
+  // 將結果 div 附加到遊戲區域
+  const gameArea = document.getElementById("gameArea"); // 或其他您希望它出現的父元素
+  gameArea.appendChild(resultDiv);
+
+  let opacity = 1;
+  let y = 0;
+  const fadeOut = setInterval(() => {
+    opacity -= 0.05;
+    y -= 2;
+    resultDiv.style.opacity = opacity;
+    resultDiv.style.top = `calc(50% + ${y}px)`;
+
+    if (opacity <= 0) {
+      resultDiv.remove();
+      clearInterval(fadeOut);
+    }
+  }, 50);
+}
+
 
 function flashHitZone() {
   hitZone.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
@@ -158,12 +206,10 @@ function togglePause() {
   if (paused) {
     bgm.pause();
     pauseButton.textContent = "繼續遊戲";
-    pauseButton.classList.add('resume-btn');
     clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
   } else {
     bgm.play();
     pauseButton.textContent = "暫停遊戲";
-    pauseButton.classList.remove('resume-btn');
     spawnNoteWithRhythm(); // ← 重新開始節奏
   }
 }
@@ -180,16 +226,10 @@ function endGame() {
   clearInterval(timerInterval);
   bgm.pause();
   bgm.currentTime = 0;
-  finalResult.innerHTML = `
-    ${score >= passScore ? '🎉 <b>過關！</b>' : '😢 <b>未過關</b>'}<br>
-    🔢 分數：${score}<br>
-    🎯 Perfect：${perfectCount}<br>
-    👍 Good：${goodCount}<br>
-    ❌ Miss：${missCount}
-  `;
+  
   clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
 
-  let sendMemberId = document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8;
+  let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 8;
   let recordScore = 0; // 初始化 recordScore
 
   // 計算 recordScore，無論是否過關
