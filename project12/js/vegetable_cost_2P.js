@@ -30,94 +30,919 @@ let player2 = {
 let currentPlayer = 1; // 1 或 2
 let totalQuestions = 0;
 
+// 邀請系統變數
+let invitedFriend = null;
+let invitationId = null;
+
 // 食材資料庫（從資料庫 AJAX 取得）
-let ingredients = {};
+let ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
 
 // 頁面載入時初始化遊戲
 window.addEventListener('DOMContentLoaded', async () => {
+    console.log('頁面載入完成，開始初始化...');
+    console.log('當前用戶ID:', window.phpMemberId);
+    console.log('當前用戶信息:', window.currentUser);
+    
+    // 確保 session 和變數都已正確設置
+    if (!window.phpMemberId) {
+        console.log('等待 session 設置...');
+        // 如果 session 還沒設置，延遲一下再檢查
+        setTimeout(async () => {
+            await initializeGame();
+        }, 1000);
+        return;
+    }
+    
+    await initializeGame();
+});
+
+// 初始化遊戲函數
+async function initializeGame() {
+    console.log('開始初始化遊戲...');
+    
     // 載入食材資料
     await fetchIngredients();
     
-    // 直接顯示難度選擇視窗
-    showDifficultyModal();
-});
+    // 檢查是否有收到的邀請
+    await checkReceivedInvitations();
+    
+    // 只有在沒有其他模態視窗顯示時才顯示好友邀請視窗
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    
+    if ((!receivedInvitationModal || receivedInvitationModal.classList.contains('hidden')) &&
+        (!waitingDifficultyModal || waitingDifficultyModal.classList.contains('hidden'))) {
+        showFriendInviteModal();
+    }
+}
+
+// 檢查收到的邀請
+async function checkReceivedInvitations() {
+    try {
+        console.log('開始檢查收到的邀請...');
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'get_pending_invitations'
+            })
+        });
+        
+        const result = await response.json();
+        console.log('檢查邀請結果:', result);
+        
+        if (result.success && result.invitations && result.invitations.length > 0) {
+            console.log('找到邀請數量:', result.invitations.length);
+            console.log('所有邀請:', result.invitations);
+            
+            // 找到算菜錢遊戲的邀請
+            const vegetableCostInvitation = result.invitations.find(inv => inv.game_type === 'vegetable_cost_2p');
+            console.log('算菜錢邀請:', vegetableCostInvitation);
+            
+            if (vegetableCostInvitation) {
+                // 設置邀請信息
+                invitationId = vegetableCostInvitation.invitation_id;
+                invitedFriend = {
+                    id: vegetableCostInvitation.from_user_id,
+                    name: vegetableCostInvitation.from_user_name
+                };
+                
+                console.log('設置邀請信息:', { invitationId, invitedFriend });
+                
+                // 顯示收到的邀請視窗
+                showReceivedInvitationModal();
+                return;
+            }
+        }
+        
+        // 如果沒有待處理的邀請，檢查是否有已接受的邀請需要同步
+        console.log('沒有待處理的邀請，檢查是否有需要同步的已接受邀請...');
+        await checkForAcceptedInvitations();
+        
+    } catch (error) {
+        console.error('檢查收到的邀請錯誤:', error);
+    }
+}
+
+// 檢查是否有已接受的邀請需要同步
+async function checkForAcceptedInvitations() {
+    try {
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'get_recent_accepted_invitations'
+            })
+        });
+        
+        const result = await response.json();
+        console.log('檢查已接受邀請結果:', result);
+        
+        if (result.success && result.invitations && result.invitations.length > 0) {
+            // 找到算菜錢遊戲的已接受邀請
+            const vegetableCostInvitation = result.invitations.find(inv => 
+                inv.game_type === 'vegetable_cost_2p' && 
+                inv.status === 'accepted'
+            );
+            
+            if (vegetableCostInvitation) {
+                console.log('找到已接受的算菜錢邀請:', vegetableCostInvitation);
+                
+                // 設置邀請信息
+                invitationId = vegetableCostInvitation.invitation_id;
+                invitedFriend = {
+                    id: vegetableCostInvitation.from_user_id,
+                    name: vegetableCostInvitation.from_user_name
+                };
+                
+                console.log('設置已接受邀請信息:', { invitationId, invitedFriend });
+                
+                // 檢查當前用戶是邀請者還是被邀請者
+                const currentUserId = window.phpMemberId;
+                if (vegetableCostInvitation.from_user_id == currentUserId) {
+                    // 當前用戶是邀請者
+                    if (vegetableCostInvitation.game_settings && vegetableCostInvitation.game_settings.difficulty) {
+                        // 如果已經選擇了難度，直接開始遊戲
+                        console.log('邀請者已選擇難度，直接開始遊戲');
+                        const difficulty = vegetableCostInvitation.game_settings.difficulty;
+                        startGameWithDifficulty(difficulty);
+                    } else {
+                        // 如果還沒選擇難度，顯示難度選擇視窗
+                        console.log('邀請者需要選擇難度，顯示難度選擇視窗');
+                        showDifficultyModal();
+                    }
+                } else {
+                    // 當前用戶是被邀請者
+                    if (vegetableCostInvitation.game_settings && vegetableCostInvitation.game_settings.difficulty) {
+                        // 如果對手已經選擇了難度，直接開始遊戲
+                        console.log('對手已選擇難度，直接開始遊戲');
+                        const difficulty = vegetableCostInvitation.game_settings.difficulty;
+                        startGameWithDifficulty(difficulty);
+                    } else {
+                        // 如果對手還沒選擇難度，顯示等待難度視窗
+                        console.log('等待對手選擇難度，顯示等待難度視窗');
+                        showWaitingDifficultyModal();
+                        // 開始檢查對手是否已選擇難度
+                        setTimeout(checkOpponentDifficultySelection, 100);
+                    }
+                }
+                return;
+            }
+        }
+        
+        console.log('沒有需要同步的已接受邀請');
+    } catch (error) {
+        console.error('檢查已接受邀請錯誤:', error);
+    }
+}
+
+// 顯示收到的邀請視窗
+function showReceivedInvitationModal() {
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    const inviterName = document.getElementById('inviter-name');
+    
+    if (receivedInvitationModal && invitedFriend) {
+        inviterName.textContent = invitedFriend.name;
+        receivedInvitationModal.classList.remove('hidden');
+    }
+}
+
+// 顯示好友邀請視窗
+function showFriendInviteModal() {
+    const friendInviteModal = document.getElementById('friend-invite-modal');
+    const difficultyModal = document.getElementById('difficulty-modal');
+    const gameContainer = document.getElementById('game-container');
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    
+    // 如果有收到的邀請，不顯示好友邀請視窗
+    if (receivedInvitationModal && !receivedInvitationModal.classList.contains('hidden')) {
+        return;
+    }
+    
+    // 如果正在等待對手選擇難度，不顯示好友邀請視窗
+    if (waitingDifficultyModal && !waitingDifficultyModal.classList.contains('hidden')) {
+        return;
+    }
+    
+    if (friendInviteModal) {
+        friendInviteModal.classList.remove('hidden');
+    }
+    if (difficultyModal) {
+        difficultyModal.classList.add('hidden');
+    }
+    if (gameContainer) {
+        gameContainer.style.display = 'none';
+    }
+}
 
 // 顯示難度選擇視窗
 function showDifficultyModal() {
+    console.log('顯示難度選擇視窗');
+    const friendInviteModal = document.getElementById('friend-invite-modal');
     const difficultyModal = document.getElementById('difficulty-modal');
+    const waitingModal = document.getElementById('waiting-modal');
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    
+    console.log('friendInviteModal:', friendInviteModal, 'difficultyModal:', difficultyModal);
+    
+    // 隱藏所有其他模態視窗
+    if (friendInviteModal) {
+        friendInviteModal.classList.add('hidden');
+    }
+    if (waitingModal) {
+        waitingModal.classList.add('hidden');
+    }
+    if (waitingDifficultyModal) {
+        waitingDifficultyModal.classList.add('hidden');
+    }
+    if (receivedInvitationModal) {
+        receivedInvitationModal.classList.add('hidden');
+    }
+    
     if (difficultyModal) {
         difficultyModal.classList.remove('hidden');
+        console.log('難度選擇視窗已顯示');
+    } else {
+        console.error('找不到難度選擇視窗元素');
+    }
+}
+
+// 邀請好友
+async function inviteFriend(friendId, friendName) {
+    invitedFriend = {
+        id: friendId,
+        name: friendName
+    };
+    
+    // 顯示等待視窗
+    showWaitingModal();
+    
+    try {
+        // 發送真正的邀請
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'send_invitation',
+                to_user_id: friendId,
+                game_type: 'vegetable_cost_2p'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            invitationId = result.invitation_id;
+            console.log('邀請已發送:', result);
+            
+            // 開始檢查邀請狀態
+            checkInvitationStatus();
+        } else {
+            console.error('發送邀請失敗:', result.message);
+            hideWaitingModal();
+            alert('發送邀請失敗: ' + result.message);
+            showFriendInviteModal();
+        }
+    } catch (error) {
+        console.error('發送邀請錯誤:', error);
+        hideWaitingModal();
+        alert('發送邀請時發生錯誤');
+        showFriendInviteModal();
+    }
+}
+
+// 檢查邀請狀態
+async function checkInvitationStatus() {
+    if (!invitationId) return;
+    
+    try {
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'check_invitation',
+                invitation_id: invitationId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('邀請狀態檢查結果:', result.status, 'invitation:', result.invitation);
+            switch (result.status) {
+                case 'accepted':
+                    hideWaitingModal();
+                    console.log('邀請已接受，當前用戶ID:', window.phpMemberId, '邀請者ID:', result.invitation?.from_user_id);
+                    
+                    // 設置 invitedFriend 為對手（邀請者或接收者）
+                    if (result.invitation) {
+                        if (result.invitation.from_user_id == window.phpMemberId) {
+                            // 當前用戶是邀請者，對手是接收者
+                            invitedFriend = {
+                                id: result.invitation.to_user_id,
+                                name: result.invitation.to_user_name
+                            };
+                            console.log('當前用戶是邀請者，對手是:', invitedFriend);
+                            showDifficultyModal();
+                        } else {
+                            // 當前用戶是被邀請者，對手是發送者
+                            invitedFriend = {
+                                id: result.invitation.from_user_id,
+                                name: result.invitation.from_user_name
+                            };
+                            console.log('當前用戶是被邀請者，對手是:', invitedFriend);
+                            // 被邀請者接受邀請後，顯示等待難度視窗
+                            showWaitingDifficultyModal();
+                            // 開始檢查對手是否已選擇難度
+                            setTimeout(checkOpponentDifficultySelection, 100);
+                        }
+                    } else {
+                        // 如果沒有邀請信息，也開始檢查對手難度選擇
+                        console.log('沒有邀請信息，開始檢查對手難度選擇');
+                        setTimeout(checkOpponentDifficultySelection, 100);
+                    }
+                    break;
+                case 'rejected':
+                    hideWaitingModal();
+                    simulateFriendReject();
+                    break;
+                case 'expired':
+                    hideWaitingModal();
+                    simulateInvitationExpired();
+                    break;
+                case 'pending':
+                    // 繼續等待，1秒後再次檢查
+                    setTimeout(checkInvitationStatus, 1000);
+                    break;
+                default:
+                    console.log('邀請狀態:', result.status);
+                    setTimeout(checkInvitationStatus, 1000);
+            }
+        } else {
+            console.error('檢查邀請狀態失敗:', result.message);
+            setTimeout(checkInvitationStatus, 2000);
+        }
+    } catch (error) {
+        console.error('檢查邀請狀態錯誤:', error);
+        setTimeout(checkInvitationStatus, 2000);
+    }
+}
+
+// 顯示等待視窗
+function showWaitingModal() {
+    const waitingModal = document.getElementById('waiting-modal');
+    const invitedFriendName = document.getElementById('invited-friend-name');
+    
+    if (waitingModal && invitedFriend) {
+        invitedFriendName.textContent = invitedFriend.name;
+        waitingModal.classList.remove('hidden');
+    }
+}
+
+// 顯示等待對手選擇難度視窗
+function showWaitingDifficultyModal() {
+    console.log('顯示等待對手選擇難度視窗');
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    const opponentName = document.getElementById('opponent-name');
+    const friendInviteModal = document.getElementById('friend-invite-modal');
+    const waitingModal = document.getElementById('waiting-modal');
+    const difficultyModal = document.getElementById('difficulty-modal');
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    const gameContainer = document.getElementById('game-container');
+    
+    console.log('waitingDifficultyModal:', waitingDifficultyModal, 'opponentName:', opponentName);
+    
+    // 隱藏所有其他模態視窗和遊戲容器
+    if (friendInviteModal) {
+        friendInviteModal.classList.add('hidden');
+    }
+    if (waitingModal) {
+        waitingModal.classList.add('hidden');
+    }
+    if (difficultyModal) {
+        difficultyModal.classList.add('hidden');
+    }
+    if (receivedInvitationModal) {
+        receivedInvitationModal.classList.add('hidden');
+    }
+    if (gameContainer) {
+        gameContainer.style.display = 'none';
+        console.log('隱藏遊戲容器');
+    }
+    
+    if (waitingDifficultyModal) {
+        // 如果有 invitedFriend，使用它；否則從邀請信息中獲取對手名稱
+        if (invitedFriend) {
+            console.log('使用 invitedFriend:', invitedFriend);
+            opponentName.textContent = invitedFriend.name;
+        } else if (invitationId) {
+            console.log('從邀請信息中獲取對手名稱');
+            // 從邀請信息中獲取對手名稱
+            getInvitationInfo().then(invitation => {
+                if (invitation && invitation.from_user_name) {
+                    opponentName.textContent = invitation.from_user_name;
+                }
+            });
+        }
+        
+        console.log('移除 hidden 類別');
+        waitingDifficultyModal.classList.remove('hidden');
+        console.log('等待難度視窗已顯示');
+        
+        // 注意：不要在這裡調用 checkOpponentDifficultySelection()，因為它會在 acceptInvitation 中被調用
+        // 避免重複調用
+    } else {
+        console.error('找不到 waiting-difficulty-modal 元素');
+    }
+}
+
+// 隱藏等待視窗
+function hideWaitingModal() {
+    const waitingModal = document.getElementById('waiting-modal');
+    if (waitingModal) {
+        waitingModal.classList.add('hidden');
+    }
+}
+
+// 隱藏等待對手選擇難度視窗
+function hideWaitingDifficultyModal() {
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    if (waitingDifficultyModal) {
+        waitingDifficultyModal.classList.add('hidden');
+    }
+}
+
+// 獲取邀請信息
+async function getInvitationInfo() {
+    if (!invitationId) return null;
+    
+    try {
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'check_invitation',
+                invitation_id: invitationId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.invitation;
+        }
+    } catch (error) {
+        console.error('獲取邀請信息錯誤:', error);
+    }
+    
+    return null;
+}
+
+// 檢查對手是否已選擇難度
+async function checkOpponentDifficultySelection() {
+    console.log('檢查對手難度選擇，invitationId:', invitationId);
+    if (!invitationId) return;
+    
+    try {
+        const response = await fetch('game-invitation-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'check_invitation',
+                invitation_id: invitationId
+            })
+        });
+        
+        const result = await response.json();
+        console.log('檢查對手難度選擇結果:', result);
+        
+        if (result.success) {
+            console.log('邀請狀態:', result.status);
+            console.log('難度信息:', result.difficulty);
+            console.log('遊戲設定:', result.game_settings);
+            
+            // 檢查邀請狀態是否包含難度信息
+            if (result.difficulty && result.status === 'accepted') {
+                console.log('對手已選擇難度:', result.difficulty, '開始遊戲');
+                // 對手已選擇難度，開始遊戲
+                hideWaitingDifficultyModal();
+                await startGameWithDifficulty(result.difficulty);
+            } else if (result.game_settings && result.game_settings.difficulty && result.status === 'accepted') {
+                console.log('從 game_settings 中獲取難度:', result.game_settings.difficulty, '開始遊戲');
+                // 從 game_settings 中獲取難度
+                hideWaitingDifficultyModal();
+                await startGameWithDifficulty(result.game_settings.difficulty);
+            } else if (result.status === 'rejected' || result.status === 'expired') {
+                // 邀請被拒絕或過期
+                console.log('邀請狀態異常:', result.status);
+                hideWaitingDifficultyModal();
+                if (result.status === 'rejected') {
+                    simulateFriendReject();
+                } else {
+                    simulateInvitationExpired();
+                }
+            } else {
+                console.log('繼續等待對手選擇難度，狀態:', result.status, '難度:', result.difficulty, 'game_settings:', result.game_settings);
+                // 繼續等待，500毫秒後再次檢查（更快的輪詢）
+                setTimeout(checkOpponentDifficultySelection, 500);
+            }
+        } else {
+            console.error('檢查對手難度選擇失敗:', result.message);
+            setTimeout(checkOpponentDifficultySelection, 1000);
+        }
+    } catch (error) {
+        console.error('檢查對手難度選擇錯誤:', error);
+        setTimeout(checkOpponentDifficultySelection, 1000);
+    }
+}
+
+// 取消邀請
+async function cancelInvitation() {
+    if (invitationId) {
+        try {
+            const response = await fetch('game-invitation-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'cancel_invitation',
+                    invitation_id: invitationId
+                })
+            });
+            
+            const result = await response.json();
+            console.log('取消邀請結果:', result);
+        } catch (error) {
+            console.error('取消邀請錯誤:', error);
+        }
+    }
+    
+    hideWaitingModal();
+    hideWaitingDifficultyModal();
+    invitedFriend = null;
+    invitationId = null;
+    
+    // 重置後顯示好友邀請視窗
+    showFriendInviteModal();
+}
+
+// 接受邀請
+async function acceptInvitation() {
+    console.log('開始接受邀請，invitationId:', invitationId, 'invitedFriend:', invitedFriend);
+    
+    if (invitationId) {
+        try {
+            const response = await fetch('game-invitation-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'accept_invitation',
+                    invitation_id: invitationId
+                })
+            });
+            
+            const result = await response.json();
+            console.log('接受邀請結果:', result);
+            
+            // 如果 invitedFriend 沒有設置，從邀請信息中獲取
+            if (!invitedFriend && result.invitation) {
+                invitedFriend = {
+                    id: result.invitation.from_user_id,
+                    name: result.invitation.from_user_name
+                };
+                console.log('設置 invitedFriend:', invitedFriend);
+            }
+            
+            // 隱藏收到的邀請視窗
+            hideReceivedInvitationModal();
+            
+            // 被邀請者接受邀請後，顯示等待難度視窗並開始輪詢
+            console.log('被邀請者接受邀請，顯示等待難度視窗並開始輪詢');
+            showWaitingDifficultyModal();
+            // 立即開始檢查對手是否已選擇難度
+            setTimeout(checkOpponentDifficultySelection, 100);
+        } catch (error) {
+            console.error('接受邀請錯誤:', error);
+            hideReceivedInvitationModal();
+            showFriendInviteModal();
+        }
+    } else {
+        console.error('沒有邀請ID');
+        hideReceivedInvitationModal();
+        showFriendInviteModal();
+    }
+}
+
+// 拒絕邀請
+async function rejectInvitation() {
+    if (invitationId) {
+        try {
+            const response = await fetch('game-invitation-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'reject_invitation',
+                    invitation_id: invitationId
+                })
+            });
+            
+            const result = await response.json();
+            console.log('拒絕邀請結果:', result);
+        } catch (error) {
+            console.error('拒絕邀請錯誤:', error);
+        }
+    }
+    
+    hideReceivedInvitationModal();
+    invitedFriend = null;
+    invitationId = null;
+    showFriendInviteModal();
+}
+
+// 隱藏收到邀請視窗
+function hideReceivedInvitationModal() {
+    const receivedInvitationModal = document.getElementById('received-invitation-modal');
+    if (receivedInvitationModal) {
+        receivedInvitationModal.classList.add('hidden');
+    }
+}
+
+// 隱藏邀請過期視窗
+function hideExpiredModal() {
+    const expiredModal = document.getElementById('invitation-expired-modal');
+    if (expiredModal) {
+        expiredModal.classList.add('hidden');
+    }
+    invitedFriend = null;
+    invitationId = null;
+    showFriendInviteModal();
+}
+
+// 隱藏好友拒絕視窗
+function hideRejectModal() {
+    const rejectModal = document.getElementById('friend-reject-modal');
+    if (rejectModal) {
+        rejectModal.classList.add('hidden');
+    }
+    invitedFriend = null;
+    invitationId = null;
+    showFriendInviteModal();
+}
+
+function restoreInvitation() {
+    // 隱藏拒絕視窗
+    hideRejectModal();
+    // 重新邀請同一個好友
+    if (invitedFriend) {
+        inviteFriend(invitedFriend.id, invitedFriend.name);
+    }
+}
+
+// 隱藏退出對戰視窗
+function hideQuitModal() {
+    const quitModal = document.getElementById('quit-game-modal');
+    if (quitModal) {
+        quitModal.classList.add('hidden');
+    }
+}
+
+// 確認退出對戰
+function confirmQuitGame() {
+    hideQuitModal();
+    
+    // 隱藏遊戲容器
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+        gameContainer.style.display = 'none';
+    }
+    
+    // 重置遊戲狀態
+    resetGameState();
+    
+    // 重置邀請狀態
+    invitedFriend = null;
+    invitationId = null;
+    
+    // 顯示好友邀請視窗
+    showFriendInviteModal();
+}
+
+// 從退出返回主選單
+function returnToMainFromQuit() {
+    const playerQuitModal = document.getElementById('player-quit-modal');
+    if (playerQuitModal) {
+        playerQuitModal.classList.add('hidden');
+    }
+    
+    // 隱藏遊戲容器
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+        gameContainer.style.display = 'none';
+    }
+    
+    // 重置遊戲狀態
+    resetGameState();
+    
+    // 重置邀請狀態
+    invitedFriend = null;
+    invitationId = null;
+    
+    // 顯示好友邀請視窗
+    showFriendInviteModal();
+}
+
+// 確認返回
+function confirmReturn() {
+    const returnConfirmModal = document.getElementById('return-confirm-modal');
+    if (returnConfirmModal) {
+        returnConfirmModal.classList.add('hidden');
+    }
+    
+    // 退出對戰並返回主選單
+    confirmQuitGame();
+}
+
+// 取消返回
+function cancelReturn() {
+    const returnConfirmModal = document.getElementById('return-confirm-modal');
+    if (returnConfirmModal) {
+        returnConfirmModal.classList.add('hidden');
+    }
+}
+
+// 重置遊戲狀態
+function resetGameState() {
+    timer = 60;
+    gamePaused = false;
+    gameStarted = false;
+    currentQuestion = 0;
+    questions = [];
+    currentPlayer = 1;
+    
+    // 重置玩家分數
+    player1.score = 0;
+    player1.correct = 0;
+    player2.score = 0;
+    player2.correct = 0;
+    
+    // 重置邀請狀態
+    invitedFriend = null;
+    invitationId = null;
+    
+    // 重置玩家2信息
+    player2.id = 'local_player';
+    player2.name = '本地玩家';
+    player2.avatar = 'img/user.png';
+    
+    // 重置顯示
+    if (document.getElementById('timer')) {
+        document.getElementById('timer').textContent = timer;
+    }
+    if (document.getElementById('pause-btn')) {
+        document.getElementById('pause-btn').textContent = '暫停遊戲';
+        document.getElementById('pause-btn').classList.remove('resume-btn');
+    }
+}
+
+// 模擬邀請過期
+function simulateInvitationExpired() {
+    hideWaitingModal();
+    hideWaitingDifficultyModal();
+    const expiredModal = document.getElementById('invitation-expired-modal');
+    if (expiredModal) {
+        expiredModal.classList.remove('hidden');
+    }
+}
+
+// 模擬好友拒絕邀請
+function simulateFriendReject() {
+    hideWaitingModal();
+    hideWaitingDifficultyModal();
+    const rejectModal = document.getElementById('friend-reject-modal');
+    if (rejectModal) {
+        rejectModal.classList.remove('hidden');
+    }
+}
+
+// 顯示退出對戰確認視窗
+function showQuitGameModal() {
+    const quitModal = document.getElementById('quit-game-modal');
+    if (quitModal) {
+        quitModal.classList.remove('hidden');
+    }
+}
+
+// 顯示返回確認視窗
+function showReturnConfirmModal() {
+    const returnConfirmModal = document.getElementById('return-confirm-modal');
+    if (returnConfirmModal) {
+        returnConfirmModal.classList.remove('hidden');
     }
 }
 
 async function fetchIngredients() {
-    const response = await fetch('vegetable_cost_2P.php?get_ingredients=1');
-    const data = await response.json();
-    console.log('fetchIngredients 回傳:', data);
-    if (!Array.isArray(data)) {
-        alert(data.error ? data.error : '取得食材資料失敗');
-        return;
+    try {
+        console.log('開始載入食材數據...');
+        const response = await fetch('vegetable_cost_2P.php?get_ingredients=1');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('fetchIngredients 回傳:', data);
+        
+        if (!Array.isArray(data)) {
+            console.error('食材數據格式錯誤:', data);
+            if (data.error) {
+                console.error('錯誤信息:', data.error);
+            }
+            // 初始化空的食材數據，避免後續錯誤
+            ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
+            return;
+        }
+        
+        // 分類
+        ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
+        data.forEach(item => {
+            if (!ingredients[item.category]) ingredients[item.category] = [];
+            ingredients[item.category].push(item);
+        });
+        console.log('分類後的食材:', ingredients);
+        console.log('食材載入完成！');
+    } catch (error) {
+        console.error('載入食材數據失敗:', error);
+        // 初始化空的食材數據，避免後續錯誤
+        ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
     }
-    // 分類
-    ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
-    data.forEach(item => {
-        if (!ingredients[item.category]) ingredients[item.category] = [];
-        ingredients[item.category].push(item);
-    });
 }
 
-// 食材對應 emoji
-const ingredientEmojis = {
-    '小白菜': '🥬',
-    '高麗菜': '🥬',
-    '青江菜': '🥬',
-    '蘋果': '🍎',
-    '香蕉': '🍌',
-    '番茄': '🍅',
-    '胡蘿蔔': '🥕',
-    '馬鈴薯': '🥔',
-    '洋蔥': '🧅',
-    '葡萄': '🍇',
-    '西瓜': '🍉',
-    '鳳梨': '🍍',
-    '草莓': '🍓',
-    '南瓜': '🎃',
-    '玉米': '🌽',
-    '茄子': '🍆',
-    '辣椒': '🌶️',
-    '檸檬': '🍋',
-    '橘子': '🍊',
-    '芒果': '🥭',
-    '蘑菇': '🍄',
-    '雞蛋': '🥚',
-    '牛肉': '🥩',
-    '豬肉': '🥓',
-    '雞肉': '🍗',
-    '魚': '🐟',
-    '蝦': '🦐',
-    '螃蟹': '🦀',
-    '龍蝦': '🦞',
-    '章魚': '🐙',
-    '海膽': '🦑',
-    '起司': '🧀',
-    '其他': '🥗'
-};
-
-// 生成題目時，將食材名稱加上 emoji
-function getIngredientWithEmoji(name) {
-    return name + (ingredientEmojis[name] ? ' ' + ingredientEmojis[name] : '');
+// 生成題目時，將食材名稱加上圖片
+function getIngredientWithImage(item) {
+    if (item.image) {
+        return `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name}`;
+    }
+    return item.name;
 }
 
-// 新增：去除 emoji 只留食材名稱
-function stripEmoji(str) {
-    // 去除 emoji 和多餘空白，只留食材名稱
-    return str.replace(/\s*[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+/gu, '').trim();
+// 新增：去除 HTML 標籤只留食材名稱
+function stripHtml(str) {
+    return str.replace(/<[^>]*>/g, '').trim();
 }
 
 // 生成簡單題目
 function generateEasyQuestion() {
+    console.log('開始生成簡單題目');
+    console.log('食材數據：', ingredients);
+    
+    // 檢查食材數據是否已載入
+    if (!ingredients || !ingredients.vegetables) {
+        console.error('食材數據未載入！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br><br>請問總共要付多少錢？',
+            options: [55, 50, 60, 45],
+            correctAnswer: 55,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}]
+        };
+    }
+    
     // 顯示2~3種蔬果與價格（組合題時固定5種）
-    const allItems = ingredients.vegetables.concat(ingredients.fruits, ingredients.others);
+    const allItems = (ingredients.vegetables || []).concat(ingredients.fruits || [], ingredients.others || []);
+    console.log('可用食材數量：', allItems.length);
+    
+    if (allItems.length === 0) {
+        console.error('沒有可用食材！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br><br>請問總共要付多少錢？',
+            options: [55, 50, 60, 45],
+            correctAnswer: 55,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}]
+        };
+    }
+    
     // 題型隨機：1. 指定物品總價 2. 固定預算能買哪些
     const type = Math.random() < 0.6 ? '指定物品' : '預算組合';
     let selectedItems = [];
@@ -151,11 +976,20 @@ function generateEasyQuestion() {
     }
 
     if (selectedItems.length === 0) {
-        return generateEasyQuestion(); // 遞迴重試
+        console.error('無法選擇食材，使用預設題目');
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br><br>請問總共要付多少錢？',
+            options: [55, 50, 60, 45],
+            correctAnswer: 55,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}]
+        };
     }
 
     // 計算總價
     const totalPrice = selectedItems.reduce((sum, item) => sum + parseFloat(item.price), 0);
+    console.log('選擇的食材：', selectedItems);
+    console.log('總價：', totalPrice);
     
     // 生成選項（包含正確答案和3個錯誤答案）
     const options = [totalPrice];
@@ -173,23 +1007,56 @@ function generateEasyQuestion() {
     }
 
     // 生成題目文字
-    let questionText = '阿嬤去市場買菜，買了：\n';
+    let questionText = '阿嬤去市場買菜，買了：<br>';
     selectedItems.forEach(item => {
-        questionText += `${getIngredientWithEmoji(item.name)} ${item.price}元\n`;
+        questionText += `${getIngredientWithImage(item)} ${item.price}元<br>`;
     });
-    questionText += '\n請問總共要付多少錢？';
+    questionText += '<br>請問總共要付多少錢？';
 
-    return {
+    const result = {
         question: questionText,
         options: options,
         correctAnswer: totalPrice,
-        type: type
+        type: type,
+        items: selectedItems
     };
+    
+    console.log('生成的題目：', result);
+    return result;
 }
 
 // 生成普通題目
 function generateNormalQuestion() {
-    const allItems = ingredients.vegetables.concat(ingredients.fruits, ingredients.meat, ingredients.seafood, ingredients.others);
+    console.log('開始生成普通題目');
+    
+    // 檢查食材數據是否已載入
+    if (!ingredients || !ingredients.vegetables) {
+        console.error('食材數據未載入！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br><br>請問總共要付多少錢？',
+            options: [70, 65, 75, 60],
+            correctAnswer: 70,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}]
+        };
+    }
+    
+    const allItems = (ingredients.vegetables || []).concat(ingredients.fruits || [], ingredients.meat || [], ingredients.seafood || [], ingredients.others || []);
+    console.log('可用食材數量：', allItems.length);
+    
+    if (allItems.length === 0) {
+        console.error('沒有可用食材！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br><br>請問總共要付多少錢？',
+            options: [70, 65, 75, 60],
+            correctAnswer: 70,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}]
+        };
+    }
+    
     const type = Math.random() < 0.5 ? '指定物品' : '預算組合';
     let selectedItems = [];
 
@@ -222,7 +1089,14 @@ function generateNormalQuestion() {
     }
 
     if (selectedItems.length === 0) {
-        return generateNormalQuestion(); // 遞迴重試
+        console.error('無法選擇食材，使用預設題目');
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br><br>請問總共要付多少錢？',
+            options: [70, 65, 75, 60],
+            correctAnswer: 70,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}]
+        };
     }
 
     // 計算總價
@@ -244,23 +1118,53 @@ function generateNormalQuestion() {
     }
 
     // 生成題目文字
-    let questionText = '阿嬤去市場買菜，買了：\n';
+    let questionText = '阿嬤去市場買菜，買了：<br>';
     selectedItems.forEach(item => {
-        questionText += `${getIngredientWithEmoji(item.name)} ${item.price}元\n`;
+        questionText += `${getIngredientWithImage(item)} ${item.price}元<br>`;
     });
-    questionText += '\n請問總共要付多少錢？';
+    questionText += '<br>請問總共要付多少錢？';
 
     return {
         question: questionText,
         options: options,
         correctAnswer: totalPrice,
-        type: type
+        type: type,
+        items: selectedItems
     };
 }
 
 // 生成困難題目
 function generateHardQuestion() {
-    const allItems = ingredients.vegetables.concat(ingredients.fruits, ingredients.meat, ingredients.seafood, ingredients.mushroom, ingredients.others);
+    console.log('開始生成困難題目');
+    
+    // 檢查食材數據是否已載入
+    if (!ingredients || !ingredients.vegetables) {
+        console.error('食材數據未載入！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br>馬鈴薯 20元<br><br>請問總共要付多少錢？',
+            options: [90, 85, 95, 80],
+            correctAnswer: 90,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}, {name: '馬鈴薯', price: 20}]
+        };
+    }
+    
+    const allItems = (ingredients.vegetables || []).concat(ingredients.fruits || [], ingredients.meat || [], ingredients.seafood || [], ingredients.mushroom || [], ingredients.others || []);
+    console.log('可用食材數量：', allItems.length);
+    
+    if (allItems.length === 0) {
+        console.error('沒有可用食材！');
+        // 返回一個預設題目
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br>馬鈴薯 20元<br><br>請問總共要付多少錢？',
+            options: [90, 85, 95, 80],
+            correctAnswer: 90,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}, {name: '馬鈴薯', price: 20}]
+        };
+    }
+    
     const type = Math.random() < 0.4 ? '指定物品' : '預算組合';
     let selectedItems = [];
 
@@ -293,7 +1197,14 @@ function generateHardQuestion() {
     }
 
     if (selectedItems.length === 0) {
-        return generateHardQuestion(); // 遞迴重試
+        console.error('無法選擇食材，使用預設題目');
+        return {
+            question: '阿嬤去市場買菜，買了：<br>蘋果 30元<br>香蕉 25元<br>胡蘿蔔 15元<br>馬鈴薯 20元<br><br>請問總共要付多少錢？',
+            options: [90, 85, 95, 80],
+            correctAnswer: 90,
+            type: '指定物品',
+            items: [{name: '蘋果', price: 30}, {name: '香蕉', price: 25}, {name: '胡蘿蔔', price: 15}, {name: '馬鈴薯', price: 20}]
+        };
     }
 
     // 計算總價
@@ -315,22 +1226,68 @@ function generateHardQuestion() {
     }
 
     // 生成題目文字
-    let questionText = '阿嬤去市場買菜，買了：\n';
+    let questionText = '阿嬤去市場買菜，買了：<br>';
     selectedItems.forEach(item => {
-        questionText += `${getIngredientWithEmoji(item.name)} ${item.price}元\n`;
+        questionText += `${getIngredientWithImage(item)} ${item.price}元<br>`;
     });
-    questionText += '\n請問總共要付多少錢？';
+    questionText += '<br>請問總共要付多少錢？';
 
     return {
         question: questionText,
         options: options,
         correctAnswer: totalPrice,
-        type: type
+        type: type,
+        items: selectedItems
     };
 }
 
 // 載入題目
 function loadQuestion() {
+    console.log(`載入題目：currentQuestion=${currentQuestion}, questions.length=${questions.length}`);
+    
+    // 確保 currentQuestion 是有效的數字
+    if (currentQuestion === undefined || currentQuestion === null) {
+        console.log('currentQuestion 無效，重置為 0');
+        currentQuestion = 0;
+    }
+    
+    // 如果是線上模式，優先使用伺服器同步的題目
+    if (invitationId && gameStarted) {
+        // 嘗試從伺服器獲取當前題目
+        fetch('game-sync-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'get_game_state',
+                invitation_id: invitationId,
+                player_id: window.phpMemberId
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && result.game_state && result.game_state.current_question_data) {
+                console.log('使用伺服器同步的題目：', result.game_state.current_question_data);
+                displayQuestion(result.game_state.current_question_data);
+                return;
+            }
+            // 如果沒有伺服器題目，使用本地題目
+            loadLocalQuestion();
+        })
+        .catch(error => {
+            console.error('獲取伺服器題目失敗，使用本地題目：', error);
+            loadLocalQuestion();
+        });
+    } else {
+        // 本地模式，使用本地題目
+        loadLocalQuestion();
+    }
+}
+
+// 載入本地題目
+function loadLocalQuestion() {
+    // 確保有題目可以載入
     if (currentQuestion >= questions.length) {
         // 生成新題目
         let newQuestion;
@@ -348,12 +1305,45 @@ function loadQuestion() {
                 newQuestion = generateEasyQuestion();
         }
         questions.push(newQuestion);
+        console.log(`生成新題目：`, newQuestion);
     }
 
     const question = questions[currentQuestion];
     
-    // 顯示題目
-    document.getElementById('question').textContent = question.question;
+    // 檢查題目是否有效
+    if (!question || !question.question || !question.options) {
+        console.error('題目無效：', question);
+        console.error('currentQuestion:', currentQuestion);
+        console.error('questions:', questions);
+        return;
+    }
+    
+    console.log(`載入本地題目 ${currentQuestion + 1}：`, question.question);
+    displayQuestion(question);
+}
+
+// 顯示題目
+function displayQuestion(question) {
+    
+    // 檢查題目是否有效
+    if (!question || !question.question || !question.options) {
+        console.error('題目無效：', question);
+        console.error('currentQuestion:', currentQuestion);
+        console.error('questions:', questions);
+        return;
+    }
+    
+    // 檢查題目是否有效
+    if (!question || !question.question || !question.options) {
+        console.error('題目無效：', question);
+        return;
+    }
+    
+    console.log(`顯示題目：`, question.question);
+    
+    // 顯示題目（支援 HTML）
+    const questionElement = document.getElementById('question');
+    questionElement.innerHTML = question.question;
     
     // 顯示選項
     const optionsContainer = document.getElementById('options-container');
@@ -371,7 +1361,8 @@ function loadQuestion() {
 }
 
 // 開始遊戲
-function startGame() {
+async function startGame() {
+    console.log('開始遊戲');
     gameStarted = true;
     currentQuestion = 0;
     questions = [];
@@ -384,6 +1375,30 @@ function startGame() {
     player2.correct = 0;
     currentPlayer = 1;
     
+    console.log(`遊戲開始！初始玩家：${player1.name}，對手：${player2.name}`);
+    
+    // 隱藏所有等待視窗
+    const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
+    const waitingModal = document.getElementById('waiting-modal');
+    const difficultyModal = document.getElementById('difficulty-modal');
+    
+    if (waitingDifficultyModal) {
+        waitingDifficultyModal.classList.add('hidden');
+    }
+    if (waitingModal) {
+        waitingModal.classList.add('hidden');
+    }
+    if (difficultyModal) {
+        difficultyModal.classList.add('hidden');
+    }
+    
+    // 顯示遊戲容器
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+        gameContainer.style.display = 'block';
+        console.log('顯示遊戲容器');
+    }
+    
     // 更新顯示
     updatePlayerDisplay();
     updateCurrentPlayerIndicator();
@@ -394,25 +1409,87 @@ function startGame() {
     // 載入第一題
     loadQuestion();
     
-    // 隱藏難度選擇視窗
-    document.getElementById('difficulty-modal').classList.add('hidden');
+    // 如果是線上對戰，立即同步初始狀態並開始同步檢查
+    if (invitationId) {
+        // 等待第一題載入完成後再同步
+        setTimeout(async () => {
+            // 立即同步初始遊戲狀態
+            try {
+                const currentQuestionData = questions[currentQuestion] || null;
+                
+                await fetch('game-sync-api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'sync_answer',
+                        invitation_id: invitationId,
+                        player_id: window.phpMemberId,
+                        selected_answer: null,
+                        correct_answer: null,
+                        is_correct: false,
+                        current_question: currentQuestion,
+                        player1_score: player1.score,
+                        player2_score: player2.score,
+                        player1_correct: player1.correct,
+                        player2_correct: player2.correct,
+                        total_questions: totalQuestions,
+                        current_question_data: currentQuestionData // 同步第一題數據
+                    })
+                });
+                console.log('初始遊戲狀態和第一題已同步到伺服器');
+            } catch (error) {
+                console.error('同步初始狀態失敗:', error);
+            }
+        }, 500); // 等待500ms確保題目已載入
+        
+        startGameSync();
+    }
+}
+    
+    // 隱藏所有相關模態視窗
+    const modals = [
+        'difficulty-modal',
+        'friend-invite-modal',
+        'received-invitation-modal',
+        'waiting-modal',
+        'waiting-difficulty-modal'
+    ];
+    
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+            console.log('隱藏模態視窗:', modalId);
+        }
+    });
     
     // 顯示遊戲容器
-    document.getElementById('game-container').style.display = 'block';
-}
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+        gameContainer.style.display = 'block';
+        console.log('顯示遊戲容器');
+    }
+
 
 // 檢查答案
-function checkAnswer(selectedAnswer, correctAnswer) {
+async function checkAnswer(selectedAnswer, correctAnswer) {
     const isCorrect = selectedAnswer === correctAnswer;
+    
+    console.log(`玩家${currentPlayer} (${currentPlayer === 1 ? player1.name : player2.name}) 選擇了 ${selectedAnswer}元，正確答案是 ${correctAnswer}元`);
+    console.log(`答案${isCorrect ? '正確' : '錯誤'}`);
     
     if (isCorrect) {
         // 當前玩家得分
         if (currentPlayer === 1) {
             player1.score += 3;
             player1.correct += 1;
+            console.log(`${player1.name} 答對了！得分：${player1.score}，答對：${player1.correct}`);
         } else {
             player2.score += 3;
             player2.correct += 1;
+            console.log(`${player2.name} 答對了！得分：${player2.score}，答對：${player2.correct}`);
         }
         
         // 更新顯示
@@ -423,14 +1500,50 @@ function checkAnswer(selectedAnswer, correctAnswer) {
     } else {
         // 顯示錯誤提示
         showAnswerFeedback(false);
+        console.log(`${currentPlayer === 1 ? player1.name : player2.name} 答錯了，不扣分`);
     }
     
     // 增加總題數
     totalQuestions++;
     document.getElementById('total-questions').textContent = totalQuestions;
     
+    // 同步答案到伺服器
+    if (invitationId) {
+        try {
+            // 獲取當前題目數據
+            const currentQuestionData = questions[currentQuestion] || null;
+            
+            await fetch('game-sync-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'sync_answer',
+                    invitation_id: invitationId,
+                    player_id: window.phpMemberId,
+                    selected_answer: selectedAnswer,
+                    correct_answer: correctAnswer,
+                    is_correct: isCorrect,
+                    current_question: currentQuestion,
+                    player1_score: player1.score,
+                    player2_score: player2.score,
+                    player1_correct: player1.correct,
+                    player2_correct: player2.correct,
+                    total_questions: totalQuestions,
+                    current_question_data: currentQuestionData // 同步當前題目數據
+                })
+            });
+            console.log('答案和題目已同步到伺服器');
+        } catch (error) {
+            console.error('同步答案失敗:', error);
+        }
+    }
+    
     // 切換玩家
+    const previousPlayer = currentPlayer;
     currentPlayer = currentPlayer === 1 ? 2 : 1;
+    console.log(`輪流答題：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
     
     // 更新當前玩家指示器
     updateCurrentPlayerIndicator();
@@ -440,6 +1553,78 @@ function checkAnswer(selectedAnswer, correctAnswer) {
     setTimeout(() => {
         loadQuestion();
     }, 1500);
+}
+
+// 開始遊戲同步
+function startGameSync() {
+    console.log('開始遊戲同步檢查');
+    // 每2秒檢查一次同步狀態
+    setInterval(async () => {
+        if (gameStarted && invitationId) {
+            await checkGameSync();
+        }
+    }, 2000);
+}
+
+// 檢查遊戲同步狀態
+async function checkGameSync() {
+    try {
+        const response = await fetch('game-sync-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'get_game_state',
+                invitation_id: invitationId,
+                player_id: window.phpMemberId
+            })
+        });
+        
+        const result = await response.json();
+        if (result.success && result.game_state) {
+            const gameState = result.game_state;
+            
+            console.log('收到遊戲狀態同步：', gameState);
+            
+            // 同步遊戲狀態
+            if (gameState.current_question !== undefined && gameState.current_question !== currentQuestion) {
+                console.log('同步題目：', gameState.current_question);
+                currentQuestion = gameState.current_question;
+                
+                // 如果有同步的題目數據，直接使用
+                if (gameState.current_question_data) {
+                    console.log('使用同步的題目數據：', gameState.current_question_data);
+                    displayQuestion(gameState.current_question_data);
+                } else {
+                    // 否則載入本地題目
+                    loadQuestion();
+                }
+            }
+            
+            if (gameState.current_player !== undefined && gameState.current_player !== currentPlayer) {
+                console.log('同步當前玩家：', gameState.current_player);
+                currentPlayer = gameState.current_player;
+                updateCurrentPlayerIndicator();
+            }
+            
+            if (gameState.player1_score !== undefined && gameState.player1_score !== player1.score || 
+                gameState.player2_score !== undefined && gameState.player2_score !== player2.score) {
+                console.log('同步分數');
+                if (gameState.player1_score !== undefined) player1.score = gameState.player1_score;
+                if (gameState.player2_score !== undefined) player2.score = gameState.player2_score;
+                if (gameState.player1_correct !== undefined) player1.correct = gameState.player1_correct;
+                if (gameState.player2_correct !== undefined) player2.correct = gameState.player2_correct;
+                if (gameState.total_questions !== undefined) totalQuestions = gameState.total_questions;
+                updatePlayerDisplay();
+                document.getElementById('total-questions').textContent = totalQuestions;
+            }
+        } else {
+            console.log('遊戲狀態同步失敗或無數據：', result);
+        }
+    } catch (error) {
+        console.error('檢查遊戲同步失敗:', error);
+    }
 }
 
 // 顯示答案反饋
@@ -471,10 +1656,21 @@ function showAnswerFeedback(isCorrect) {
 
 // 更新玩家顯示
 function updatePlayerDisplay() {
+    // 更新玩家1信息
+    document.getElementById('player1-name-display').textContent = player1.name;
     document.getElementById('player1-score').textContent = player1.score;
     document.getElementById('player1-correct').textContent = player1.correct;
+    
+    // 更新玩家2信息
+    document.getElementById('player2-name-display').textContent = player2.name;
     document.getElementById('player2-score').textContent = player2.score;
     document.getElementById('player2-correct').textContent = player2.correct;
+    
+    // 更新玩家2頭像
+    const player2Avatar = document.getElementById('player2-avatar');
+    if (player2Avatar) {
+        player2Avatar.src = player2.avatar;
+    }
 }
 
 // 更新當前玩家指示器
@@ -483,14 +1679,24 @@ function updateCurrentPlayerIndicator() {
     const player2Info = document.getElementById('player2-info');
     const currentTurnText = document.getElementById('current-turn');
     
+    // 確保 currentPlayer 是有效的數字
+    if (currentPlayer === undefined || currentPlayer === null) {
+        console.log('currentPlayer 無效，重置為 1');
+        currentPlayer = 1;
+    }
+    
+    console.log(`更新當前玩家指示器：玩家${currentPlayer} (${currentPlayer === 1 ? player1.name : player2.name})`);
+    
     if (currentPlayer === 1) {
         player1Info.classList.add('active');
         player2Info.classList.remove('active');
         currentTurnText.textContent = player1.name;
+        console.log(`設置 ${player1.name} 為當前玩家（橙色背景）`);
     } else {
         player1Info.classList.remove('active');
         player2Info.classList.add('active');
         currentTurnText.textContent = player2.name;
+        console.log(`設置 ${player2.name} 為當前玩家（橙色背景）`);
     }
 }
 
@@ -601,7 +1807,7 @@ async function saveGameResult() {
             },
             body: JSON.stringify({
                 player1_id: player1.id,
-                player2_id: 'local_player', // 本地玩家
+                player2_id: player2.id, // 使用實際的玩家2 ID
                 player1_score: player1.score,
                 player2_score: player2.score,
                 difficulty: currentDifficulty,
@@ -621,9 +1827,6 @@ function restartGame() {
     // 隱藏遊戲結束視窗
     document.getElementById('game-over-modal').classList.add('hidden');
     
-    // 顯示難度選擇視窗
-    showDifficultyModal();
-    
     // 隱藏遊戲容器
     document.getElementById('game-container').style.display = 'none';
     
@@ -637,6 +1840,18 @@ function restartGame() {
     document.getElementById('timer').textContent = timer;
     document.getElementById('pause-btn').textContent = '暫停遊戲';
     document.getElementById('pause-btn').classList.remove('resume-btn');
+    
+    // 重置邀請狀態
+    invitedFriend = null;
+    invitationId = null;
+    
+    // 重置玩家2信息
+    player2.id = 'local_player';
+    player2.name = '本地玩家';
+    player2.avatar = 'img/user.png';
+    
+    // 顯示好友邀請視窗
+    showFriendInviteModal();
 }
 
 // 退出遊戲
@@ -644,9 +1859,17 @@ function exitGame() {
     window.location.href = 'index.php';
 }
 
-// 難度選擇
-function selectDifficulty(difficulty) {
+// 開始遊戲（帶難度）
+async function startGameWithDifficulty(difficulty) {
+    console.log('開始遊戲（帶難度）:', difficulty);
     currentDifficulty = difficulty;
+    
+    // 設置玩家2信息
+    if (invitedFriend) {
+        player2.id = invitedFriend.id;
+        player2.name = invitedFriend.name;
+        player2.avatar = 'img/user.png'; // 可以從好友資料中獲取實際頭像
+    }
     
     // 設定時間
     switch (difficulty) {
@@ -664,8 +1887,115 @@ function selectDifficulty(difficulty) {
     savedTimer = timer;
     document.getElementById('timer').textContent = timer;
     
-    // 直接開始遊戲
-    startGame();
+    // 確保食材數據已加載
+    try {
+        console.log('檢查食材數據是否已加載...');
+        if (!ingredients.vegetables || ingredients.vegetables.length === 0) {
+            console.log('食材數據未加載，正在加載...');
+            await fetchIngredients();
+        }
+        console.log('食材數據已準備就緒');
+        
+        // 開始遊戲
+        await startGame();
+    } catch (error) {
+        console.error('加載食材數據失敗:', error);
+        alert('加載遊戲數據失敗，請重新整理頁面');
+    }
+}
+
+// 難度選擇
+async function selectDifficulty(difficulty) {
+    console.log('選擇難度:', difficulty, 'invitationId:', invitationId, 'invitedFriend:', invitedFriend);
+    currentDifficulty = difficulty;
+    
+    // 如果有邀請好友，設置玩家2信息
+    if (invitedFriend) {
+        player2.id = invitedFriend.id;
+        player2.name = invitedFriend.name;
+        player2.avatar = 'img/user.png'; // 可以從好友資料中獲取實際頭像
+    }
+    
+    // 設定時間
+    switch (difficulty) {
+        case 'easy':
+            timer = 80;
+            break;
+        case 'normal':
+            timer = 150;
+            break;
+        case 'hard':
+            timer = 200;
+            break;
+    }
+    
+    savedTimer = timer;
+    document.getElementById('timer').textContent = timer;
+    
+    // 更新邀請狀態，通知對手已選擇難度
+    if (invitationId) {
+        try {
+            console.log('發送難度更新請求:', difficulty);
+            const response = await fetch('game-invitation-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'update_invitation_difficulty',
+                    invitation_id: invitationId,
+                    difficulty: difficulty
+                })
+            });
+            
+            const result = await response.json();
+            console.log('更新難度結果:', result);
+            
+            if (result.success) {
+                console.log('難度更新成功，等待對手確認');
+                // 隱藏難度選擇視窗
+                const difficultyModal = document.getElementById('difficulty-modal');
+                if (difficultyModal) {
+                    difficultyModal.classList.add('hidden');
+                }
+                
+                // 顯示等待對手確認視窗
+                showWaitingDifficultyModal();
+                
+                // 開始檢查對手是否已確認難度並開始遊戲
+                setTimeout(checkOpponentDifficultySelection, 100);
+            } else {
+                console.error('難度更新失敗:', result.message);
+                alert('難度設置失敗: ' + result.message);
+            }
+        } catch (error) {
+            console.error('更新難度錯誤:', error);
+            alert('難度設置時發生錯誤');
+        }
+    } else {
+        console.log('沒有邀請ID，直接開始遊戲');
+        // 隱藏難度選擇視窗
+        const difficultyModal = document.getElementById('difficulty-modal');
+        if (difficultyModal) {
+            difficultyModal.classList.add('hidden');
+        }
+        
+        // 確保食材數據已加載
+        try {
+            console.log('檢查食材數據是否已加載...');
+            if (!ingredients.vegetables || ingredients.vegetables.length === 0) {
+                console.log('食材數據未加載，正在加載...');
+                await fetchIngredients();
+            }
+            console.log('食材數據已準備就緒');
+            
+            // 開始遊戲
+            await startGame();
+        } catch (error) {
+            console.error('加載食材數據失敗:', error);
+            alert('加載遊戲數據失敗，請重新整理頁面');
+        }
+    }
 }
 
 // 說明視窗控制
@@ -699,5 +2029,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-

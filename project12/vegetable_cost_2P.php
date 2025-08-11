@@ -14,13 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ob_clean();
 }
 
-require_once 'check_login.php';
-require_once 'db_connect_vegetable_cost_game.php';
-
-
-
-// 處理取得食材資料的 API 請求
+// 處理取得食材資料的 API 請求（在登入檢查之前）
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
+    require_once 'db_connect_vegetable_cost_game.php';
     header('Content-Type: application/json');
     
     try {
@@ -35,6 +31,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
         exit;
     }
 }
+
+require_once 'check_login.php';
+require_once 'db_connect_vegetable_cost_game.php';
+
+// 獲取當前用戶的好友列表
+$my_id = $_SESSION['member_id'];
+$sql = "
+    SELECT m.member_id, m.member_name, m.account, m.avatar
+    FROM friends f
+    JOIN member m ON f.friend_id = m.member_id
+    WHERE f.member_id = ?
+    ORDER BY m.member_name
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$my_id]);
+$friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
 
 // 處理遊戲結果保存的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
@@ -128,11 +143,186 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id']; ?>">
 
-    <!-- 難度選擇視窗 -->
-    <div id="difficulty-modal" class="modal">
+    <!-- 好友邀請視窗 -->
+    <div id="friend-invite-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <button class="back-button" onclick="window.location.href='index.php'">
+                    <span class="back-label">返回</span>
+                </button>
+                <h2 class="modal-title">邀請好友對戰</h2>
+                <button class="help-button" onclick="openHelpModal()">
+                    <span class="help-label">說明</span>
+                </button>
+            </div>
+            
+            <div class="invite-options">
+                <div class="invite-option">
+                    <h3>🎮 邀請好友</h3>
+                    <p>從您的好友列表中選擇一位進行對戰</p>
+                    <div class="friend-list-container">
+                        <?php if (empty($friends)): ?>
+                            <div class="no-friends">
+                                <p>您還沒有好友</p>
+                                <button onclick="window.location.href='add-friend.php'" class="add-friend-btn">添加好友</button>
+                            </div>
+                        <?php else: ?>
+                            <div class="friend-list">
+                                <?php foreach ($friends as $friend): ?>
+                                    <div class="friend-item" data-friend-id="<?php echo $friend['member_id']; ?>" data-friend-name="<?php echo htmlspecialchars($friend['member_name']); ?>">
+                                        <img src="<?php echo htmlspecialchars($friend['avatar'] ?? 'img/user.png'); ?>" class="friend-avatar" alt="頭像">
+                                        <div class="friend-info">
+                                            <div class="friend-name"><?php echo htmlspecialchars($friend['member_name']); ?></div>
+                                            <div class="friend-account"><?php echo htmlspecialchars($friend['account']); ?></div>
+                                        </div>
+                                        <button class="invite-friend-btn" onclick="inviteFriend(<?php echo $friend['member_id']; ?>, '<?php echo htmlspecialchars($friend['member_name']); ?>')">
+                                            邀請對戰
+                                        </button>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 等待好友接受邀請視窗 -->
+    <div id="waiting-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="waiting-title">等待好友回應</h2>
+            <div class="waiting-content">
+                <div class="loading-spinner"></div>
+                <p id="waiting-message">正在等待 <span id="invited-friend-name"></span> 接受邀請...</p>
+                <div class="waiting-actions">
+                    <button onclick="cancelInvitation()" class="cancel-btn">取消邀請</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 等待對手選擇難度視窗 -->
+    <div id="waiting-difficulty-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="waiting-difficulty-title">等待對手選擇難度</h2>
+            <div class="waiting-difficulty-content">
+                <div class="loading-spinner"></div>
+                <p id="waiting-difficulty-message">正在等待 <span id="opponent-name"></span> 選擇遊戲難度...</p>
+                <div class="waiting-difficulty-actions">
+                    <button onclick="cancelInvitation()" class="cancel-btn">取消對戰</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收到遊戲邀請視窗 -->
+    <div id="received-invitation-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>收到遊戲邀請</h2>
+            <div class="invite-content">
+                <p><span id="inviter-name"></span> 邀請您進行算菜錢對戰</p>
+                <div class="invite-actions">
+                    <button onclick="acceptInvitation()" class="accept-btn">接受邀請</button>
+                    <button onclick="rejectInvitation()" class="reject-btn">拒絕邀請</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 邀請過期視窗 -->
+    <div id="invitation-expired-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">邀請已過期</h2>
+            </div>
+            <div class="expired-content">
+                <div class="expired-icon">⏰</div>
+                <p class="expired-message">很抱歉，您的遊戲邀請已經過期了。</p>
+                <p class="expired-subtitle">請重新發送邀請或選擇其他好友進行對戰。</p>
+            </div>
+            <div class="expired-buttons">
+                <button onclick="hideExpiredModal()" class="primary-btn">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 好友拒絕邀請視窗 -->
+    <div id="friend-reject-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">邀請被拒絕</h2>
+            </div>
+            <div class="reject-content">
+                <div class="reject-icon">❌</div>
+                <p class="reject-message">好友拒絕了您的邀請
+                    <button class="restore-btn" onclick="restoreInvitation()">往上還原</button>
+                </p>
+                <p class="reject-subtitle">您可以邀請其他好友或稍後再試。</p>
+            </div>
+            <div class="reject-buttons">
+                <button onclick="hideRejectModal()" class="primary-btn">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退出對戰確認視窗 -->
+    <div id="quit-game-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">退出對戰</h2>
+            </div>
+            <div class="quit-content">
+                <div class="quit-icon">🚪</div>
+                <p class="quit-message">確定要退出當前對戰嗎？</p>
+                <p class="quit-subtitle">退出後將無法繼續此局遊戲。</p>
+            </div>
+            <div class="quit-buttons">
+                <button onclick="confirmQuitGame()" class="danger-btn">確定退出</button>
+                <button onclick="hideQuitModal()" class="cancel-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 玩家退出提示視窗 -->
+    <div id="player-quit-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">對戰結束</h2>
+            </div>
+            <div class="player-quit-content">
+                <div class="player-quit-icon">👋</div>
+                <p class="player-quit-message">對手已退出對戰</p>
+            </div>
+            <div class="player-quit-buttons">
+                <button onclick="returnToMainFromQuit()" class="primary-btn">返回主選單</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回確認對話框 -->
+    <div id="return-confirm-modal" class="modal hidden">
+        <div class="modal-content return-confirm-content">
+            <div class="modal-header">
+                <h2 class="modal-title">確認返回</h2>
+            </div>
+            <div class="return-confirm-body">
+                <div class="return-confirm-icon">⚠️</div>
+                <p class="return-confirm-message">您正在進行線上對戰，返回將自動退出戰局。</p>
+                <p class="return-confirm-subtitle">確定要返回嗎？</p>
+            </div>
+            <div class="return-confirm-buttons">
+                <button onclick="confirmReturn()" class="danger-btn">確定</button>
+                <button onclick="cancelReturn()" class="cancel-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 難度選擇視窗 -->
+    <div id="difficulty-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-button" onclick="showFriendInviteModal()">
                     <span class="back-label">返回</span>
                 </button>
                 <h2 class="modal-title">選擇難度</h2>
@@ -175,7 +365,27 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
         <div class="players-panel">
             <div class="player-info" id="player1-info">
                 <div class="player-avatar">
-                    <img src="<?php echo $current_user['avatar'] ? 'img/avatars/' . $current_user['avatar'] : 'img/user.png'; ?>" alt="玩家1頭像">
+                    <?php
+                    $avatar_path = '';
+                    if ($current_user['avatar']) {
+                        $full_path = 'img/avatars/' . $current_user['avatar'];
+                        if (file_exists($full_path)) {
+                            $avatar_path = $full_path;
+                        } else {
+                            // 如果檔案不存在，嘗試找到類似的檔案
+                            $dir = 'img/avatars/';
+                            $filename = basename($current_user['avatar'], '.png');
+                            $files = glob($dir . $filename . '*');
+                            if (!empty($files)) {
+                                $avatar_path = $files[0]; // 使用第一個找到的檔案
+                            }
+                        }
+                    }
+                    if (!$avatar_path) {
+                        $avatar_path = 'img/user.png';
+                    }
+                    ?>
+                    <img src="<?php echo $avatar_path; ?>" alt="玩家1頭像">
                 </div>
                 <div class="player-details">
                     <div class="player-name" id="player1-name-display"><?php echo htmlspecialchars($current_user['member_name']); ?></div>
@@ -250,8 +460,6 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-
-
     <!-- 遊戲說明視窗 -->
     <div id="help-modal" class="modal hidden">
         <div class="modal-content">
@@ -272,6 +480,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
                     <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
                 </div>
                 <ul style="margin-left:2.2rem;">
+                    <li>邀請好友進行對戰</li>
                     <li>兩位玩家輪流答題</li>
                     <li>每答對一題得3分</li>
                     <li>答錯不扣分，但會輪到另一位玩家</li>
@@ -289,7 +498,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
         // 將PHP變數傳遞給JavaScript
         window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
         window.currentUser = <?php echo json_encode($current_user); ?>;
-        window.friends = [];
+        window.friends = <?php echo json_encode($friends); ?>;
     </script>
     <script src="js/vegetable_cost_2P.js"></script>
 </body>

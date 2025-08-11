@@ -50,6 +50,159 @@ try {
             ]);
             break;
             
+
+
+
+        // --- 算菜錢遊戲同步功能 ---
+        case 'sync_answer':
+            $invitationId = $data['invitation_id'] ?? null;
+            $playerId = $data['player_id'] ?? null;
+            $selectedAnswer = $data['selected_answer'] ?? null;
+            $correctAnswer = $data['correct_answer'] ?? null;
+            $isCorrect = $data['is_correct'] ?? false;
+            $currentQuestion = $data['current_question'] ?? 0;
+            $player1Score = $data['player1_score'] ?? 0;
+            $player2Score = $data['player2_score'] ?? 0;
+            $player1Correct = $data['player1_correct'] ?? 0;
+            $player2Correct = $data['player2_correct'] ?? 0;
+            $totalQuestions = $data['total_questions'] ?? 0;
+            $currentQuestionData = $data['current_question_data'] ?? null; // 新增：當前題目數據
+
+            if (!$invitationId || $playerId === null) {
+                echo json_encode(['success' => false, 'message' => '參數缺失']);
+                exit;
+            }
+
+            // 獲取當前遊戲狀態
+            $stmt = $pdo->prepare("SELECT game_state, from_user_id, to_user_id FROM game_invitations WHERE invitation_id = ? AND status = 'accepted'");
+            $stmt->execute([$invitationId]);
+            $invitation = $stmt->fetch();
+
+            if (!$invitation) {
+                echo json_encode(['success' => false, 'message' => '邀請不存在或未接受']);
+                exit;
+            }
+
+            $gameState = json_decode($invitation['game_state'], true) ?: [];
+            
+            // 更新遊戲狀態
+            $gameState['current_question'] = $currentQuestion;
+            $gameState['player1_score'] = $player1Score;
+            $gameState['player2_score'] = $player2Score;
+            $gameState['player1_correct'] = $player1Correct;
+            $gameState['player2_correct'] = $player2Correct;
+            $gameState['total_questions'] = $totalQuestions;
+            
+            // 同步當前題目數據（如果提供）
+            if ($currentQuestionData) {
+                $gameState['current_question_data'] = $currentQuestionData;
+            }
+            
+            // 切換玩家（1 或 2）
+            $isInviter = ($playerId == $invitation['from_user_id']);
+            $currentPlayer = $gameState['current_player'] ?? 1;
+            $gameState['current_player'] = ($currentPlayer === 1) ? 2 : 1;
+            
+            // 記錄答案
+            $gameState['last_answer'] = [
+                'player_id' => $playerId,
+                'selected_answer' => $selectedAnswer,
+                'correct_answer' => $correctAnswer,
+                'is_correct' => $isCorrect,
+                'timestamp' => time()
+            ];
+
+            // 更新資料庫
+            $stmt = $pdo->prepare("UPDATE game_invitations SET game_state = ?, last_updated = NOW() WHERE invitation_id = ?");
+            $stmt->execute([json_encode($gameState), $invitationId]);
+
+            echo json_encode(['success' => true, 'message' => '答案已同步']);
+            break;
+            
+        case 'get_game_state':
+            $invitationId = $data['invitation_id'] ?? null;
+            $playerId = $data['player_id'] ?? null;
+
+            if (!$invitationId) {
+                echo json_encode(['success' => false, 'message' => '邀請ID參數缺失']);
+                exit;
+            }
+
+            error_log("獲取遊戲狀態 - 邀請ID: $invitationId, 玩家ID: " . ($playerId ?? '未提供'));
+
+            // 根據是否有 player_id 參數決定查詢方式
+            if ($playerId !== null) {
+                // 算菜錢遊戲專用查詢
+                $stmt = $pdo->prepare("SELECT game_state FROM game_invitations WHERE invitation_id = ? AND status = 'accepted'");
+                $stmt->execute([$invitationId]);
+                $invitation = $stmt->fetch();
+
+                if (!$invitation) {
+                    echo json_encode(['success' => false, 'message' => '邀請不存在或未接受']);
+                    exit;
+                }
+
+                $gameState = json_decode($invitation['game_state'], true) ?: [];
+                
+                echo json_encode([
+                    'success' => true,
+                    'game_state' => $gameState
+                ]);
+            } else {
+                // 通用查詢（翻牌遊戲等）
+                $stmt = $pdo->prepare("SELECT game_state, game_end_state, status, last_updated, from_user_id FROM game_invitations WHERE invitation_id = ?");
+                $stmt->execute([$invitationId]);
+                $result = $stmt->fetch();
+                
+                if ($result) {
+                    $gameState = json_decode($result['game_state'], true) ?: [];
+                    $gameEndState = json_decode($result['game_end_state'], true) ?: [];
+                    
+                    error_log("遊戲狀態查詢結果 - 狀態: " . $result['status'] . ", 遊戲狀態: " . json_encode($gameState));
+                    
+                    if ($result['status'] === 'quit') {
+                        echo json_encode([
+                            'success' => true, 
+                            'game_state' => $gameState,
+                            'last_updated' => $result['last_updated'],
+                            'is_game_end' => false,
+                            'player_quit' => true,
+                            'current_user_id' => $_SESSION['member_id'],
+                            'from_user_id' => $result['from_user_id']
+                        ]);
+                        exit;
+                    }
+                    
+                    if (!empty($gameEndState)) {
+                        echo json_encode([
+                            'success' => true, 
+                            'game_state' => $gameEndState,
+                            'last_updated' => $result['last_updated'],
+                            'is_game_end' => true,
+                            'current_user_id' => $_SESSION['member_id'],
+                            'from_user_id' => $result['from_user_id']
+                        ]);
+                    } else {
+                        echo json_encode([
+                            'success' => true, 
+                            'game_state' => $gameState,
+                            'last_updated' => $result['last_updated'],
+                            'is_game_end' => false,
+                            'current_user_id' => $_SESSION['member_id'],
+                            'from_user_id' => $result['from_user_id']
+                        ]);
+                    }
+                } else {
+                    error_log("找不到遊戲狀態 - 邀請ID: $invitationId");
+                    echo json_encode(['success' => false, 'message' => '找不到遊戲狀態']);
+                }
+            }
+            break;
+            
+
+
+
+            
         // --- 新增的動作：處理單張卡片翻開 ---
         case 'flip_card':
             $invitationId = $data['invitation_id'] ?? null;
@@ -252,58 +405,7 @@ try {
             }
             break;
             
-        case 'get_game_state':
-            $invitationId = $data['invitation_id'];
-            
-            error_log("獲取遊戲狀態 - 邀請ID: $invitationId");
-            
-            $stmt = $pdo->prepare("SELECT game_state, game_end_state, status, last_updated, from_user_id FROM game_invitations WHERE invitation_id = ?");
-            $stmt->execute([$invitationId]);
-            $result = $stmt->fetch();
-            
-            if ($result) {
-                $gameState = json_decode($result['game_state'], true) ?: [];
-                $gameEndState = json_decode($result['game_end_state'], true) ?: [];
-                
-                error_log("遊戲狀態查詢結果 - 狀態: " . $result['status'] . ", 遊戲狀態: " . json_encode($gameState));
-                
-                if ($result['status'] === 'quit') {
-                    echo json_encode([
-                        'success' => true, 
-                        'game_state' => $gameState,
-                        'last_updated' => $result['last_updated'],
-                        'is_game_end' => false,
-                        'player_quit' => true,
-                        'current_user_id' => $_SESSION['member_id'], // 回傳當前用戶ID
-                        'from_user_id' => $result['from_user_id'] // 回傳邀請者ID
-                    ]);
-                    exit;
-                }
-                
-                if (!empty($gameEndState)) {
-                    echo json_encode([
-                        'success' => true, 
-                        'game_state' => $gameEndState,
-                        'last_updated' => $result['last_updated'],
-                        'is_game_end' => true,
-                        'current_user_id' => $_SESSION['member_id'],
-                        'from_user_id' => $result['from_user_id']
-                    ]);
-                } else {
-                    echo json_encode([
-                        'success' => true, 
-                        'game_state' => $gameState,
-                        'last_updated' => $result['last_updated'],
-                        'is_game_end' => false,
-                        'current_user_id' => $_SESSION['member_id'],
-                        'from_user_id' => $result['from_user_id']
-                    ]);
-                }
-            } else {
-                error_log("找不到遊戲狀態 - 邀請ID: $invitationId");
-                echo json_encode(['success' => false, 'message' => '找不到遊戲狀態']);
-            }
-            break;
+        // 移除重複的 get_game_state case
             
         case 'update_game_end':
             $invitationId = $data['invitation_id'];
@@ -352,16 +454,7 @@ try {
             echo json_encode(['success' => true, 'message' => '玩家已退出對戰']);
             break;
             
-        // 這裡有重複的 'test_connection' case，請移除一個
-        case 'test_connection': // <-- 這個是重複的，請移除
-            try {
-                $stmt = $pdo->prepare("SELECT 1");
-                $stmt->execute();
-                echo json_encode(['success' => true, 'message' => '資料庫連接正常']);
-            } catch (Exception $e) {
-                echo json_encode(['success' => false, 'message' => '資料庫連接失敗: ' . $e->getMessage()]);
-            }
-            break;
+        // 移除重複的 test_connection case
             
         default:
             echo json_encode(['success' => false, 'message' => '未知操作']);

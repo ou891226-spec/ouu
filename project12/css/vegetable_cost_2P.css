@@ -326,6 +326,24 @@ h1 {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+.quit-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.quit-btn:hover {
+  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.3);
+}
+
 /* 分數顏色 */
 .score-green {
   color: #4caf50 !important;
@@ -627,11 +645,11 @@ h1 {
 
 @media (max-width: 480px) {
   h1 {
-    font-size: 1.5rem;
+    font-size: 24px;
   }
   
   .player-info {
-    padding: 10px;
+    min-width: 150px;
   }
   
   .player-avatar {
@@ -648,10 +666,525 @@ h1 {
   }
   
   .modal-content {
-    padding: 20px;
+    padding: 15px;
   }
   
   .modal-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
+}
+
+/* 好友邀請相關樣式 */
+.invite-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 30px 0;
+  padding-top: 1rem;
+}
+
+.invite-option {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.invite-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.invite-option h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.invite-option p {
+  margin: 0 0 15px 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.friend-list-container {
+  max-height: none;
+  overflow-y: visible;
+}
+
+.no-friends {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.no-friends p {
+  margin-bottom: 15px;
+}
+
+.friend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.friend-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+  object-fit: cover;
+}
+
+.friend-info {
+  flex: 1;
+}
+
+.friend-name {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.friend-account {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.invite-friend-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.invite-friend-btn:hover {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-1px);
+}
+
+.add-friend-btn {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.add-friend-btn:hover {
+  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+  transform: translateY(-1px);
+}
+
+.waiting-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.waiting-actions {
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+  transform: translateY(-1px);
+}
+
+.invite-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.invite-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.accept-btn, .reject-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.accept-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+
+.reject-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+.accept-btn:hover, .reject-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .invite-options {
+    margin: 20px 0;
+  }
+  
+  .friend-item {
+    padding: 10px;
+  }
+  
+  .invite-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .accept-btn, .reject-btn {
+    width: 100%;
+  }
+}
+
+/* 邀請過期視窗樣式 */
+#invitation-expired-modal .modal-header {
+  text-align: center;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+#invitation-expired-modal .modal-title {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.expired-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.expired-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  animation: pulse 2s infinite;
+}
+
+.expired-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.expired-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.expired-buttons {
+  text-align: center;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+/* 好友拒絕邀請視窗樣式 */
+#friend-reject-modal .modal-header {
+  text-align: center;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+#friend-reject-modal .modal-title {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.reject-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.reject-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #e74c3c;
+    animation: shake 0.5s ease-in-out;
+}
+
+.reject-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.reject-subtitle {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.restore-btn {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all 0.3s ease;
+}
+
+.restore-btn:hover {
+    background: #ffeaa7;
+    border-color: #f39c12;
+}
+
+.reject-buttons {
+  text-align: center;
+}
+
+/* 退出對戰確認視窗樣式 */
+#quit-game-modal .modal-header {
+  text-align: center;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+#quit-game-modal .modal-title {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.quit-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.quit-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.quit-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.quit-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.quit-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.danger-btn {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.danger-btn:hover {
+  background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+/* 玩家退出提示視窗樣式 */
+#player-quit-modal .modal-header {
+  text-align: center;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+#player-quit-modal .modal-title {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.player-quit-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.player-quit-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.player-quit-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.player-quit-buttons {
+  text-align: center;
+}
+
+/* 返回確認對話框樣式 */
+.return-confirm-content {
+  max-width: 400px;
+}
+
+.return-confirm-body {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.return-confirm-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  animation: pulse 1s infinite;
+}
+
+.return-confirm-message {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.return-confirm-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.return-confirm-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* 動畫效果 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* 等待對手選擇難度視窗樣式 */
+.waiting-difficulty-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.waiting-difficulty-content .loading-spinner {
+  margin: 0 auto 20px;
+}
+
+.waiting-difficulty-actions {
+  margin-top: 20px;
+}
+
+#waiting-difficulty-title {
+  color: #00796b;
+  margin-bottom: 20px;
+}
+
+#waiting-difficulty-message {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 15px;
 }
