@@ -197,7 +197,6 @@ function generateEasyQuestion() {
         
         // **修正選項的格式，並保持正確答案為純文字**
         options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
-        
         return {
             question: questionText,
             options: options,
@@ -604,11 +603,36 @@ function startGame() {
 
 function checkAnswer(selectedAnswer, correctAnswer) {
     if (gamePaused) return;
+
+    // 定義一個新的清理函式
+    const cleanAnswer = (answer) => {
+    // 1. 找到所有 img 標籤並提取 alt 的值
+    const altTexts = [];
+    const imgRegex = /<img[^>]*alt="([^"]*)"[^>]*>/g;
+    let match;
+    while ((match = imgRegex.exec(answer)) !== null) {
+        altTexts.push(match[1]);
+    }
     
-    // 清理 HTML 標籤來比較答案
-    const cleanSelectedAnswer = selectedAnswer.replace(/<[^>]*>/g, '').replace(/[^\w\s＋]/g, '');
-    const cleanCorrectAnswer = correctAnswer.replace(/<[^>]*>/g, '').replace(/[^\w\s＋]/g, '');
+    // 2. 清理掉所有 HTML 標籤，取得純文字
+    const textOnly = answer.replace(/<[^>]*>/g, '');
+
+    // 3. 將 alt 文本和純文字結合。
+    //    如果 altTexts 陣列有值，表示答案是圖片組合，就用 altTexts。
+    //    如果 altTexts 沒值，就用純文字。
+    if (altTexts.length > 0) {
+        return altTexts.join('＋');
+    } else {
+        // 清理除了文字、數字、空白和以外的所有字元
+        return textOnly.replace(/[^\w\s]/g, '');
+    }
+};
+
+    const cleanSelectedAnswer = cleanAnswer(selectedAnswer);
+    const cleanCorrectAnswer = correctAnswer.replace("$",'');
     
+    console.log('清理後的選取答案:', cleanSelectedAnswer, '清理後的正確答案:', cleanCorrectAnswer);
+
     const isCorrect = cleanSelectedAnswer === cleanCorrectAnswer;
     
     if (isCorrect) {
@@ -619,7 +643,7 @@ function checkAnswer(selectedAnswer, correctAnswer) {
         showAnswerFeedback(false);
     }
     
-    // 延遲載入下一題，讓玩家看到反饋訊息
+    // 延遲載入下一題
     setTimeout(() => {
         loadQuestion();
     }, 1500);
@@ -937,4 +961,4 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(() => {
         document.getElementById('help-modal').classList.add('hidden');
     }, 200);
-}); 
+});
