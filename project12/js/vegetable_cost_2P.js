@@ -33,6 +33,7 @@ let totalQuestions = 0;
 // 邀請系統變數
 let invitedFriend = null;
 let invitationId = null;
+let invitationData = null;
 
 // 食材資料庫（從資料庫 AJAX 取得）
 let ingredients = { vegetables: [], fruits: [], meat: [], seafood: [], mushroom: [], others: [] };
@@ -104,12 +105,13 @@ async function checkReceivedInvitations() {
             if (vegetableCostInvitation) {
                 // 設置邀請信息
                 invitationId = vegetableCostInvitation.invitation_id;
+                invitationData = vegetableCostInvitation;
                 invitedFriend = {
                     id: vegetableCostInvitation.from_user_id,
                     name: vegetableCostInvitation.from_user_name
                 };
                 
-                console.log('設置邀請信息:', { invitationId, invitedFriend });
+                console.log('設置邀請信息:', { invitationId, invitedFriend, invitationData });
                 
                 // 顯示收到的邀請視窗
                 showReceivedInvitationModal();
@@ -154,12 +156,13 @@ async function checkForAcceptedInvitations() {
                 
                 // 設置邀請信息
                 invitationId = vegetableCostInvitation.invitation_id;
+                invitationData = vegetableCostInvitation;
                 invitedFriend = {
                     id: vegetableCostInvitation.from_user_id,
                     name: vegetableCostInvitation.from_user_name
                 };
                 
-                console.log('設置已接受邀請信息:', { invitationId, invitedFriend });
+                console.log('設置已接受邀請信息:', { invitationId, invitedFriend, invitationData });
                 
                 // 檢查當前用戶是邀請者還是被邀請者
                 const currentUserId = window.phpMemberId;
@@ -620,6 +623,12 @@ async function acceptInvitation() {
             
             const result = await response.json();
             console.log('接受邀請結果:', result);
+            
+            // 設置邀請數據
+            if (result.invitation) {
+                invitationData = result.invitation;
+                console.log('設置 invitationData:', invitationData);
+            }
             
             // 如果 invitedFriend 沒有設置，從邀請信息中獲取
             if (!invitedFriend && result.invitation) {
@@ -1734,12 +1743,29 @@ async function checkGameSync() {
                     currentQuestion = gameState.current_question;
                     console.log('切換到新題目:', currentQuestion);
                     
-                    // 載入新題目
-                    if (questions.length > currentQuestion) {
-                        displayQuestion(questions[currentQuestion]);
-                    } else {
-                        loadQuestion();
+                    // 生成新題目並顯示
+                    let newQuestion;
+                    switch (currentDifficulty) {
+                        case 'easy':
+                            newQuestion = generateEasyQuestion();
+                            break;
+                        case 'normal':
+                            newQuestion = generateNormalQuestion();
+                            break;
+                        case 'hard':
+                            newQuestion = generateHardQuestion();
+                            break;
+                        default:
+                            newQuestion = generateNormalQuestion();
                     }
+                    
+                    // 更新題目數組
+                    if (questions.length <= currentQuestion) {
+                        questions[currentQuestion] = newQuestion;
+                    }
+                    
+                    // 顯示新題目
+                    displayQuestion(newQuestion);
                 }
             }
             

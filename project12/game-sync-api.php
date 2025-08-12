@@ -53,7 +53,99 @@ try {
 
 
 
-        // --- 算菜錢遊戲同步功能 ---
+        // --- 翻牌遊戲困難度同步功能 ---------------------------------------------------------------
+        case 'sync_difficulty':
+            $invitationId = $data['invitation_id'] ?? null;
+            $playerId = $data['player_id'] ?? null;
+            $difficulty = $data['difficulty'] ?? null;
+
+            if (!$invitationId || !$playerId || !$difficulty) {
+                error_log("sync_difficulty 參數缺失 - 邀請ID: $invitationId, 玩家ID: $playerId, 困難度: $difficulty");
+                echo json_encode(['success' => false, 'message' => '參數缺失']);
+                exit;
+            }
+
+            // 獲取當前遊戲狀態
+            $stmt = $pdo->prepare("SELECT game_state, from_user_id, to_user_id FROM game_invitations WHERE invitation_id = ? AND status = 'accepted'");
+            $stmt->execute([$invitationId]);
+            $invitation = $stmt->fetch();
+
+            if (!$invitation) {
+                error_log("sync_difficulty 邀請不存在或未接受 - 邀請ID: $invitationId");
+                echo json_encode(['success' => false, 'message' => '邀請不存在或未接受']);
+                exit;
+            }
+
+            $gameState = json_decode($invitation['game_state'], true) ?: [];
+            
+            // 更新困難度設定
+            $gameState['difficulty'] = $difficulty;
+            $gameState['lastAction'] = 'sync_difficulty';
+            $gameState['lastActionBy'] = $playerId;
+
+            // 將更新後的新狀態存回資料庫
+            $stmt = $pdo->prepare("UPDATE game_invitations SET game_state = ?, last_updated = NOW() WHERE invitation_id = ?");
+            $result = $stmt->execute([json_encode($gameState), $invitationId]);
+
+            if ($result) {
+                error_log("翻牌遊戲困難度同步成功 - 邀請ID: $invitationId, 困難度: $difficulty");
+                echo json_encode(['success' => true]);
+            } else {
+                error_log("翻牌遊戲困難度同步失敗 - 邀請ID: $invitationId");
+                echo json_encode(['success' => false, 'message' => '更新遊戲狀態失敗']);
+            }
+            break;
+
+        // --- 算菜錢遊戲題目同步功能 ---------------------------------------------------------------
+        case 'sync_questions':
+            $invitationId = $data['invitation_id'] ?? null;
+            $playerId = $data['player_id'] ?? null;
+            $questions = $data['questions'] ?? null;
+            $totalQuestions = $data['total_questions'] ?? 0;
+            $currentDifficulty = $data['current_difficulty'] ?? null;
+
+            if (!$invitationId || !$playerId) {
+                error_log("sync_questions 參數缺失 - 邀請ID: $invitationId, 玩家ID: $playerId");
+                echo json_encode(['success' => false, 'message' => '參數缺失']);
+                exit;
+            }
+
+            // 獲取當前遊戲狀態
+            $stmt = $pdo->prepare("SELECT game_state, from_user_id, to_user_id FROM game_invitations WHERE invitation_id = ? AND status = 'accepted'");
+            $stmt->execute([$invitationId]);
+            $invitation = $stmt->fetch();
+
+            if (!$invitation) {
+                error_log("sync_questions 邀請不存在或未接受 - 邀請ID: $invitationId");
+                echo json_encode(['success' => false, 'message' => '邀請不存在或未接受']);
+                exit;
+            }
+
+            $gameState = json_decode($invitation['game_state'], true) ?: [];
+            
+            // 更新題目數據
+            $gameState['questions'] = $questions;
+            $gameState['total_questions'] = $totalQuestions;
+            $gameState['current_difficulty'] = $currentDifficulty;
+            $gameState['lastAction'] = 'sync_questions';
+            $gameState['lastActionBy'] = $playerId;
+
+            // 將更新後的新狀態存回資料庫
+            $stmt = $pdo->prepare("UPDATE game_invitations SET game_state = ?, last_updated = NOW() WHERE invitation_id = ?");
+            $result = $stmt->execute([json_encode($gameState), $invitationId]);
+
+            if ($result) {
+                error_log("算菜錢遊戲題目同步成功 - 邀請ID: $invitationId, 題目數量: $totalQuestions");
+                echo json_encode(['success' => true]);
+            } else {
+                error_log("算菜錢遊戲題目同步失敗 - 邀請ID: $invitationId");
+                echo json_encode(['success' => false, 'message' => '更新遊戲狀態失敗']);
+            }
+            break;
+
+
+
+        // --- 算菜錢遊戲同步功能 ------------------------------------------------------------
         case 'sync_answer':
             $invitationId = $data['invitation_id'] ?? null;
             $playerId = $data['player_id'] ?? null;
@@ -103,6 +195,13 @@ try {
             $currentPlayer = $gameState['current_player'] ?? 1;
             $gameState['current_player'] = ($currentPlayer === 1) ? 2 : 1;
             
+            // 直接切換到下一題，不需要等待雙方都答完
+            $gameState['current_question'] = $currentQuestion + 1;
+            $gameState['last_action'] = 'next_question';
+            $gameState['last_action_by'] = $playerId;
+            
+            echo json_encode(['success' => true, 'message' => '答案已同步，題目已切換']);
+            
             // 記錄答案
             $gameState['last_answer'] = [
                 'player_id' => $playerId,
@@ -115,8 +214,6 @@ try {
             // 更新資料庫
             $stmt = $pdo->prepare("UPDATE game_invitations SET game_state = ?, last_updated = NOW() WHERE invitation_id = ?");
             $stmt->execute([json_encode($gameState), $invitationId]);
-
-            echo json_encode(['success' => true, 'message' => '答案已同步']);
             break;
             
         case 'get_game_state':
@@ -204,6 +301,7 @@ try {
 
             
         // --- 新增的動作：處理單張卡片翻開 ---
+        case 'flip_card_immediate':
         case 'flip_card':
             $invitationId = $data['invitation_id'] ?? null;
             $playerId = $data['player_id'] ?? null;
@@ -239,11 +337,24 @@ try {
                 exit;
             }
 
-            // 檢查卡片是否已經被翻開或配對
-            if (!isset($gameState['cards'][$cardIndex]) || $gameState['cards'][$cardIndex]['flipped'] || $gameState['cards'][$cardIndex]['matched']) {
-                error_log("flip_card 卡片已被翻開或配對 - 索引: $cardIndex");
-                echo json_encode(['success' => false, 'message' => '卡片已被翻開或配對']);
+            // 檢查卡片是否存在
+            if (!isset($gameState['cards'][$cardIndex])) {
+                error_log("flip_card 卡片不存在 - 索引: $cardIndex");
+                echo json_encode(['success' => false, 'message' => '卡片不存在']);
                 exit;
+            }
+            
+            // 檢查卡片是否已經被配對（已配對的卡片不能再翻）
+            if ($gameState['cards'][$cardIndex]['matched']) {
+                error_log("flip_card 卡片已被配對 - 索引: $cardIndex");
+                echo json_encode(['success' => false, 'message' => '卡片已被配對']);
+                exit;
+            }
+            
+            // 如果卡片已經被翻開，允許重複翻牌（可能是同步延遲）
+            if ($gameState['cards'][$cardIndex]['flipped']) {
+                error_log("flip_card 卡片已被翻開，但允許重複操作 - 索引: $cardIndex");
+                // 不返回錯誤，繼續執行
             }
 
             // 更新卡片狀態
