@@ -1352,7 +1352,20 @@ function displayQuestion(question) {
     question.options.forEach((option, index) => {
         const button = document.createElement('button');
         button.textContent = option + '元';
-        button.onclick = () => checkAnswer(option, question.correctAnswer);
+        
+        // 檢查是否輪到當前玩家答題
+        const isInviter = window.phpMemberId == invitationData?.from_user_id;
+        const shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
+        
+        if (shouldBeMyTurn) {
+            button.onclick = () => checkAnswer(option, question.correctAnswer);
+            button.style.cursor = 'pointer';
+        } else {
+            button.disabled = true;
+            button.style.cursor = 'not-allowed';
+            button.style.opacity = '0.6';
+        }
+        
         optionsContainer.appendChild(button);
     });
 
@@ -1373,7 +1386,10 @@ async function startGame() {
     player1.correct = 0;
     player2.score = 0;
     player2.correct = 0;
+    
+    // 確保主邀人先答題（玩家1）
     currentPlayer = 1;
+    console.log('設置主邀人（玩家1）先答題');
     
     console.log(`遊戲開始！初始玩家：${player1.name}，對手：${player2.name}`);
     
@@ -1413,6 +1429,9 @@ async function startGame() {
     if (invitationId) {
         // 等待第一題載入完成後再同步
         setTimeout(async () => {
+            // 同步題目到伺服器
+            await syncQuestionsToServer();
+            
             // 立即同步初始遊戲狀態
             try {
                 const currentQuestionData = questions[currentQuestion] || null;
@@ -1475,6 +1494,15 @@ async function startGame() {
 
 // 檢查答案
 async function checkAnswer(selectedAnswer, correctAnswer) {
+    // 檢查是否輪到當前玩家答題
+    const isInviter = window.phpMemberId == invitationData?.from_user_id;
+    const shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
+    
+    if (!shouldBeMyTurn) {
+        console.log('不是你的回合，無法答題');
+        return;
+    }
+    
     const isCorrect = selectedAnswer === correctAnswer;
     
     console.log(`玩家${currentPlayer} (${currentPlayer === 1 ? player1.name : player2.name}) 選擇了 ${selectedAnswer}元，正確答案是 ${correctAnswer}元`);
@@ -1531,39 +1559,62 @@ async function checkAnswer(selectedAnswer, correctAnswer) {
                     player1_correct: player1.correct,
                     player2_correct: player2.correct,
                     total_questions: totalQuestions,
-                    current_question_data: currentQuestionData // 同步當前題目數據
+                    current_question_data: currentQuestionData, // 同步當前題目數據
+                    last_action: 'answer_submitted',
+                    last_action_by: window.phpMemberId,
+                    waiting_for_opponent: true,
+                    my_answer_count: (currentPlayer === 1 ? player1.correct : player2.correct) + (isCorrect ? 1 : 0)
                 })
             });
-            console.log('答案和題目已同步到伺服器');
+            console.log('答案和題目已同步到伺服器，等待對手答題');
         } catch (error) {
             console.error('同步答案失敗:', error);
         }
     }
     
-    // 切換玩家
-    const previousPlayer = currentPlayer;
-    currentPlayer = currentPlayer === 1 ? 2 : 1;
-    console.log(`輪流答題：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
+    // 等待對手答題，不立即切換玩家
+    console.log(`等待對手 ${currentPlayer === 1 ? player2.name : player1.name} 答題...`);
     
-    // 更新當前玩家指示器
-    updateCurrentPlayerIndicator();
-    
-    // 下一題
-    currentQuestion++;
-    setTimeout(() => {
-        loadQuestion();
-    }, 1500);
+    // 不要立即增加題目編號，等待雙方都答完後再切換
+    // currentQuestion++ 會在雙方都答完後由同步機制處理
 }
 
 // 開始遊戲同步
 function startGameSync() {
     console.log('開始遊戲同步檢查');
-    // 每2秒檢查一次同步狀態
+    // 每1秒檢查一次同步狀態，提高同步頻率
     setInterval(async () => {
         if (gameStarted && invitationId) {
             await checkGameSync();
         }
-    }, 2000);
+    }, 1000);
+}
+
+// 同步題目到伺服器
+async function syncQuestionsToServer() {
+    if (!invitationId) return;
+    
+    try {
+        console.log('同步題目到伺服器...');
+        
+        await fetch('game-sync-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'sync_questions',
+                invitation_id: invitationId,
+                player_id: window.phpMemberId,
+                questions: questions,
+                total_questions: totalQuestions,
+                current_difficulty: currentDifficulty
+            })
+        });
+        console.log('題目同步成功');
+    } catch (error) {
+        console.error('題目同步失敗:', error);
+    }
 }
 
 // 檢查遊戲同步狀態
@@ -1587,6 +1638,13 @@ async function checkGameSync() {
             
             console.log('收到遊戲狀態同步：', gameState);
             
+            // 同步題目數據
+            if (gameState.questions && gameState.questions.length > 0 && questions.length === 0) {
+                console.log('同步題目數據：', gameState.questions.length);
+                questions = gameState.questions;
+                totalQuestions = gameState.total_questions || questions.length;
+            }
+            
             // 同步遊戲狀態
             if (gameState.current_question !== undefined && gameState.current_question !== currentQuestion) {
                 console.log('同步題目：', gameState.current_question);
@@ -1596,9 +1654,102 @@ async function checkGameSync() {
                 if (gameState.current_question_data) {
                     console.log('使用同步的題目數據：', gameState.current_question_data);
                     displayQuestion(gameState.current_question_data);
+                } else if (questions.length > currentQuestion) {
+                    // 使用本地題目數據
+                    displayQuestion(questions[currentQuestion]);
                 } else {
                     // 否則載入本地題目
                     loadQuestion();
+                }
+            }
+            
+            // 同步玩家分數
+            if (gameState.player1_score !== undefined) {
+                player1.score = gameState.player1_score;
+                console.log('同步玩家1分數：', player1.score);
+            }
+            if (gameState.player2_score !== undefined) {
+                player2.score = gameState.player2_score;
+                console.log('同步玩家2分數：', player2.score);
+            }
+            
+            // 同步正確答題數
+            if (gameState.player1_correct !== undefined) {
+                player1.correct = gameState.player1_correct;
+            }
+            if (gameState.player2_correct !== undefined) {
+                player2.correct = gameState.player2_correct;
+            }
+            
+            // 更新顯示
+            updatePlayerDisplay();
+            
+            // 處理答案提交和玩家切換
+            if (gameState.last_action === 'answer_submitted' && gameState.last_action_by !== window.phpMemberId) {
+                console.log('檢測到對手已答題，準備切換玩家');
+                
+                // 檢查是否已經切換過玩家，避免重複切換
+                const shouldSwitch = gameState.current_player !== currentPlayer;
+                
+                if (shouldSwitch) {
+                    // 切換到對手
+                    const previousPlayer = currentPlayer;
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    console.log(`輪流答題：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
+                    
+                    // 更新當前玩家指示器
+                    updateCurrentPlayerIndicator();
+                    
+                    // 同步玩家切換到伺服器
+                    if (invitationId) {
+                        try {
+                            fetch('game-sync-api.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    action: 'sync_answer',
+                                    invitation_id: invitationId,
+                                    player_id: window.phpMemberId,
+                                    current_player: currentPlayer,
+                                    last_action: 'switch_player',
+                                    last_action_by: window.phpMemberId
+                                })
+                            });
+                            console.log('玩家切換已同步到伺服器');
+                        } catch (error) {
+                            console.error('同步玩家切換失敗:', error);
+                        }
+                    }
+                } else {
+                    console.log('玩家已切換，無需重複切換');
+                }
+            }
+            
+            // 處理題目切換 - 當對手答題後
+            if (gameState.last_action === 'next_question' && gameState.last_action_by !== window.phpMemberId) {
+                console.log('檢測到對手已答題，切換到新題目');
+                if (gameState.current_question !== undefined && gameState.current_question !== currentQuestion) {
+                    currentQuestion = gameState.current_question;
+                    console.log('切換到新題目:', currentQuestion);
+                    
+                    // 載入新題目
+                    if (questions.length > currentQuestion) {
+                        displayQuestion(questions[currentQuestion]);
+                    } else {
+                        loadQuestion();
+                    }
+                }
+            }
+            
+            // 處理玩家切換同步
+            if (gameState.last_action === 'switch_player' && gameState.last_action_by !== window.phpMemberId) {
+                console.log('檢測到對手已切換玩家');
+                if (gameState.current_player !== undefined && gameState.current_player !== currentPlayer) {
+                    currentPlayer = gameState.current_player;
+                    updateCurrentPlayerIndicator();
+                    console.log('同步玩家切換到:', currentPlayer === 1 ? player1.name : player2.name);
                 }
             }
             

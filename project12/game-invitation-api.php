@@ -56,6 +56,10 @@ try {
             handleGetPendingInvitations($pdo);
             break;
             
+        case 'get_recent_accepted_invitations':
+            handleGetRecentAcceptedInvitations($pdo);
+            break;
+            
         case 'get_friends':
             handleGetFriends($pdo, $input);
             break;
@@ -66,6 +70,10 @@ try {
             
         case 'update_invitation_status':
             handleUpdateInvitationStatus($pdo, $input);
+            break;
+            
+        case 'update_invitation_difficulty':
+            handleUpdateInvitationDifficulty($pdo, $input);
             break;
             
         case 'find_users':
@@ -182,6 +190,11 @@ function handleCheckInvitation($pdo, $input) {
     // 如果有遊戲設定，直接返回
     if ($gameSettings) {
         $response['game_settings'] = $gameSettings;
+        
+        // 如果有難度設定，也直接返回
+        if (isset($gameSettings['difficulty'])) {
+            $response['difficulty'] = $gameSettings['difficulty'];
+        }
     }
     
     echo json_encode($response);
@@ -271,18 +284,50 @@ function handleCancelInvitation($pdo, $input) {
 function handleGetPendingInvitations($pdo) {
     $currentUserId = $_SESSION['member_id'];
     
-    // 獲取待處理的邀請（包括 quit 狀態的邀請，用於調試）
+    // 只獲取真正待處理的邀請
     $stmt = $pdo->prepare("
         SELECT gi.*, 
                m.member_name as from_user_name,
                m.avatar as from_user_avatar
         FROM game_invitations gi
         JOIN member m ON gi.from_user_id = m.member_id
-        WHERE gi.to_user_id = ? AND (gi.status = 'pending' OR gi.status = 'accepted' OR gi.status = 'quit')
+        WHERE gi.to_user_id = ? AND gi.status = 'pending'
         ORDER BY gi.created_at DESC
     ");
     $stmt->execute([$currentUserId]);
     $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    echo json_encode([
+        'success' => true,
+        'invitations' => $invitations
+    ]);
+}
+
+function handleGetRecentAcceptedInvitations($pdo) {
+    $currentUserId = $_SESSION['member_id'];
+    
+    // 獲取最近30分鐘內更新的已接受邀請
+    $stmt = $pdo->prepare("
+        SELECT gi.*, 
+               m.member_name as from_user_name,
+               m.avatar as from_user_avatar
+        FROM game_invitations gi
+        JOIN member m ON gi.from_user_id = m.member_id
+        WHERE gi.to_user_id = ? AND gi.status = 'accepted' AND gi.last_updated >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+        ORDER BY gi.last_updated DESC
+    ");
+    $stmt->execute([$currentUserId]);
+    $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 解析遊戲設定
+    foreach ($invitations as &$invitation) {
+        if ($invitation['game_settings'] && !empty($invitation['game_settings'])) {
+            $decoded = json_decode($invitation['game_settings'], true);
+            $invitation['game_settings'] = $decoded ?: null;
+        } else {
+            $invitation['game_settings'] = null;
+        }
+    }
     
     echo json_encode([
         'success' => true,
@@ -409,6 +454,48 @@ function handleFindUsers($pdo, $input) {
         'sender_name' => $sender['member_name'],
         'receiver_name' => $receiver['member_name'],
         'is_friend' => $isFriend
+    ]);
+}
+
+function handleUpdateInvitationDifficulty($pdo, $input) {
+    $invitationId = $input['invitation_id'] ?? '';
+    $difficulty = $input['difficulty'] ?? '';
+    $currentUserId = $_SESSION['member_id'];
+    
+    if (!$invitationId || !$difficulty) {
+        echo json_encode(['success' => false, 'message' => '缺少邀請ID或難度']);
+        return;
+    }
+    
+    // 檢查邀請是否存在且屬於當前用戶
+    $stmt = $pdo->prepare("SELECT * FROM game_invitations WHERE invitation_id = ? AND from_user_id = ?");
+    $stmt->execute([$invitationId, $currentUserId]);
+    $invitation = $stmt->fetch();
+    
+    if (!$invitation) {
+        echo json_encode(['success' => false, 'message' => '邀請不存在或無權限']);
+        return;
+    }
+    
+    // 獲取現有的遊戲設定
+    $gameSettings = [];
+    if ($invitation['game_settings']) {
+        $gameSettings = json_decode($invitation['game_settings'], true) ?: [];
+    }
+    
+    // 更新難度設定
+    $gameSettings['difficulty'] = $difficulty;
+    $gameSettings['difficulty_selected_at'] = date('Y-m-d H:i:s');
+    
+    // 更新資料庫
+    $gameSettingsJson = json_encode($gameSettings);
+    $stmt = $pdo->prepare("UPDATE game_invitations SET game_settings = ?, last_updated = NOW() WHERE invitation_id = ?");
+    $stmt->execute([$gameSettingsJson, $invitationId]);
+    
+    echo json_encode([
+        'success' => true, 
+        'message' => '難度已設定',
+        'difficulty' => $difficulty
     ]);
 }
 ?> 

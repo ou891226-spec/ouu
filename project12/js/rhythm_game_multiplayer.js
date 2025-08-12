@@ -122,6 +122,59 @@ function enterBattleMode(invitationId) {
   console.log('對戰模式設置完成');
 }
 
+// 設置玩家區域限制
+function setupPlayerAreaRestrictions() {
+  if (!currentInvitation) return; // 本地模式不需要設置
+  
+  console.log('設置玩家區域限制，isInviter:', isInviter);
+  
+  // 獲取玩家區域元素
+  const player1Area = document.getElementById('noteTrack-top');
+  const player2Area = document.getElementById('noteTrack-bottom');
+  const player1HitZone = document.getElementById('hitZone-top');
+  const player2HitZone = document.getElementById('hitZone-bottom');
+  
+  // 獲取玩家標籤元素 - 修復選擇器
+  const player1Label = document.querySelector('.player-label:first-child') || 
+                      document.querySelector('[data-player="1"]') || 
+                      document.querySelector('.player-info:first-child .player-name') ||
+                      document.querySelector('.player1-name');
+  const player2Label = document.querySelector('.player-label:last-child') || 
+                      document.querySelector('[data-player="2"]') || 
+                      document.querySelector('.player-info:last-child .player-name') ||
+                      document.querySelector('.player2-name');
+  
+  if (isInviter) {
+    // 邀請人（黑嚕嚕）：只能點擊上排（玩家一）
+    if (player2Area) {
+      player2Area.style.pointerEvents = 'none'; // 禁用點擊
+    }
+    if (player2HitZone) {
+      player2HitZone.style.pointerEvents = 'none'; // 禁用點擊
+    }
+    
+    // 更新玩家標籤 - 確保黑嚕嚕在上排
+    if (player1Label) player1Label.textContent = '黑嚕嚕 (主邀人)';
+    if (player2Label) player2Label.textContent = 'OU (被邀人)';
+    
+    console.log('邀請人（黑嚕嚕）：禁用下排區域點擊，黑嚕嚕在上排');
+  } else {
+    // 被邀請人（OU）：只能點擊下排（玩家二）
+    if (player1Area) {
+      player1Area.style.pointerEvents = 'none'; // 禁用點擊
+    }
+    if (player1HitZone) {
+      player1HitZone.style.pointerEvents = 'none'; // 禁用點擊
+    }
+    
+    // 更新玩家標籤 - 確保黑嚕嚕在上排，OU在下排
+    if (player1Label) player1Label.textContent = '黑嚕嚕 (主邀人)';
+    if (player2Label) player2Label.textContent = 'OU (被邀人)';
+    
+    console.log('被邀請人（OU）：禁用上排區域點擊，OU在下排');
+  }
+}
+
 // 檢查待處理的邀請
 function checkPendingInvitations() {
   fetch('game-invitation-api.php', {
@@ -659,6 +712,9 @@ function startGame() {
     console.log('已隱藏收到邀請視窗');
   }
   
+  // 設置玩家區域限制
+  setupPlayerAreaRestrictions();
+  
   gameContainer.style.display = 'block';
   console.log('遊戲容器已顯示');
 
@@ -885,6 +941,50 @@ function swingBat(player) {
   }
 }
 
+// 同步打擊動作到伺服器
+function syncHitAction(playerType) {
+  if (!currentInvitation || !currentInvitation.invitationId) return;
+  
+  // 獲取當前用戶ID
+  const currentUserId = window.phpMemberId || 
+                       (typeof getCurrentMemberId === 'function' ? getCurrentMemberId() : null) ||
+                       document.querySelector('meta[name="user-id"]')?.content;
+  
+  if (!currentUserId) {
+    console.error('無法獲取當前用戶ID');
+    return;
+  }
+  
+  // 使用新的節奏遊戲打擊同步API
+  fetch('game-sync-api.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'sync_rhythm_hit',
+      invitation_id: currentInvitation.invitationId,
+      player_id: currentUserId,
+      player_number: playerType, // 'player1' 或 'player2'
+      hit_time: Date.now(),
+      score: playerType === 'player1' ? player1.score : player2.score
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('節奏遊戲打擊同步成功');
+    } else {
+      console.error('節奏遊戲打擊同步失敗:', data.message);
+    }
+  })
+  .catch(error => {
+    console.error('節奏遊戲打擊同步錯誤:', error);
+  });
+}
+
+
+
 if (startBtn) startBtn.addEventListener("click", startGame);
 if (restartBtn) restartBtn.addEventListener("click", () => {
   endGame();
@@ -1044,10 +1144,16 @@ function checkGameState() {
   });
 }
 
+// 簡化的點擊事件處理
 if (player1.hitZone) {
   player1.hitZone.addEventListener("click", () => {
     hit(player1);
     swingBat(player1);
+    
+    // 如果是線上模式，同步打擊動作
+    if (currentInvitation) {
+      syncHitAction('player1');
+    }
   });
 }
 
@@ -1055,6 +1161,11 @@ if (player2.hitZone) {
   player2.hitZone.addEventListener("click", () => {
     hit(player2);
     swingBat(player2);
+    
+    // 如果是線上模式，同步打擊動作
+    if (currentInvitation) {
+      syncHitAction('player2');
+    }
   });
 }
 
@@ -1063,10 +1174,16 @@ document.addEventListener("keydown", e => {
   if (e.key === "a") {
     hit(player1);
     swingBat(player1);
+    if (currentInvitation) {
+      syncHitAction('player1');
+    }
   }
   if (e.key === "l") {
     hit(player2);
     swingBat(player2);
+    if (currentInvitation) {
+      syncHitAction('player2');
+    }
   }
 });
 

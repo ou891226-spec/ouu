@@ -104,7 +104,7 @@ class GlobalInvitationChecker {
         this.isChecking = true;
 
         try {
-            const response = await fetch('game-invitation-api.php', {
+            const response = await fetch('https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/game-invitation-api.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,20 +165,14 @@ class GlobalInvitationChecker {
             case 'memory_game_2p':
                 gameTypeText.textContent = '翻牌對對樂';
                 break;
-            case 'prisoner_game_2p':
-                gameTypeText.textContent = '追蹤犯人遊戲';
+            case 'vegetable_cost_2p':
+                gameTypeText.textContent = '算菜錢對戰';
                 break;
-            case 'rhythm_game_2p':
             case 'rhythm_game_multiplayer':
                 gameTypeText.textContent = '節奏遊戲';
-                console.log('設置為節奏遊戲');
-                break;
-            case 'text_color_2p':
-                gameTypeText.textContent = '看字選色遊戲';
                 break;
             default:
                 gameTypeText.textContent = '遊戲';
-                console.log('使用預設遊戲文字');
         }
         
         console.log('最終遊戲文字:', gameTypeText.textContent);
@@ -237,15 +231,11 @@ class GlobalInvitationChecker {
                     case 'memory_game_2p':
                         gameUrl = 'Memory-Game-2P.php';
                         break;
-                    case 'prisoner_game_2p':
-                        gameUrl = 'prisoner.php?mode=2p';
+                    case 'vegetable_cost_2p':
+                        gameUrl = 'vegetable_cost_2P.php';
                         break;
-                    case 'rhythm_game_2p':
                     case 'rhythm_game_multiplayer':
                         gameUrl = 'rhythm_game_multiplayer.php';
-                        break;
-                    case 'text_color_2p':
-                        gameUrl = 'text-color.php?mode=2p';
                         break;
                 }
                 
@@ -264,7 +254,7 @@ class GlobalInvitationChecker {
         if (!this.currentInvitation) return;
 
         try {
-            const response = await fetch('game-invitation-api.php', {
+            const response = await fetch('https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/game-invitation-api.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -299,10 +289,8 @@ class GlobalInvitationChecker {
 document.addEventListener('DOMContentLoaded', function() {
     // 只在非雙人遊戲頁面初始化（避免重複檢查）
     if (!window.location.pathname.includes('Memory-Game-2P.php') && 
-        !window.location.pathname.includes('prisoner.php') &&
-        !window.location.pathname.includes('rhythm_game.php') &&
-        !window.location.pathname.includes('rhythm_game_multiplayer.php') &&
-        !window.location.pathname.includes('text-color.php')) {
+        !window.location.pathname.includes('vegetable_cost_2P.php') &&
+        !window.location.pathname.includes('rhythm_game_multiplayer.php')) {
         window.globalInvitationChecker = new GlobalInvitationChecker();
     }
 }); 
