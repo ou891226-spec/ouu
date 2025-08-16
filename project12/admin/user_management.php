@@ -58,7 +58,10 @@ $total_users = $count_stmt->fetchColumn();
 $total_pages = ceil($total_users / $per_page);
 
 // 獲取用戶列表
-$sql = "SELECT * FROM member $where_clause ORDER BY member_id DESC LIMIT $per_page OFFSET $offset";
+$sql = "SELECT m.*, 
+        (SELECT session_id FROM user_behavior_log ubl WHERE ubl.member_id = m.member_id ORDER BY ubl.created_at DESC LIMIT 1) as latest_session_id,
+        (SELECT created_at FROM user_behavior_log ubl WHERE ubl.member_id = m.member_id ORDER BY ubl.created_at DESC LIMIT 1) as last_activity_time
+        FROM member m $where_clause ORDER BY m.member_id DESC LIMIT $per_page OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $users = $stmt->fetchAll();
@@ -66,10 +69,10 @@ $users = $stmt->fetchAll();
 // 獲取統計數據
 $stats_sql = "SELECT 
     COUNT(*) as total_users,
-    COUNT(*) as active_users,
+    (SELECT COUNT(DISTINCT member_id) FROM user_behavior_log WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)) as active_users,
     COUNT(*) as inactive_users,
     COUNT(*) as new_users_7d,
-    COUNT(*) as new_users_30d
+    (SELECT COUNT(DISTINCT session_id) FROM user_behavior_log) as total_sessions
 FROM member";
 $stats_stmt = $pdo->prepare($stats_sql);
 $stats_stmt->execute();
@@ -181,7 +184,7 @@ $stats = $stats_stmt->fetch();
             <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">題目管理</a>
+            <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
         </div>
         
@@ -191,7 +194,7 @@ $stats = $stats_stmt->fetch();
                 <p>總用戶數</p>
             </div>
             <div class="stat-card">
-                <h3><?php echo number_format($stats['total_users']); ?></h3>
+                <h3><?php echo number_format($stats['active_users']); ?></h3>
                 <p>活躍用戶</p>
             </div>
             <div class="stat-card">
@@ -199,8 +202,8 @@ $stats = $stats_stmt->fetch();
                 <p>近7天新用戶</p>
             </div>
             <div class="stat-card">
-                <h3><?php echo number_format($stats['new_users_30d']); ?></h3>
-                <p>近30天新用戶</p>
+                <h3><?php echo number_format($stats['total_sessions']); ?></h3>
+                <p>總會話數</p>
             </div>
         </div>
         
@@ -226,11 +229,10 @@ $stats = $stats_stmt->fetch();
                         <th>ID</th>
                         <th>帳號</th>
                         <th>姓名</th>
-                        <th>郵箱</th>
                         <th>狀態</th>
                         <th>註冊時間</th>
-                        <th>最後登入</th>
-                        <th>操作</th>
+                        <th>最後活動</th>
+                        <th>會話ID</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -239,21 +241,12 @@ $stats = $stats_stmt->fetch();
                         <td><?php echo $user['member_id']; ?></td>
                         <td><?php echo htmlspecialchars($user['account']); ?></td>
                         <td><?php echo htmlspecialchars($user['member_name'] ?? $user['name'] ?? '-'); ?></td>
-                        <td>-</td>
                         <td>
                             <span class="status-active">活躍</span>
                         </td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>
-                            <!-- 暫時隱藏用戶操作，因為 member 表可能沒有 status 欄位 -->
-                            <!-- <form method="POST" style="display: inline;">
-                                <input type="hidden" name="action" value="update_status">
-                                <input type="hidden" name="user_id" value="<?php echo $user['member_id']; ?>">
-                                <button type="submit" class="action-btn btn-deactivate" onclick="return confirm('確定要停用此用戶嗎？')">停用</button>
-                            </form> -->
-                            -
-                        </td>
+                        <td><?php echo isset($user['created_at']) && $user['created_at'] ? date('m月d日 H:i', strtotime($user['created_at'])) : '-'; ?></td>
+                        <td><?php echo isset($user['last_activity_time']) && $user['last_activity_time'] ? date('m月d日 H:i', strtotime($user['last_activity_time'])) : '-'; ?></td>
+                        <td><?php echo isset($user['latest_session_id']) && $user['latest_session_id'] ? substr($user['latest_session_id'], 0, 20) . '...' : '-'; ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

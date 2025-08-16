@@ -163,7 +163,7 @@ function togglePersonalHistoryMenu() {
 }
 </script>
 
-<script src="js/auto-save-time.js"></script>
+<script src="js/auto-save-time-fixed.js"></script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>
@@ -233,8 +233,149 @@ function togglePersonalHistoryMenu() {
 function openProfileModal() {
   document.getElementById('profileModal').style.display = 'flex';
   document.getElementById('modalOverlay').style.display = 'block';
-  loadUserAchievements(); // 載入成就
+  
+  // 添加調試信息
+  console.log('打開個人資料彈窗');
+  
+  // 檢查loadUserAchievements函數是否存在
+  if (typeof loadUserAchievements === 'function') {
+    console.log('loadUserAchievements函數存在，開始載入成就');
+    loadUserAchievements();
+  } else {
+    console.error('loadUserAchievements函數不存在！');
+    // 如果函數不存在，直接調用API
+    loadUserAchievementsDirect();
+  }
 }
+
+// 直接載入成就的備用函數
+function loadUserAchievementsDirect() {
+  console.log('使用備用方法載入成就');
+  
+  const container = document.getElementById('achievementCards');
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 20px; color: #666;">
+        <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+        <div style="font-size: 14px; color: #999;">載入成就中...</div>
+      </div>
+    `;
+  }
+  
+  fetch('get_user_achievements.php')
+    .then(response => response.json())
+    .then(data => {
+      console.log('API返回數據:', data);
+      if (data.success) {
+        displayAchievementsDirect(data.achievements, data.today_status);
+      } else {
+        console.error('載入成就失敗：', data.message);
+        displayEmptyAchievementsDirect();
+      }
+    })
+    .catch(error => {
+      console.error('載入成就時發生錯誤：', error);
+      displayEmptyAchievementsDirect();
+    });
+}
+
+// 直接顯示成就的備用函數
+function displayAchievementsDirect(achievements, todayStatus = null) {
+  console.log('顯示成就:', achievements);
+  
+  const container = document.getElementById('achievementCards');
+  
+  if (!container) {
+    console.error('找不到成就容器');
+    return;
+  }
+  
+  if (!achievements || achievements.length === 0) {
+    displayEmptyAchievementsDirect();
+    return;
+  }
+
+  container.innerHTML = '';
+  
+  // 添加今日成就狀態
+  if (todayStatus) {
+    const statusDiv = document.createElement('div');
+    statusDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px; border: 1px solid #d0e7ff; text-align: center;';
+    
+    const remaining = todayStatus.remaining;
+    const todayCount = todayStatus.today_count;
+    
+    if (remaining > 0) {
+      statusDiv.innerHTML = `
+        <div style="font-size: 14px; color: #0066cc; margin-bottom: 5px;">
+          📅 今日已獲得 ${todayCount}/3 個成就
+        </div>
+        <div style="font-size: 12px; color: #0066cc;">
+          還可獲得 ${remaining} 個成就 • 凌晨12點重置
+        </div>
+      `;
+    } else {
+      statusDiv.innerHTML = `
+        <div style="font-size: 14px; color: #ff6b6b; margin-bottom: 5px;">
+          📅 今日成就已達上限 (3/3)
+        </div>
+        <div style="font-size: 12px; color: #ff6b6b;">
+          凌晨12點重置後可繼續獲得成就
+        </div>
+      `;
+    }
+    
+    container.appendChild(statusDiv);
+  }
+  
+  // 創建成就卡片容器
+  const achievementsContainer = document.createElement('div');
+  achievementsContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;';
+  
+  // 顯示所有成就卡片
+  const displayAchievements = achievements.slice(0, 4);
+  
+  displayAchievements.forEach((achievement, index) => {
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.style.cursor = 'pointer';
+    card.onclick = () => showAchievementDetailDirect(achievement);
+    
+    card.innerHTML = `
+      <div class="emoji-icon" style="background:#97f55c;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;font-weight:bold;font-size:20px;color:#333;text-shadow:1px 1px 2px rgba(0,0,0,0.1);">${achievement.icon || '🏆'}</div>
+      <div class="profile-card-label" style="font-size:12px;margin-top:5px;">${achievement.achievement_name}</div>
+    `;
+    
+    achievementsContainer.appendChild(card);
+  });
+  
+  container.appendChild(achievementsContainer);
+}
+
+// 顯示空成就狀態的備用函數
+function displayEmptyAchievementsDirect() {
+  const container = document.getElementById('achievementCards');
+  
+  if (!container) {
+    console.error('找不到成就容器');
+    return;
+  }
+  
+  container.innerHTML = `
+    <div style="text-align: center; padding: 20px; color: #666;">
+      <div style="font-size: 48px; margin-bottom: 10px;">🎯</div>
+      <div style="font-size: 16px; margin-bottom: 5px;">尚未獲得成就</div>
+      <div style="font-size: 14px; color: #999;">完成遊戲來獲得成就稱號！</div>
+    </div>
+  `;
+}
+
+// 顯示成就詳情的備用函數
+function showAchievementDetailDirect(achievement) {
+  const date = new Date(achievement.earned_date).toLocaleDateString('zh-TW');
+  alert(`${achievement.icon} ${achievement.achievement_name}\n\n📝 ${achievement.achievement_description}\n\n📅 獲得時間：${date}`);
+}
+
 function closeProfileModal() {
   document.getElementById('profileModal').style.display = 'none';
   document.getElementById('modalOverlay').style.display = 'none';

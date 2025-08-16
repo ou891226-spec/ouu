@@ -28,13 +28,13 @@ if ($_POST) {
                     $sql = "INSERT INTO game_questions (game_type, question_text, correct_answer, options, difficulty, points) VALUES (?, ?, ?, ?, ?, ?)";
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$game_type, $question_text, $correct_answer, json_encode($options), $difficulty, $points]);
-                    $success_message = "題目添加成功！";
+                    $success_message = "遊戲添加成功！";
                 } else {
                     $question_id = intval($_POST['question_id']);
                     $sql = "UPDATE game_questions SET game_type=?, question_text=?, correct_answer=?, options=?, difficulty=?, points=? WHERE id=?";
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$game_type, $question_text, $correct_answer, json_encode($options), $difficulty, $points, $question_id]);
-                    $success_message = "題目更新成功！";
+                    $success_message = "遊戲更新成功！";
                 }
             } catch (Exception $e) {
                 $error_message = "操作失敗：" . $e->getMessage();
@@ -48,9 +48,9 @@ if ($_POST) {
             $sql = "DELETE FROM game_questions WHERE id = ?";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$question_id]);
-            $success_message = "題目刪除成功！";
+            $success_message = "遊戲刪除成功！";
         } catch (Exception $e) {
-            $error_message = "刪除失敗：" . $e->getMessage();
+            $error_message = "遊戲刪除失敗：" . $e->getMessage();
         }
     }
 }
@@ -114,7 +114,7 @@ $stats = $stats_stmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>題目管理</title>
+    <title>遊戲管理</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -185,7 +185,7 @@ $stats = $stats_stmt->fetch();
 <body>
     <div class="container">
         <div class="header">
-            <h1>題目管理</h1>
+            <h1>遊戲管理</h1>
             <p>歡迎，<?php echo htmlspecialchars($admin_name); ?></p>
             <a href="logout.php" class="logout">登出</a>
         </div>
@@ -194,7 +194,7 @@ $stats = $stats_stmt->fetch();
             <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">題目管理</a>
+            <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
         </div>
         
@@ -210,7 +210,7 @@ $stats = $stats_stmt->fetch();
             <form method="GET">
                 <div>
                     <label>搜尋：</label>
-                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="題目內容或答案">
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="遊戲內容或答案">
                 </div>
                 <div>
                     <label>遊戲類型：</label>
@@ -232,14 +232,14 @@ $stats = $stats_stmt->fetch();
                 </div>
                 <button type="submit">篩選</button>
                 <a href="question_management.php" class="btn btn-add">重置</a>
-                <button type="button" class="btn btn-add" onclick="openAddModal()">添加題目</button>
+                <button type="button" class="btn btn-add" onclick="openAddModal()">添加遊戲</button>
             </form>
         </div>
         
         <div class="stats">
             <div class="stat-card">
                 <h3><?php echo number_format($stats['total_questions']); ?></h3>
-                <p>總題目數</p>
+                <p>總遊戲數</p>
             </div>
             <div class="stat-card">
                 <h3><?php echo number_format($stats['game_types']); ?></h3>
@@ -252,18 +252,14 @@ $stats = $stats_stmt->fetch();
         </div>
         
         <div class="questions">
-            <h2>題目列表 (共 <?php echo number_format($total_records); ?> 題)</h2>
+            <h2>遊戲列表 (共 <?php echo number_format($total_records); ?> 個)</h2>
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>遊戲類型</th>
-                        <th>題目內容</th>
-                        <th>正確答案</th>
-                        <th>難度</th>
-                        <th>分數</th>
-                        <th>創建時間</th>
-                        <th>操作</th>
+                                                                          <th>遊戲內容</th>
+                         <th>創建時間</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -271,20 +267,8 @@ $stats = $stats_stmt->fetch();
                     <tr>
                         <td><?php echo $question['id']; ?></td>
                         <td><?php echo htmlspecialchars($question['game_type']); ?></td>
-                        <td><?php echo htmlspecialchars(substr($question['question_text'], 0, 50)) . (strlen($question['question_text']) > 50 ? '...' : ''); ?></td>
-                        <td><?php echo htmlspecialchars(substr($question['correct_answer'], 0, 30)) . (strlen($question['correct_answer']) > 30 ? '...' : ''); ?></td>
-                        <td>
-                            <?php 
-                            $difficulty_labels = ['easy' => '簡單', 'medium' => '中等', 'hard' => '困難'];
-                            echo $difficulty_labels[$question['difficulty']] ?? $question['difficulty'];
-                            ?>
-                        </td>
-                        <td><?php echo $question['points']; ?></td>
-                        <td><?php echo date('d日 H:i', strtotime($question['created_at'])); ?></td>
-                        <td>
-                            <a href="#" class="btn btn-edit" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($question)); ?>)">編輯</a>
-                            <a href="#" class="btn btn-delete" onclick="deleteQuestion(<?php echo $question['id']; ?>)">刪除</a>
-                        </td>
+                                                 <td><?php echo htmlspecialchars(substr($question['question_text'], 0, 50)) . (strlen($question['question_text']) > 50 ? '...' : ''); ?></td>
+                         <td><?php echo date('d日 H:i', strtotime($question['created_at'])); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -312,7 +296,7 @@ $stats = $stats_stmt->fetch();
     <div id="questionModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">添加題目</h2>
+                            <h2 id="modalTitle">添加遊戲</h2>
             <form method="POST" id="questionForm">
                 <input type="hidden" name="action" id="formAction" value="add">
                 <input type="hidden" name="question_id" id="questionId" value="">
@@ -320,8 +304,7 @@ $stats = $stats_stmt->fetch();
                 <div class="form-group">
                     <label>遊戲類型：</label>
                     <select name="game_type" required>
-                        <option value="">請選擇遊戲類型</option>
-                        <option value="算菜錢遊戲">算菜錢遊戲</option>
+                        <option value="">請選擇遊戲類型</option>                        
                         <option value="記憶力">記憶力</option>
                         <option value="反應力">反應力</option>
                         <option value="邏輯力">邏輯力</option>
@@ -377,7 +360,7 @@ $stats = $stats_stmt->fetch();
     
     <script>
         function openAddModal() {
-            document.getElementById('modalTitle').textContent = '添加題目';
+            document.getElementById('modalTitle').textContent = '添加遊戲';
             document.getElementById('formAction').value = 'add';
             document.getElementById('questionId').value = '';
             document.getElementById('questionForm').reset();

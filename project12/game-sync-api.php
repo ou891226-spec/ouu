@@ -421,12 +421,19 @@ try {
                 exit;
             }
 
-            // 確保卡片存在且已被翻開 (防止作弊或不同步)
-            if (!isset($gameState['cards'][$card1Index]) || !isset($gameState['cards'][$card2Index]) ||
-                !$gameState['cards'][$card1Index]['flipped'] || !$gameState['cards'][$card2Index]['flipped']) {
-                error_log("check_match_and_turn_switch 卡片狀態不正確 - 索引1: $card1Index, 索引2: $card2Index");
-                echo json_encode(['success' => false, 'message' => '卡片狀態不正確']);
+            // 確保卡片存在 (放寬檢查，允許卡片未翻開的情況)
+            if (!isset($gameState['cards'][$card1Index]) || !isset($gameState['cards'][$card2Index])) {
+                error_log("check_match_and_turn_switch 卡片不存在 - 索引1: $card1Index, 索引2: $card2Index");
+                echo json_encode(['success' => false, 'message' => '卡片不存在']);
                 exit;
+            }
+            
+            // 如果卡片未翻開，先翻開它們
+            if (!$gameState['cards'][$card1Index]['flipped']) {
+                $gameState['cards'][$card1Index]['flipped'] = true;
+            }
+            if (!$gameState['cards'][$card2Index]['flipped']) {
+                $gameState['cards'][$card2Index]['flipped'] = true;
             }
 
             $card1Symbol = $gameState['cards'][$card1Index]['symbol'];
@@ -572,6 +579,8 @@ try {
     }
 } catch (Exception $e) {
     error_log("API錯誤: " . $e->getMessage() . " - 堆疊: " . $e->getTraceAsString());
+    // 確保回應是有效的 JSON
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['success' => false, 'message' => '錯誤：' . $e->getMessage()]);
 }
 ?>

@@ -13,6 +13,8 @@ $admin_name = $_SESSION['admin_name'] ?? '管理員';
 // 處理篩選參數
 $game_type_filter = $_GET['game_type'] ?? '';
 $date_filter = $_GET['date_filter'] ?? '';
+$selected_month = $_GET['selected_month'] ?? '';
+$selected_year = $_GET['selected_year'] ?? '';
 $search = $_GET['search'] ?? '';
 
 // 構建查詢條件
@@ -34,6 +36,13 @@ if ($date_filter) {
             break;
         case 'month':
             $where_conditions[] = "gr.play_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+            break;
+        case 'specific_month':
+            if ($selected_month && $selected_year) {
+                $where_conditions[] = "YEAR(gr.play_date) = ? AND MONTH(gr.play_date) = ?";
+                $params[] = $selected_year;
+                $params[] = $selected_month;
+            }
             break;
     }
 }
@@ -82,7 +91,8 @@ $stats_sql = "
         COUNT(*) as total_records,
         COUNT(DISTINCT gr.member_id) as unique_users,
         SUM(gr.play_time) as total_playtime,
-        AVG(gr.score) as avg_score
+        AVG(gr.score) as avg_score,
+        AVG(gr.play_time) as avg_playtime
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
     $where_clause
@@ -161,7 +171,30 @@ $stats = $stats_stmt->fetch();
             background: #5a6268; 
             text-decoration: none;
         }
+        #month_year_select {
+            margin-top: 10px;
+        }
+        #month_year_select select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('date_filter');
+            const monthYearSelect = document.getElementById('month_year_select');
+            
+            dateFilter.addEventListener('change', function() {
+                if (this.value === 'specific_month') {
+                    monthYearSelect.style.display = 'block';
+                } else {
+                    monthYearSelect.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -175,7 +208,7 @@ $stats = $stats_stmt->fetch();
             <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">題目管理</a>
+            <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
         </div>
         
@@ -196,11 +229,27 @@ $stats = $stats_stmt->fetch();
                 </div>
                 <div>
                     <label>日期範圍：</label>
-                    <select name="date_filter">
+                    <select name="date_filter" id="date_filter">
                         <option value="">全部</option>
                         <option value="today" <?php echo $date_filter === 'today' ? 'selected' : ''; ?>>今天</option>
                         <option value="week" <?php echo $date_filter === 'week' ? 'selected' : ''; ?>>本週</option>
                         <option value="month" <?php echo $date_filter === 'month' ? 'selected' : ''; ?>>本月</option>
+                        <option value="specific_month" <?php echo $date_filter === 'specific_month' ? 'selected' : ''; ?>>指定月份</option>
+                    </select>
+                </div>
+                <div id="month_year_select" style="display: <?php echo $date_filter === 'specific_month' ? 'block' : 'none'; ?>;">
+                    <label>選擇月份：</label>
+                    <select name="selected_month" style="margin-right: 10px;">
+                        <option value="">選擇月份</option>
+                        <?php for ($i = 1; $i <= 12; $i++): ?>
+                            <option value="<?php echo $i; ?>" <?php echo $selected_month == $i ? 'selected' : ''; ?>><?php echo $i; ?>月</option>
+                        <?php endfor; ?>
+                    </select>
+                    <select name="selected_year">
+                        <option value="">選擇年份</option>
+                        <?php for ($i = date('Y'); $i >= date('Y') - 5; $i--): ?>
+                            <option value="<?php echo $i; ?>" <?php echo $selected_year == $i ? 'selected' : ''; ?>><?php echo $i; ?>年</option>
+                        <?php endfor; ?>
                     </select>
                 </div>
                 <button type="submit">篩選</button>
@@ -219,13 +268,20 @@ $stats = $stats_stmt->fetch();
             </div>
             <div class="stat-card">
                 <h3><?php 
-                    $total_hours = floor($stats['total_playtime']/3600);
-                    $total_days = floor($total_hours/24);
-                    $remaining_hours = $total_hours % 24;
-                    $total_minutes = floor(($stats['total_playtime']%3600)/60);
-                    echo sprintf('%d日 %02d:%02d', $total_days, $remaining_hours, $total_minutes);
+                    $avg_seconds = $stats['avg_playtime'] ?? 0;
+                    $avg_days = floor($avg_seconds / 86400);
+                    $avg_hours = floor(($avg_seconds % 86400) / 3600);
+                    $avg_minutes = floor(($avg_seconds % 3600) / 60);
+                    
+                    if ($avg_days > 0) {
+                        echo sprintf('%d日%d時%d分', $avg_days, $avg_hours, $avg_minutes);
+                    } elseif ($avg_hours > 0) {
+                        echo sprintf('%d時%d分', $avg_hours, $avg_minutes);
+                    } else {
+                        echo sprintf('%d分', $avg_minutes);
+                    }
                 ?></h3>
-                <p>總遊玩時間</p>
+                <p>平均遊玩時間</p>
             </div>
             <div class="stat-card">
                 <h3><?php echo round($stats['avg_score']); ?></h3>
@@ -258,7 +314,7 @@ $stats = $stats_stmt->fetch();
                         <td><?php echo $record['score']; ?></td>
                         <td><?php echo htmlspecialchars($record['difficulty'] ?? '一般'); ?></td>
                         <td><?php echo $record['play_time']; ?>秒</td>
-                        <td><?php echo date('d日 H:i', strtotime($record['play_date'])); ?></td>
+                        <td><?php echo date('m月d日 H:i', strtotime($record['play_date'])); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -267,15 +323,15 @@ $stats = $stats_stmt->fetch();
             <?php if ($total_pages > 1): ?>
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="?page=<?php echo $page-1; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&search=<?php echo urlencode($search); ?>">上一頁</a>
+                    <a href="?page=<?php echo $page-1; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&selected_month=<?php echo urlencode($selected_month); ?>&selected_year=<?php echo urlencode($selected_year); ?>&search=<?php echo urlencode($search); ?>">上一頁</a>
                 <?php endif; ?>
                 
                 <?php for ($i = max(1, $page-2); $i <= min($total_pages, $page+2); $i++): ?>
-                    <a href="?page=<?php echo $i; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&search=<?php echo urlencode($search); ?>" <?php echo $i === $page ? 'style="background: #0056b3;"' : ''; ?>><?php echo $i; ?></a>
+                    <a href="?page=<?php echo $i; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&selected_month=<?php echo urlencode($selected_month); ?>&selected_year=<?php echo urlencode($selected_year); ?>&search=<?php echo urlencode($search); ?>" <?php echo $i === $page ? 'style="background: #0056b3;"' : ''; ?>><?php echo $i; ?></a>
                 <?php endfor; ?>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page+1; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&search=<?php echo urlencode($search); ?>">下一頁</a>
+                    <a href="?page=<?php echo $page+1; ?>&game_type=<?php echo urlencode($game_type_filter); ?>&date_filter=<?php echo urlencode($date_filter); ?>&selected_month=<?php echo urlencode($selected_month); ?>&selected_year=<?php echo urlencode($selected_year); ?>&search=<?php echo urlencode($search); ?>">下一頁</a>
                 <?php endif; ?>
             </div>
             <?php endif; ?>

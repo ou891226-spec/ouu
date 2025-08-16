@@ -523,11 +523,54 @@
     grid-template-rows: repeat(4, 1fr);
 }
 
-/* 困難模式：8x4 */
-.hard-mode {
+/* 動態視窗佈局 - 根據難度調整 */
+.game-board {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+/* 簡單模式：4x3 - 動態視窗大小 */
+.game-board[data-difficulty="easy"] {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+}
+
+/* 普通模式：4x4 - 動態視窗大小 */
+.game-board[data-difficulty="normal"] {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+}
+
+/* 困難模式：8x4 - 動態視窗大小 */
+.game-board[data-difficulty="hard"] {
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    max-width: 1000px;
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+}
+
+/* 遊戲容器動態調整 */
+#game-container {
+    transition: all 0.3s ease;
+}
+
+#game-container[data-difficulty="easy"] {
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+    padding: 20px;
+}
+
+#game-container[data-difficulty="normal"] {
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+    padding: 25px;
+}
+
+#game-container[data-difficulty="hard"] {
+    /* 移除固定大小限制，讓 JavaScript 動態計算 */
+    padding: 30px;
 }
 
 @keyframes matchSuccess {
@@ -560,6 +603,9 @@
 
 .card.flipped {
     transform: rotateY(180deg);
+    /* 修復卡片變形問題 */
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
 }
 
 .card.matched {

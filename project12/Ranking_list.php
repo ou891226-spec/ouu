@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadRankings();
 });
 </script>
-<script src="js/auto-save-time.js"></script>
+<script src="js/auto-save-time-fixed.js"></script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>

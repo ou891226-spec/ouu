@@ -210,7 +210,7 @@ $colors = $stmt->fetchAll();
                                             <div class="friend-name"><?php echo htmlspecialchars($friend['member_name']); ?></div>
                                             <div class="friend-account"><?php echo htmlspecialchars($friend['account']); ?></div>
                                         </div>
-                                        <button class="invite-friend-btn" onclick="inviteFriend(<?php echo $friend['member_id']; ?>, '<?php echo htmlspecialchars($friend['member_name']); ?>')">
+                                        <button class="invite-friend-btn" onclick="if(typeof inviteFriend === 'function') { inviteFriend(<?php echo $friend['member_id']; ?>, '<?php echo htmlspecialchars($friend['member_name']); ?>'); } else { console.error('inviteFriend function not loaded'); }">
                                             邀請對戰
                                         </button>
                                     </div>
@@ -530,18 +530,165 @@ $colors = $stmt->fetchAll();
             localStorage.setItem('member_id', phpCurrentUserId);
         }
     </script>
+    <script src="js/websocket_client.js?v=<?php echo time(); ?>"></script>
     <script src="js/Memory-Game-2P.js?v=<?php echo time(); ?>"></script>
     <script src="js/auto-save-time.js?v=<?php echo time(); ?>"></script>
     <script src="js/sync-optimization.js?v=<?php echo time(); ?>"></script>
     <script>
-        // 在遊戲開始時初始化同步優化
+        // 初始化 WebSocket 事件處理器
         document.addEventListener('DOMContentLoaded', function() {
-            // 等待遊戲初始化完成後再啟用優化
+            if (window.memoryGameWebSocket) {
+                // 處理玩家加入遊戲
+                window.memoryGameWebSocket.on('playerJoined', function(data) {
+                    console.log('玩家加入遊戲:', data);
+                });
+                
+                // 處理困難度同步
+                window.memoryGameWebSocket.on('difficultySynced', function(data) {
+                    console.log('困難度同步:', data);
+                    if (data.difficulty && data.difficulty !== currentDifficulty) {
+                        currentDifficulty = data.difficulty;
+                        // 重新初始化遊戲
+                        setTimeout(() => {
+                            initializeGame();
+                        }, 200);
+                    }
+                });
+                
+                // 處理卡片翻轉
+                window.memoryGameWebSocket.on('cardFlipped', function(data) {
+                    console.log('卡片翻轉同步:', data);
+                    // 確保是對手的翻牌動作
+                    if (data.player_id !== getCurrentMemberId()) {
+                        flipCard(data.index, data.value);
+                    }
+                });
+                
+                // 處理配對成功
+                window.memoryGameWebSocket.on('matchSuccess', function(data) {
+                    console.log('配對成功:', data);
+                    // 標記卡片為已配對
+                    data.indices.forEach(index => {
+                        const card = document.querySelector(`[data-index="${index}"]`);
+                        if (card) {
+                            card.classList.add('matched');
+                        }
+                    });
+                    
+                    // 更新分數
+                    updateScore(data.turn_player_id, data.score);
+                    
+                    // 配對成功，保持回合
+                    isMyTurn = true;
+                    canFlip = true;
+                    flippedCards = [];
+                    
+                    updateCurrentPlayer();
+                });
+                
+                // 處理配對失敗
+                window.memoryGameWebSocket.on('matchFail', function(data) {
+                    console.log('配對失敗:', data);
+                    // 2秒後蓋回卡片
+                    setTimeout(() => {
+                        unflipCards(data.indices);
+                    }, 2000);
+                    
+                    // 配對失敗，換人
+                    isMyTurn = false;
+                    canFlip = false;
+                    flippedCards = [];
+                    
+                    updateCurrentPlayer();
+                });
+                
+                // 處理回合切換
+                window.memoryGameWebSocket.on('turnChanged', function(data) {
+                    console.log('回合變更同步:', data);
+                    isMyTurn = data.is_my_turn;
+                    updateCurrentPlayer();
+                    
+                    // 如果不是我的回合，重置翻牌狀態
+                    if (!isMyTurn) {
+                        flippedCards = [];
+                        canFlip = false;
+                    } else {
+                        canFlip = true;
+                    }
+                });
+                
+                // 處理玩家加入遊戲
+                window.memoryGameWebSocket.on('playerJoined', function(data) {
+                    console.log('玩家加入遊戲同步:', data);
+                    // 確保回合指示器正確顯示
+                    setTimeout(() => {
+                        updateCurrentPlayer();
+                    }, 100);
+                });
+                
+                // 處理輪詢模式切換
+                window.memoryGameWebSocket.on('pollingMode', function(data) {
+                    console.log('切換到輪詢模式:', data.message);
+                    // 顯示提示訊息
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #ff9800; color: white; padding: 10px; border-radius: 5px; z-index: 9999;';
+                    statusDiv.textContent = '使用輪詢模式同步';
+                    document.body.appendChild(statusDiv);
+                    
+                    // 3秒後移除提示
+                    setTimeout(() => {
+                        if (statusDiv.parentNode) {
+                            statusDiv.parentNode.removeChild(statusDiv);
+                        }
+                    }, 3000);
+                });
+                
+                // 處理遊戲狀態更新
+                window.memoryGameWebSocket.on('gameStateUpdate', function(gameState) {
+                    console.log('收到遊戲狀態更新:', gameState);
+                    if (typeof updateGameFromSync === 'function') {
+                        updateGameFromSync(gameState);
+                    }
+                });
+                
+                // 處理邀請狀態更新
+                window.memoryGameWebSocket.on('invitationStatusUpdate', function(data) {
+                    console.log('收到邀請狀態更新:', data);
+                    if (data.status === 'accepted' && data.game_settings) {
+                        console.log('邀請已接受，遊戲設定已就緒');
+                        if (typeof startOnlineGame === 'function') {
+                            startOnlineGame(data);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        // 在遊戲開始時初始化 WebSocket 和同步優化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延遲初始化，確保所有腳本都已載入
             setTimeout(() => {
-                if (typeof initSyncOptimization === 'function') {
-                    initSyncOptimization();
+                // 初始化 WebSocket 客戶端
+                if (typeof WebSocket !== 'undefined') {
+                    console.log('WebSocket 可用，初始化連接');
+                    window.memoryGameWebSocket = new MemoryGameWebSocketClient();
+                    window.memoryGameWebSocket.connect();
+                    
+                    // 添加連接狀態檢查
+                    setTimeout(() => {
+                        if (window.memoryGameWebSocket && !window.memoryGameWebSocket.isConnected) {
+                            console.log('WebSocket 連接失敗，切換到輪詢模式');
+                            window.memoryGameWebSocket.switchToPollingMode();
+                        }
+                    }, 3000);
+                } else {
+                    console.log('WebSocket 不可用，使用優化輪詢機制');
+                    if (window.optimizedSync && window.optimizedSync.start) {
+                        window.optimizedSync.start();
+                    }
                 }
-            }, 2000);
+            }, 1000);
         });
     </script>
 </body>

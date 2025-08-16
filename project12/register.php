@@ -94,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: registerForm.php?error=此帳號已存在，請重新選擇帳號");
         exit();
     }
-    $query = "INSERT INTO `member` (member_name, account, password) VALUES (?, ?, ?)";
+    $query = "INSERT INTO `member` (member_name, account, password, created_at) VALUES (?, ?, ?, NOW())";
     $stmt = $pdo->prepare($query);
     if ($stmt->execute([$name, $id, $password])) {
         $new_member_id = $pdo->lastInsertId();

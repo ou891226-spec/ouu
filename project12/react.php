@@ -255,7 +255,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 </script>
 
 <!-- 外部 JS -->
-<script src="js/auto-save-time.js"></script>
+<script src="js/auto-save-time-fixed.js"></script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>

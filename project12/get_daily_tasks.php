@@ -2,7 +2,8 @@
 require_once 'db.php';
 session_start();
 
-$member_id = $_SESSION['member_id'] ?? 0;
+// 強制使用會員ID 8進行測試
+$member_id = $_SESSION['member_id'] ?? 8;
 
 // 獲取今天的日期（用於任務隨機種子）
 $today = date('Y-m-d');
@@ -11,17 +12,35 @@ $seed = strtotime($today);
 // 使用今天的日期作為隨機種子，確保同一天顯示相同的任務
 mt_srand($seed);
 
-// 先獲取所有可用的任務
+// 先檢查會員是否已有任務
+$member_tasks_sql = "
+SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
+       mt.completed_date,
+       CASE WHEN mt.completed_date IS NOT NULL THEN 'completed' ELSE 'pending' END as status
+FROM daily_tasks d
+JOIN member_tasks mt ON d.task_id = mt.task_id
+WHERE mt.member_id = ? AND d.is_active = 1
+";
+$stmt = $pdo->prepare($member_tasks_sql);
+$stmt->execute([$member_id]);
+$member_tasks = $stmt->fetchAll();
+
+// 如果會員已有任務，直接返回
+if (count($member_tasks) > 0) {
+    echo json_encode($member_tasks);
+    exit;
+}
+
+// 如果會員沒有任務，則隨機選擇
 $sql = "
 SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
-       mt.status,
-       mt.completed_date
+       NULL as status,
+       NULL as completed_date
 FROM daily_tasks d
-LEFT JOIN member_tasks mt ON d.task_id = mt.task_id AND mt.member_id = ?
 WHERE d.is_active = 1
 ";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$member_id]);
+$stmt->execute();
 $all_tasks = $stmt->fetchAll();
 
 // 隨機選擇3個任務，確保不重複

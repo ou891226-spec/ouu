@@ -18,22 +18,8 @@ try {
     // 今日遊戲次數
     $today_games = $pdo->query("SELECT COUNT(*) FROM game_records WHERE DATE(play_date) = CURDATE()")->fetchColumn();
     
-    // 今日遊玩時間
-    $today_playtime = $pdo->query("SELECT SUM(play_time) FROM game_records WHERE DATE(play_date) = CURDATE()")->fetchColumn() ?? 0;
-    $hours = floor($today_playtime / 3600);
-    $minutes = floor(($today_playtime % 3600) / 60);
-    
     // 平均分數
     $avg_score = $pdo->query("SELECT AVG(score) FROM game_records WHERE score > 0")->fetchColumn() ?? 0;
-    
-    // 最近遊戲記錄
-    $recent_games = $pdo->query("
-        SELECT gr.*, m.member_name 
-        FROM game_records gr 
-        JOIN member m ON gr.member_id = m.member_id 
-        ORDER BY gr.play_date DESC 
-        LIMIT 10
-    ")->fetchAll();
     
 } catch (Exception $e) {
     $error = '獲取數據失敗：' . $e->getMessage();
@@ -56,10 +42,6 @@ try {
         .stat-card { background: white; padding: 20px; border-radius: 5px; text-align: center; }
         .stat-card h3 { margin: 0; color: #007bff; font-size: 24px; }
         .stat-card p { margin: 5px 0 0 0; color: #666; }
-        .recent-games { background: white; padding: 20px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: bold; }
         .logout { 
             float: right; 
             background: #dc3545; 
@@ -75,6 +57,21 @@ try {
             background: #c82333; 
             text-decoration: none;
         }
+        .welcome-section {
+            background: white;
+            padding: 30px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .welcome-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .welcome-section p {
+            color: #666;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -89,8 +86,13 @@ try {
             <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">題目管理</a>
+            <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
+        </div>
+        
+        <div class="welcome-section">
+            <h2>系統概覽</h2>
+            <p>歡迎使用樂齡智趣網後台管理系統。您可以在此查看系統統計數據，並使用上方導航欄管理各個功能模組。</p>
         </div>
         
         <div class="stats">
@@ -103,41 +105,9 @@ try {
                 <p>今日遊戲次數</p>
             </div>
             <div class="stat-card">
-                <h3><?php echo sprintf('%d日 %02d:%02d', 0, $hours, $minutes); ?></h3>
-                <p>今日遊玩時間</p>
-            </div>
-            <div class="stat-card">
                 <h3><?php echo round($avg_score); ?></h3>
                 <p>平均分數</p>
             </div>
-        </div>
-        
-        <div class="recent-games">
-            <h2>最近遊戲記錄</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>用戶</th>
-                        <th>遊戲類型</th>
-                        <th>分數</th>
-                        <th>難度</th>
-                        <th>時間</th>
-                        <th>日期</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recent_games as $game): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($game['member_name']); ?></td>
-                        <td><?php echo htmlspecialchars($game['game_type']); ?></td>
-                        <td><?php echo $game['score']; ?></td>
-                        <td><?php echo htmlspecialchars($game['difficulty'] ?? '一般'); ?></td>
-                        <td><?php echo $game['play_time']; ?>秒</td>
-                        <td><?php echo date('d日 H:i', strtotime($game['play_date'])); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
         </div>
     </div>
 </body>

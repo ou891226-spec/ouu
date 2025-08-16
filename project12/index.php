@@ -231,7 +231,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
   // previewAndUploadAvatar 函數已在 avatar-upload.js 中定義
 
-  // showTimeDetail 函數已在 auto-save-time.js 中定義
+  // showTimeDetail 函數已在 auto-save-time-fixed.js 中定義
 
   function togglePersonalHistoryMenu() {
     const menu = document.getElementById('personalHistoryMenu');
@@ -294,7 +294,7 @@ function togglePassword() {
 }
 </script>
 
-<script src="js/auto-save-time.js"></script>
+<script src="js/auto-save-time-fixed.js"></script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>
@@ -302,6 +302,26 @@ function togglePassword() {
 <script src="js/achievements.js"></script>
 <script src="js/avatar-upload.js"></script>
 <script src="js/global-invitation-checker.js"></script>
+
+<script>
+// 檢查每日重置
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('check_daily_reset.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.message.includes('每日重置已執行')) {
+                console.log('每日重置已執行，重新載入任務...');
+                // 重新載入每日任務
+                if (window.loadDailyTasks) {
+                    window.loadDailyTasks();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('檢查每日重置失敗:', error);
+        });
+});
+</script>
 
 <script>
 // 載入最近遊戲

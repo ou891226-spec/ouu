@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'member_id' => $data['member_id']
         ]);
         
+        // 檢查並完成所有相關任務
+        require_once 'check_and_grant_achievements.php';
+        checkAndCompleteAllTasks($data['member_id'], '追蹤犯人遊戲');
+        
         // 檢查並授予成就
         require_once 'check_and_grant_achievements.php';
         checkAndGrantAchievements($data['member_id'], 'prisoner_game', $data['score'], isset($data['play_time']) ? $data['play_time'] : 0);
@@ -47,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         error_log('追蹤犯人遊戲數據保存成功，分數: ' . $data['score']);
        
-        echo json_encode(['success' => true, 'message' => '遊戲結果已儲存']);
+        echo json_encode(['success' => true, 'message' => '遊戲結果已儲存', 'task_completed' => !empty($completed_tasks)]);
     } catch (Exception $e) {
         // 如果發生錯誤，回滾交易
         $pdo->rollBack();

@@ -469,6 +469,13 @@ function showGameOver(isWin) {
  
     // 儲存遊戲結果（帶分數與 play_time）
     saveGameResult(isWin, score, playTime);
+    
+    // 立即更新主頁面分數
+    if (window.forceRefreshScore) {
+        setTimeout(() => {
+            window.forceRefreshScore();
+        }, 1000); // 1秒後更新，確保資料庫已保存
+    }
  
     // 立即顯示遊戲結束視窗
     gameOverModal.classList.remove('hidden');

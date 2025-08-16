@@ -12,6 +12,7 @@ let todayStart = getTodayStart();
 let sessionStartTime = Date.now();
 let sessionSeconds = 0;
 let lastSaveTime = Date.now();
+let isPageActive = true; // 追蹤頁面是否活躍
 
 // 從 localStorage 載入或初始化會話時間
 function loadSessionTime() {
@@ -87,41 +88,40 @@ function updateTimeDisplay() {
   }
 }
 
-// 每秒執行：更新會話時間並更新畫面
+// 每秒執行：更新會話時間並更新畫面（只在頁面活躍時）
 setInterval(() => {
   // 檢查是否需要重置（新的一天）
   checkAndResetDaily();
   
-  // 計算從會話開始的總時間
-  const now = Date.now();
-  sessionSeconds = Math.floor((now - sessionStartTime) / 1000);
-  
-  // 每10秒保存一次到 localStorage
-  if (sessionSeconds % 10 === 0) {
-    saveSessionTimeToStorage();
+  if (isPageActive) {
+    // 計算從會話開始的總時間
+    const now = Date.now();
+    sessionSeconds = Math.floor((now - sessionStartTime) / 1000);
+    
+    // 每10秒保存一次到 localStorage
+    if (sessionSeconds % 10 === 0) {
+      saveSessionTimeToStorage();
+    }
+    
+    updateTimeDisplay();
   }
-  
-  updateTimeDisplay();
 }, 1000);
 
-// 確保 DOM 載入完成後才執行一次畫面更新（避免 timeValue 未出現）
+// 確保 DOM 載入完成後才執行一次畫面更新
 document.addEventListener('DOMContentLoaded', () => {
   updateTimeDisplay();
 });
 
 // 顯示目前時間的提示（⏱️按鈕）
 function showTimeDetail() {
-  alert("您今天已累積瀏覽時間：" + formatTime(sessionSeconds));
+  alert("您這次已累積瀏覽時間：" + formatTime(sessionSeconds));
 }
 
-// 手動保存當前時間到資料庫
+// 手動保存當前時間
 function saveCurrentTime() {
-  if (sessionSeconds > 0) {
-    saveSessionTime();
-    alert("✅ 已保存當前遊玩時間：" + formatTime(sessionSeconds));
-  } else {
-    alert("⚠️ 尚無遊玩時間可保存");
-  }
+  saveSessionTime();
+  saveSessionTimeToStorage();
+  alert("已保存當前時間：" + formatTime(sessionSeconds));
 }
 
 // ===== 手動儲存時間到資料庫 =====
@@ -130,7 +130,7 @@ function saveSessionTime() {
   const currentTime = Date.now();
   const timeSinceLastSave = Math.floor((currentTime - lastSaveTime) / 1000);
   
-  if (timeSinceLastSave > 0) {
+  if (timeSinceLastSave > 0 && isPageActive) {
     // 保存到遊戲記錄
     const gameData = new URLSearchParams({
       game_id: 0,
@@ -171,40 +171,53 @@ function saveSessionTime() {
   }
 }
 
-// 每5分鐘保存一次（可選，如果不需要可以註釋掉）
-// setInterval(saveSessionTime, 300000);
+// 定期保存（每5分鐘）
+setInterval(saveSessionTime, 300000);
 
-// ===== 頁面可見性變化處理 =====
+// 頁面隱藏時保存並暫停計時
 document.addEventListener('visibilitychange', function() {
-  // 當頁面被隱藏時，不保存時間（用戶要求）
-  // if (document.hidden) {
-  //   saveSessionTime();
-  // }
+  if (document.hidden) {
+    console.log('頁面隱藏，暫停計時');
+    isPageActive = false;
+    saveSessionTime();
+    saveSessionTimeToStorage();
+  } else {
+    console.log('頁面顯示，恢復計時');
+    isPageActive = true;
+    sessionStartTime = Date.now(); // 重置會話開始時間
+    lastSaveTime = Date.now(); // 重置最後保存時間
+  }
 });
 
-// 頁面卸載前不保存（用戶要求）
-// window.addEventListener('beforeunload', function() {
-  // saveSessionTime();
-// });
+// 頁面卸載時保存
+window.addEventListener('beforeunload', function() {
+  console.log('頁面即將卸載，保存時間');
+  isPageActive = false;
+  saveSessionTime();
+  saveSessionTimeToStorage();
+});
 
-// ===== 新增：遊戲頁面特殊處理 =====
 // 檢測是否在遊戲頁面
 function isGamePage() {
+  const currentPath = window.location.pathname;
   const gamePages = [
-    '2048ht.php',
-    'Memory-Game.php', 
-    'Memory-Game-2P.php',
-    'Catch-Egg Game.php',
-    'rhythm_game.php',
-    'prisoner.php',
-    'Vegetable-Cost.php'
+    '/2048ht.php',
+    '/Catch-Egg Game.php',
+    '/Vegetable-Cost.php',
+    '/Memory-Game.php',
+    '/Memory-Game-2P.php',
+    '/prisoner.php',
+    '/rhythm_game.php',
+    '/text-color.php',
+    '/clue.php'
   ];
   
-  const currentPage = window.location.pathname.split('/').pop();
-  return gamePages.includes(currentPage);
+  return gamePages.some(page => currentPath.includes(page));
 }
 
-// 在遊戲頁面中，確保計時器持續運行
-if (isGamePage()) {
-  console.log('檢測到遊戲頁面，計時器將持續運行');
+// 只在非遊戲頁面啟用自動計時
+if (!isGamePage()) {
+  console.log('啟用自動計時功能');
+} else {
+  console.log('遊戲頁面，停用自動計時');
 }

@@ -20,6 +20,13 @@ try {
     ]
   );
 } catch (PDOException $e) {
-  die("資料庫連線錯誤：" . $e->getMessage());
+  // 如果是API請求，返回JSON錯誤
+  if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => '資料庫連線錯誤：' . $e->getMessage()]);
+    exit;
+  } else {
+    die("資料庫連線錯誤：" . $e->getMessage());
+  }
 }
 ?>

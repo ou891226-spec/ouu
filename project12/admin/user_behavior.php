@@ -196,7 +196,7 @@ $action_types = $action_types_stmt->fetchAll();
             <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">題目管理</a>
+            <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
         </div>
         
@@ -214,8 +214,6 @@ $action_types = $action_types_stmt->fetchAll();
                         <option value="game_start" <?php echo $action_type_filter === 'game_start' ? 'selected' : ''; ?>>遊戲開始</option>
                         <option value="game_complete" <?php echo $action_type_filter === 'game_complete' ? 'selected' : ''; ?>>遊戲完成</option>
                         <option value="game_exit" <?php echo $action_type_filter === 'game_exit' ? 'selected' : ''; ?>>遊戲退出</option>
-                        <option value="login" <?php echo $action_type_filter === 'login' ? 'selected' : ''; ?>>登入</option>
-                        <option value="logout" <?php echo $action_type_filter === 'logout' ? 'selected' : ''; ?>>登出</option>
                     </select>
                 </div>
                 <div>
@@ -240,10 +238,6 @@ $action_types = $action_types_stmt->fetchAll();
             <div class="stat-card">
                 <h3><?php echo number_format($stats['unique_users']); ?></h3>
                 <p>活躍用戶</p>
-            </div>
-            <div class="stat-card">
-                <h3><?php echo number_format($stats['unique_sessions']); ?></h3>
-                <p>會話數</p>
             </div>
             <div class="stat-card">
                 <h3><?php echo $stats['game_exits'] > 0 ? round(($stats['game_exits'] / ($stats['game_exits'] + $stats['game_completes'])) * 100, 1) : 0; ?>%</h3>
@@ -296,8 +290,6 @@ $action_types = $action_types_stmt->fetchAll();
                         <th>用戶</th>
                         <th>行為類型</th>
                         <th>頁面/遊戲</th>
-                        <th>會話ID</th>
-                        <th>IP地址</th>
                         <th>時間</th>
                     </tr>
                 </thead>
@@ -322,9 +314,7 @@ $action_types = $action_types_stmt->fetchAll();
                             </span>
                         </td>
                         <td><?php echo htmlspecialchars($record['page_url'] ?? $record['game_type'] ?? '-'); ?></td>
-                        <td><?php echo substr($record['session_id'], 0, 20) . '...'; ?></td>
-                        <td><?php echo htmlspecialchars($record['ip_address']); ?></td>
-                        <td><?php echo date('d日 H:i', strtotime($record['created_at'])); ?></td>
+                        <td><?php echo date('m月d日 H:i', strtotime($record['created_at'])); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

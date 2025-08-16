@@ -262,7 +262,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     document.getElementById('avatarForm').submit();
   }
 
-  // showTimeDetail 函數已在 auto-save-time.js 中定義
+  // showTimeDetail 函數已在 auto-save-time-fixed.js 中定義
 
   function openAccountModal() {
     // 先關閉個人資訊彈窗
@@ -314,7 +314,7 @@ function togglePassword() {
 </script>
 
 <!-- 外部 JS -->
-<script src="js/auto-save-time.js"></script>
+<script src="js/auto-save-time-fixed.js"></script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>

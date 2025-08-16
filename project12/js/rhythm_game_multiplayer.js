@@ -138,11 +138,13 @@ function setupPlayerAreaRestrictions() {
   const player1Label = document.querySelector('.player-label:first-child') || 
                       document.querySelector('[data-player="1"]') || 
                       document.querySelector('.player-info:first-child .player-name') ||
-                      document.querySelector('.player1-name');
+                      document.querySelector('.player1-name') ||
+                      document.querySelector('.player-button:first-child');
   const player2Label = document.querySelector('.player-label:last-child') || 
                       document.querySelector('[data-player="2"]') || 
                       document.querySelector('.player-info:last-child .player-name') ||
-                      document.querySelector('.player2-name');
+                      document.querySelector('.player2-name') ||
+                      document.querySelector('.player-button:last-child');
   
   if (isInviter) {
     // 邀請人（黑嚕嚕）：只能點擊上排（玩家一）

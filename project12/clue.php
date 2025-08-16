@@ -60,6 +60,10 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             
             $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt4->execute([$member_id, $game_id, $score, $difficulty, $play_date, $play_time, $game_type, $is_single_player, null]);
+            
+            // 檢查並完成所有相關任務
+            require_once 'check_and_grant_achievements.php';
+            checkAndCompleteAllTasks($member_id, '記憶力');
         }
         
         // 清空 session

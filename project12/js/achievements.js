@@ -66,7 +66,7 @@ function displayAchievements(achievements, todayStatus = null) {
 
   container.innerHTML = '';
   
-  // 添加今日成就狀態
+  // 添加今日成就狀態（保持在上面）
   if (todayStatus) {
     const statusDiv = document.createElement('div');
     statusDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px; border: 1px solid #d0e7ff; text-align: center;';
@@ -97,7 +97,11 @@ function displayAchievements(achievements, todayStatus = null) {
     container.appendChild(statusDiv);
   }
   
-  // 最多顯示4個成就
+  // 創建成就卡片容器（在下面）
+  const achievementsContainer = document.createElement('div');
+  achievementsContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;';
+  
+  // 顯示所有成就卡片
   const displayAchievements = achievements.slice(0, 4);
   
   displayAchievements.forEach((achievement, index) => {
@@ -111,8 +115,10 @@ function displayAchievements(achievements, todayStatus = null) {
       <div class="profile-card-label" style="font-size:12px;margin-top:5px;">${achievement.achievement_name}</div>
     `;
     
-    container.appendChild(card);
+    achievementsContainer.appendChild(card);
   });
+  
+  container.appendChild(achievementsContainer);
 }
 
 // 顯示空成就狀態
@@ -129,9 +135,13 @@ function displayEmptyAchievements() {
       <div style="font-size: 48px; margin-bottom: 10px;">🎯</div>
       <div style="font-size: 16px; margin-bottom: 5px;">尚未獲得成就</div>
       <div style="font-size: 14px; color: #999;">完成遊戲來獲得成就稱號！</div>
-      <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px; border: 1px solid #d0e7ff;">
-        <div style="font-size: 12px; color: #0066cc;">📅 每日限制：3個成就</div>
-        <div style="font-size: 12px; color: #0066cc;">🕛 凌晨12點重置</div>
+      <div style="margin-top: 15px; padding: 10px; background: #f0f8ff; border-radius: 5px; border: 1px solid #d0e7ff; text-align: center;">
+        <div style="font-size: 14px; color: #0066cc; margin-bottom: 5px;">
+          📅 今日已獲得 0/3 個成就
+        </div>
+        <div style="font-size: 12px; color: #0066cc;">
+          還可獲得 3 個成就 • 凌晨12點重置
+        </div>
       </div>
     </div>
   `;

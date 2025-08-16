@@ -1,6 +1,13 @@
 <?php
-require_once 'db.php';
-session_start();
+// 如果沒有已經建立的數據庫連接，則使用默認連接
+if (!isset($pdo)) {
+    require_once 'db.php';
+}
+
+// 只在會話未啟動時啟動會話
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 /**
  * 檢查並授予成就
@@ -126,8 +133,10 @@ function grantAchievement($member_id, $achievement_id, $achievement_name, $icon)
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$member_id, $achievement_id]);
             
-            // 記錄成就獲得
-            echo "🎉 恭喜獲得成就：{$icon} {$achievement_name}\n";
+                         // 記錄成就獲得（只在非API請求時輸出）
+             if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+                 echo "🎉 恭喜獲得成就：{$icon} {$achievement_name}\n";
+             }
             
             return true;
         }
@@ -296,13 +305,14 @@ function getTodayAchievementStatus($member_id) {
     try {
         $today = date('Y-m-d');
         
-        $sql = "SELECT achievement_count FROM daily_achievement_records 
-                WHERE member_id = ? AND achievement_date = ?";
+        // 計算今天獲得的成就數量（包括任務獲得的成就）
+        $sql = "SELECT COUNT(*) as count FROM member_achievements ma 
+                JOIN achievements a ON ma.achievement_id = a.achievement_id 
+                WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$member_id, $today]);
-        $record = $stmt->fetch();
+        $count = $stmt->fetchColumn();
         
-        $count = $record ? $record['achievement_count'] : 0;
         $remaining = 3 - $count;
         
         return [
@@ -318,6 +328,120 @@ function getTodayAchievementStatus($member_id) {
             'remaining' => 3,
             'can_earn' => true
         ];
+    }
+}
+
+// 新增：檢查並完成複雜任務（如完成三種不同類型遊戲）
+function checkAndCompleteComplexTasks($member_id) {
+    global $pdo;
+    
+    try {
+        // 檢查任務47：完成三種不同類型遊戲
+        $task_47_sql = "
+        SELECT mt.task_id, mt.completed_date, d.task_description
+        FROM member_tasks mt
+        JOIN daily_tasks d ON mt.task_id = d.task_id
+        WHERE mt.member_id = ? AND d.task_id = 47 AND mt.completed_date IS NULL
+        ";
+        $task_stmt = $pdo->prepare($task_47_sql);
+        $task_stmt->execute([$member_id]);
+        $task_47 = $task_stmt->fetch();
+        
+        if ($task_47) {
+            // 檢查今天玩過的不同遊戲類型
+            $today = date('Y-m-d');
+            $game_types_sql = "
+            SELECT DISTINCT game_type
+            FROM game_records 
+            WHERE member_id = ? AND DATE(play_date) = ?
+            ";
+            $game_stmt = $pdo->prepare($game_types_sql);
+            $game_stmt->execute([$member_id, $today]);
+            $game_types = $game_stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // 如果玩了3種或以上不同類型的遊戲，完成任務
+            if (count($game_types) >= 3) {
+                $complete_sql = "UPDATE member_tasks SET completed_date = NOW() WHERE member_id = ? AND task_id = 47";
+                $complete_stmt = $pdo->prepare($complete_sql);
+                $complete_stmt->execute([$member_id]);
+                
+                // 記錄到日誌
+                error_log("用戶 $member_id 完成任務47：完成三種不同類型遊戲。遊戲類型：" . implode(", ", $game_types));
+            }
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("檢查複雜任務時發生錯誤：" . $e->getMessage());
+        return false;
+    }
+}
+
+// 新增：檢查並完成所有相關任務
+function checkAndCompleteAllTasks($member_id, $game_type = null) {
+    global $pdo;
+    
+    try {
+        // 檢查一般任務（基於遊戲類型）
+        if ($game_type) {
+            // 根據遊戲類型映射到任務描述中的關鍵字
+            $game_type_mapping = [
+                '記憶力' => ['記憶力遊戲', '記憶力'],
+                '算數邏輯力' => ['算數邏輯力', '算術邏輯', '算菜錢遊戲', '蔬菜遊戲'],
+                '邏輯力' => ['邏輯力', '2048遊戲'],
+                '反應力' => ['反應力', '反應力遊戲'],
+                '節奏遊戲' => ['節奏遊戲', '節奏'],
+                '接金蛋遊戲' => ['接金蛋遊戲', '接金蛋', '接蛋遊戲'],
+                '看字選色遊戲' => ['看字選色遊戲', '看字選色'],
+                '追蹤犯人遊戲' => ['追蹤犯人遊戲', '追蹤犯人', '犯人遊戲']
+            ];
+            
+            $search_terms = $game_type_mapping[$game_type] ?? [$game_type];
+            $placeholders = str_repeat('?,', count($search_terms) - 1) . '?';
+            
+            $task_check_sql = "
+            SELECT mt.task_id, mt.completed_date, d.task_description, d.reward_achievement
+            FROM member_tasks mt
+            JOIN daily_tasks d ON mt.task_id = d.task_id
+            WHERE mt.member_id = ? AND mt.completed_date IS NULL AND (
+                d.task_description LIKE '%遊玩任一普通關卡%' OR
+                d.task_description LIKE '%完成任意一場遊戲%' OR
+                d.task_description LIKE '%普通關卡%' OR
+                d.task_description LIKE '%遊戲對戰%'
+            ";
+            
+            // 添加遊戲類型特定的搜索條件
+            foreach ($search_terms as $term) {
+                $task_check_sql .= " OR d.task_description LIKE '%$term%'";
+            }
+            $task_check_sql .= ")";
+            
+            $task_stmt = $pdo->prepare($task_check_sql);
+            $task_stmt->execute([$member_id]);
+            $completed_tasks = $task_stmt->fetchAll();
+            
+            foreach ($completed_tasks as $task) {
+                // 完成任務（但不自動授予成就）
+                $complete_task_sql = "UPDATE member_tasks SET completed_date = NOW() WHERE member_id = ? AND task_id = ?";
+                $complete_stmt = $pdo->prepare($complete_task_sql);
+                $complete_stmt->execute([$member_id, $task['task_id']]);
+                
+                error_log("用戶 $member_id 完成任務 {$task['task_id']}：{$task['task_description']}");
+                
+                // 記錄可領取的成就（不自動授予）
+                if ($task['reward_achievement']) {
+                    error_log("用戶 $member_id 可領取成就：{$task['reward_achievement']}");
+                }
+            }
+        }
+        
+        // 檢查複雜任務
+        checkAndCompleteComplexTasks($member_id);
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("檢查任務時發生錯誤：" . $e->getMessage());
+        return false;
     }
 }
 
