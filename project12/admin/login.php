@@ -4,7 +4,7 @@ require_once '../db.php';
 
 // 如果已經登入，直接跳轉到後台
 if (isset($_SESSION['admin_id'])) {
-    header('Location: index.php');
+    header('Location: game_records.php');
     exit;
 }
 
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_stmt = $pdo->prepare("UPDATE admin_users SET last_login = NOW() WHERE id = ?");
             $update_stmt->execute([$admin['id']]);
             
-            header('Location: index.php');
+            header('Location: game_records.php');
             exit;
         } else {
             $error = '帳號或密碼錯誤';

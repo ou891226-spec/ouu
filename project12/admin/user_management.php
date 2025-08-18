@@ -181,7 +181,6 @@ $stats = $stats_stmt->fetch();
         </div>
         
         <div class="nav">
-            <a href="index.php">首頁</a>
             <a href="game_records.php">遊戲紀錄</a>
             <a href="user_behavior.php">行為軌跡</a>
             <a href="question_management.php">遊戲管理</a>
