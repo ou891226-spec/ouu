@@ -72,6 +72,18 @@ form {
     background-color: #45a049;
 }
 
+.forgot-password-link {
+    display: inline-block;
+    margin-top: 15px;
+    font-size: 20px;
+    color: #dc3545;
+    text-decoration: none;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+    color: #c82333;
+}
 
 .register-link {
     display: inline-block;
@@ -125,6 +137,11 @@ form {
         width: 50%;
     }
     
+    .forgot-password-link {
+        margin-top: 10px;
+        font-size: 16px;
+    }
+    
     .register-link {
         margin-top: 20px;
         font-size: 18px;
@@ -168,6 +185,11 @@ form {
         font-size: 20px;
         padding: 12px;
         width: 60%;
+    }
+    
+    .forgot-password-link {
+        margin-top: 8px;
+        font-size: 14px;
     }
     
     .register-link {

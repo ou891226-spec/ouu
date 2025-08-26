@@ -22,19 +22,26 @@ if (!$member_id) {
 }
 
 try {
-    // 獲取用戶最近遊玩的遊戲（按時間排序，最多6個）
+    // 獲取用戶最近遊玩的遊戲（按時間排序，最多3個）
+    // 合併相同類型的遊戲記錄，避免重複顯示
     $recent_games_sql = "
         SELECT 
-            gr.game_type,
+            CASE 
+                WHEN gr.game_type IN ('記憶力', '翻牌對對樂') THEN '記憶力'
+                WHEN gr.game_type IN ('邏輯力', '2048') THEN '2048'
+                WHEN gr.game_type IN ('反應力', '節奏遊戲', '看字選色遊戲', '接金蛋遊戲') THEN gr.game_type
+                WHEN gr.game_type IN ('算數邏輯力', '算術邏輯', '算菜錢遊戲') THEN '算數邏輯力'
+                ELSE gr.game_type
+            END as normalized_game_type,
             SUM(gr.score) as total_score,
             SUM(gr.play_time) as total_play_time,
             MAX(gr.play_date) as last_played,
             COUNT(*) as play_count
         FROM game_records gr
         WHERE gr.member_id = ?
-        GROUP BY gr.game_type
+        GROUP BY normalized_game_type
         ORDER BY MAX(gr.play_date) DESC
-        LIMIT 6
+        LIMIT 3
     ";
     
     $recent_games_stmt = $pdo->prepare($recent_games_sql);
@@ -49,22 +56,18 @@ try {
         '節奏遊戲' => ['img' => 'img/rhythm.jpg', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
         '反應力' => ['img' => 'img/egg.jpg', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
         '看字選色遊戲' => ['img' => 'img/color.jpg', 'link' => 'text-color.php', 'title' => '看字選色'],
-        '算數邏輯力' => ['img' => 'img/vegetable.jpg', 'link' => 'Vegetable-Cost.php', 'title' => '蔬菜成本'],
-        '邏輯力' => ['img' => 'img/2048.png', 'link' => '2048ht.php', 'title' => '2048']
+        '算數邏輯力' => ['img' => 'img/vegetable.jpg', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢']
     ];
     
     $formatted_games = [];
     
     foreach ($recent_games as $game) {
-        $game_type = $game['game_type'];
+        $game_type = $game['normalized_game_type'];
         
         // 查找對應的遊戲資訊
         $game_info = null;
-        foreach ($game_mappings as $key => $info) {
-            if (strpos($game_type, $key) !== false || strpos($key, $game_type) !== false) {
-                $game_info = $info;
-                break;
-            }
+        if (isset($game_mappings[$game_type])) {
+            $game_info = $game_mappings[$game_type];
         }
         
         // 如果找不到對應，使用預設值

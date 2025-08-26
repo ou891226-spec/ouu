@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('開始創建遊戲實例');
             this.board = Array(4).fill().map(() => Array(4).fill(0));
             this.score = 0;
-            this.bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+            this.bestScore = 0; // 初始化為 0，稍後從資料庫讀取
             this.targetScore = 1500;
             this.difficulty = 'easy';
             this.gameOver = false;
@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setupTouchEvents(); // 新增觸控事件
             this.setupWinModalListeners();
             this.setupGameOverModalListeners();
+            
+            // 從資料庫讀取最高分數
+            this.loadBestScore();
         }
 
         init() {
@@ -94,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 觸控開始事件
             gameBoard.addEventListener('touchstart', (e) => {
-                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                if (!this.isInitialized || this.gameOver || this.won || this.isPaused) {
                     return;
                 }
                 
@@ -107,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 觸控結束事件
             gameBoard.addEventListener('touchend', (e) => {
-                if (!this.isInitialized || this.gameOver || this.isPaused) {
+                if (!this.isInitialized || this.gameOver || this.won || this.isPaused) {
                     return;
                 }
                 
@@ -129,6 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         handleSwipe() {
+            // 檢查遊戲狀態
+            if (this.gameOver || this.won) {
+                console.log('遊戲已結束或已勝利，忽略滑動');
+                return;
+            }
+            
             const deltaX = this.touchEndX - this.touchStartX;
             const deltaY = this.touchEndY - this.touchStartY;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -248,8 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('遊戲未初始化，忽略按鍵');
                     return;
                 }
-                if (this.gameOver) {
-                    console.log('遊戲已結束，忽略按鍵');
+                if (this.gameOver || this.won) {
+                    console.log('遊戲已結束或已勝利，忽略按鍵');
                     return;
                 }
                 if (this.isPaused) {
@@ -305,6 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('找到結束按鈕，設置事件監聽器');
                 endButton.onclick = () => {
                     console.log('結束按鈕被點擊');
+                    // 如果已經勝利，不重複記錄分數
+                    if (this.won) {
+                        console.log('遊戲已勝利，只顯示勝利彈窗，不重複記錄分數');
+                        this.showWinModal();
+                        return;
+                    }
                     // 直接呼叫 endGame 顯示彈窗
                     this.isContinuing = false;
                     this.endGame();
@@ -464,12 +479,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('找不到分數元素 #score');
             }
             
+            // 檢查並更新最高分數
+            if (this.score > this.bestScore) {
+                this.bestScore = this.score;
+                console.log(`更新最高分數為: ${this.bestScore}`);
+            }
+            
             if (bestScoreElement) {
                 bestScoreElement.textContent = this.bestScore;
                 console.log(`更新最高分數: ${this.bestScore}`);
             } else {
                 console.error('找不到最高分數元素 #best-score');
             }
+            
+            // 更新目標分數顯示
+            this.updateTargetScoreDisplay();
         }
 
         moveLeft() {
@@ -479,6 +503,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (newRow[i] === newRow[i + 1]) {
                         newRow[i] *= 2;
                         this.score += newRow[i];
+                        
+                        // 檢查是否達到目標分數
+                        if (this.score >= this.targetScore && !this.won) {
+                            this.won = true;
+                            this.gameOver = true;
+                            console.log('移動過程中達到目標分數，立即停止遊戲');
+                            // 立即顯示勝利彈窗
+                            setTimeout(() => {
+                                this.showWinModal();
+                            }, 100);
+                        }
+                        
                         newRow.splice(i + 1, 1);
                     }
                 }
@@ -496,6 +532,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (newRow[i] === newRow[i - 1]) {
                         newRow[i] *= 2;
                         this.score += newRow[i];
+                        
+                        // 檢查是否達到目標分數
+                        if (this.score >= this.targetScore && !this.won) {
+                            this.won = true;
+                            this.gameOver = true;
+                            console.log('移動過程中達到目標分數，立即停止遊戲');
+                            // 立即顯示勝利彈窗
+                            setTimeout(() => {
+                                this.showWinModal();
+                            }, 100);
+                        }
+                        
                         newRow.splice(i - 1, 1);
                     }
                 }
@@ -513,6 +561,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (newCol[i] === newCol[i + 1]) {
                         newCol[i] *= 2;
                         this.score += newCol[i];
+                        
+                        // 檢查是否達到目標分數
+                        if (this.score >= this.targetScore && !this.won) {
+                            this.won = true;
+                            this.gameOver = true;
+                            console.log('移動過程中達到目標分數，立即停止遊戲');
+                            // 立即顯示勝利彈窗
+                            setTimeout(() => {
+                                this.showWinModal();
+                            }, 100);
+                        }
+                        
                         newCol.splice(i + 1, 1);
                     }
                 }
@@ -530,6 +590,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (newCol[i] === newCol[i - 1]) {
                         newCol[i] *= 2;
                         this.score += newCol[i];
+                        
+                        // 檢查是否達到目標分數
+                        if (this.score >= this.targetScore && !this.won) {
+                            this.won = true;
+                            this.gameOver = true;
+                            console.log('移動過程中達到目標分數，立即停止遊戲');
+                            // 立即顯示勝利彈窗
+                            setTimeout(() => {
+                                this.showWinModal();
+                            }, 100);
+                        }
+                        
                         newCol.splice(i - 1, 1);
                     }
                 }
@@ -561,46 +633,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         checkGameStatus() {
-            if (!this.isContinuing && this.score >= this.targetScore && !this.won) {
-                this.won = true;
-                this.showWinModal();
-                return;
-            }
-
-            let hasEmptyCell = false;
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    if (this.board[i][j] === 0) {
-                        hasEmptyCell = true;
-                        return;
-                    }
-                }
-            }
-
-            if (!hasEmptyCell) {
-                let canMove = false;
-                for (let i = 0; i < 4; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        if (this.board[i][j] === this.board[i][j + 1]) {
-                            canMove = true;
-                            return;
-                        }
-                    }
-                }
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        if (this.board[i][j] === this.board[i + 1][j]) {
-                            canMove = true;
-                            return;
-                        }
-                    }
-                }
-                if (!canMove) {
+            console.log('=== 開始檢查遊戲狀態 ===');
+            console.log('當前分數:', this.score);
+            console.log('目標分數:', this.targetScore);
+            console.log('已勝利狀態:', this.won);
+            console.log('遊戲結束狀態:', this.gameOver);
+            
+            // 檢查勝利條件 - 添加更嚴格的檢查
+            if (this.score >= this.targetScore && !this.won) {
+                console.log('=== 遊戲勝利檢查 ===');
+                console.log('當前分數:', this.score);
+                console.log('目標分數:', this.targetScore);
+                console.log('已勝利狀態:', this.won);
+                
+                // 確保分數真的達到了目標
+                if (this.score >= this.targetScore) {
+                    console.log('達到目標分數，遊戲勝利！');
+                    this.won = true;
                     this.gameOver = true;
-                    this.isContinuing = false;
-                    this.showGameOverModal();
+                    
+                    // 立即顯示勝利彈窗
+                    console.log('準備顯示勝利彈窗...');
+                    setTimeout(() => {
+                        console.log('執行顯示勝利彈窗');
+                        this.showWinModal();
+                    }, 100);
+                    
+                    return; // 立即返回，不再檢查其他條件
+                }
+            } else if (this.score >= this.targetScore && this.won) {
+                console.log('已經勝利，跳過勝利檢查');
+            } else {
+                console.log('未達到目標分數，繼續遊戲');
+            }
+
+            // 只有在未勝利的情況下才檢查遊戲失敗條件
+            if (!this.won) {
+                // 檢查是否有空格子
+                let hasEmptyCell = false;
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (this.board[i][j] === 0) {
+                            hasEmptyCell = true;
+                            break;
+                        }
+                    }
+                    if (hasEmptyCell) break;
+                }
+
+                // 如果沒有空格子，檢查是否還能移動
+                if (!hasEmptyCell) {
+                    let canMove = false;
+                    
+                    // 檢查水平方向
+                    for (let i = 0; i < 4; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            if (this.board[i][j] === this.board[i][j + 1] && this.board[i][j] !== 0) {
+                                canMove = true;
+                                break;
+                            }
+                        }
+                        if (canMove) break;
+                    }
+                    
+                    // 檢查垂直方向
+                    if (!canMove) {
+                        for (let i = 0; i < 3; i++) {
+                            for (let j = 0; j < 4; j++) {
+                                if (this.board[i][j] === this.board[i + 1][j] && this.board[i][j] !== 0) {
+                                    canMove = true;
+                                    break;
+                                }
+                            }
+                            if (canMove) break;
+                        }
+                    }
+                    
+                    if (!canMove) {
+                        console.log('無法移動，遊戲失敗');
+                        this.gameOver = true;
+                        this.isContinuing = false;
+                        this.showGameOverModal();
+                    }
                 }
             }
+            
+            console.log('=== 遊戲狀態檢查完成 ===');
         }
 
         getDifficultyText() {
@@ -617,32 +735,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         showWinModal() {
+            // 防止重複調用
+            if (this.winModal.style.display === 'block') {
+                console.log('勝利彈窗已顯示，忽略重複調用');
+                return;
+            }
+            
+            console.log('=== 顯示勝利彈窗 ===');
+            // 確保遊戲狀態正確
+            this.gameOver = true;
+            this.won = true;
+            
             const difficultyLabel = document.getElementById('win-difficulty');
             difficultyLabel.textContent = this.getDifficultyText();
             difficultyLabel.className = 'difficulty-label ' + this.difficulty;
             
-            document.getElementById('win-score').textContent = this.score;
+            // 根據難度計算獎勵分數
+            let rewardScore = 0;
+            switch (this.difficulty) {
+                case 'easy':
+                    rewardScore = 20;
+                    break;
+                case 'medium':
+                    rewardScore = 50;
+                    break;
+                case 'hard':
+                    rewardScore = 100;
+                    break;
+                default:
+                    rewardScore = 20;
+            }
+            
+            // 顯示遊戲分數和獎勵分數
+            document.getElementById('win-game-score').textContent = this.score;
+            document.getElementById('win-reward-score').textContent = rewardScore;
             document.getElementById('win-best-score').textContent = this.bestScore;
             
-                            // 自動呼叫 saveGameRecord
-                if (typeof saveGameRecord === 'function') {
-                    console.log('遊戲勝利，呼叫 saveGameRecord');
-                    saveGameRecord(memberId, this.score, this.difficulty, 60);
-                }
+            // 自動呼叫 saveGameRecord，使用獎勵分數而不是遊戲分數
+            if (typeof saveGameRecord === 'function') {
+                console.log('遊戲勝利，呼叫 saveGameRecord，獎勵分數：', rewardScore);
+                saveGameRecord(memberId, rewardScore, this.difficulty, 60);
+            }
             this.winModal.style.display = 'block';
         }
 
         showGameOverModal() {
-            // ... (保留原始程式碼中的內容)
+            // 確保只在失敗時調用此函數
+            if (this.won) {
+                console.log('遊戲已勝利，不顯示失敗彈窗');
+                return;
+            }
 
-            // 調整標題為「遊戲失敗」或更通用的「遊戲結束」
+            // 調整標題為「遊戲失敗」
             const modalTitle = this.gameOverModal.querySelector('h2');
             if (modalTitle) {
-                if (this.score >= this.targetScore && this.won) {
-                    modalTitle.textContent = '恭喜破關';
-                } else {
-                    modalTitle.textContent = '遊戲失敗';
-                }
+                modalTitle.textContent = '遊戲失敗';
             }
 
             // 更新彈窗內的難度、分數等資訊
@@ -652,12 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('game-over-score').textContent = this.score;            
             
-            // 自動呼叫 saveGameRecord
-            if (typeof saveGameRecord === 'function') {
-                console.log('遊戲結束，呼叫 saveGameRecord');
-                // 這裡的 60 是範例，請根據實際遊戲時間調整
-                saveGameRecord(memberId, this.score, this.difficulty, 60);
-            }
+            // 遊戲失敗時不記錄任何分數
+            console.log('遊戲失敗，不記錄任何分數');
 
             // 顯示彈窗
             this.gameOverModal.style.display = 'block';
@@ -683,14 +826,18 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOver = true;
             this.isInitialized = false;
             
-            // 更新最高分
+            // 更新最高分（如果需要，可以保存到資料庫）
             if (this.score > this.bestScore) {
                 this.bestScore = this.score;
-                localStorage.setItem('bestScore', this.bestScore);
+                // 注意：這裡不保存到 localStorage，因為我們從資料庫讀取
             }
             
-            // 直接顯示遊戲結束彈窗，而不是 alert
-            this.showGameOverModal();
+            // 如果已經勝利，顯示勝利彈窗；否則顯示失敗彈窗
+            if (this.won) {
+                this.showWinModal();
+            } else {
+                this.showGameOverModal();
+            }
             console.log('顯示遊戲結束彈窗');
         }
 
@@ -717,8 +864,51 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 更新顯示
             this.updateDisplay();
-            this.updateTargetScoreDisplay();
+            
             console.log('遊戲重置完成');
+        }
+
+        // 從資料庫讀取最高分數
+        async loadBestScore() {
+            console.log('開始從資料庫讀取最高分數...');
+            try {
+                const response = await fetch('get_high_score.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        game_id: 4, // 2048 遊戲的 ID
+                        member_id: memberId
+                    })
+                });
+                
+                console.log('API 回應狀態:', response.status);
+                const data = await response.json();
+                console.log('API 回應數據:', data);
+                
+                if (data.success) {
+                    this.bestScore = data.high_score || 0;
+                    console.log(`從資料庫讀取最高分數: ${this.bestScore}`);
+                } else {
+                    console.log('無法從資料庫讀取最高分數，使用預設值 0');
+                    this.bestScore = 0;
+                }
+            } catch (error) {
+                console.error('讀取最高分數失敗:', error);
+                this.bestScore = 0;
+            }
+            
+            // 更新顯示
+            this.updateBestScoreDisplay();
+        }
+        
+        // 更新最高分數顯示
+        updateBestScoreDisplay() {
+            if (this.bestScoreElement) {
+                this.bestScoreElement.textContent = this.bestScore;
+                console.log(`更新最高分數顯示: ${this.bestScore}`);
+            }
         }
     }
 
@@ -727,7 +917,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('遊戲實例已創建並保存到 window.game');
 
     async function saveGameRecord(member_id, score, difficulty, play_time) {
-        console.log('送出紀錄', {member_id, score, difficulty, play_time});
+        console.log('=== 開始記錄遊戲分數 ===');
+        console.log('會員ID:', member_id);
+        console.log('記錄分數:', score);
+        console.log('難度:', difficulty);
+        console.log('遊戲時間:', play_time);
+        console.log('=== 分數記錄詳情 ===');
         const res = await fetch(window.location.href, {
             method: 'POST',
             headers: {

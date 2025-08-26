@@ -530,7 +530,10 @@ $colors = $stmt->fetchAll();
             localStorage.setItem('member_id', phpCurrentUserId);
         }
     </script>
+    <script src="js/memory-game-http-sync.js?v=<?php echo time(); ?>"></script>
     <script src="js/websocket_client.js?v=<?php echo time(); ?>"></script>
+    <script src="js/enhanced-sync.js?v=<?php echo time(); ?>"></script>
+    <script src="js/memory-game-client.js?v=<?php echo time(); ?>"></script>
     <script src="js/Memory-Game-2P.js?v=<?php echo time(); ?>"></script>
     <script src="js/auto-save-time.js?v=<?php echo time(); ?>"></script>
     <script src="js/sync-optimization.js?v=<?php echo time(); ?>"></script>

@@ -10,7 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
- * 檢查並授予成就
+ * 檢查並授予成就（已停用自動授予）
  * @param int $member_id 會員ID
  * @param string $game_type 遊戲類型（可選）
  * @param int $score 分數（可選）
@@ -20,95 +20,16 @@ function checkAndGrantAchievements($member_id, $game_type = null, $score = 0, $p
     global $pdo;
     
     try {
-        // 0. 檢查每日成就限制
-        if (!checkDailyAchievementLimit($member_id)) {
-            return false; // 今日成就已達上限
-        }
-        
-        // 1. 檢查遊戲類型成就
+        // 現在成就只能通過完成每日任務獲得，不再自動授予
+        // 只檢查並完成相關的每日任務（必須有明確的遊戲類型）
         if ($game_type) {
-            $sql = "SELECT achievement_id, achievement_name, icon 
-                    FROM achievements 
-                    WHERE achievement_type = ? AND requirement_type = 'game_completion' 
-                    AND is_active = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$game_type]);
-            $game_achievements = $stmt->fetchAll();
-            
-            foreach ($game_achievements as $achievement) {
-                // 檢查每日限制
-                if (!checkDailyAchievementLimit($member_id)) {
-                    break; // 今日已達上限
-                }
-                
-                if (grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon'])) {
-                    // 如果成功授予成就，更新每日計數
-                    updateDailyAchievementCount($member_id);
-                }
-            }
+            checkAndCompleteAllTasks($member_id, $game_type);
         }
-        
-        // 2. 檢查總遊戲數量成就（每日限制內）
-        if (checkDailyAchievementLimit($member_id)) {
-            $sql = "SELECT COUNT(*) as total_games FROM game_records WHERE member_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$member_id]);
-            $total_games = $stmt->fetch()['total_games'];
-            
-            $sql = "SELECT achievement_id, achievement_name, icon, requirement_value 
-                    FROM achievements 
-                    WHERE achievement_type = 'general' AND requirement_type = 'total_games' 
-                    AND requirement_value <= ? AND is_active = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$total_games]);
-            $game_count_achievements = $stmt->fetchAll();
-            
-            foreach ($game_count_achievements as $achievement) {
-                // 檢查每日限制
-                if (!checkDailyAchievementLimit($member_id)) {
-                    break; // 今日已達上限
-                }
-                
-                if (grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon'])) {
-                    updateDailyAchievementCount($member_id);
-                }
-            }
-        }
-        
-        // 3. 檢查總分成就（每日限制內）
-        if (checkDailyAchievementLimit($member_id)) {
-            $sql = "SELECT SUM(score) as total_score FROM game_records WHERE member_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$member_id]);
-            $total_score = $stmt->fetch()['total_score'] ?? 0;
-            
-            $sql = "SELECT achievement_id, achievement_name, icon, requirement_value 
-                    FROM achievements 
-                    WHERE achievement_type = 'score' AND requirement_type = 'total_score' 
-                    AND requirement_value <= ? AND is_active = 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$total_score]);
-            $score_achievements = $stmt->fetchAll();
-            
-            foreach ($score_achievements as $achievement) {
-                // 檢查每日限制
-                if (!checkDailyAchievementLimit($member_id)) {
-                    break; // 今日已達上限
-                }
-                
-                if (grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon'])) {
-                    updateDailyAchievementCount($member_id);
-                }
-            }
-        }
-        
-        // 4. 檢查特殊成就
-        checkSpecialAchievements($member_id, $score, $play_time);
         
         return true;
         
     } catch (Exception $e) {
-        error_log("成就檢查錯誤: " . $e->getMessage());
+        error_log("任務檢查錯誤: " . $e->getMessage());
         return false;
     }
 }
@@ -305,10 +226,14 @@ function getTodayAchievementStatus($member_id) {
     try {
         $today = date('Y-m-d');
         
-        // 計算今天獲得的成就數量（包括任務獲得的成就）
+        // 計算今天通過完成每日任務獲得的成就數量
         $sql = "SELECT COUNT(*) as count FROM member_achievements ma 
                 JOIN achievements a ON ma.achievement_id = a.achievement_id 
-                WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?";
+                JOIN daily_tasks d ON a.achievement_name = d.reward_achievement
+                JOIN member_tasks mt ON d.task_id = mt.task_id
+                WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?
+                AND mt.claimed_date IS NOT NULL
+                AND a.achievement_name != '每日登入'";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$member_id, $today]);
         $count = $stmt->fetchColumn();
@@ -403,7 +328,8 @@ function checkAndCompleteAllTasks($member_id, $game_type = null) {
             SELECT mt.task_id, mt.completed_date, d.task_description, d.reward_achievement
             FROM member_tasks mt
             JOIN daily_tasks d ON mt.task_id = d.task_id
-            WHERE mt.member_id = ? AND mt.completed_date IS NULL AND (
+            WHERE mt.member_id = ? AND mt.completed_date IS NULL 
+            AND d.task_name != '登入網站一次' AND (
                 d.task_description LIKE '%遊玩任一普通關卡%' OR
                 d.task_description LIKE '%完成任意一場遊戲%' OR
                 d.task_description LIKE '%普通關卡%' OR

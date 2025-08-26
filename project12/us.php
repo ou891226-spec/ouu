@@ -271,6 +271,11 @@ function togglePassword() {
       closeSidebar();
     }
   });
+
+  function togglePersonalHistoryMenu() {
+    const menu = document.getElementById('personalHistoryMenu');
+    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  }
 </script>
 
 <!-- 外部 JS -->

@@ -83,7 +83,7 @@ function claimReward(button) {
 function loadDailyTasks() {
   console.log("開始載入每日任務...");
   
-  fetch("get_daily_tasks.php")
+  fetch("get_daily_tasks_fixed.php")
     .then(response => {
       console.log("收到回應:", response.status);
       return response.json();
@@ -117,7 +117,7 @@ function loadDailyTasks() {
         item.className = "mission-item";
         item.setAttribute("data-task-id", task.task_id);
         // 判斷是否已完成
-        const isCompleted = task.status === 'completed';
+        const isCompleted = task.status === 'completed' || task.status === 'claimed';
         const isClaimed = task.status === 'claimed';
         const progressText = isCompleted ? '1/1' : '0/1';
 

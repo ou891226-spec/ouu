@@ -73,21 +73,39 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     <canvas id="abilityRadarChart"></canvas>
   </div>
   
+  <!-- 能力趨勢圖 -->
+  <div class="trend-chart-container">
+    <h3>能力趨勢變化（最近12個月）</h3>
+    <canvas id="abilityTrendChart"></canvas>
+  </div>
+  
   <!-- 詳細統計 -->
   <div class="detailed-stats" id="detailedStats" style="display: none;">
     <h3>詳細統計</h3>
     <div class="stats-grid">
       <div class="stat-item">
-        <span class="stat-label">反應力遊戲次數：</span>
+        <span class="stat-label">反應力遊戲總次數：</span>
         <span class="stat-value" id="reactionGames">0</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">記憶力遊戲次數：</span>
+        <span class="stat-label">記憶力遊戲總次數：</span>
         <span class="stat-value" id="memoryGames">0</span>
       </div>
       <div class="stat-item">
-        <span class="stat-label">邏輯力遊戲次數：</span>
+        <span class="stat-label">邏輯力遊戲總次數：</span>
         <span class="stat-value" id="logicGames">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">反應力平均分數：</span>
+        <span class="stat-value" id="reactionAvg">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">記憶力平均分數：</span>
+        <span class="stat-value" id="memoryAvg">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">邏輯力平均分數：</span>
+        <span class="stat-value" id="logicAvg">0</span>
       </div>
     </div>
   </div>
@@ -121,6 +139,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- Chart.js -->
 <script>
 let radarChart = null;
+let trendChart = null;
 
 // 載入能力分析數據
 function loadAbilityAnalysis() {
@@ -140,6 +159,28 @@ function loadAbilityAnalysis() {
     })
     .catch(error => {
       console.error('載入分析數據時發生錯誤:', error);
+    });
+}
+
+// 載入能力趨勢數據
+function loadAbilityTrend() {
+  fetch('get_ability_trend.php')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        createTrendChart(data.data);
+      } else {
+        console.error('載入趨勢數據失敗:', data.message);
+        // 顯示錯誤信息
+        document.getElementById('abilityTrendChart').parentElement.innerHTML = 
+          '<div style="text-align: center; padding: 20px; color: #666;">載入趨勢數據失敗：' + data.message + '</div>';
+      }
+    })
+    .catch(error => {
+      console.error('載入趨勢數據時發生錯誤:', error);
+      // 顯示錯誤信息
+      document.getElementById('abilityTrendChart').parentElement.innerHTML = 
+        '<div style="text-align: center; padding: 20px; color: #666;">載入趨勢數據時發生錯誤：' + error.message + '</div>';
     });
 }
 
@@ -200,6 +241,123 @@ function createRadarChart(analysisData) {
   });
 }
 
+// 創建趨勢圖
+function createTrendChart(trendData) {
+  const ctx = document.getElementById('abilityTrendChart').getContext('2d');
+  
+  if (trendChart) {
+    trendChart.destroy();
+  }
+  
+  // 準備數據
+  const labels = trendData.map(item => {
+    const date = new Date(item.date + '-01'); // 添加日期部分以正確解析
+    return `${date.getFullYear()}/${date.getMonth() + 1}`;
+  });
+  
+  const reactionData = trendData.map(item => item.reaction);
+  const memoryData = trendData.map(item => item.memory);
+  const logicData = trendData.map(item => item.logic);
+  
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '反應力',
+          data: reactionData,
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.1)',
+          borderWidth: 3,
+          fill: false,
+          tension: 0.2,
+          pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        },
+        {
+          label: '記憶力',
+          data: memoryData,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.1)',
+          borderWidth: 3,
+          fill: false,
+          tension: 0.2,
+          pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        },
+        {
+          label: '邏輯力',
+          data: logicData,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.1)',
+          borderWidth: 3,
+          fill: false,
+          tension: 0.2,
+          pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          min: 0,
+          ticks: {
+            stepSize: 20
+          }
+        },
+        x: {
+          ticks: {
+            maxTicksLimit: 12
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + context.parsed.y + ' 分';
+            }
+          }
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
+      elements: {
+        point: {
+          radius: 5,
+          hoverRadius: 8
+        },
+        line: {
+          tension: 0.2
+        }
+      },
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10
+        }
+      }
+    }
+  });
+}
+
 // 更新分析報告
 function updateAnalysisReport(data) {
   const report = data.report;
@@ -228,6 +386,9 @@ function updateDetailedStats(data) {
   document.getElementById('reactionGames').textContent = data.stats.reaction_games;
   document.getElementById('memoryGames').textContent = data.stats.memory_games;
   document.getElementById('logicGames').textContent = data.stats.logic_games;
+  document.getElementById('reactionAvg').textContent = data.stats.reaction_avg;
+  document.getElementById('memoryAvg').textContent = data.stats.memory_avg;
+  document.getElementById('logicAvg').textContent = data.stats.logic_avg;
   
   document.getElementById('detailedStats').style.display = 'block';
 }
@@ -235,6 +396,7 @@ function updateDetailedStats(data) {
 // 頁面載入時執行
 document.addEventListener('DOMContentLoaded', function() {
   loadAbilityAnalysis();
+  loadAbilityTrend();
 });
 
 

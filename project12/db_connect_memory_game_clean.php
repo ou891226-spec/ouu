@@ -1,19 +1,22 @@
 <?php
 $hostname = 'smartfun-senior.mysql.database.azure.com';
-$username = 's1411131021'; // 帳號要加 @smartfun-senior
-$password = 'Test12345'; // 你的密碼
-$dbname   = 'myproject'; // 你的資料庫名稱
+$username = 's1411131021';
+$password = 'Test12345';
+$dbname   = 'myproject';
 $ssl_ca   = __DIR__ . '/BaltimoreCyberTrustRoot.crt.pem';
 
-// 在API請求中禁用錯誤輸出，避免破壞JSON響應
-if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || strpos($_SERVER['REQUEST_URI'], 'sync') !== false || strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false) {
+// 在API請求中禁用錯誤輸出
+if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || 
+    strpos($_SERVER['REQUEST_URI'], 'sync') !== false || 
+    strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false ||
+    strpos($_SERVER['REQUEST_URI'], 'invitation_handler.php') !== false) {
     ini_set('display_errors', 0);
     ini_set('display_startup_errors', 0);
     error_reporting(0);
 } else {
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 }
 
 try {
@@ -30,7 +33,10 @@ try {
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
     // 檢查是否在API請求中
-    if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || strpos($_SERVER['REQUEST_URI'], 'sync') !== false || strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false || strpos($_SERVER['REQUEST_URI'], 'invitation_handler.php') !== false) {
+    if (strpos($_SERVER['REQUEST_URI'], 'api') !== false || 
+        strpos($_SERVER['REQUEST_URI'], 'sync') !== false || 
+        strpos($_SERVER['REQUEST_URI'], 'game-sync') !== false ||
+        strpos($_SERVER['REQUEST_URI'], 'invitation_handler.php') !== false) {
         // 在API請求中，返回JSON錯誤
         if (!headers_sent()) {
             header('Content-Type: application/json');
@@ -42,4 +48,4 @@ try {
         echo "連接失敗: " . $e->getMessage();
         die();
     }
-} 
+}

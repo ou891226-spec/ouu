@@ -65,7 +65,19 @@ try {
     
     // 獲取詳細的遊戲記錄來計算綜合分析
     $game_records_sql = "
-        SELECT game_type, COUNT(*) as play_count, AVG(score) as avg_score, MAX(score) as max_score
+        SELECT 
+            game_type, 
+            COUNT(*) as play_count, 
+            AVG(CASE 
+                WHEN score > 1000 THEN 100 
+                WHEN score > 100 THEN (score / 10)
+                ELSE score 
+            END) as avg_score, 
+            MAX(CASE 
+                WHEN score > 1000 THEN 100 
+                WHEN score > 100 THEN (score / 10)
+                ELSE score 
+            END) as max_score
         FROM game_records 
         WHERE member_id = ? 
         GROUP BY game_type
@@ -133,9 +145,12 @@ try {
             ],
             'report' => $analysis_report,
             'stats' => [
-                'reaction_games' => count($reaction_games),
-                'memory_games' => count($memory_games),
-                'logic_games' => count($logic_games)
+                'reaction_games' => array_sum(array_column($reaction_games, 'play_count')),
+                'memory_games' => array_sum(array_column($memory_games, 'play_count')),
+                'logic_games' => array_sum(array_column($logic_games, 'play_count')),
+                'reaction_avg' => calculateAverageScore($reaction_games),
+                'memory_avg' => calculateAverageScore($memory_games),
+                'logic_avg' => calculateAverageScore($logic_games)
             ]
         ]
     ]);
@@ -167,6 +182,28 @@ function calculateComprehensiveScore($games) {
     
     // 綜合公式：平均分數 * 遊戲次數的對數 * 最高分數權重
     return $avg_score * log($total_plays + 1) * (1 + $max_score / 1000);
+}
+
+// 計算平均分數
+function calculateAverageScore($games) {
+    if (empty($games)) return 0;
+    
+    $total_score = 0;
+    $total_plays = 0;
+    
+    foreach ($games as $game) {
+        // 確保單個遊戲的平均分數不會超過100
+        $avg_score = min(100, $game['avg_score']);
+        $total_score += $avg_score * $game['play_count'];
+        $total_plays += $game['play_count'];
+    }
+    
+    if ($total_plays == 0) return 0;
+    
+    $final_avg = $total_score / $total_plays;
+    
+    // 確保最終平均分數不會超過100
+    return round(min(100, $final_avg), 1);
 }
 
 // 計算能力等級

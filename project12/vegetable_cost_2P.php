@@ -335,7 +335,6 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
                     <span class="game-icon">🎮</span>
                     <span>算菜錢遊戲 - 雙人模式</span>
                 </div>
-                <p class="difficulty-text">請選擇遊戲難度</p>
                 <div class="difficulty-options">
                     <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
                         <span class="difficulty-icon">🌱</span>

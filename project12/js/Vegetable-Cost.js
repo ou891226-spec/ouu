@@ -191,7 +191,7 @@ function generateEasyQuestion() {
         
         itemsHTML = `<div class="item-list-container"><div class="item-list-column">${finalFirstThreeHTML}</div><div class="item-list-column">${finalRemainingHTML}</div></div>`;
         
-        let questionText = itemsHTML + `<br><br>我只有 $${finalBudget}元，可以買「哪兩種蔬果組合」？`;
+        let questionText = itemsHTML + `<br><br>阿嬤口袋剛好有<span class="highlight-text">$${finalBudget}元</span>，要買兩種蔬果回家，請幫她挑出<span class="highlight-text">總價剛好$${finalBudget}元</span>的組合。（買太便宜或太貴都不行喔！）`;
         
         let options = combos;
         

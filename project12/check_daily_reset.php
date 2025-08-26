@@ -24,8 +24,10 @@ function checkAndExecuteDailyReset() {
         
         // 如果今天還沒有重置過，執行重置
         if (!$last_reset || date('Y-m-d', strtotime($last_reset)) !== $today) {
-            // 執行重置
+            // 捕獲 daily_reset.php 的輸出，防止干擾 JSON
+            ob_start();
             include 'daily_reset.php';
+            $reset_output = ob_get_clean();
             
             // 記錄重置時間
             $log_sql = "INSERT INTO daily_reset_log (created_at) VALUES (NOW())";
@@ -65,6 +67,9 @@ function createResetLogTable() {
 // 執行檢查
 createResetLogTable();
 $reset_executed = checkAndExecuteDailyReset();
+
+// 設置 JSON 響應頭
+header('Content-Type: application/json; charset=utf-8');
 
 if ($reset_executed) {
     echo json_encode([

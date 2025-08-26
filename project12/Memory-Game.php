@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        
         // 提交交易
         $pdo->commit();
+        
+        // 觸發任務和成就檢查
+        require_once 'check_and_grant_achievements.php';
+        checkAndCompleteAllTasks($data['member_id'], '記憶力');
        
         echo json_encode(['success' => true, 'message' => '遊戲結果已儲存']);
         exit;

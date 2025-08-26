@@ -402,16 +402,16 @@ h1 {
 .back-button {
   background: white;
   color: black;
-  border: 3px solid black;
-  width: 60px;
-  height: 60px;
+  border: 2px solid black;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   cursor: pointer;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 600;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 1.2rem;
+  left: 1.2rem;
   transition: all 0.3s ease;
   box-shadow: none;
   display: flex;
@@ -419,7 +419,7 @@ h1 {
   align-items: center;
   justify-content: center;
   margin: 0;
-  z-index: 2;
+  z-index: 10;
 }
 
 .back-button:hover {
@@ -429,38 +429,40 @@ h1 {
 
 .back-label {
   position: absolute !important;
-  top: 35px !important;
+  top: 3.5rem !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  color: #333 !important;
-  font-size: 0.8rem !important;
+  color: #000 !important;
+  font-size: 1rem !important;
   white-space: nowrap !important;
   text-align: center !important;
-  font-weight: normal !important;
+  font-weight: 600 !important;
   pointer-events: none !important;
   z-index: 1 !important;
   font-family: inherit !important;
+  letter-spacing: 0.05em !important;
 }
 
 .back-arrow {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 600;
+  color: #000;
 }
 
 /* 說明按鈕樣式 */
 .help-button {
   background: white;
   color: black;
-  border: 3px solid black;
-  width: 60px;
-  height: 60px;
+  border: 2px solid black;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   cursor: pointer;
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 600;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 1.2rem;
+  right: 1.2rem;
   transition: all 0.3s ease;
   box-shadow: none;
   display: flex;
@@ -468,7 +470,7 @@ h1 {
   align-items: center;
   justify-content: center;
   margin: 0;
-  z-index: 2;
+  z-index: 10;
 }
 
 .help-button:hover {
@@ -478,22 +480,24 @@ h1 {
 
 .help-button .help-label {
   position: absolute;
-  top: 35px;
+  top: 3.5rem;
   left: 50%;
   transform: translateX(-50%);
-  color: #333;
-  font-size: 0.8rem;
+  color: #000;
+  font-size: 1rem;
   white-space: nowrap;
   text-align: center;
-  font-weight: normal;
+  font-weight: 600;
   pointer-events: none;
   z-index: 1;
   font-family: inherit;
+  letter-spacing: 0.05em;
 }
 
 .help-btn {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 600;
+  color: #000;
 }
 
 /* 難度選項容器 */

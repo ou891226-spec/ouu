@@ -1,9 +1,12 @@
 <?php
-// 每日重置腳本 - 在台灣凌晨12點重置任務和成就
+// 獨立的每日重置腳本 - 可以單獨調用並返回 JSON
 require_once 'db.php';
 
 // 設定台灣時區
 date_default_timezone_set('Asia/Taipei');
+
+// 設置 JSON 響應頭
+header('Content-Type: application/json; charset=utf-8');
 
 // 記錄重置開始
 error_log("開始執行每日重置 - " . date('Y-m-d H:i:s'));
@@ -28,8 +31,6 @@ try {
     }
     
     // 2. 清空今日成就計數（但保留歷史成就記錄）
-    // 注意：這裡不清除 member_achievements 表，只重置計數器
-    // 由於 member 表沒有 daily_achievement_count 欄位，我們通過刪除今日成就記錄來重置
     $reset_achievement_count_sql = "
         DELETE FROM member_achievements 
         WHERE DATE(earned_date) = CURDATE()
@@ -76,36 +77,34 @@ try {
     
     error_log("✓ 為 $task_count 個用戶分配了新任務");
     
-    // 4. 重置每日遊戲統計（可選）
-    // 如果需要重置每日遊戲統計，可以取消註釋下面的代碼
-    /*
-    $reset_stats_sql = "
-        UPDATE member 
-        SET daily_games_played = 0, daily_score_earned = 0 
-        WHERE daily_games_played > 0 OR daily_score_earned > 0
-    ";
-    $stats_stmt = $pdo->prepare($reset_stats_sql);
-    $stats_result = $stats_stmt->execute();
-    
-    if ($stats_result) {
-        error_log("✓ 每日遊戲統計重置成功");
-    } else {
-        error_log("✗ 每日遊戲統計重置失敗");
-    }
-    */
+    // 4. 記錄重置時間
+    $log_sql = "INSERT INTO daily_reset_log (created_at) VALUES (NOW())";
+    $log_stmt = $pdo->prepare($log_sql);
+    $log_stmt->execute();
     
     // 提交交易
     $pdo->commit();
     error_log("✓ 每日重置完成 - " . date('Y-m-d H:i:s'));
     
-    // 移除 JSON 輸出，因為這個文件現在被包含在其他文件中
-    // 如果需要單獨調用，可以通過參數控制是否輸出 JSON
+    // 返回成功訊息
+    echo json_encode([
+        'success' => true,
+        'message' => '每日重置完成',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'tasks_reset' => $task_result,
+        'achievements_reset' => $achievement_result,
+        'users_updated' => $task_count
+    ]);
     
 } catch (Exception $e) {
     // 回滾交易
     $pdo->rollBack();
     error_log("✗ 每日重置失敗: " . $e->getMessage());
     
-    // 移除 JSON 輸出，因為這個文件現在被包含在其他文件中
+    echo json_encode([
+        'success' => false,
+        'message' => '重置失敗：' . $e->getMessage(),
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
 }
-?> 
+?>

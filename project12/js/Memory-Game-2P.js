@@ -44,6 +44,9 @@ let lastSyncTime = 0;
 let syncDebounceDelay = 500; // 500ms防抖延遲
 let lastSyncState = null; // 追蹤上次同步的狀態
 
+// HTTP 同步相關變數
+let httpSyncEnabled = false; // 是否啟用 HTTP 同步
+
     // 頁面載入時初始化currentUserId
     document.addEventListener('DOMContentLoaded', function() {
         currentUserId = getCurrentMemberId();
@@ -57,7 +60,7 @@ let lastSyncState = null; // 追蹤上次同步的狀態
         // 延遲檢查並修復同步問題
         setTimeout(() => {
             if (gameMode === 'online' && invitationId) {
-                console.log('🔍 檢查邀請同步狀態...');
+                console.log('檢查邀請同步狀態...');
                 // 如果已經在遊戲中但狀態不正確，嘗試修復
                 const gameContainer = document.getElementById('game-container');
                 if (gameContainer && !gameContainer.classList.contains('hidden')) {
@@ -952,6 +955,15 @@ function startOnlineGame(data) {
     gameMode = 'online';
     invitationId = data.invitation_id;
     invitationData = data;
+    
+    // 啟用 HTTP 同步
+    httpSyncEnabled = true;
+    
+    // 初始化 HTTP 同步
+    if (window.memoryGameHttpSync) {
+        window.memoryGameHttpSync.init(invitationId, getCurrentMemberId());
+        setupHttpSync();
+    }
     
     // 確保翻牌權限啟用
     canFlip = true;
@@ -1882,19 +1894,34 @@ function createCards() {
         
         console.log('翻牌：', { cardIndex, symbol: card.dataset.value });
         
-        // 翻開卡片（參考單人模式的簡潔實現）
-        card.classList.add('flipped');
-        
-        flippedCards.push(card);
-        
-        // 同步到伺服器
-        if (gameMode === 'online' && invitationId) {
-            syncGameState();
-        }
-        
-        // 檢查是否翻開了兩張卡片（參考 phptest 的簡潔邏輯）
-        if (flippedCards.length === 2) {
-            setTimeout(checkMatchSync, 500);
+        // 使用 HTTP 同步翻牌
+        if (httpSyncEnabled && window.memoryGameHttpSync && gameMode === 'online') {
+            window.memoryGameHttpSync.flipCard(cardIndex, card.dataset.value).then(success => {
+                if (success) {
+                    card.classList.add('flipped');
+                    card.textContent = card.dataset.value;
+                    flippedCards.push(card);
+                    
+                    if (flippedCards.length === 2) {
+                        setTimeout(checkMatchSyncWithHttp, 500);
+                    }
+                }
+            });
+        } else {
+            // 本地模式或 HTTP 同步未啟用
+            card.classList.add('flipped');
+            card.textContent = card.dataset.value;
+            flippedCards.push(card);
+            
+            // 同步到伺服器
+            if (gameMode === 'online' && invitationId) {
+                syncGameState();
+            }
+            
+            // 檢查是否翻開了兩張卡片
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatchSync, 500);
+            }
         }
     });
         gameBoard.appendChild(card);

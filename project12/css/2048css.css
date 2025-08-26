@@ -368,7 +368,7 @@ body {
     max-width: 480px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18);
     position: relative;
-    margin-top: 50px;
+    margin-top: 150px;
     font-family: 'Noto Sans TC', 'Microsoft JhengHei', Arial, sans-serif;
 }
 
@@ -431,7 +431,7 @@ body {
     padding: 30px 40px;
     border-radius: 15px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    margin: 200px 520px;
+    margin: 250px auto;
     background: #fff;
     position: relative;
     text-align: center;

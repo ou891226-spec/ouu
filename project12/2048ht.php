@@ -11,24 +11,53 @@ if (
     $data = json_decode(file_get_contents('php://input'), true);
     error_log('收到資料: ' . print_r($data, true));
     try {
-        $stmt = $pdo->prepare("INSERT INTO game_records
-            (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :score, :difficulty, NOW(), :play_time, :game_type, 1, NULL)");
-        $stmt->execute([
-            'member_id' => $data['member_id'],
-            'game_id' => 4,
-            'score' => $data['score'],
-            'difficulty' => $data['difficulty'],
-            'play_time' => $data['play_time'],
-            'game_type' => '邏輯力'
-        ]);
+        // 檢查是否為遊戲勝利（分數大於0表示勝利）
+        $score = isset($data['score']) ? intval($data['score']) : 0;
+        $difficulty = isset($data['difficulty']) ? $data['difficulty'] : 'easy';
         
-        // 更新會員總分數和邏輯分數
-        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
-        $update_stmt->execute([
-            'score' => $data['score'],
-            'member_id' => $data['member_id']
-        ]);
+        error_log('收到分數: ' . $score . ', 難度: ' . $difficulty);
+        
+        if ($score > 0) {
+            // 遊戲勝利，依難度給固定獎勵分數
+            switch ($difficulty) {
+                case 'hard':
+                    $rewardScore = 100;
+                    break;
+                case 'medium':
+                    $rewardScore = 50;
+                    break;
+                case 'easy':
+                default:
+                    $rewardScore = 20;
+                    break;
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO game_records
+                (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player, opponent_id)
+                VALUES (:member_id, :game_id, :score, :difficulty, NOW(), :play_time, :game_type, 1, NULL)");
+            $stmt->execute([
+                'member_id' => $data['member_id'],
+                'game_id' => 4,
+                // 寫入固定獎勵分數
+                'score' => $rewardScore,
+                'difficulty' => $difficulty,
+                'play_time' => $data['play_time'],
+                'game_type' => '邏輯力'
+            ]);
+            
+            // 更新會員總分數和邏輯分數
+            $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
+            $update_stmt->execute([
+                // 同樣以固定獎勵分數更新
+                'score' => $rewardScore,
+                'member_id' => $data['member_id']
+            ]);
+            
+            error_log('遊戲勝利，記錄獎勵分數: ' . $rewardScore);
+        } else {
+            // 遊戲失敗，不記錄分數
+            error_log('遊戲失敗，不記錄分數');
+        }
         
         error_log('寫入成功');
         echo json_encode(['success' => true]);
@@ -141,7 +170,8 @@ if (
         <div class="modal-content">
             <h2>恭喜破關</h2>
             <p>難度：<span id="win-difficulty"></span></p>
-            <p>獲得分數：<span id="win-score"></span></p>
+            <p>遊戲分數：<span id="win-game-score"></span></p>
+            <p>獎勵分數：<span id="win-reward-score"></span></p>
             <p>最高分數：<span id="win-best-score"></span></p>
             <div class="modal-buttons">
                 <button id="continue-game" class="btn red-button">再玩一次</button>

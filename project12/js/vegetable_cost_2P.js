@@ -112,6 +112,11 @@ async function checkReceivedInvitations() {
                 };
                 
                 console.log('設置邀請信息:', { invitationId, invitedFriend, invitationData });
+                console.log('邀請者判斷:', { 
+                    myId: window.phpMemberId, 
+                    fromUserId: vegetableCostInvitation.from_user_id, 
+                    isInviter: window.phpMemberId == vegetableCostInvitation.from_user_id
+                });
                 
                 // 顯示收到的邀請視窗
                 showReceivedInvitationModal();
@@ -163,6 +168,11 @@ async function checkForAcceptedInvitations() {
                 };
                 
                 console.log('設置已接受邀請信息:', { invitationId, invitedFriend, invitationData });
+                console.log('邀請者判斷:', { 
+                    myId: window.phpMemberId, 
+                    fromUserId: vegetableCostInvitation.from_user_id, 
+                    isInviter: window.phpMemberId == vegetableCostInvitation.from_user_id
+                });
                 
                 // 檢查當前用戶是邀請者還是被邀請者
                 const currentUserId = window.phpMemberId;
@@ -349,6 +359,10 @@ async function checkInvitationStatus() {
                     
                     // 設置 invitedFriend 為對手（邀請者或接收者）
                     if (result.invitation) {
+                        // 設置 invitationData
+                        invitationData = result.invitation;
+                        console.log('設置 invitationData:', invitationData);
+                        
                         if (result.invitation.from_user_id == window.phpMemberId) {
                             // 當前用戶是邀請者，對手是接收者
                             invitedFriend = {
@@ -632,11 +646,12 @@ async function acceptInvitation() {
             
             // 如果 invitedFriend 沒有設置，從邀請信息中獲取
             if (!invitedFriend && result.invitation) {
+                // 被邀請者接受邀請時，設置對手為邀請者
                 invitedFriend = {
                     id: result.invitation.from_user_id,
                     name: result.invitation.from_user_name
                 };
-                console.log('設置 invitedFriend:', invitedFriend);
+                console.log('被邀請者設置 invitedFriend（對手為邀請者）:', invitedFriend);
             }
             
             // 隱藏收到的邀請視窗
@@ -1364,15 +1379,65 @@ function displayQuestion(question) {
         
         // 檢查是否輪到當前玩家答題
         const isInviter = window.phpMemberId == invitationData?.from_user_id;
-        const shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
+        let shouldBeMyTurn = (currentPlayer === 1 && isInviter) || (currentPlayer === 2 && !isInviter);
+        
+        // 如果 invitationData 為空，使用備用判斷方法
+        if (!invitationData) {
+            console.log('invitationData 為空，使用備用判斷方法');
+            // 如果我是玩家1，且當前回合是玩家1，那麼我可以答題
+            shouldBeMyTurn = (currentPlayer === 1 && window.phpMemberId == player1.id) || 
+                           (currentPlayer === 2 && window.phpMemberId == player2.id);
+        }
+        
+        // 強制修復：直接基於玩家ID判斷答題權限
+        const isPlayer1 = window.phpMemberId == player1.id;
+        const isPlayer2 = window.phpMemberId == player2.id;
+        const shouldBeMyTurnByPlayerId = (currentPlayer === 1 && isPlayer1) || (currentPlayer === 2 && isPlayer2);
+        
+        console.log('強制修復權限檢查:', {
+            isPlayer1,
+            isPlayer2,
+            shouldBeMyTurnByPlayerId,
+            originalShouldBeMyTurn: shouldBeMyTurn
+        });
+        
+        // 強制使用玩家ID計算，因為 invitationData 可能不正確
+        shouldBeMyTurn = shouldBeMyTurnByPlayerId;
+        console.log('強制使用玩家ID計算答題權限');
+        
+        console.log('=== 詳細調試信息 ===');
+        console.log('當前玩家:', currentPlayer);
+        console.log('我的ID:', window.phpMemberId);
+        console.log('玩家1 ID:', player1.id, '名字:', player1.name);
+        console.log('玩家2 ID:', player2.id, '名字:', player2.name);
+        console.log('我的名字:', window.currentUser.member_name);
+        console.log('當前回合玩家名字:', currentPlayer === 1 ? player1.name : player2.name);
+        console.log('我是玩家1?', window.phpMemberId == player1.id);
+        console.log('我是玩家2?', window.phpMemberId == player2.id);
+        console.log('最終答題權限:', shouldBeMyTurn);
+        console.log('==================');
+        
+        // 強制檢查：如果總題數 > 0，說明已經有人答過題，需要輪流
+        if (totalQuestions > 0) {
+            console.log('已有人答過題，強制檢查輪流答題權限');
+            console.log('詳細權限分析:', {
+                condition1: currentPlayer === 1 && isInviter,
+                condition2: currentPlayer === 2 && !isInviter,
+                currentPlayer,
+                isInviter,
+                shouldBeMyTurn
+            });
+        }
         
         if (shouldBeMyTurn) {
             button.onclick = () => checkAnswer(option, question.correctAnswer);
             button.style.cursor = 'pointer';
+            console.log('設置按鈕為可點擊狀態');
         } else {
             button.disabled = true;
             button.style.cursor = 'not-allowed';
             button.style.opacity = '0.6';
+            console.log('設置按鈕為禁用狀態');
         }
         
         optionsContainer.appendChild(button);
@@ -1396,11 +1461,29 @@ async function startGame() {
     player2.score = 0;
     player2.correct = 0;
     
-    // 確保主邀人先答題（玩家1）
-    currentPlayer = 1;
-    console.log('設置主邀人（玩家1）先答題');
+    // 確保邀請者先答題
+    const isInviter = window.phpMemberId == invitationData?.from_user_id;
+    if (isInviter) {
+        // 如果我是邀請者，我應該是玩家1，先答題
+        currentPlayer = 1;
+        console.log('我是邀請者，設置為玩家1先答題');
+    } else {
+        // 如果我是被邀請者，對手是玩家1，我先等待
+        currentPlayer = 1;
+        console.log('我是被邀請者，設置對手為玩家1先答題，我等待');
+    }
+    
+    console.log('回合設置完成:', { currentPlayer, isInviter, player1Name: player1.name, player2Name: player2.name });
     
     console.log(`遊戲開始！初始玩家：${player1.name}，對手：${player2.name}`);
+    console.log('詳細遊戲狀態:', {
+        currentPlayer,
+        isInviter,
+        player1: { id: player1.id, name: player1.name },
+        player2: { id: player2.id, name: player2.name },
+        myId: window.phpMemberId,
+        invitationData: invitationData
+    });
     
     // 隱藏所有等待視窗
     const waitingDifficultyModal = document.getElementById('waiting-difficulty-modal');
@@ -1458,6 +1541,7 @@ async function startGame() {
                         correct_answer: null,
                         is_correct: false,
                         current_question: currentQuestion,
+                        current_player: currentPlayer, // 同步當前玩家
                         player1_score: player1.score,
                         player2_score: player2.score,
                         player1_correct: player1.correct,
@@ -1472,7 +1556,9 @@ async function startGame() {
             }
         }, 500); // 等待500ms確保題目已載入
         
+        // 啟動同步檢查
         startGameSync();
+        console.log('同步功能已啟動');
     }
 }
     
@@ -1581,7 +1667,53 @@ async function checkAnswer(selectedAnswer, correctAnswer) {
         }
     }
     
-    // 等待對手答題，不立即切換玩家
+    // 立即切換到對手，禁止當前玩家繼續答題
+    const previousPlayer = currentPlayer;
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    console.log(`答題後立即切換：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
+    
+    // 立即同步玩家切換到伺服器
+    if (invitationId) {
+        try {
+            await fetch('game-sync-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'sync_answer',
+                    invitation_id: invitationId,
+                    player_id: window.phpMemberId,
+                    selected_answer: selectedAnswer,
+                    correct_answer: correctAnswer,
+                    is_correct: isCorrect,
+                    current_question: currentQuestion,
+                    current_player: currentPlayer, // 同步切換後的玩家
+                    player1_score: player1.score,
+                    player2_score: player2.score,
+                    player1_correct: player1.correct,
+                    player2_correct: player2.correct,
+                    total_questions: totalQuestions,
+                    current_question_data: questions[currentQuestion] || null,
+                    last_action: 'switch_player',
+                    last_action_by: window.phpMemberId,
+                    waiting_for_opponent: true
+                })
+            });
+            console.log('玩家切換已同步到伺服器');
+        } catch (error) {
+            console.error('同步玩家切換失敗:', error);
+        }
+    }
+    
+    // 更新當前玩家指示器
+    updateCurrentPlayerIndicator();
+    
+    // 重新顯示當前題目以更新選項按鈕狀態
+    if (questions.length > currentQuestion) {
+        displayQuestion(questions[currentQuestion]);
+    }
+    
     console.log(`等待對手 ${currentPlayer === 1 ? player2.name : player1.name} 答題...`);
     
     // 不要立即增加題目編號，等待雙方都答完後再切換
@@ -1592,11 +1724,22 @@ async function checkAnswer(selectedAnswer, correctAnswer) {
 function startGameSync() {
     console.log('開始遊戲同步檢查');
     // 每1秒檢查一次同步狀態，提高同步頻率
-    setInterval(async () => {
+    const syncInterval = setInterval(async () => {
         if (gameStarted && invitationId) {
-            await checkGameSync();
+            try {
+                await checkGameSync();
+            } catch (error) {
+                console.error('同步檢查失敗:', error);
+            }
+        } else {
+            // 如果遊戲結束或沒有邀請ID，停止同步
+            clearInterval(syncInterval);
+            console.log('停止同步檢查');
         }
     }, 1000);
+    
+    // 保存interval ID以便後續清理
+    window.gameSyncInterval = syncInterval;
 }
 
 // 同步題目到伺服器
@@ -1697,42 +1840,40 @@ async function checkGameSync() {
             if (gameState.last_action === 'answer_submitted' && gameState.last_action_by !== window.phpMemberId) {
                 console.log('檢測到對手已答題，準備切換玩家');
                 
-                // 檢查是否已經切換過玩家，避免重複切換
-                const shouldSwitch = gameState.current_player !== currentPlayer;
+                // 強制切換到對手，確保輪流答題
+                const previousPlayer = currentPlayer;
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                console.log(`輪流答題：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
                 
-                if (shouldSwitch) {
-                    // 切換到對手
-                    const previousPlayer = currentPlayer;
-                    currentPlayer = currentPlayer === 1 ? 2 : 1;
-                    console.log(`輪流答題：從 ${previousPlayer === 1 ? player1.name : player2.name} 切換到 ${currentPlayer === 1 ? player1.name : player2.name}`);
-                    
-                    // 更新當前玩家指示器
-                    updateCurrentPlayerIndicator();
-                    
-                    // 同步玩家切換到伺服器
-                    if (invitationId) {
-                        try {
-                            fetch('game-sync-api.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    action: 'sync_answer',
-                                    invitation_id: invitationId,
-                                    player_id: window.phpMemberId,
-                                    current_player: currentPlayer,
-                                    last_action: 'switch_player',
-                                    last_action_by: window.phpMemberId
-                                })
-                            });
-                            console.log('玩家切換已同步到伺服器');
-                        } catch (error) {
-                            console.error('同步玩家切換失敗:', error);
-                        }
+                // 更新當前玩家指示器
+                updateCurrentPlayerIndicator();
+                
+                // 重新顯示當前題目以更新選項按鈕狀態
+                if (questions.length > currentQuestion) {
+                    displayQuestion(questions[currentQuestion]);
+                }
+                
+                // 同步玩家切換到伺服器
+                if (invitationId) {
+                    try {
+                        await fetch('game-sync-api.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                action: 'sync_answer',
+                                invitation_id: invitationId,
+                                player_id: window.phpMemberId,
+                                current_player: currentPlayer,
+                                last_action: 'switch_player',
+                                last_action_by: window.phpMemberId
+                            })
+                        });
+                        console.log('玩家切換已同步到伺服器');
+                    } catch (error) {
+                        console.error('同步玩家切換失敗:', error);
                     }
-                } else {
-                    console.log('玩家已切換，無需重複切換');
                 }
             }
             
@@ -1776,15 +1917,24 @@ async function checkGameSync() {
                     currentPlayer = gameState.current_player;
                     updateCurrentPlayerIndicator();
                     console.log('同步玩家切換到:', currentPlayer === 1 ? player1.name : player2.name);
+                    
+                    // 重新顯示當前題目以更新選項按鈕狀態
+                    if (questions.length > currentQuestion) {
+                        displayQuestion(questions[currentQuestion]);
+                    }
+                }
+            } else if (gameState.current_player !== undefined && gameState.current_player !== currentPlayer) {
+                console.log('同步當前玩家：', gameState.current_player, '從', currentPlayer);
+                currentPlayer = gameState.current_player;
+                updateCurrentPlayerIndicator();
+                
+                // 重新顯示當前題目以更新選項按鈕狀態
+                if (questions.length > currentQuestion) {
+                    displayQuestion(questions[currentQuestion]);
                 }
             }
             
-            if (gameState.current_player !== undefined && gameState.current_player !== currentPlayer) {
-                console.log('同步當前玩家：', gameState.current_player);
-                currentPlayer = gameState.current_player;
-                updateCurrentPlayerIndicator();
-            }
-            
+            // 同步分數和正確答題數
             if (gameState.player1_score !== undefined && gameState.player1_score !== player1.score || 
                 gameState.player2_score !== undefined && gameState.player2_score !== player2.score) {
                 console.log('同步分數');
@@ -1917,6 +2067,13 @@ function endGame() {
     clearInterval(interval);
     gameStarted = false;
     
+    // 清理同步檢查
+    if (window.gameSyncInterval) {
+        clearInterval(window.gameSyncInterval);
+        window.gameSyncInterval = null;
+        console.log('已清理同步檢查');
+    }
+    
     // 計算獎勵分數
     let player1Bonus = 0;
     let player2Bonus = 0;
@@ -2007,6 +2164,13 @@ function restartGame() {
     // 隱藏遊戲容器
     document.getElementById('game-container').style.display = 'none';
     
+    // 清理同步檢查
+    if (window.gameSyncInterval) {
+        clearInterval(window.gameSyncInterval);
+        window.gameSyncInterval = null;
+        console.log('已清理同步檢查');
+    }
+    
     // 重置遊戲狀態
     timer = 60;
     gamePaused = false;
@@ -2021,6 +2185,14 @@ function restartGame() {
     // 重置邀請狀態
     invitedFriend = null;
     invitationId = null;
+    invitationData = null;
+    
+    // 重置玩家狀態
+    player1.score = 0;
+    player1.correct = 0;
+    player2.score = 0;
+    player2.correct = 0;
+    currentPlayer = 1;
     
     // 重置玩家2信息
     player2.id = 'local_player';
@@ -2041,11 +2213,45 @@ async function startGameWithDifficulty(difficulty) {
     console.log('開始遊戲（帶難度）:', difficulty);
     currentDifficulty = difficulty;
     
-    // 設置玩家2信息
+    // 正確設置玩家身份 - 邀請者先答題
+    const isInviter = window.phpMemberId == invitationData?.from_user_id;
+    console.log('邀請者判斷:', { 
+        myId: window.phpMemberId, 
+        fromUserId: invitationData?.from_user_id, 
+        isInviter,
+        invitationData: invitationData
+    });
+    
     if (invitedFriend) {
-        player2.id = invitedFriend.id;
-        player2.name = invitedFriend.name;
-        player2.avatar = 'img/user.png'; // 可以從好友資料中獲取實際頭像
+        if (isInviter) {
+            // 如果我是邀請者，我是玩家1（先答題），對手是玩家2
+            player1.id = window.phpMemberId;
+            player1.name = window.currentUser.member_name;
+            player1.avatar = window.currentUser.avatar;
+            
+            player2.id = invitedFriend.id;
+            player2.name = invitedFriend.name;
+            player2.avatar = 'img/user.png';
+            console.log('我是邀請者，設置為玩家1（先答題）');
+        } else {
+            // 如果我是被邀請者，對手是玩家1（先答題），我是玩家2
+            player1.id = invitedFriend.id;
+            player1.name = invitedFriend.name;
+            player1.avatar = 'img/user.png';
+            
+            player2.id = window.phpMemberId;
+            player2.name = window.currentUser.member_name;
+            player2.avatar = window.currentUser.avatar;
+            console.log('我是被邀請者，對手是玩家1（先答題）');
+        }
+        console.log('玩家身份設置完成:', { 
+            player1: { id: player1.id, name: player1.name }, 
+            player2: { id: player2.id, name: player2.name }, 
+            isInviter, 
+            note: '邀請者先答題',
+            myId: window.phpMemberId,
+            invitationData: invitationData
+        });
     }
     
     // 設定時間
@@ -2086,11 +2292,45 @@ async function selectDifficulty(difficulty) {
     console.log('選擇難度:', difficulty, 'invitationId:', invitationId, 'invitedFriend:', invitedFriend);
     currentDifficulty = difficulty;
     
-    // 如果有邀請好友，設置玩家2信息
+    // 正確設置玩家身份 - 邀請者先答題
+    const isInviter = window.phpMemberId == invitationData?.from_user_id;
+    console.log('邀請者判斷:', { 
+        myId: window.phpMemberId, 
+        fromUserId: invitationData?.from_user_id, 
+        isInviter,
+        invitationData: invitationData
+    });
+    
     if (invitedFriend) {
-        player2.id = invitedFriend.id;
-        player2.name = invitedFriend.name;
-        player2.avatar = 'img/user.png'; // 可以從好友資料中獲取實際頭像
+        if (isInviter) {
+            // 如果我是邀請者，我是玩家1（先答題），對手是玩家2
+            player1.id = window.phpMemberId;
+            player1.name = window.currentUser.member_name;
+            player1.avatar = window.currentUser.avatar;
+            
+            player2.id = invitedFriend.id;
+            player2.name = invitedFriend.name;
+            player2.avatar = 'img/user.png';
+            console.log('我是邀請者，設置為玩家1（先答題）');
+        } else {
+            // 如果我是被邀請者，對手是玩家1（先答題），我是玩家2
+            player1.id = invitedFriend.id;
+            player1.name = invitedFriend.name;
+            player1.avatar = 'img/user.png';
+            
+            player2.id = window.phpMemberId;
+            player2.name = window.currentUser.member_name;
+            player2.avatar = window.currentUser.avatar;
+            console.log('我是被邀請者，對手是玩家1（先答題）');
+        }
+        console.log('玩家身份設置完成:', { 
+            player1: { id: player1.id, name: player1.name }, 
+            player2: { id: player2.id, name: player2.name }, 
+            isInviter, 
+            note: '邀請者先答題',
+            myId: window.phpMemberId,
+            invitationData: invitationData
+        });
     }
     
     // 設定時間
