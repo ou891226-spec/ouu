@@ -245,12 +245,20 @@ function dropItem() {
     const item = document.createElement('div');
     item.className = type;
     item.setAttribute('data-type', type);
-    item.innerText = type === 'bomb' ? '💣' : type === 'gold' ? '🥚' : '';
-    if (type === 'white') {
+    item.innerText = type === 'bomb' ? '💣' : '';
+    if (type === 'gold') {
         const img = document.createElement('img');
         img.src = 'img/egg.png';
+        img.alt = '金蛋';
+        img.style.width = '50px';
+        img.style.height = '50px';
+        item.appendChild(img);
+    } else if (type === 'white') {
+        const img = document.createElement('img');
+        img.src = 'img/catch_egg.png';
         img.alt = '白蛋';
         img.style.width = '55px';
+        img.style.height = '55px';
         item.appendChild(img);
     }
     item.style.position = 'absolute';

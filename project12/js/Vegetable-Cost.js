@@ -11,6 +11,7 @@ let savedTimer = 60;
 let gameStarted = false;
 let currentDifficulty = null;
 let isPaused = false;
+let isAnswering = false; // 防止重複回答
 
 // 獲取會員ID
 let memberId = window.phpMemberId || 8;
@@ -171,8 +172,8 @@ function generateEasyQuestion() {
         console.log('firstThree:', firstThree.length, firstThree.map(item => item.name));
         console.log('remaining:', remaining.length, remaining.map(item => item.name));
         
-        const firstThreeHTML = firstThree.map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
-        const remainingHTML = remaining.map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
+        const firstThreeHTML = firstThree.map(item => `<div class="item-line"><img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}</div>`).join('');
+        const remainingHTML = remaining.map(item => `<div class="item-line"><img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}</div>`).join('');
         
         // 確保兩欄都有內容，如果右邊沒有內容，從左邊移動一個過去
         let finalFirstThreeHTML = firstThreeHTML;
@@ -181,8 +182,8 @@ function generateEasyQuestion() {
         if (remainingHTML === '' && firstThree.length > 2) {
             // 如果右邊沒有內容且左邊有超過2個，從左邊移動一個到右邊
             const lastItem = firstThree[firstThree.length - 1];
-            finalFirstThreeHTML = firstThree.slice(0, 2).map(item => `<div class="item-line"><img src="img/${item.image}" alt="${item.name}">${item.name} $${item.price}</div>`).join('');
-            finalRemainingHTML = `<div class="item-line"><img src="img/${lastItem.image}" alt="${lastItem.name}">${lastItem.name} $${lastItem.price}</div>`;
+            finalFirstThreeHTML = firstThree.slice(0, 2).map(item => `<div class="item-line"><img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}</div>`).join('');
+            finalRemainingHTML = `<div class="item-line"><img src="${lastItem.name.includes('蛋') ? 'img/catch_egg.png' : `img/${lastItem.image}`}" alt="${lastItem.name}" style="width: ${lastItem.name.includes('蛋') ? '32px' : '24px'}; height: ${lastItem.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${lastItem.name} $${lastItem.price}</div>`;
             console.log('移動項目到右邊:', lastItem.name);
         }
         
@@ -196,7 +197,7 @@ function generateEasyQuestion() {
         let options = combos;
         
         // **修正選項的格式，並保持正確答案為純文字**
-        options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
+        options = options.map(opt => ({ text: opt.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
         return {
             question: questionText,
             options: options,
@@ -230,8 +231,8 @@ function generateEasyQuestion() {
         }
         
         const total = buyItems.reduce((sum, item) => sum + item.price, 0);
-        let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>如果我要買「${buyItems.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋')}」，請問要多少錢？`;
+        let questionText = selectedItems.map(item => `<img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
+        questionText += `<br><br>如果我要買<span style="color: #1976D2; font-weight: bold;">「${buyItems.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋')}」</span>，請問要多少錢？`;
         
         const options = [total];
         let offsetTries = 0;
@@ -278,17 +279,38 @@ function generateNormalQuestion() {
         const egg = ingredients.others.find(i => i.name.includes('蛋')) || ingredients.others[Math.floor(Math.random() * ingredients.others.length)];
 
         // 原始促銷資訊
-        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}，買4把送1把。<br>`;
-        questionText += `<img src="img/${egg.image}" alt="${egg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}，買3${egg.unit}共100元。<br><br>`;
+        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}。<br>`;
+        questionText += `<img src="img/catch_egg.png" alt="${egg.name}" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}。<br><br>`;
         
         // **修改這裡，在阿嬤的題目文字中加上圖片**
         const buyVegCount = Math.floor(Math.random() * 3) + 1; // 1~3把
         const buyEggCount = Math.floor(Math.random() * 2) + 1; // 1~2盒
 
-        questionText += `如果阿嬤要買 ${buyVegCount}${veg.unit} <img src="img/${veg.image}" alt="${veg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg.name} 和 ${buyEggCount}${egg.unit} <img src="img/${egg.image}" alt="${egg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${egg.name}，請問總共要花多少錢？`;
+        questionText += `如果阿嬤要買<span style="color: #1976D2; font-weight: bold;">「${buyVegCount}${veg.unit}<img src="img/${veg.image}" alt="${veg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg.name}＋${buyEggCount}${egg.unit}<img src="img/catch_egg.png" alt="${egg.name}" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 3px;">${egg.name}」</span>，請問總共要花多少錢？`;
         
-        // 計算總價（這裡只計算組合，不考慮促銷）
-        const total = (veg.price * buyVegCount) + (egg.price * buyEggCount);
+        // 計算總價（考慮促銷優惠）
+        let vegTotal = 0;
+        let eggTotal = 0;
+        
+        // 計算豌豆的促銷價格（買4斤送1斤）
+        if (buyVegCount >= 4) {
+            const promoGroups = Math.floor(buyVegCount / 4);
+            const remaining = buyVegCount % 4;
+            vegTotal = (promoGroups * 4 * veg.price) + (remaining * veg.price);
+        } else {
+            vegTotal = buyVegCount * veg.price;
+        }
+        
+        // 計算蛋的促銷價格（買3盒共100元）
+        if (buyEggCount >= 3) {
+            const promoGroups = Math.floor(buyEggCount / 3);
+            const remaining = buyEggCount % 3;
+            eggTotal = (promoGroups * 100) + (remaining * egg.price);
+        } else {
+            eggTotal = buyEggCount * egg.price;
+        }
+        
+        const total = vegTotal + eggTotal;
         
         // 生成選項
         const options = [total];
@@ -315,44 +337,98 @@ function generateNormalQuestion() {
             items: [veg, egg]
         };
 
-    } else { // type === '預算'
-        // ... (預算題邏輯保持不變) ...
-        const veg = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
-        const budget = [100, 120, 150, 200][Math.floor(Math.random() * 4)];
-        const promo = Math.random() < 0.5;
-        let maxCount;
-        let promoText = '';
-        if (promo) {
-            promoText = `（買4把送1把）`;
-            maxCount = Math.floor(budget / (veg.price * 4 / 5));
+    } else { // 普通模式
+        // 隨機選擇兩種蔬果或三種蔬果的促銷題型
+        const useTwoVegs = Math.random() < 0.5; // 50%機率使用兩種蔬果
+        // 50%機率使用三種蔬果
+        
+        if (useTwoVegs) {
+            // 兩種蔬果的促銷題型
+            const veg1 = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
+            let veg2;
+            do {
+                veg2 = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
+            } while (veg2.name === veg1.name); // 確保兩種不同的蔬果
+            
+            const buyCount1 = [2, 3, 4, 5, 6][Math.floor(Math.random() * 5)]; // 第一種買2、3、4、5、6個
+            const buyCount2 = [2, 3, 4, 5, 6][Math.floor(Math.random() * 5)]; // 第二種買2、3、4、5、6個
+            const freeCount1 = [1, 2][Math.floor(Math.random() * 2)]; // 送1個或2個
+            const freeCount2 = [1, 2][Math.floor(Math.random() * 2)]; // 送1個或2個
+            const totalCount1 = buyCount1 + freeCount1; // 第一種實際總共買到幾個
+            const totalCount2 = buyCount2 + freeCount2; // 第二種實際總共買到幾個
+            const totalCount = totalCount1 + totalCount2; // 總共買到幾個
+            
+            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}」</span>，實際總共買到多少個？`;
+            
+            let options = [totalCount];
+            let offsetTries = 0;
+            while (options.length < 4 && offsetTries < 20) {
+                let fake = totalCount + (Math.floor(Math.random() * 3) - 1);
+                if (fake > 0 && !options.includes(fake)) options.push(fake);
+                offsetTries++;
+            }
+            while (options.length < 4) {
+                let fake = totalCount + (Math.floor(Math.random() * 6) + 2) * (Math.random() < 0.5 ? 1 : -1);
+                fake = Math.abs(fake);
+                if (fake > 0 && !options.includes(fake)) options.push(fake);
+            }
+            return {
+                question: questionText,
+                options: options.map(v => ({ text: `${v}個` })).sort(() => Math.random() - 0.5),
+                correctAnswer: `${totalCount}個`,
+                items: selectedItems.length ? selectedItems : [veg1, veg2]
+            };
         } else {
-            maxCount = Math.floor(budget / veg.price);
-        }
-        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit} ${promoText}<br>阿嬤帶${budget}元去買${veg.name}，可以買幾${veg.unit}？`;
-        let options = [maxCount];
+            // 三種蔬果的促銷題型 - 計算數量
+            const veg1 = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
+            let veg2;
+            do {
+                veg2 = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
+            } while (veg2.name === veg1.name);
+            let veg3;
+            do {
+                veg3 = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
+            } while (veg3.name === veg1.name || veg3.name === veg2.name);
+            
+            const buyCount1 = [2, 3, 4, 5, 6][Math.floor(Math.random() * 5)];
+            const buyCount2 = [2, 3, 4, 5, 6][Math.floor(Math.random() * 5)];
+            const buyCount3 = [2, 3, 4, 5, 6][Math.floor(Math.random() * 5)];
+            const freeCount1 = [1, 2][Math.floor(Math.random() * 2)]; // 送1個或2個
+            const freeCount2 = [1, 2][Math.floor(Math.random() * 2)]; // 送1個或2個
+            const freeCount3 = [1, 2][Math.floor(Math.random() * 2)]; // 送1個或2個
+            const totalCount1 = buyCount1 + freeCount1;
+            const totalCount2 = buyCount2 + freeCount2;
+            const totalCount3 = buyCount3 + freeCount3;
+            const totalCount = totalCount1 + totalCount2 + totalCount3;
+            
+            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><img src="img/${veg3.image}" alt="${veg3.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg3.name} $${veg3.price}/${veg3.unit}<span style="color: red; font-weight: bold;">（買${buyCount3}${veg3.unit}送${freeCount3}${veg3.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}＋${buyCount3}${veg3.unit}<img src="img/${veg3.image}" alt="${veg3.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg3.name}」</span>，實際總共買到多少個？`;
+            
+            let options = [totalCount];
         let offsetTries = 0;
         while (options.length < 4 && offsetTries < 20) {
-            let fake = maxCount + (Math.floor(Math.random() * 3) - 1);
+                let fake = totalCount + (Math.floor(Math.random() * 3) - 1);
             if (fake > 0 && !options.includes(fake)) options.push(fake);
             offsetTries++;
         }
         while (options.length < 4) {
-            let fake = maxCount + (Math.floor(Math.random() * 8) + 2) * (Math.random() < 0.5 ? 1 : -1);
+                let fake = totalCount + (Math.floor(Math.random() * 6) + 2) * (Math.random() < 0.5 ? 1 : -1);
             fake = Math.abs(fake);
             if (fake > 0 && !options.includes(fake)) options.push(fake);
         }
         return {
             question: questionText,
-            options: options.map(v => ({ text: `${v}${veg.unit}` })).sort(() => Math.random() - 0.5),
-            correctAnswer: `${maxCount}${veg.unit}`,
-            items: selectedItems.length ? selectedItems : [veg]
-        };
+                options: options.map(v => ({ text: `${v}個` })).sort(() => Math.random() - 0.5),
+                correctAnswer: `${totalCount}個`,
+                items: selectedItems.length ? selectedItems : [veg1, veg2, veg3]
+            };
+        }
     }
 }
 
 
 // 生成困難題目
 function generateHardQuestion() {
+    console.log('開始生成困難題目');
     // 顯示5~7種蔬果
     const allItems = [].concat(ingredients.vegetables, ingredients.fruits, ingredients.meat, ingredients.others);
     const numItems = Math.min(Math.floor(Math.random() * 3) + 5, allItems.length); // 5~7種
@@ -369,12 +445,14 @@ function generateHardQuestion() {
     }
     // 題型隨機：1. 買指定組合 2. 預算能買哪些 3. 只能買兩樣/湊滿不超過金額
     const typeRand = Math.random();
+    console.log('困難題目類型隨機數:', typeRand);
     if (typeRand < 0.4) {
+        console.log('生成指定組合題型');
         // 指定組合
         const veg = ingredients.vegetables[Math.floor(Math.random() * ingredients.vegetables.length)];
         const meat = ingredients.meat[Math.floor(Math.random() * ingredients.meat.length)];
         const egg = ingredients.others.find(i => i.name.includes('蛋')) || ingredients.others[Math.floor(Math.random() * ingredients.others.length)];
-        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}<br><img src="img/${meat.image}" alt="${meat.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${meat.name} $${meat.price}/斤<br><img src="img/${egg.image}" alt="${egg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}<br><br>如果阿嬤要買1${veg.unit}<img src="img/${veg.image}" alt="${veg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg.name}＋1${egg.unit}<img src="img/${egg.image}" alt="${egg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${egg.name}＋2斤<img src="img/${meat.image}" alt="${meat.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${meat.name}，要多少錢？`;
+        let questionText = `<img src="img/${veg.image}" alt="${veg.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg.name} $${veg.price}/${veg.unit}<br><img src="img/${meat.image}" alt="${meat.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${meat.name} $${meat.price}/斤<br><img src="img/catch_egg.png" alt="${egg.name}" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 5px;">${egg.name} $${egg.price}/${egg.unit}<br><br>如果阿嬤要買<span style="color: #1976D2; font-weight: bold;">「1${veg.unit}<img src="img/${veg.image}" alt="${veg.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg.name}＋1${egg.unit}<img src="img/catch_egg.png" alt="${egg.name}" style="width: 32px; height: 28px; vertical-align: middle; margin-right: 3px;">${egg.name}＋2斤<img src="img/${meat.image}" alt="${meat.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${meat.name}」</span>，要多少錢？`;
         const total = veg.price + egg.price + meat.price * 2;
         const options = [total];
         let offsetTries = 0;
@@ -391,53 +469,134 @@ function generateHardQuestion() {
             items: selectedItems.length ? selectedItems : [veg, meat, egg]
         };
     } else if (typeRand < 0.7) {
-        // 預算能買哪些
-        const budget = [100, 150, 200, 250, 300][Math.floor(Math.random() * 5)];
-        let combos = [];
-        for (let i = 0; i < selectedItems.length; i++) {
-            for (let j = i + 1; j < selectedItems.length; j++) {
+        console.log('生成預算能買哪些題型');
+        // 預算能買哪些 - 困難版本
+        // 降低預算，增加挑戰性
+        const budget = [50, 60, 70, 80][Math.floor(Math.random() * 4)];
+        
+        // 簡化的正確答案生成
+        let validCombos = [];
+        for (let i = 0; i < selectedItems.length && validCombos.length < 5; i++) {
+            for (let j = i + 1; j < selectedItems.length && validCombos.length < 5; j++) {
                 let sum = selectedItems[i].price + selectedItems[j].price;
-                if (sum <= budget) combos.push([selectedItems[i], selectedItems[j]]);
-            }
-        }
-        if (combos.length === 0) combos.push([selectedItems[0], selectedItems[1]]);
-        const answerCombo = combos[Math.floor(Math.random() * combos.length)];
-        let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>阿嬤只帶了$${budget}，可以買哪些東西回家？`;
-        let options = [answerCombo];
-        let comboTries = 0;
-        while (options.length < 4 && comboTries < 30) {
-            let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            // 檢查是否已存在相同的組合（不管順序）
-            const isDuplicate = options.some(opt => 
-                (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
-                (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
-            );
-            if (!isDuplicate) {
-                options.push(fakeCombo);
-            }
-            comboTries++;
-        }
-        while (options.length < 4) {
-            let fakeCombo = [];
-            let tries = 0;
-            while (fakeCombo.length < 2 && tries < 10) {
-                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
-                if (!fakeCombo.includes(item)) fakeCombo.push(item);
-                tries++;
-            }
-            if (fakeCombo.length === 2) {
-                // 檢查是否已存在相同的組合（不管順序）
-                const isDuplicate = options.some(opt => 
-                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
-                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
-                );
-                if (!isDuplicate) {
-                    options.push(fakeCombo);
+                if (sum <= budget) {
+                    validCombos.push([selectedItems[i], selectedItems[j]]);
                 }
             }
         }
-        options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
+        
+        // 如果沒有符合預算的組合，快速調整
+        if (validCombos.length === 0) {
+            const minSum = Math.min(...selectedItems.map(item => item.price)) * 2;
+            const adjustedBudget = Math.max(budget, minSum + 20);
+            for (let i = 0; i < selectedItems.length && validCombos.length < 5; i++) {
+                for (let j = i + 1; j < selectedItems.length && validCombos.length < 5; j++) {
+                    let sum = selectedItems[i].price + selectedItems[j].price;
+                    if (sum <= adjustedBudget) {
+                        validCombos.push([selectedItems[i], selectedItems[j]]);
+                    }
+                }
+            }
+        }
+        
+        // 選擇一個正確答案
+        const answerCombo = validCombos[Math.floor(Math.random() * validCombos.length)];
+        console.log('第二種題型選擇的正確答案:', answerCombo.map(i => i.name).join('＋'), '價格:', answerCombo[0].price + answerCombo[1].price);
+        
+        // 生成錯誤選項（確保只有一個正確答案）
+        let options = [answerCombo];
+        let usedCombos = new Set();
+        usedCombos.add(answerCombo.map(i => i.name).sort().join('+'));
+        
+        // 生成3個錯誤選項（價格超過預算的組合）
+        let attempts = 0;
+        while (options.length < 4 && attempts < 100) {
+            let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            if (item1 !== item2) {
+                let sum = item1.price + item2.price;
+                let comboKey = [item1.name, item2.name].sort().join('+');
+                // 確保選項價格超過預算，這樣就只有一個正確答案
+                if (sum > budget && !usedCombos.has(comboKey)) {
+                    options.push([item1, item2]);
+                    usedCombos.add(comboKey);
+                }
+            }
+            attempts++;
+        }
+        
+        // 如果還是不夠4個選項，生成一些更貴的組合
+        let fallbackTries = 0;
+        while (options.length < 4 && fallbackTries < 50) {
+            let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            if (item1 !== item2) {
+                let sum = item1.price + item2.price;
+                let comboKey = [item1.name, item2.name].sort().join('+');
+                // 確保選項價格明顯超過預算
+                if (sum > budget + 30 && !usedCombos.has(comboKey)) {
+                    options.push([item1, item2]);
+                    usedCombos.add(comboKey);
+                }
+            }
+            fallbackTries++;
+        }
+        
+        // 如果還是不夠4個選項，強制添加一些錯誤組合
+        if (options.length < 4) {
+            // 找到所有價格超過預算的組合
+            let expensiveCombos = [];
+        for (let i = 0; i < selectedItems.length; i++) {
+            for (let j = i + 1; j < selectedItems.length; j++) {
+                let sum = selectedItems[i].price + selectedItems[j].price;
+                    let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+                    if (sum > budget && !usedCombos.has(comboKey)) {
+                        expensiveCombos.push([selectedItems[i], selectedItems[j]]);
+                    }
+                }
+            }
+            
+            // 隨機選擇一些貴的組合
+            while (options.length < 4 && expensiveCombos.length > 0) {
+                let randomIndex = Math.floor(Math.random() * expensiveCombos.length);
+                let combo = expensiveCombos.splice(randomIndex, 1)[0];
+                options.push(combo);
+                usedCombos.add(combo.map(i => i.name).sort().join('+'));
+            }
+            
+            // 如果還是不夠，添加任何未使用的組合（但標記為錯誤）
+            if (options.length < 4) {
+                for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
+                    for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
+                        let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+                        if (!usedCombos.has(comboKey)) {
+                            options.push([selectedItems[i], selectedItems[j]]);
+                            usedCombos.add(comboKey);
+                        }
+                    }
+                }
+            }
+        }
+        
+        let questionText = selectedItems.map(item => `<img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
+        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${budget}</span>，可以買哪些東西回家？`;
+        
+        options = options.map(opt => ({ 
+            text: opt.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋'),
+            isCorrect: opt === answerCombo
+        })).sort(() => Math.random() - 0.5);
+        
+        console.log('第二種題型生成的選項:', options.map(opt => ({
+            text: opt.text.replace(/<[^>]*>/g, ''),
+            isCorrect: opt.isCorrect,
+            price: opt.text.includes('＋') ? 
+                opt.text.split('＋').map(item => {
+                    const itemName = item.replace(/<[^>]*>/g, '').trim();
+                    const foundItem = selectedItems.find(i => i.name === itemName);
+                    return foundItem ? foundItem.price : 0;
+                }).reduce((a, b) => a + b, 0) : 0
+        })));
+        
         return {
             question: questionText,
             options: options,
@@ -445,53 +604,136 @@ function generateHardQuestion() {
             items: selectedItems
         };
     } else {
-        // 只能買兩樣/湊滿不超過金額
-        const limit = [100, 150, 200, 250][Math.floor(Math.random() * 4)];
-        let combos = [];
+        console.log('生成只能買兩樣題型');
+        // 只能買兩樣/湊滿不超過金額 - 困難版本
+        // 降低預算，增加挑戰性
+        const limit = [60, 70, 80, 90][Math.floor(Math.random() * 4)];
+        
+        // 先選擇一些較貴的物品，確保有挑戰性
+        let expensiveItems = selectedItems.filter(item => item.price > 30);
+        let cheapItems = selectedItems.filter(item => item.price <= 30);
+        
+        // 如果沒有足夠的貴物品，就從所有物品中選擇
+        if (expensiveItems.length < 3) {
+            expensiveItems = selectedItems.slice(0, Math.ceil(selectedItems.length / 2));
+            cheapItems = selectedItems.slice(Math.ceil(selectedItems.length / 2));
+        }
+        
+        // 確保有正確答案的組合
+        let validCombos = [];
         for (let i = 0; i < selectedItems.length; i++) {
             for (let j = i + 1; j < selectedItems.length; j++) {
                 let sum = selectedItems[i].price + selectedItems[j].price;
-                if (sum <= limit) combos.push([selectedItems[i], selectedItems[j]]);
-            }
-        }
-        if (combos.length === 0) combos.push([selectedItems[0], selectedItems[1]]);
-        const answerCombo = combos[Math.floor(Math.random() * combos.length)];
-        let questionText = selectedItems.map(item => `<img src="img/${item.image}" alt="${item.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>小胖只帶了$${limit}，只能買兩樣，湊滿不超過這個金額，可以買哪些？`;
-        let options = [answerCombo];
-        let comboTries = 0;
-        while (options.length < 4 && comboTries < 30) {
-            let fakeCombo = combos[Math.floor(Math.random() * combos.length)];
-            // 檢查是否已存在相同的組合（不管順序）
-            const isDuplicate = options.some(opt => 
-                (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
-                (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
-            );
-            if (!isDuplicate) {
-                options.push(fakeCombo);
-            }
-            comboTries++;
-        }
-        while (options.length < 4) {
-            let fakeCombo = [];
-            let tries = 0;
-            while (fakeCombo.length < 2 && tries < 10) {
-                const item = selectedItems[Math.floor(Math.random() * selectedItems.length)];
-                if (!fakeCombo.includes(item)) fakeCombo.push(item);
-                tries++;
-            }
-            if (fakeCombo.length === 2) {
-                // 檢查是否已存在相同的組合（不管順序）
-                const isDuplicate = options.some(opt => 
-                    (opt[0] === fakeCombo[0] && opt[1] === fakeCombo[1]) || 
-                    (opt[0] === fakeCombo[1] && opt[1] === fakeCombo[0])
-                );
-                if (!isDuplicate) {
-                    options.push(fakeCombo);
+                if (sum <= limit) {
+                    validCombos.push([selectedItems[i], selectedItems[j]]);
                 }
             }
         }
-        options = options.map(opt => ({ text: opt.map(i => `<img src="img/${i.image}" alt="${i.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋') })).sort(() => Math.random() - 0.5);
+        
+        // 如果沒有符合預算的組合，調整預算
+        if (validCombos.length === 0) {
+            const minSum = Math.min(...selectedItems.map(item => item.price)) * 2;
+            const adjustedLimit = Math.max(limit, minSum + 20);
+            validCombos = [];
+            for (let i = 0; i < selectedItems.length; i++) {
+                for (let j = i + 1; j < selectedItems.length; j++) {
+                    let sum = selectedItems[i].price + selectedItems[j].price;
+                    if (sum <= adjustedLimit) {
+                        validCombos.push([selectedItems[i], selectedItems[j]]);
+                    }
+                }
+            }
+        }
+        
+        // 選擇一個正確答案
+        const answerCombo = validCombos[Math.floor(Math.random() * validCombos.length)];
+        console.log('選擇的正確答案:', answerCombo.map(i => i.name).join('＋'), '價格:', answerCombo[0].price + answerCombo[1].price);
+        
+        // 生成錯誤選項（確保只有一個正確答案）
+        let options = [answerCombo];
+        let usedCombos = new Set();
+        usedCombos.add(answerCombo.map(i => i.name).sort().join('+'));
+        
+        // 生成3個錯誤選項（價格超過預算的組合）
+        for (let i = 0; i < 20 && options.length < 4; i++) {
+            let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            if (item1 !== item2) {
+                let sum = item1.price + item2.price;
+                let comboKey = [item1.name, item2.name].sort().join('+');
+                // 確保選項價格超過預算，這樣就只有一個正確答案
+                if (sum > limit && !usedCombos.has(comboKey)) {
+                    options.push([item1, item2]);
+                    usedCombos.add(comboKey);
+                }
+            }
+        }
+        
+        // 如果還是不夠4個選項，生成一些更貴的組合
+        let fallbackTries = 0;
+        while (options.length < 4 && fallbackTries < 50) {
+            let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
+            if (item1 !== item2) {
+                let sum = item1.price + item2.price;
+                let comboKey = [item1.name, item2.name].sort().join('+');
+                // 確保選項價格明顯超過預算
+                if (sum > limit + 30 && !usedCombos.has(comboKey)) {
+                    options.push([item1, item2]);
+                    usedCombos.add(comboKey);
+                }
+            }
+            fallbackTries++;
+        }
+        
+        // 如果還是不夠4個選項，強制添加一些錯誤組合
+        while (options.length < 4) {
+            for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
+                for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
+                    let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+                    let sum = selectedItems[i].price + selectedItems[j].price;
+                    // 只添加價格超過預算的組合作為錯誤選項
+                    if (!usedCombos.has(comboKey) && sum > limit) {
+                        options.push([selectedItems[i], selectedItems[j]]);
+                        usedCombos.add(comboKey);
+                    }
+                }
+            }
+            // 如果還是沒有足夠的選項，添加任何未使用的組合
+            if (options.length < 4) {
+                for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
+                    for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
+                        let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+                        if (!usedCombos.has(comboKey)) {
+                            options.push([selectedItems[i], selectedItems[j]]);
+                            usedCombos.add(comboKey);
+                        }
+                    }
+                }
+            }
+            // 如果還是沒有足夠的選項，跳出循環避免無限循環
+            if (options.length < 4) break;
+        }
+        
+        let questionText = selectedItems.map(item => `<img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
+        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${limit}</span>，只能買兩樣，湊滿<span style="color: red; font-weight: bold;">不超過這個金額</span>，可以買哪些？`;
+        
+        options = options.map(opt => ({ 
+            text: opt.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋'),
+            isCorrect: opt === answerCombo
+        })).sort(() => Math.random() - 0.5);
+        
+        console.log('第三種題型生成的選項:', options.map(opt => ({
+            text: opt.text.replace(/<[^>]*>/g, ''),
+            isCorrect: opt.isCorrect,
+            price: opt.text.includes('＋') ? 
+                opt.text.split('＋').map(item => {
+                    const itemName = item.replace(/<[^>]*>/g, '').trim();
+                    const foundItem = selectedItems.find(i => i.name === itemName);
+                    return foundItem ? foundItem.price : 0;
+                }).reduce((a, b) => a + b, 0) : 0
+        })));
+        
         return {
             question: questionText,
             options: options,
@@ -503,8 +745,13 @@ function generateHardQuestion() {
 
 // 顯示題目時帶圖片
 function loadQuestion() {
+    console.log('loadQuestion 被調用，gamePaused:', gamePaused);
     if (gamePaused) return;
+    
+    // 重置回答狀態
+    isAnswering = false;
     let question;
+    console.log('開始生成題目，難度:', currentDifficulty);
     switch (currentDifficulty) {
         case 'easy':
             question = generateEasyQuestion();
@@ -518,6 +765,7 @@ function loadQuestion() {
         default:
             question = generateEasyQuestion();
     }
+    console.log('題目生成完成');
     const questionElement = document.getElementById('question');
     const optionsContainer = document.getElementById('options-container');
     let lines = [];
@@ -526,47 +774,34 @@ function loadQuestion() {
     }
     questionElement.innerHTML = lines.join('<br>');
     optionsContainer.innerHTML = '';
-    // 缺圖清單
-    let missingImages = [];
     question.options.forEach(option => {
         const button = document.createElement('button');
         
-        // 檢查選項文字是否包含 HTML（圖片）
+        // 簡化的選項處理
         if (option.text.includes('<img')) {
             button.innerHTML = option.text;
         } else {
             button.textContent = option.text;
-            // 嘗試找出對應的食材物件
-            let matchedItem = null;
-            if (question.items && question.items.length > 0) {
-                // 如果是組合題，option.text 可能是「A＋B」
-                let names = option.text.replace(/\$/g, '').split('＋').map(s => cleanIngredientName(s));
-                matchedItem = question.items.find(item => names.includes(item.name));
-                // 如果是單一選項，直接比對
-                if (!matchedItem && names.length === 1) {
-                    matchedItem = question.items.find(item => cleanIngredientName(option.text).includes(item.name));
-                }
-            }
-            // 顯示圖片
-            if (matchedItem && matchedItem.image) {
-                const img = document.createElement('img');
-                img.src = 'img/' + matchedItem.image;
-                img.alt = matchedItem.name;
-                img.style.width = '32px';
-                img.style.height = '32px';
-                img.style.marginRight = '6px';
-                button.prepend(img);
-            } else if (matchedItem && !matchedItem.image) {
-                missingImages.push(matchedItem.name);
-            }
         }
         
-        button.onclick = () => checkAnswer(option.text, question.correctAnswer);
+        button.onclick = () => {
+            // 防止重複點擊
+            if (button.disabled) return;
+            
+            // 立即禁用所有選項按鈕，防止快速點擊
+            const allButtons = optionsContainer.querySelectorAll('button');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none'; // 完全禁用點擊
+            });
+            
+            // 使用 setTimeout 確保按鈕狀態更新後再處理答案
+            setTimeout(() => {
+                checkAnswer(option.text, question.correctAnswer);
+            }, 10);
+        };
         optionsContainer.appendChild(button);
     });
-    if (missingImages.length > 0) {
-        console.log('缺圖清單：', Array.from(new Set(missingImages)));
-    }
 }
 
 // 遊戲控制函數
@@ -603,37 +838,54 @@ function startGame() {
 
 function checkAnswer(selectedAnswer, correctAnswer) {
     if (gamePaused) return;
-
-    // 定義一個新的清理函式
-    const cleanAnswer = (answer) => {
-    // 1. 找到所有 img 標籤並提取 alt 的值
-    const altTexts = [];
-    const imgRegex = /<img[^>]*alt="([^"]*)"[^>]*>/g;
-    let match;
-    while ((match = imgRegex.exec(answer)) !== null) {
-        altTexts.push(match[1]);
-    }
+    if (isAnswering) return; // 防止重複回答
     
-    // 2. 清理掉所有 HTML 標籤，取得純文字
-    const textOnly = answer.replace(/<[^>]*>/g, '');
+    isAnswering = true; // 設置回答狀態
 
-    // 3. 將 alt 文本和純文字結合。
-    //    如果 altTexts 陣列有值，表示答案是圖片組合，就用 altTexts。
-    //    如果 altTexts 沒值，就用純文字。
-    if (altTexts.length > 0) {
-        return altTexts.join('＋');
-    } else {
-        // 清理除了文字、數字、空白和以外的所有字元
-        return textOnly.replace(/[^\w\s]/g, '');
-    }
+    // 簡化的清理函式
+    const cleanAnswer = (answer) => {
+        // 移除所有HTML標籤
+    const textOnly = answer.replace(/<[^>]*>/g, '');
+        // 只保留文字、數字、空白和特殊符號（如＋）
+        return textOnly.replace(/[^\w\s＋]/g, '');
+    };
+    
+    // 專門處理組合答案的清理函式
+    const cleanComboAnswer = (answer) => {
+        // 移除所有HTML標籤
+        const textOnly = answer.replace(/<[^>]*>/g, '');
+        // 移除表情符號和其他特殊字符，只保留中文和＋
+        return textOnly.replace(/[^\u4e00-\u9fa5＋]/g, '');
 };
 
     const cleanSelectedAnswer = cleanAnswer(selectedAnswer);
     const cleanCorrectAnswer = correctAnswer.replace("$",'');
     
     console.log('清理後的選取答案:', cleanSelectedAnswer, '清理後的正確答案:', cleanCorrectAnswer);
+    console.log('原始選取答案:', selectedAnswer, '原始正確答案:', correctAnswer);
 
-    const isCorrect = cleanSelectedAnswer === cleanCorrectAnswer;
+    // 對於不同題型，需要特殊處理
+    let isCorrect;
+    if (correctAnswer.includes('條') || correctAnswer.includes('顆') || correctAnswer.includes('把') || correctAnswer.includes('斤') || correctAnswer.includes('盒') || correctAnswer.includes('個')) {
+        // 數量題型：比較數字部分
+        const selectedNum = parseInt(cleanSelectedAnswer);
+        const correctNum = parseInt(cleanCorrectAnswer);
+        isCorrect = selectedNum === correctNum;
+    } else if (correctAnswer.startsWith('$')) {
+        // 金額題型：比較數字部分
+        const selectedNum = parseInt(cleanSelectedAnswer);
+        const correctNum = parseInt(cleanCorrectAnswer.replace('$', ''));
+        isCorrect = selectedNum === correctNum;
+    } else if (correctAnswer.includes('＋')) {
+        // 組合題型：使用專門的清理函式
+        const selectedClean = cleanComboAnswer(selectedAnswer).trim();
+        const correctClean = cleanComboAnswer(correctAnswer).trim();
+        console.log('組合題型比較:', selectedClean, 'vs', correctClean);
+        isCorrect = selectedClean === correctClean;
+    } else {
+        // 其他題型：直接比較清理後的字符串
+        isCorrect = cleanSelectedAnswer === cleanCorrectAnswer;
+    }
     
     if (isCorrect) {
         score += 3;
@@ -644,19 +896,21 @@ function checkAnswer(selectedAnswer, correctAnswer) {
     }
     
     // 延遲載入下一題
+    console.log('準備載入下一題，延遲時間:', isCorrect ? 1500 : 1200);
     setTimeout(() => {
+        console.log('開始載入下一題');
         loadQuestion();
-    }, 1500);
+    }, isCorrect ? 1500 : 1200);
 }
 
 // 顯示答案反饋
 function showAnswerFeedback(isCorrect) {
     console.log('顯示答案反饋:', isCorrect ? '答對了' : '答錯了');
     
-    const questionContainer = document.getElementById('question-container');
-    if (!questionContainer) {
-        console.error('找不到 question-container 元素');
-        return;
+    // 移除舊的反饋元素
+    const oldFeedback = document.getElementById('answer-feedback');
+    if (oldFeedback) {
+        oldFeedback.remove();
     }
     
     const feedback = document.createElement('div');
@@ -666,39 +920,28 @@ function showAnswerFeedback(isCorrect) {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 3rem;
+        font-size: 2rem;
         font-weight: bold;
         color: ${isCorrect ? '#4caf50' : '#f44336'};
-        background: rgba(255, 255, 255, 0.95);
-        padding: 30px 40px;
-        border-radius: 15px;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 8px;
         z-index: 9999;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-        border: 3px solid ${isCorrect ? '#4caf50' : '#f44336'};
-        animation: feedbackFadeIn 0.3s ease-in;
+        border: 2px solid ${isCorrect ? '#4caf50' : '#f44336'};
     `;
     feedback.textContent = isCorrect ? '✓ 答對了！' : '✗ 答錯了！';
-    
-    // 添加動畫樣式
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes feedbackFadeIn {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-    `;
-    document.head.appendChild(style);
     
     document.body.appendChild(feedback);
     
     console.log('反饋元素已添加到頁面');
     
+    // 簡化的移除邏輯
     setTimeout(() => {
-        if (document.body.contains(feedback)) {
-            document.body.removeChild(feedback);
+        if (feedback && document.body.contains(feedback)) {
+            feedback.remove();
             console.log('反饋元素已移除');
         }
-    }, 1500);
+    }, 1000);
 }
 
 function updateScore() {

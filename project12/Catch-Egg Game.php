@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 </div>
                 <ul style="margin-left:2.2rem;">
                     <li>動動手指左右拖曳籃子接蛋</li>
-                    <li>接到<span style="color:gold;font-size:1.2em;">🥚</span>金蛋+10分，<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分</li>
+                    <li>接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:2.2em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分</li>
                     <li>時間內達到目標分數就過關！</li>
                 </ul>
             </div>

@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("強制重新載入每日任務數據");
   loadDailyTasks();
   
+  // 禁用自動彈出每日任務視窗
+  console.log("已禁用自動顯示每日任務彈窗");
+  /*
   if (autoShowMission && !hasShownToday) {
     // 自動顯示每日任務彈窗（延遲2秒顯示）
     setTimeout(() => {
@@ -49,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   } else if (!autoShowMission) {
     console.log("用戶已關閉自動顯示每日任務彈窗");
   }
+  */
 });
 
 // 圖片映射函數
