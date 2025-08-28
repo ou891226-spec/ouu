@@ -26,6 +26,10 @@ try {
       PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]
   );
+  
+  // 設定時區為台北時間
+  $pdo->exec("SET time_zone = '+08:00'");
+  error_log("db_connect.php: 資料庫時區已設定為 +08:00");
 } catch (PDOException $e) {
   die("資料庫連線錯誤：" . $e->getMessage());
 }

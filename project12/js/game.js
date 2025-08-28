@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.isInitialized = false;
             this.isPaused = false;
             this.isContinuing = false;
+            this.gameStartTime = null; // 遊戲開始時間
             this.winModal = document.getElementById('win-modal');
             this.gameOverModal = document.getElementById('game-over-modal');
             this.targetScoreElement = document.getElementById('target-score');
@@ -56,7 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.gameOver = false;
                 this.won = false;
                 this.isPaused = false;
-                console.log('遊戲初始化完成');
+                this.gameStartTime = Date.now(); // 記錄遊戲開始時間
+                console.log('遊戲初始化完成，開始時間:', this.gameStartTime);
             } else {
                 console.log('遊戲已經初始化過');
             }
@@ -773,10 +775,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('win-reward-score').textContent = rewardScore;
             document.getElementById('win-best-score').textContent = this.bestScore;
             
+            // 計算實際遊玩時間
+            const playTime = this.gameStartTime ? Math.floor((Date.now() - this.gameStartTime) / 1000) : 0;
+            console.log('遊戲勝利，實際遊玩時間:', playTime, '秒');
+            
             // 自動呼叫 saveGameRecord，使用獎勵分數而不是遊戲分數
             if (typeof saveGameRecord === 'function') {
                 console.log('遊戲勝利，呼叫 saveGameRecord，獎勵分數：', rewardScore);
-                saveGameRecord(memberId, rewardScore, this.difficulty, 60);
+                saveGameRecord(memberId, rewardScore, this.difficulty, playTime);
             }
             this.winModal.style.display = 'block';
         }
@@ -803,11 +809,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             document.getElementById('game-over-score').textContent = this.score;            
             
+            // 計算實際遊玩時間
+            const currentTime = Date.now();
+            const playTime = this.gameStartTime ? Math.floor((currentTime - this.gameStartTime) / 1000) : 0;
+            console.log('遊戲失敗，開始時間:', this.gameStartTime);
+            console.log('遊戲失敗，當前時間:', currentTime);
+            console.log('遊戲失敗，實際遊玩時間:', playTime, '秒');
+            
             // 遊戲失敗時記錄0分
             console.log('遊戲失敗，記錄0分');
             if (typeof saveGameRecord === 'function') {
                 console.log('遊戲失敗，呼叫 saveGameRecord，分數：0');
-                saveGameRecord(memberId, 0, this.difficulty, 60);
+                saveGameRecord(memberId, 0, this.difficulty, playTime);
             }
 
             // 顯示彈窗
@@ -861,6 +874,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOver = false;
             this.won = false;
             this.isContinuing = false;
+            
+            // 重置遊戲開始時間
+            this.gameStartTime = Date.now();
+            console.log('遊戲重置，新的開始時間:', this.gameStartTime);
             
             // 重新創建遊戲板
             this.createBoard();
@@ -931,6 +948,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('難度:', difficulty);
         console.log('遊戲時間:', play_time);
         console.log('=== 分數記錄詳情 ===');
+        console.log('=== 調試信息 ===');
+        console.log('傳入的 play_time 類型:', typeof play_time);
+        console.log('傳入的 play_time 值:', play_time);
+        console.log('是否為數字:', !isNaN(play_time));
+        console.log('=== 調試信息結束 ===');
         const res = await fetch(window.location.href, {
             method: 'POST',
             headers: {
