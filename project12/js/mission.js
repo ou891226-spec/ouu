@@ -1,7 +1,23 @@
 // 開啟每日任務視窗
 function openMissionModal() {
   document.getElementById("missionModal").style.display = "flex";
-  loadDailyTasks();
+  
+  // 檢查今天是否已經載入過任務
+  const today = new Date().toDateString();
+  const lastLoadDate = localStorage.getItem('missionLoadDate');
+  const hasLoadedToday = localStorage.getItem('missionLoadedToday') === 'true';
+  
+  // 如果是新的一天，重置狀態
+  if (lastLoadDate !== today) {
+    localStorage.setItem('missionLoadDate', today);
+    localStorage.setItem('missionLoadedToday', 'false');
+  }
+  
+  // 如果今天還沒載入過任務，才載入
+  if (!hasLoadedToday) {
+    loadDailyTasks();
+    localStorage.setItem('missionLoadedToday', 'true');
+  }
 }
 
 // 關閉視窗
@@ -79,6 +95,39 @@ function claimReward(button) {
     });
 }
 
+// 圖片映射函數
+function getTaskIcon(taskType) {
+  const iconMap = {
+    'memory': 'memory_game.png',
+    'rhythm': 'complete_all_daily.png',
+    'logic': 'Achievement.png',
+    'coordination': 'complete_all_daily.png',
+    'tracking': 'Achievement.png',
+    'attention': 'complete_all_daily.png',
+    'calculation': 'Achievement.png',
+    'general': 'Achievement.png',
+    'score': 'score_100.png',
+    'login': 'login.png',
+    'social': 'friend.png',
+    'speed': 'Achievement.png',
+    'endurance': 'Achievement.png',
+    'reaction': 'note.png'
+  };
+  
+  // 根據任務類型選擇更合適的圖片
+  let iconFile = iconMap[taskType] || 'Achievement.png';
+  
+  // 如果是分數相關任務，根據任務描述選擇不同圖片
+  if (taskType === 'score') {
+    // 這裡可以根據具體的任務描述來選擇不同的分數圖片
+    // 暫時使用 score_100.png，如果需要可以進一步優化
+    iconFile = 'score_100.png';
+  }
+  
+  console.log(`任務類型: ${taskType} -> 圖片: ${iconFile}`);
+  return iconFile;
+}
+
 // ✅ 載入任務資料
 function loadDailyTasks() {
   console.log("開始載入每日任務...");
@@ -133,9 +182,11 @@ function loadDailyTasks() {
           btnHtml = '<button class="reward-btn" disabled>尚未完成</button>';
         }
 
+        const iconFile = getTaskIcon(task.task_type);
+
         item.innerHTML = `
           <div class="icon-text">
-            <img src="img/${task.task_type}.png" alt="${task.task_name}" onerror="this.src='img/Achievement.png'">
+            <img src="img/${iconFile}" alt="${task.task_name}" onerror="this.src='img/Achievement.png'">
             <div>
               <div class="title">${task.task_name}</div>
               <div class="desc">${task.task_description}</div>

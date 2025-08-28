@@ -40,10 +40,10 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         $stmt2->execute([$game_id, $difficulty]);
         $pass_bounce = ($row = $stmt2->fetch()) ? (int)$row['pass_bounce'] : 0;
         
-        // 如果過關且有登入會員，更新 memory_score
+        // 如果過關且有登入會員，更新 total_score
         if ($pass && isset($_SESSION['member_id'])) {
             $member_id = $_SESSION['member_id'];
-            $stmt3 = $pdo->prepare('UPDATE member SET memory_score = memory_score + ? WHERE member_id = ?');
+            $stmt3 = $pdo->prepare('UPDATE member SET total_score = total_score + ? WHERE member_id = ?');
             $stmt3->execute([$pass_bounce, $member_id]);
         }
         
@@ -58,8 +58,18 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $play_time = $_POST['game_time'] ?? (isset($_SESSION['game_start_time']) ? 
                 time() - $_SESSION['game_start_time'] : null);
             
-            $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt4->execute([$member_id, $game_id, $score, $difficulty, $play_date, $play_time, $game_type, $is_single_player, null]);
+            $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
+            $stmt4->execute([
+                'member_id' => $member_id,
+                'game_id' => $game_id,
+                'difficulty' => $difficulty,
+                'score' => $pass_bounce, // 使用固定的獎勵分數
+                'play_date' => $play_date,
+                'play_time' => $play_time,
+                'game_type' => $game_type,
+                'is_single_player' => $is_single_player,
+                'opponent_id' => null
+            ]);
             
             // 檢查並完成所有相關任務
             require_once 'check_and_grant_achievements.php';
@@ -76,6 +86,68 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             'end' => true,
             'pass' => $pass,
             'score' => $score,
+            'difficulty' => $difficulty,
+            'pass_bounce' => $pass_bounce
+        ]);
+        exit;
+    }
+    
+    // 處理強制結束遊戲
+    if (isset($_POST['force_end']) && $_POST['force_end'] === '1') {
+        $final_score = (int)($_POST['final_score'] ?? 0);
+        $pass = $final_score >= 3;
+        
+        // 查詢 pass_bounce
+        $game_id = 8;
+        $stmt2 = $pdo->prepare('SELECT pass_bounce FROM difficulty_settings WHERE game_id = ? AND difficulty = ? LIMIT 1');
+        $stmt2->execute([$game_id, $difficulty]);
+        $pass_bounce = ($row = $stmt2->fetch()) ? (int)$row['pass_bounce'] : 0;
+        
+        // 如果過關且有登入會員，更新 total_score
+        if ($pass && isset($_SESSION['member_id'])) {
+            $member_id = $_SESSION['member_id'];
+            $stmt3 = $pdo->prepare('UPDATE member SET total_score = total_score + ? WHERE member_id = ?');
+            $stmt3->execute([$pass_bounce, $member_id]);
+        }
+        
+        // 儲存遊戲紀錄到 game_records 表
+        if (isset($_SESSION['member_id'])) {
+            $member_id = $_SESSION['member_id'];
+            $play_date = date('Y-m-d H:i:s');
+            $game_type = '記憶力';
+            $is_single_player = 1;
+            
+            // 使用前端傳送的遊戲時間
+            $play_time = $_POST['game_time'] ?? null;
+            
+            $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
+            $stmt4->execute([
+                'member_id' => $member_id,
+                'game_id' => $game_id,
+                'difficulty' => $difficulty,
+                'score' => $final_score,
+                'play_date' => $play_date,
+                'play_time' => $play_time,
+                'game_type' => $game_type,
+                'is_single_player' => $is_single_player,
+                'opponent_id' => null
+            ]);
+            
+            // 檢查並完成所有相關任務
+            require_once 'check_and_grant_achievements.php';
+            checkAndCompleteAllTasks($member_id, '記憶力');
+        }
+        
+        // 清空 session
+        $_SESSION['clue_total'] = 0;
+        $_SESSION['clue_correct'] = 0;
+        $_SESSION['used_question_ids'] = [];
+        unset($_SESSION['game_start_time']); // 清除遊戲開始時間
+        
+        echo json_encode([
+            'end' => true,
+            'pass' => $pass,
+            'score' => $final_score,
             'difficulty' => $difficulty,
             'pass_bounce' => $pass_bounce
         ]);

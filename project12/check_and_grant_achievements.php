@@ -56,7 +56,7 @@ function grantAchievement($member_id, $achievement_id, $achievement_name, $icon)
             
                          // 記錄成就獲得（只在非API請求時輸出）
              if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
-                 echo "🎉 恭喜獲得成就：{$icon} {$achievement_name}\n";
+                 // echo "🎉 恭喜獲得成就：{$icon} {$achievement_name}\n";
              }
             
             return true;

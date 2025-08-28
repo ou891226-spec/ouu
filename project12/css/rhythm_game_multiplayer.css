@@ -188,13 +188,15 @@ h1 {
 #bat img, .bat img {
   width: 100px;
   transform-origin: left center;
-  transition: transform 0.15s ease;
+  transition: transform 0.1s ease;
   z-index: 3;
   position: relative;
+  transform: rotate(-20deg);
+  top: 30px
 }
 
 .bat.swing img {
-  transform: rotate(60deg);
+  transform: rotate(75deg);
 }
 
 .score-board {

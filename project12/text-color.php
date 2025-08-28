@@ -5,7 +5,7 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 session_start();
-require_once "db.php";
+require_once "db_connect.php";
 
 // 從資料庫讀取顏色
 $colors_query = "SELECT * FROM text_color_colors";
@@ -32,15 +32,14 @@ while ($row = $settings_stmt->fetch(PDO::FETCH_ASSOC)) {
         'pass_bounce' => $row['pass_bounce']
     ];
 }
-// 2. 讀取看字選色專屬難度設定（顏色數量、每題作答時間）
-$text_color_query = "SELECT * FROM text_color_difficulty_settings";
-$text_color_stmt = $pdo->query($text_color_query);
-while ($row = $text_color_stmt->fetch(PDO::FETCH_ASSOC)) {
-    if (isset($difficulty_settings[$row['difficulty']])) {
-        $difficulty_settings[$row['difficulty']]['color_count'] = $row['color_count'];
-        $difficulty_settings[$row['difficulty']]['question_time'] = $row['question_time'];
-    }
-}
+// 2. 看字選色專屬難度設定（顏色數量、每題作答時間）
+// 由於已統一使用 difficulty_settings 表，這些設定直接在程式中定義
+$difficulty_settings['easy']['color_count'] = 3;
+$difficulty_settings['easy']['question_time'] = 10;
+$difficulty_settings['normal']['color_count'] = 4;
+$difficulty_settings['normal']['question_time'] = 8;
+$difficulty_settings['hard']['color_count'] = 5;
+$difficulty_settings['hard']['question_time'] = 6;
 
 if (!isset($_SESSION['score'])) {
     $_SESSION['score'] = 0;
@@ -239,12 +238,24 @@ function recordGameResult($score, $playTime, $difficulty) {
                     }
                 }
 
+                // 根據是否過關決定記錄的分數
+                $record_score = ($score >= $pass_score) ? $pass_bounce : 0;
+                
                 // 插入遊戲記錄
                 $record_query = "INSERT INTO game_records 
-                               (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player) 
-                               VALUES (?, ?, ?, ?, NOW(), ?, ?, true)";
+                               (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) 
+                               VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)";
                 $record_stmt = $pdo->prepare($record_query);
-                $record_stmt->execute([$member_id, $game_id, $score, $difficulty, $playTime, $game_type]);
+                $record_stmt->execute([
+                    'member_id' => $member_id,
+                    'game_id' => $game_id,
+                    'difficulty' => $difficulty,
+                    'score' => $record_score, // 根據是否過關決定分數
+                    'play_time' => $playTime,
+                    'game_type' => $game_type,
+                    'is_single_player' => 1,
+                    'opponent_id' => null
+                ]);
                 $record_stmt->closeCursor();
                 return true;
             }
@@ -887,31 +898,29 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
 
         // 修改重新開始按鈕的點擊事件
         document.getElementById('resetBtn').onclick = function() {
-            if (confirm('確定要重新開始遊戲嗎？')) {
-                fetch('text-color.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=reset_score'
-                }).then(() => {
-                    // 重置所有遊戲狀態
-                    score = 0;
-                    scoreEl.textContent = '0';
-                    timeLeft = difficultySettings[difficulty].time_limit;
-                    timeEl.textContent = timeLeft.toString();
-                    gameStarted = false;
-                    clearInterval(timer);
-                    clearInterval(distractionInterval);
-                    clearInterval(questionTimer);
-                    distractionContainer.innerHTML = '';
-                    document.getElementById('buttonContainer').innerHTML = '';
-                    document.getElementById('targetColorText').textContent = '';
-                    
-                    // 顯示難度選擇視窗
-                    document.getElementById('difficultyModal').classList.add('show');
-                });
-            }
+            fetch('text-color.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=reset_score'
+            }).then(() => {
+                // 重置所有遊戲狀態
+                score = 0;
+                scoreEl.textContent = '0';
+                timeLeft = difficultySettings[difficulty].time_limit;
+                timeEl.textContent = timeLeft.toString();
+                gameStarted = false;
+                clearInterval(timer);
+                clearInterval(distractionInterval);
+                clearInterval(questionTimer);
+                distractionContainer.innerHTML = '';
+                document.getElementById('buttonContainer').innerHTML = '';
+                document.getElementById('targetColorText').textContent = '';
+                
+                // 顯示難度選擇視窗
+                document.getElementById('difficultyModal').classList.add('show');
+            });
         };
 
         // 監聽視窗大小變化

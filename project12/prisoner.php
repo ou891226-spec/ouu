@@ -1,39 +1,52 @@
 <?php
 require_once 'check_login.php';
-require_once 'prisoner_db.php';
+require_once 'db_connect.php';
  
 // 獲取難度設定
 $difficulties = [];
 
 try {
-    // 嘗試查詢專門的犯人遊戲難度設定表
-    $stmt = $pdo->query("SELECT * FROM prisoner_game_difficulty_settings WHERE is_active = true");
-    $difficulties = $stmt->fetchAll();
+    // 使用統一的 difficulty_settings 表查詢犯人遊戲設定 (game_id = 6)
+    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 6 ORDER BY difficulty");
+    $db_difficulties = $stmt->fetchAll();
+    
+    // 轉換為犯人遊戲需要的格式
+    $difficulties = [];
+    foreach ($db_difficulties as $setting) {
+        $difficulties[] = [
+            'difficulty_level' => $setting['difficulty'],
+            'hole_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
+            'time_limit' => $setting['time_limit'] ?? 60,
+            'sequence_length' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
+            'pass_score' => $setting['pass_score'] ?? 50,
+            'is_active' => true
+        ];
+    }
 } catch (PDOException $e) {
-    // 如果表不存在，使用預設設定
+    // 如果查詢失敗，使用預設設定
     $difficulties = [
         [
             'difficulty_level' => 'easy',
             'hole_count' => 3,
             'time_limit' => 60,
             'sequence_length' => 3,
-            'pass_score' => 50,
+            'pass_score' => 0,
             'is_active' => true
         ],
         [
             'difficulty_level' => 'normal',
-            'hole_count' => 5,
-            'time_limit' => 90,
-            'sequence_length' => 5,
-            'pass_score' => 100,
+            'hole_count' => 4,
+            'time_limit' => 60,
+            'sequence_length' => 4,
+            'pass_score' => 0,
             'is_active' => true
         ],
         [
             'difficulty_level' => 'hard',
-            'hole_count' => 7,
+            'hole_count' => 5,
             'time_limit' => 120,
-            'sequence_length' => 7,
-            'pass_score' => 150,
+            'sequence_length' => 5,
+            'pass_score' => 0,
             'is_active' => true
         ]
     ];
@@ -51,7 +64,7 @@ try {
 </head>
 <body>
   <div class="game-container">
-    <input type="hidden" id="member-id" value="8">
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
     <h1>追蹤犯人遊戲</h1>
 
     <div class="score-board">

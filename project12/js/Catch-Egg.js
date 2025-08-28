@@ -12,7 +12,7 @@ const resetBtn = document.getElementById('resetBtn');
 const countdownOverlay = document.getElementById('countdownOverlay');
 
 // 音頻元素
-const bgm = document.getElementById('bgm');
+// const bgm = document.getElementById('bgm'); // 背景音樂已移除
 const catchSound = document.getElementById('catchSound');
 const bombSound = document.getElementById('bombSound');
 const gameOverSound = document.getElementById('gameOverSound');
@@ -93,7 +93,7 @@ function startGameTimer() {
     pauseBtn.classList.remove('hidden');
     resumeBtn.classList.add('hidden');
 
-    bgm.play();
+    // bgm.play(); // 移除背景音樂，只保留接到物品的音效
 
     let dropInterval = 600;
     if (currentDifficulty === 'normal') dropInterval = 400;
@@ -134,8 +134,8 @@ function resetGame() {
   clearInterval(itemInterval);
   clearInterval(countdown);
  
-  bgm.pause();
-  bgm.currentTime = 0;
+  // bgm.pause(); // 移除背景音樂
+  // bgm.currentTime = 0; // 移除背景音樂
  
   score = 0;
   timeLeft = 60;
@@ -275,22 +275,49 @@ function dropItem() {
             if (itemCenter >= basketLeft && itemCenter <= basketRight && itemBottom >= basketTop && !isScored && !gamePaused && gameStarted) {
                 isScored = true;
                 const type = item.getAttribute('data-type');
-                if (type === 'gold') {
-                    score += 10;
-                    catchSound.currentTime = 0;
-                    catchSound.play();
-                } else if (type === 'white') {
-                    score += 3;
-                    catchSound.currentTime = 0;
-                    catchSound.play();
-                } else if (type === 'bomb') {
-                    score -= 20;
-                    bombSound.currentTime = 0;
-                    bombSound.play();
+                
+                // 播放音效 - 只有物品碰到籃子時才播放
+                try {
+                    if (type === 'gold') {
+                        score += 10;
+                        if (catchSound) {
+                            catchSound.currentTime = 0;
+                            catchSound.playbackRate = 1.5; // 加快播放速度
+                            catchSound.play().catch(e => console.log('金蛋音效播放失敗:', e));
+                        }
+                    } else if (type === 'white') {
+                        score += 3;
+                        if (catchSound) {
+                            catchSound.currentTime = 0;
+                            catchSound.playbackRate = 1.5; // 加快播放速度
+                            catchSound.play().catch(e => console.log('白蛋音效播放失敗:', e));
+                        }
+                    } else if (type === 'bomb') {
+                        score -= 20;
+                        if (bombSound) {
+                            bombSound.currentTime = 0;
+                            bombSound.playbackRate = 1.5; // 加快播放速度
+                            bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
+                        }
+                    }
+                } catch (e) {
+                    console.log('音效播放錯誤:', e);
                 }
+                
                 updateScore();
-                game.removeChild(item);
-                clearInterval(item.fallInterval);
+                
+                // 讓物品進入籃子後有視覺效果
+                item.style.transition = 'all 0.3s ease';
+                item.style.transform = 'scale(0.8)';
+                item.style.opacity = '0.7';
+                
+                // 延遲移除物品，讓玩家看到接到的效果
+                setTimeout(() => {
+                    if (item.parentNode) {
+                        game.removeChild(item);
+                    }
+                    clearInterval(item.fallInterval);
+                }, 300);
             } else if (top >= game.offsetHeight) {
                 game.removeChild(item);
                 clearInterval(item.fallInterval);
@@ -316,7 +343,7 @@ function pauseGame() {
     resumeBtn.classList.remove('hidden');
     clearInterval(itemInterval);
     clearInterval(countdown);
-    bgm.pause();
+    // bgm.pause(); // 移除背景音樂
     
     const items = document.querySelectorAll('.gold, .white, .bomb');
     items.forEach(item => {
@@ -336,7 +363,7 @@ function resumeGame() {
     gamePaused = false;
     pauseBtn.classList.remove('hidden');
     resumeBtn.classList.add('hidden');
-    bgm.play();
+    // bgm.play(); // 移除背景音樂，只保留接到物品的音效
     basket.style.pointerEvents = 'none';
     basket.style.cursor = 'default';
     
@@ -393,22 +420,49 @@ function resumeGame() {
                             const basketTop = game.offsetHeight - 100;
                             if (itemCenter >= basketLeft && itemCenter <= basketRight && itemBottom >= basketTop && !gamePaused && gameStarted) {
                                 const type = item.getAttribute('data-type');
-                                if (type === 'gold') {
-                                    score += 10;
-                                    catchSound.currentTime = 0;
-                                    catchSound.play();
-                                } else if (type === 'white') {
-                                    score += 3;
-                                    catchSound.currentTime = 0;
-                                    catchSound.play();
-                                } else if (type === 'bomb') {
-                                    score -= 20;
-                                    bombSound.currentTime = 0;
-                                    bombSound.play();
+                                
+                                // 播放音效 - 只有物品碰到籃子時才播放
+                                try {
+                                    if (type === 'gold') {
+                                        score += 10;
+                                        if (catchSound) {
+                                            catchSound.currentTime = 0;
+                                            catchSound.playbackRate = 1.5; // 加快播放速度
+                                            catchSound.play().catch(e => console.log('金蛋音效播放失敗:', e));
+                                        }
+                                    } else if (type === 'white') {
+                                        score += 3;
+                                        if (catchSound) {
+                                            catchSound.currentTime = 0;
+                                            catchSound.playbackRate = 1.5; // 加快播放速度
+                                            catchSound.play().catch(e => console.log('白蛋音效播放失敗:', e));
+                                        }
+                                    } else if (type === 'bomb') {
+                                        score -= 20;
+                                        if (bombSound) {
+                                            bombSound.currentTime = 0;
+                                            bombSound.playbackRate = 1.5; // 加快播放速度
+                                            bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.log('音效播放錯誤:', e);
                                 }
+                                
                                 updateScore();
-                                game.removeChild(item);
-                                clearInterval(item.fallInterval);
+                                
+                                // 讓物品進入籃子後有視覺效果
+                                item.style.transition = 'all 0.3s ease';
+                                item.style.transform = 'scale(0.8)';
+                                item.style.opacity = '0.7';
+                                
+                                // 延遲移除物品，讓玩家看到接到的效果
+                                setTimeout(() => {
+                                    if (item.parentNode) {
+                                        game.removeChild(item);
+                                    }
+                                    clearInterval(item.fallInterval);
+                                }, 300);
                             } else if (top >= game.offsetHeight) {
                                 game.removeChild(item);
                                 clearInterval(item.fallInterval);
@@ -463,10 +517,10 @@ function endGame() {
     clearInterval(itemInterval);
     clearInterval(countdown);
     
-    bgm.pause();
-    bgm.currentTime = 0;
+    // bgm.pause(); // 移除背景音樂
+    // bgm.currentTime = 0; // 移除背景音樂
     
-    gameOverSound.play();
+    // 遊戲結束音效已移除 - 只有接到物品時才有音效
     
     // 計算獎勵分數
     let bonusScore = 0;
@@ -548,6 +602,18 @@ window.onload = function() {
     if (resumeBtn) resumeBtn.onclick = resumeGame;
     if (endBtn) endBtn.onclick = endGame;
     if (resetBtn) resetBtn.onclick = resetGame;
+    
+    // 測試音效是否正常載入
+    console.log('音效元素檢查:');
+    console.log('catchSound:', catchSound);
+    console.log('bombSound:', bombSound);
+    console.log('gameOverSound:', gameOverSound);
+    
+    // 測試音效播放
+    if (catchSound) {
+        catchSound.volume = 0.5; // 設定音量
+        console.log('音效已載入，音量設定為 0.5');
+    }
     
     // 添加返回按鈕事件
     const backBtn = document.getElementById('back-btn');

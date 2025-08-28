@@ -1,6 +1,6 @@
 <?php
 session_start();
-require 'db.php'; // 資料庫連線
+require_once 'db_connect.php';
 
 $member_id = $_SESSION['member_id'] ?? 8;
 $game_id = $_POST['game_id'] ?? 0;
@@ -12,10 +12,10 @@ $is_single_player = 0;
 
 // 保存遊戲記錄
 $sql = "INSERT INTO game_records 
-  (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player)
-  VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)";
+  (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
+  VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$member_id, $game_id, $score, $difficulty, $play_time, $game_type, $is_single_player]);
+$stmt->execute([$member_id, $game_id, $difficulty, $score, $play_time, $game_type, $is_single_player, null]);
 
 // 更新會員總分數
 $update_sql = "UPDATE member SET total_score = total_score + ? WHERE member_id = ?";

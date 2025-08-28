@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 處理取得食材資料的 API 請求（在登入檢查之前）
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
-    require_once 'db_connect_vegetable_cost_game.php';
+    require_once 'db_connect.php';
     header('Content-Type: application/json');
     
     try {
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
 }
 
 require_once 'check_login.php';
-require_once 'db_connect_vegetable_cost_game.php';
+require_once 'db_connect.php';
 
 // 獲取當前用戶的好友列表
 $my_id = $_SESSION['member_id'];

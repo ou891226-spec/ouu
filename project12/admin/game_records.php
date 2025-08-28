@@ -65,6 +65,7 @@ $count_sql = "
     SELECT COUNT(*) 
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
+    LEFT JOIN games g ON gr.game_id = g.game_id 
     $where_clause
 ";
 $count_stmt = $pdo->prepare($count_sql);
@@ -74,9 +75,10 @@ $total_pages = ceil($total_records / $per_page);
 
 // 獲取遊戲記錄
 $sql = "
-    SELECT gr.*, m.member_name 
+    SELECT gr.*, m.member_name, g.game_name 
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
+    LEFT JOIN games g ON gr.game_id = g.game_id 
     $where_clause
     ORDER BY gr.play_date DESC 
     LIMIT $per_page OFFSET $offset
@@ -95,6 +97,7 @@ $stats_sql = "
         AVG(gr.play_time) as avg_playtime
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
+    LEFT JOIN games g ON gr.game_id = g.game_id 
     $where_clause
 ";
 $stats_stmt = $pdo->prepare($stats_sql);

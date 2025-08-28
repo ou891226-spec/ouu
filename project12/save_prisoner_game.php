@@ -1,5 +1,5 @@
 <?php
-require_once 'db.php';
+require_once 'db_connect.php';
  
 header('Content-Type: application/json');
  
@@ -13,8 +13,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 開始交易
         $pdo->beginTransaction();
        
-        $gameId = 6;
+        // 獲取追蹤犯人遊戲的game_id和game_type
+        $game_sql = "SELECT game_id, game_type FROM games WHERE game_name = '追蹤犯人遊戲'";
+        $game_stmt = $pdo->prepare($game_sql);
+        $game_stmt->execute();
+        $game = $game_stmt->fetch();
+        $gameId = $game ? $game['game_id'] : 6; // 如果找不到，使用預設值
+        $gameType = $game ? $game['game_type'] : '記憶力'; // 從資料庫獲取正確的遊戲類型
        
+        // 根據難度和是否過關設定獎勵分數
+        $difficulty = $data['difficulty'];
+        $is_passed = $data['is_passed'] ?? false; // 從前端接收是否過關
+        $final_score = 0;
+        
+        if ($is_passed) {
+            // 只有過關才給予獎勵分數
+            if ($difficulty === 'easy') {
+                $final_score = 20;
+            } elseif ($difficulty === 'normal') {
+                $final_score = 50;
+            } elseif ($difficulty === 'hard') {
+                $final_score = 100;
+            }
+        }
+        // 如果沒過關，final_score 保持為 0
+        
         $stmt = $pdo->prepare("
             INSERT INTO game_records
             (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
@@ -24,19 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'member_id' => $data['member_id'],
             'game_id' => $gameId,
             'difficulty' => $data['difficulty'],
-            'score' => $data['score'],
+            'score' => $final_score, // 使用前端計算好的分數
             'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '追蹤犯人遊戲', // 修正遊戲類型
+            'game_type' => $gameType, // 使用資料庫中的正確遊戲類型
             'is_single_player' => 1,
             'opponent_id' => null
         ]);
        
-        // 更新會員總分數和記憶力分數
-        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
-        $update_stmt->execute([
-            'score' => $data['score'],
-            'member_id' => $data['member_id']
-        ]);
+                       // 更新會員總分數（使用前端計算好的分數）
+               $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score WHERE member_id = :member_id");
+               $update_stmt->execute([
+                   'score' => $final_score, // 使用前端計算好的分數
+                   'member_id' => $data['member_id']
+               ]);
         
         // 檢查並完成所有相關任務
         require_once 'check_and_grant_achievements.php';

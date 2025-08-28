@@ -1,9 +1,24 @@
 <?php
-require_once 'check_login.php';
-require_once 'db_connect_memory_game.php';
+// 啟動輸出緩衝
+ob_start();
+
+// 只在會話未啟動時啟動會話
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once 'db_connect.php';
+
+// 只在非 AJAX 請求時檢查登入狀態
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+    require_once 'check_login.php';
+}
 
 // 處理遊戲結果保存的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 清除任何之前的輸出
+    if (ob_get_length()) ob_clean();
+    
     header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true);
    
@@ -42,6 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 觸發任務和成就檢查
         require_once 'check_and_grant_achievements.php';
         checkAndCompleteAllTasks($data['member_id'], '記憶力');
+        
+        // 確保沒有其他輸出
+        if (ob_get_length()) ob_clean();
        
         echo json_encode(['success' => true, 'message' => '遊戲結果已儲存']);
         exit;
@@ -57,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $pdo->query("SELECT * FROM memory_game_themes WHERE is_active = true");
 $themes = $stmt->fetchAll();
 
-// 獲取難度設定
-$stmt = $pdo->query("SELECT * FROM memory_game_difficulty_settings WHERE is_active = true");
+// 獲取難度設定 (使用統一的 difficulty_settings 表)
+$stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 5 ORDER BY difficulty");
 $difficulties = $stmt->fetchAll();
 
 // 獲取遊戲顏色

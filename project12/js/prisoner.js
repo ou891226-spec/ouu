@@ -170,7 +170,16 @@ difficultyOptions.forEach(option => {
 function endGame(success) {
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
   clearInterval(gameInterval);
-  const finalScore = success ? score : 0;
+  
+  // 根據是否過關和難度計算固定獎勵分數
+  let finalScore = 0;
+  if (success) {
+    if (level === 3) finalScore = 20; // 簡單
+    else if (level === 4) finalScore = 50; // 普通
+    else if (level === 5) finalScore = 100; // 困難
+  }
+  // 如果沒過關，finalScore 保持為 0
+  
   sendScoreToServer(finalScore, level);
   showEndModal(success, finalScore, level);
 }
@@ -183,7 +192,14 @@ function showEndModal(success, score, level) {
 
   title.textContent = success ? '恭喜破關' : '遊戲失敗';
   difficulty.textContent = '難度：' + (level === 3 ? '簡單' : level === 4 ? '普通' : '困難');
-  message.textContent = success ? '得分：' + score : '未在時間內達成分數';
+  
+  // 根據難度顯示固定分數
+  let fixedScore = 0;
+  if (level === 3) fixedScore = 20; // 簡單
+  else if (level === 4) fixedScore = 50; // 普通
+  else if (level === 5) fixedScore = 100; // 困難
+  
+  message.innerHTML = success ? '得分：' + fixedScore + '<br>過關分數：+' + fixedScore : '未在時間內達成分數';
 
   modal.style.display = 'flex';
 }
@@ -248,13 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function sendScoreToServer(score, level) {
-  const difficultyText = level === 3 ? '簡單' : level === 4 ? '普通' : '困難';
+  // 將 level 轉換為英文難度名稱
+  const difficultyText = level === 3 ? 'easy' : level === 4 ? 'normal' : 'hard';
 
   const data = {
     member_id: memberId,
     difficulty: difficultyText,
     score: score,
     play_time: gameTime - timeLeft,
+    is_passed: score > 0, // 如果分數大於0表示過關
   };
 
   fetch('save_prisoner_game.php', {

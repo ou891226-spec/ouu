@@ -27,7 +27,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('此帳號尚未註冊，請註冊新帳號'); window.location.href='register.php';</script>";
         exit;
     } else {
-        if ($row['password'] === $password) {
+        // 檢查密碼是否已加密（長度超過20字元）
+        if (strlen($row['password']) > 20) {
+            // 使用 password_verify 驗證加密密碼
+            if (password_verify($password, $row['password'])) {
             $_SESSION["member_id"] = $row['member_id'];
             $_SESSION["account"] = $row['account'];
             $_SESSION["member_name"] = $row['member_name'];
@@ -41,8 +44,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header('Location: index.php');
             exit;
         } else {
+            // 密碼驗證失敗
             echo "<script>alert('密碼錯誤，請重新輸入'); window.history.back();</script>";
             exit;
+        }
+        } else {
+            // 舊密碼格式（未加密），直接比較
+            if ($row['password'] === $password) {
+                $_SESSION["member_id"] = $row['member_id'];
+                $_SESSION["account"] = $row['account'];
+                $_SESSION["member_name"] = $row['member_name'];
+                $_SESSION["name"] = $row['name'] ?? $row['member_name'];
+                $_SESSION["avatar_url"] = $row['avatar_url'] ?? $row['avatar'] ?? 'img/big.jpg';
+
+                // 直接跳轉到主頁，不顯示alert
+                header('Location: index.php');
+                exit;
+            } else {
+                echo "<script>alert('密碼錯誤，請重新輸入'); window.history.back();</script>";
+                exit;
+            }
         }
     }
 }

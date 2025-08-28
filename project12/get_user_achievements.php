@@ -19,16 +19,14 @@ if (!$member_id) {
 }
 
 try {
-    // 獲取用戶今天通過完成每日任務獲得的成就稱號（根據台灣時間）
+    // 獲取用戶今天獲得的成就稱號（根據台灣時間）
     $today = date('Y-m-d'); // 使用台灣時間
-    $sql = "SELECT a.achievement_name, a.achievement_description, a.icon, ma.earned_date
+    $sql = "SELECT ma.achievement_name, ma.achievement_name as achievement_description, 
+                   '🏆' as icon, ma.earned_date
             FROM member_achievements ma
-            JOIN achievements a ON ma.achievement_id = a.achievement_id
-            JOIN daily_tasks d ON a.achievement_name = d.reward_achievement
-            JOIN member_tasks mt ON d.task_id = mt.task_id
             WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?
-            AND mt.claimed_date IS NOT NULL
-            AND a.achievement_name != '每日登入'
+            AND ma.achievement_name IS NOT NULL
+            AND ma.achievement_name != '每日登入'
             ORDER BY ma.earned_date DESC
             LIMIT 3";
     

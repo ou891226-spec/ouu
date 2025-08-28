@@ -334,3 +334,4 @@ class MemoryGameHttpSync {
 
 // 全域 HTTP 同步實例
 window.memoryGameHttpSync = new MemoryGameHttpSync();
+

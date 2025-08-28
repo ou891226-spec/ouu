@@ -34,6 +34,10 @@ let perfectCount = 0, goodCount = 0, missCount = 0;
 let currentDifficulty = 'easy';
 let noteTimeoutId = null;
 
+// 獲取會員ID
+const memberIdInput = document.getElementById('member-id');
+const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
+
 document.getElementById('back-btn').addEventListener('click', () => {
   window.location.href = 'index.php';
 });
@@ -215,10 +219,11 @@ function togglePause() {
 }
 
 
-function endGame() {
+function endGame(forceEnd = false) {
   console.log("endGame() called."); // 新增偵錯訊息
   console.log("Current Score:", score); // 新增偵錯訊息
   console.log("Pass Score:", passScore); // 新增偵錯訊息
+  console.log("Force End:", forceEnd); // 新增偵錯訊息
   console.log("Is game passed?", score >= passScore); // 新增偵錯訊息
 
   gameRunning = false;
@@ -229,11 +234,14 @@ function endGame() {
   
   clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
 
-  let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 8;
+  let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 1;
   let recordScore = 0; // 初始化 recordScore
 
-  // 計算 recordScore，無論是否過關
-  if (score >= passScore) { // 判斷是否過關
+  // 計算 recordScore，強制結束時給予 0 分
+  if (forceEnd) {
+    recordScore = 0; // 強制結束給予 0 分
+    console.log("Force end. Record score set to 0."); // 新增偵錯訊息
+  } else if (score >= passScore) { // 判斷是否過關
     if (currentDifficulty === 'easy') recordScore = 20;
     else if (currentDifficulty === 'normal') recordScore = 50;
     else if (currentDifficulty === 'hard') recordScore = 100;
@@ -250,9 +258,10 @@ function endGame() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       member_id: sendMemberId,
-      difficulty: currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難',
+      difficulty: currentDifficulty, // 直接使用英文難度名稱
       score: recordScore, // 使用計算後的 recordScore
-      play_time: 60 - gameTime // 遊玩秒數
+      play_time: 60 - gameTime, // 遊玩秒數
+      is_passed: score >= passScore // 傳送是否過關
     })
   })
   .then(res => res.json())
@@ -294,7 +303,7 @@ function endGame() {
   }
 
   // 修正 showEndModal 的分數參數，確保顯示的是 recordScore
-  showEndModal(score >= passScore, recordScore, currentDifficulty);
+  showEndModal(forceEnd ? false : score >= passScore, recordScore, currentDifficulty);
 }
 
 function resetGame() {
@@ -339,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 restartButton.addEventListener("click", () => location.reload());
-endButton.addEventListener("click", () => endGame());
+endButton.addEventListener("click", () => endGame(true)); // true 表示強制結束，不給分
 document.getElementById("gameArea").addEventListener("click", handleHit);
 
 // 結束後顯示結果 modal
@@ -352,7 +361,14 @@ function showEndModal(success, score, levelStr) {
   title.textContent = success ? '恭喜破關' : '遊戲失敗';
   const levelName = levelStr === 'easy' ? '簡單' : levelStr === 'normal' ? '普通' : '困難';
   difficulty.textContent = '難度：' + levelName;
-  message.textContent = success ? '得分：' + score : '未在時間內達成分數';
+  
+  // 根據難度顯示固定分數
+  let fixedScore = 0;
+  if (levelStr === 'easy') fixedScore = 20; // 簡單
+  else if (levelStr === 'normal') fixedScore = 50; // 普通
+  else if (levelStr === 'hard') fixedScore = 100; // 困難
+  
+  message.innerHTML = success ? '得分：' + fixedScore + '<br>過關分數：+' + fixedScore : '未在時間內達成分數';
 
   modal.style.display = 'flex';
 }

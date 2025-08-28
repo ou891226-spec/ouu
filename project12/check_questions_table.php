@@ -72,3 +72,4 @@ try {
     echo "<p style='color: red;'>錯誤: " . $e->getMessage() . "</p>";
 }
 ?>
+

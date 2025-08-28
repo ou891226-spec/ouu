@@ -98,6 +98,11 @@ h1 {
   background-color: #e0f2f1;
 }
 
+.highlight-text {
+  color: red;
+  font-weight: bold;
+}
+
 /* 控制按鈕 */
 .control-buttons {
   display: flex;

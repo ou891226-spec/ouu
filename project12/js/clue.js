@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
       resultModal.style.display = 'flex';
       if (pass) {
         modalTitle.textContent = '恭喜破關';
-        modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>獲得分數：${pass_bounce}`;
+        modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>過關分數：+${pass_bounce}`;
       } else {
         modalTitle.textContent = '遊戲失敗';
         modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>未在時間內達成分數`;
@@ -36,8 +36,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let timeLeft = 0;
     let questionShown = false;
     let gameStartTime = Date.now(); // 記錄遊戲開始時間
+    let clueCorrect = 0; // 追蹤答對的題數
+    let clueTotal = 0; // 追蹤總題數
     const main = document.querySelector('.main-container');
     const difficulty = new URLSearchParams(window.location.search).get('difficulty');
+    
+    // 將變數設為全局，供結束遊戲按鈕使用
+    window.clueCorrect = clueCorrect;
+    window.clueTotal = clueTotal;
 
     function updateTimeDisplay() {
         var timeLeftElement = document.getElementById('time-left');
@@ -126,9 +132,39 @@ document.addEventListener('DOMContentLoaded', function() {
         this.textContent = paused ? '繼續遊戲' : '暫停遊戲';
     };
     document.getElementById('endBtn').onclick = function() {
-        if (confirm('確定要結束遊戲並返回主頁嗎？')) {
-            window.location.href = 'index.php';
+        // 直接結束遊戲，不顯示確認視窗
+        // 計算當前進度和分數
+        const currentScore = window.clueCorrect || 0;
+        const currentTotal = window.clueTotal || 0;
+        
+        // 判斷是否過關（至少答對3題）
+        const pass = currentScore >= 3;
+        
+        // 根據難度設定獎勵分數
+        let pass_bounce = 0;
+        if (pass) {
+            if (difficulty === 'easy') pass_bounce = 20;
+            else if (difficulty === 'normal') pass_bounce = 50;
+            else if (difficulty === 'hard') pass_bounce = 100;
         }
+        
+        // 顯示結果
+        showResultModal(pass, currentScore, difficulty, pass_bounce);
+        
+        // 儲存遊戲記錄（後端會自動處理會員ID）
+        const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
+        const data = new URLSearchParams();
+        data.append('ajax', '1');
+        data.append('difficulty', difficulty);
+        data.append('game_time', gameTime);
+        data.append('force_end', '1');
+        data.append('final_score', currentScore);
+        
+        fetch('clue.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: data.toString()
+        }).catch(err => console.error('儲存遊戲記錄失敗:', err));
     };
     document.getElementById('resetBtn').onclick = function() {
         if (confirm('確定要重新開始遊戲嗎？')) {
@@ -154,10 +190,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (userAns === correctAnswer) {
                 document.getElementById('result-msg').textContent = '答對了！';
                 document.getElementById('result-msg').style.color = 'green';
+                clueCorrect++; // 答對題數加1
             } else {
                 document.getElementById('result-msg').textContent = '答錯了！';
                 document.getElementById('result-msg').style.color = 'red';
             }
+            clueTotal++; // 總題數加1
+            
+            // 更新全局變數
+            window.clueCorrect = clueCorrect;
+            window.clueTotal = clueTotal;
+            
             showQuestionOnce();
             setTimeout(function(){
                 loadQuestion(userAns);

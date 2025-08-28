@@ -1,7 +1,15 @@
 <?php
-require_once 'check_login.php';
-session_start();
-require_once 'db_connect_catch_egg_game.php';
+// 啟動輸出緩衝
+ob_start();
+
+// 只在會話未啟動時啟動會話
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once 'db_connect.php';
+
+// 登入檢查已移除，避免 session 警告
 
 // 檢查是否已登入
 //if (!isset($_SESSION['member_id'])) {
@@ -24,14 +32,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             $difficulty = $_POST['difficulty'] ?? 'normal';
             $_SESSION['game_start_time'] = time();
             $_SESSION['current_difficulty'] = $difficulty;
-            echo json_encode(['success' => true]);
+            
+            // 接金蛋遊戲的特殊設定（根據難度）
+            $egg_settings = [
+                'easy' => [
+                    'egg_spawn_rate' => 2500,
+                    'basket_speed' => 12,
+                    'egg_fall_speed' => 2
+                ],
+                'normal' => [
+                    'egg_spawn_rate' => 2000,
+                    'basket_speed' => 10,
+                    'egg_fall_speed' => 3
+                ],
+                'hard' => [
+                    'egg_spawn_rate' => 1500,
+                    'basket_speed' => 8,
+                    'egg_fall_speed' => 4
+                ]
+            ];
+            
+            $current_settings = $egg_settings[$difficulty] ?? $egg_settings['normal'];
+            
+            echo json_encode([
+                'success' => true,
+                'settings' => $current_settings
+            ]);
             break;
             
         case 'end_game':
+            // 確保沒有之前的輸出
+            if (ob_get_length()) ob_clean();
+            
             $score = $_POST['score'] ?? 0;
             $playTime = isset($_SESSION['game_start_time']) ? (time() - $_SESSION['game_start_time']) : 0;
             $difficulty = $_SESSION['current_difficulty'] ?? 'easy';
-            $pass_score = ($difficulty === 'easy') ? 200 : (($difficulty === 'normal') ? 450 : 600);
+            
+            // 從統一的 difficulty_settings 表讀取過關分數
+            $stmt = $pdo->prepare("SELECT pass_score FROM difficulty_settings WHERE game_id = 2 AND difficulty = ?");
+            $stmt->execute([$difficulty]);
+            $setting = $stmt->fetch();
+            $pass_score = $setting ? $setting['pass_score'] : 200; // 預設值
+            
             $status = ($score >= $pass_score) ? 'success' : 'failed';
             try {
                 $pdo->beginTransaction();
@@ -57,10 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
-                checkAndCompleteAllTasks($member_id, '反應力');
+                $completed_tasks = checkAndCompleteAllTasks($member_id, '反應力');
+                
+                // 確保沒有其他輸出
+                if (ob_get_length()) ob_clean();
                 
                 $pdo->commit();
 
+                header('Content-Type: application/json');
                 echo json_encode([
                     'success' => true,
                     'member_id' => (string)$member_id,
@@ -72,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 ]);
             } catch (Exception $e) {
                 $pdo->rollBack();
+                header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
             break;
@@ -89,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>接金蛋遊戲</title>
-    <link rel="stylesheet" href="css/Catch-Egg.css">
+    <link rel="stylesheet" href="css/Catch-Egg.css" type="text/css">
     <script>
         // 設置會員ID供JavaScript使用
         window.memberId = <?php echo $_SESSION['member_id'] ?? 'null'; ?>;
@@ -143,15 +190,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <div class="help-label">說明</div>
             </button>
             <h2>難度選擇</h2>
-            <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
-                簡單 目標：200分
-            </button>
-            <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
-                普通 目標：450分
-            </button>
-            <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
-                困難 目標：600分
-            </button>
+            <?php
+            // 從統一的 difficulty_settings 表讀取接金蛋遊戲的難度設定
+            $stmt = $pdo->query("SELECT difficulty, pass_score FROM difficulty_settings WHERE game_id = 2 ORDER BY difficulty");
+            $difficulties = $stmt->fetchAll();
+            
+            // 定義正確的順序：簡單、普通、困難
+            $correct_order = ['easy', 'normal', 'hard'];
+            $difficulty_map = [];
+            
+            // 先建立難度對應表
+            foreach ($difficulties as $diff) {
+                $difficulty_map[$diff['difficulty']] = $diff['pass_score'];
+            }
+            
+            // 按照正確順序顯示
+            foreach ($correct_order as $difficulty_class) {
+                if (isset($difficulty_map[$difficulty_class])) {
+                    $target_score = $difficulty_map[$difficulty_class];
+                    
+                    // 將英文難度轉換為中文
+                    $difficulty_text = '';
+                    switch ($difficulty_class) {
+                        case 'easy':
+                            $difficulty_text = '簡單';
+                            break;
+                        case 'normal':
+                            $difficulty_text = '普通';
+                            break;
+                        case 'hard':
+                            $difficulty_text = '困難';
+                            break;
+                        default:
+                            $difficulty_text = $difficulty_class;
+                    }
+                    
+                    echo "<button class='difficulty-btn {$difficulty_class}' onclick='selectDifficulty(\"{$difficulty_class}\")'>";
+                    echo "{$difficulty_text} 目標：{$target_score}分";
+                    echo "</button>";
+                }
+            }
+            ?>
         </div>
     </div>
 
@@ -199,26 +278,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     </div>
 
     <!-- 音頻元素 -->
-    <audio id="bgm" loop>
-        <source src="music/m.mp3" type="audio/mpeg">
-    </audio>
     <audio id="catchSound">
-        <source src="music/m.mp3" type="audio/mpeg">
+        <source src="music/gett.mp4" type="audio/mp4">
     </audio>
     <audio id="bombSound">
-        <source src="music/m.mp3" type="audio/mpeg">
+        <source src="music/gett.mp4" type="audio/mp4">
     </audio>
     <audio id="gameOverSound">
-        <source src="music/m.mp3" type="audio/mpeg">
-    </audio>
+        <source src="music/gett.mp4" type="audio/mp4">
+    </audio> 
 
     <script>
         // 如果 localStorage 沒有 member_id，就自動設一個（這裡用 8，請改成你自己的會員ID）
         if (!localStorage.getItem('member_id')) {
             localStorage.setItem('member_id', 8);
         }
+        
     </script>
     <script src="js/Catch-Egg.js"></script>
-    <script src="js/auto-save-time-fixed.js"></script>
+    <!-- <script src="js/auto-save-time-fixed.js"></script> -->
 </body>
 </html> 

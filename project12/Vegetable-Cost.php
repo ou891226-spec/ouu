@@ -1,5 +1,5 @@
 <?php
-require_once 'db_connect_vegetable_cost_game.php';
+require_once 'db_connect.php';
 
 // 處理取得食材資料的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
@@ -65,9 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 如果 localStorage 沒有 member_id，就自動設一個（這裡用 8，請改成你自己的會員ID）
-if (!isset($_COOKIE['member_id'])) {
-    setcookie('member_id', 8, time() + (86400 * 30), "/"); // 30天過期
+// 檢查 session 中的 member_id
+session_start();
+if (!isset($_SESSION['member_id'])) {
+    // 如果沒有登入，重定向到登入頁面
+    header('Location: login.php');
+    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -79,7 +82,7 @@ if (!isset($_COOKIE['member_id'])) {
     <link rel="stylesheet" href="css/Vegetable-Cost.css">
 </head>
 <body>
-    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
+    <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id']; ?>">
 
 
     <div class="game-container" style="display:none;">
@@ -140,15 +143,15 @@ if (!isset($_COOKIE['member_id'])) {
             <div class="difficulty-btn-group">
                 <button class="difficulty-btn easy-mode" data-difficulty="easy">
                     <div class="diff-main">簡單模式</div>
-                    <div class="diff-sub">60秒</div>
+                    <div class="diff-sub">80秒</div>
                 </button>
                 <button class="difficulty-btn normal-mode" data-difficulty="normal">
                     <div class="diff-main">普通模式</div>
-                    <div class="diff-sub">60秒</div>
+                    <div class="diff-sub">150秒</div>
                 </button>
                 <button class="difficulty-btn hard-mode" data-difficulty="hard">
                     <div class="diff-main">困難模式</div>
-                    <div class="diff-sub">60秒</div>
+                    <div class="diff-sub">200秒</div>
                 </button>
             </div>
         </div>
@@ -160,21 +163,15 @@ if (!isset($_COOKIE['member_id'])) {
             <h2>🎮 遊戲說明</h2>
             <div class="help-content">
                 <h3>🔹 遊戲目標</h3>
-                <p>在60秒內完成盡可能多的題目，計算阿嬤買菜的總金額，看看你能得多少分！</p>
+                <p>計算阿嬤買菜的總金額！</p>
 
                 <h3>🔹 遊戲規則</h3>
                 <ul>
                     <li>每答對一題得3分</li>
-                    <li>簡單模式：達到200分可獲得20分獎勵</li>
-                    <li>中等模式：達到450分可獲得50分獎勵</li>
-                    <li>困難模式：達到600分可獲得100分獎勵</li>
+                    <li>簡單：30分過關，獎勵20分</li>
+                    <li>中等：60分過關，獎勵50分</li>
+                    <li>困難：90分過關，獎勵100分</li>
                 </ul>
-
-                <h3>🔹 題型說明</h3>
-                <ul>
-                    <li>簡單模式：基本計算題，包含3-5個物品</li>
-                    <li>中等模式：包含優惠折扣和預算計算</li>
-                    <li>困難模式：包含多種食材組合和預算限制</li>
                 </ul>
             </div>
             <span class="close-btn">×</span>
@@ -183,7 +180,7 @@ if (!isset($_COOKIE['member_id'])) {
 
     <script>
         // 將PHP變數傳遞給JavaScript
-        window.phpMemberId = <?php echo isset($_COOKIE['member_id']) ? $_COOKIE['member_id'] : 8; ?>;
+        window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
     </script>
     <script src="js/Vegetable-Cost.js"></script>
 </body>

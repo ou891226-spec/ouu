@@ -1,5 +1,5 @@
 <?php
-require_once 'db_connect2048.php';
+require_once 'db_connect.php';
 
 header('Content-Type: application/json');
 
@@ -36,8 +36,8 @@ switch ($method) {
             // 開始交易
             $pdo->beginTransaction();
             
-            // 2048 遊戲的 game_id（假設為 7）
-            $gameId = 7;
+            // 2048 遊戲的 game_id
+            $gameId = 4;
             
             // 插入遊戲記錄
             $stmt = $pdo->prepare("

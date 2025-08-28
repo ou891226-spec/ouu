@@ -1,3 +1,7 @@
+// 獲取會員ID
+const memberIdInput = document.getElementById('member-id');
+const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
+
 // 遊戲狀態
 let gameState = {
     items: [],
@@ -89,9 +93,6 @@ function showScreen(screenId) {
 
 // 事件監聽器
 document.addEventListener('DOMContentLoaded', function() {
-    // 載入用戶統計數據
-    loadUserStats();
-    
     // 開始畫面按鈕
     document.getElementById("start-game-btn").addEventListener("click", () => {
         showScreen("difficulty-screen");
@@ -99,6 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById("help-btn").addEventListener("click", () => {
         showScreen("rules-screen");
+    });
+    
+    document.getElementById("theme-btn").addEventListener("click", () => {
+        showThemeModal();
     });
     
     // 難度選擇按鈕
@@ -216,8 +221,7 @@ function initGame() {
         weather: null,
         weatherInfo: "",
         gameHistory: [],
-        bestSteps: gameState.bestSteps,
-        startTime: Date.now()
+        bestSteps: gameState.bestSteps
     };
     
     // 重置暫停按鈕文字
@@ -251,7 +255,7 @@ function initGame() {
 function showHint() {
     const hints = {
         easy: "💡 提示：先運羊，再運狼，然後把羊帶回來，運菜，最後運羊",
-        normal: "💡 提示：狗可以保護羊不被狼吃掉，但狗和狼不能單獨在一起",
+        normal: "💡 提示：狗可以保護羊不被狼吃掉，但狗和狼不能單獨在一起（沒有羊時）",
         hard: "💡 提示：狐狸會偷吃菜，船可以載兩個物品，注意隨機事件！"
     };
     
@@ -494,15 +498,12 @@ function handleWin() {
     
     // 計算分數
     const scoreRewards = {
-        "easy": 10,
-        "normal": 30,
-        "hard": 50
+        "easy": 20,
+        "normal": 50,
+        "hard": 100
     };
     
     gameState.score = scoreRewards[gameState.mode];
-    
-    // 保存遊戲記錄到後端
-    saveGameRecord(true);
     
     // 更新成功對話框內容
     const difficultyNames = {
@@ -514,113 +515,12 @@ function handleWin() {
     document.getElementById("success-difficulty").textContent = difficultyNames[gameState.mode];
     document.getElementById("success-score").textContent = gameState.score;
     
+    // 保存分數到資料庫
+    saveScoreToServer(gameState.score, gameState.mode);
+    
     // 顯示成功對話框
     showModal("game-success-modal");
     gameState.gameOver = true;
-}
-
-// 載入用戶統計數據
-function loadUserStats() {
-    if (!window.gameConfig || !window.gameConfig.userId) {
-        console.log('用戶未登入，跳過載入統計');
-        return;
-    }
-    
-    fetch('get_river_stats.php')
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            displayUserStats(data.stats);
-        } else {
-            console.error('載入統計失敗:', data.error);
-        }
-    })
-    .catch(error => {
-        console.error('載入統計數據時發生錯誤:', error);
-    });
-}
-
-// 顯示用戶統計數據
-function displayUserStats(stats) {
-    // 在開始畫面添加統計信息
-    const startContainer = document.querySelector('.start-container');
-    const existingStats = document.getElementById('user-stats');
-    
-    if (existingStats) {
-        existingStats.remove();
-    }
-    
-    if (stats.total_games > 0) {
-        const statsDiv = document.createElement('div');
-        statsDiv.id = 'user-stats';
-        statsDiv.className = 'user-stats';
-        statsDiv.innerHTML = `
-            <h3>📊 您的遊戲統計</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">總遊戲次數</span>
-                    <span class="stat-value">${stats.total_games}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">成功完成</span>
-                    <span class="stat-value">${stats.completed_games}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">總分數</span>
-                    <span class="stat-value">${stats.total_score}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">最佳分數</span>
-                    <span class="stat-value">${stats.best_score}</span>
-                </div>
-            </div>
-        `;
-        
-        startContainer.appendChild(statsDiv);
-    }
-}
-
-// 保存遊戲記錄
-function saveGameRecord(completed = false) {
-    if (!window.gameConfig || !window.gameConfig.userId) {
-        console.log('用戶未登入，跳過保存記錄');
-        return;
-    }
-    
-    const gameData = {
-        difficulty: gameState.mode,
-        score: gameState.score,
-        steps: gameState.stepCount,
-        gameTime: Math.floor((Date.now() - gameState.startTime) / 1000),
-        completed: completed
-    };
-    
-    fetch('save_river_game.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(gameData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('遊戲記錄已保存:', data.message);
-            if (data.stats && data.stats.is_new_best_score) {
-                showMessage('🎉 新紀錄！恭喜您創造了新的最佳分數！');
-            }
-            if (data.stats && data.stats.is_new_best_steps) {
-                showMessage('🏆 新紀錄！恭喜您創造了新的最少步數！');
-            }
-            // 重新載入統計數據
-            loadUserStats();
-        } else {
-            console.error('保存失敗:', data.error);
-        }
-    })
-    .catch(error => {
-        console.error('保存遊戲記錄時發生錯誤:', error);
-    });
 }
 
 // 檢查單岸規則
@@ -630,9 +530,6 @@ function checkSideRules(sideItems, sideName) {
     for (const rule of rules) {
         if (rule.check(sideItems)) {
             playSound('lose');
-            
-            // 保存失敗記錄
-            saveGameRecord(false);
             
             // 更新失敗對話框內容
             const difficultyNames = {
@@ -655,7 +552,7 @@ function checkSideRules(sideItems, sideName) {
 function getRulesForMode() {
     const baseRules = [
         {
-            check: (items) => items.includes("狼") && items.includes("羊"),
+            check: (items) => items.includes("狼") && items.includes("羊") && !items.includes("狗"),
             message: "狼吃掉了羊！"
         },
         {
@@ -666,7 +563,7 @@ function getRulesForMode() {
     
     if (gameState.mode === "normal" || gameState.mode === "hard") {
         baseRules.push({
-            check: (items) => items.includes("狼") && items.includes("狗"),
+            check: (items) => items.includes("狼") && items.includes("狗") && !items.includes("羊"),
             message: "狗咬死了狼！"
         });
     }
@@ -779,4 +676,55 @@ function showModal(modalId) {
 // 隱藏彈出對話框
 function hideModal(modalId) {
     document.getElementById(modalId).classList.remove("active");
+}
+
+// 主題選擇視窗相關函數
+function showThemeModal() {
+    document.getElementById("theme-modal").classList.remove("hidden");
+}
+
+function hideThemeModal() {
+    document.getElementById("theme-modal").classList.add("hidden");
+}
+
+function backToInviteFriends() {
+    hideThemeModal();
+    // 這裡可以添加返回邀請朋友畫面的邏輯
+    showScreen("start-screen");
+}
+
+function showHelp() {
+    // 這裡可以添加顯示幫助的邏輯
+    showScreen("rules-screen");
+}
+
+// 保存分數到伺服器
+function saveScoreToServer(score, difficulty) {
+    const difficultyText = difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難';
+
+    const data = {
+        member_id: memberId,
+        difficulty: difficultyText,
+        score: score,
+        play_time: 0 // 過河遊戲沒有時間限制
+    };
+
+    fetch('save_river_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            console.log("✅ 過河遊戲成績已儲存");
+        } else {
+            console.error("❌ 儲存失敗：", result.message);
+        }
+    })
+    .catch(err => {
+        console.error("❌ 發送錯誤：", err);
+    });
 }

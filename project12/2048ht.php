@@ -17,46 +17,51 @@ if (
         
         error_log('收到分數: ' . $score . ', 難度: ' . $difficulty);
         
-        if ($score > 0) {
+        // 根據是否過關決定記錄的分數
+        $is_passed = ($score > 0);
+        $record_score = 0;
+        
+        if ($is_passed) {
             // 遊戲勝利，依難度給固定獎勵分數
             switch ($difficulty) {
                 case 'hard':
-                    $rewardScore = 100;
+                    $record_score = 100;
                     break;
-                case 'medium':
-                    $rewardScore = 50;
+                case 'normal': // 保持向後兼容
+                    $record_score = 50;
                     break;
                 case 'easy':
                 default:
-                    $rewardScore = 20;
+                    $record_score = 20;
                     break;
             }
+        }
+        // 如果沒過關，record_score 保持為 0
 
-            $stmt = $pdo->prepare("INSERT INTO game_records
-                (member_id, game_id, score, difficulty, play_date, play_time, game_type, is_single_player, opponent_id)
-                VALUES (:member_id, :game_id, :score, :difficulty, NOW(), :play_time, :game_type, 1, NULL)");
-            $stmt->execute([
-                'member_id' => $data['member_id'],
-                'game_id' => 4,
-                // 寫入固定獎勵分數
-                'score' => $rewardScore,
-                'difficulty' => $difficulty,
-                'play_time' => $data['play_time'],
-                'game_type' => '邏輯力'
-            ]);
-            
-            // 更新會員總分數和邏輯分數
+        $stmt = $pdo->prepare("INSERT INTO game_records
+            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
+            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)");
+        $stmt->execute([
+            'member_id' => $data['member_id'],
+            'game_id' => 4,
+            'difficulty' => $difficulty,
+            'score' => $record_score,
+            'play_time' => $data['play_time'],
+            'game_type' => '邏輯力',
+            'is_single_player' => 1,
+            'opponent_id' => null
+        ]);
+        
+        // 只有過關時才更新會員總分數和邏輯分數
+        if ($is_passed) {
             $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
             $update_stmt->execute([
-                // 同樣以固定獎勵分數更新
-                'score' => $rewardScore,
+                'score' => $record_score,
                 'member_id' => $data['member_id']
             ]);
-            
-            error_log('遊戲勝利，記錄獎勵分數: ' . $rewardScore);
+            error_log('遊戲勝利，記錄獎勵分數: ' . $record_score);
         } else {
-            // 遊戲失敗，不記錄分數
-            error_log('遊戲失敗，不記錄分數');
+            error_log('遊戲失敗，記錄0分');
         }
         
         error_log('寫入成功');
@@ -230,7 +235,7 @@ if (
                     // 初始化遊戲
                     if (window.game) {
                         debugLog('設定遊戲難度和目標分數並重置遊戲');
-                        window.game.difficulty = this.classList.contains('normal') ? 'medium' : 
+                        window.game.difficulty = this.classList.contains('normal') ? 'normal' : 
                                                this.classList.contains('hard') ? 'hard' : 'easy';
                         window.game.targetScore = parseInt(this.dataset.target) || 1500;
                         window.game.resetGame();

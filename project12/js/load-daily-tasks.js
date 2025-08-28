@@ -1,74 +1,145 @@
-// 檢查是否已經載入過任務，避免重複載入
-if (!window.tasksLoaded) {
-  window.tasksLoaded = true;
+// 檢查今天是否已經載入過任務，避免重複載入
+document.addEventListener("DOMContentLoaded", () => {
+  // 檢查今天是否已經載入過任務
+  const today = new Date().toDateString();
+  const lastLoadDate = localStorage.getItem('missionLoadDate');
+  const hasLoadedToday = localStorage.getItem('missionLoadedToday') === 'true';
   
-  document.addEventListener("DOMContentLoaded", () => {
+  // 如果是新的一天，重置狀態
+  if (lastLoadDate !== today) {
+    localStorage.setItem('missionLoadDate', today);
+    localStorage.setItem('missionLoadedToday', 'false');
+  }
+  
+  // 如果今天還沒載入過任務，才載入
+  if (!hasLoadedToday) {
     console.log("開始載入每日任務...");
-    fetch("get_daily_tasks_fixed.php")
-      .then(response => {
-        console.log("收到回應:", response);
-        return response.json();
-      })
-      .then(tasks => {
-        console.log("解析的任務:", tasks);
-        const container = document.getElementById("daily-tasks-container");
-        if (!container) {
-          console.error("找不到 daily-tasks-container 元素");
-          return;
-        }
-        container.innerHTML = "";
+    loadDailyTasks();
+    localStorage.setItem('missionLoadedToday', 'true');
+  } else {
+    console.log("今天已經載入過任務，跳過自動載入");
+  }
+});
 
-        tasks.forEach(task => {
-          console.log("處理任務:", task);
-          const status = task.status || "pending";
-          const isCompleted = status === "completed" || status === "claimed";
-          const isClaimed = status === "claimed";
-          const progress = isCompleted ? "1/1" : "0/1";
+// 圖片映射函數
+function getTaskIcon(taskType) {
+  const iconMap = {
+    'memory': 'memory_game.png',
+    'rhythm': 'complete_all_daily.png',
+    'logic': 'Achievement.png',
+    'coordination': 'complete_all_daily.png',
+    'tracking': 'Achievement.png',
+    'attention': 'complete_all_daily.png',
+    'calculation': 'Achievement.png',
+    'general': 'Achievement.png',
+    'score': 'score_100.png',
+    'login': 'login.png',
+    'social': 'friend.png',
+    'speed': 'Achievement.png',
+    'endurance': 'Achievement.png',
+    'reaction': 'note.png'
+  };
+  
+  // 根據任務類型選擇更合適的圖片
+  let iconFile = iconMap[taskType] || 'Achievement.png';
+  
+  // 如果是分數相關任務，根據任務描述選擇不同圖片
+  if (taskType === 'score') {
+    // 這裡可以根據具體的任務描述來選擇不同的分數圖片
+    // 暫時使用 score_100.png，如果需要可以進一步優化
+    iconFile = 'score_100.png';
+  }
+  
+  console.log(`任務類型: ${taskType} -> 圖片: ${iconFile}`);
+  return iconFile;
+}
 
-          const taskItem = document.createElement("div");
-          taskItem.className = "mission-item";
-          taskItem.setAttribute("data-progress", progress);
-          taskItem.setAttribute("data-completed", isCompleted);
-          taskItem.setAttribute("data-task-id", task.task_id);
+// 載入每日任務
+function loadDailyTasks() {
+  console.log("開始載入每日任務...");
+  
+  fetch("get_daily_tasks_fixed.php")
+    .then(response => {
+      console.log("收到回應:", response.status);
+      return response.json();
+    })
+    .then(tasks => {
+      console.log("任務資料:", tasks);
+      
+      const container = document.getElementById("daily-tasks-container");
+      if (!container) {
+        console.error("找不到 daily-tasks-container 元素");
+        return;
+      }
+      
+      container.innerHTML = ""; // 清空舊內容
 
-          let btnHtml = '';
-          if (isClaimed) {
-            btnHtml = '<button class="reward-btn" disabled>已領取</button>';
-          } else if (isCompleted) {
-            btnHtml = `<button class="reward-btn" onclick="claimReward(this)">領取獎勵</button>`;
-          } else {
-            btnHtml = '<button class="reward-btn" disabled>未完成</button>';
-          }
+      if (!Array.isArray(tasks) || tasks.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: #666;">
+            <div style="font-size: 24px; margin-bottom: 10px;">📋</div>
+            <div style="font-size: 16px; margin-bottom: 5px;">暫無每日任務</div>
+            <div style="font-size: 14px; color: #999;">請稍後再試</div>
+          </div>
+        `;
+        return;
+      }
 
-          taskItem.innerHTML = `
-            <div class="icon-text">
-              <img src="img/${task.task_type}.png" alt="${task.task_name}" onerror="this.src='img/Achievement.png'">
-              <div>
-                <div class="title">${task.task_name}</div>
-                <div class="desc">${task.task_description}</div>
-              </div>
-            </div>
-            <div class="progress">${progress}</div>
-            ${btnHtml}
-          `;
-          container.appendChild(taskItem);
-        });
+      tasks.forEach(task => {
+        console.log("處理任務:", task);
         
-        console.log("任務載入完成，共載入", tasks.length, "個任務");
-      })
-      .catch(error => {
-        console.error("載入任務失敗:", error);
-        const container = document.getElementById("daily-tasks-container");
-        if (container) {
-          container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #666;">
-              <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
-              <div style="font-size: 14px; color: #999;">載入任務失敗</div>
-            </div>
-          `;
+        const item = document.createElement("div");
+        item.className = "mission-item";
+        item.setAttribute("data-task-id", task.task_id);
+        // 判斷是否已完成
+        const isCompleted = task.status === 'completed' || task.status === 'claimed';
+        const isClaimed = task.status === 'claimed';
+        const progressText = isCompleted ? '1/1' : '0/1';
+
+        item.setAttribute("data-completed", isCompleted.toString());
+        item.setAttribute("data-progress", progressText);
+
+        let btnHtml = '';
+        if (isClaimed) {
+          btnHtml = '<button class="reward-btn" disabled>已領取</button>';
+        } else if (isCompleted) {
+          btnHtml = `<button class="reward-btn" onclick="claimReward(this)">領取獎勵</button>`;
+        } else {
+          btnHtml = '<button class="reward-btn" disabled>尚未完成</button>';
         }
+
+        const iconFile = getTaskIcon(task.task_type);
+
+        item.innerHTML = `
+          <div class="icon-text">
+            <img src="img/${iconFile}" alt="${task.task_name}" onerror="this.src='img/Achievement.png'">
+            <div>
+              <div class="title">${task.task_name}</div>
+              <div class="desc">${task.task_description}</div>
+            </div>
+          </div>
+          <div class="progress">${progressText}</div>
+          ${btnHtml}
+        `;
+        container.appendChild(item);
       });
-  });
+      
+      console.log("任務載入完成，共載入", tasks.length, "個任務");
+    })
+    .catch(error => {
+      console.error("載入任務失敗：", error);
+      
+      const container = document.getElementById("daily-tasks-container");
+      if (container) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: #666;">
+            <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+            <div style="font-size: 16px; margin-bottom: 5px;">載入任務失敗</div>
+            <div style="font-size: 14px; color: #999;">請重新整理頁面</div>
+          </div>
+        `;
+      }
+    });
 }
 
 // 領取成就獎勵

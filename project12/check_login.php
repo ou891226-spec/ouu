@@ -1,5 +1,8 @@
 <?php
-session_start();
+// 只在會話未啟動時啟動會話
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // 檢查用戶是否已登入
 if (!isset($_SESSION['member_id']) || empty($_SESSION['member_id'])) {

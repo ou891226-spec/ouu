@@ -216,7 +216,29 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   function openMissionModal() {
     document.getElementById('missionModal').style.display = 'flex';
     document.getElementById('modalOverlay').style.display = 'block';
-    loadDailyTasks(); // 載入每日任務
+    
+    // 檢查今天是否已經載入過任務
+    const today = new Date().toDateString();
+    const lastLoadDate = localStorage.getItem('missionLoadDate');
+    const hasLoadedToday = localStorage.getItem('missionLoadedToday') === 'true';
+    
+    // 如果是新的一天，重置狀態
+    if (lastLoadDate !== today) {
+      localStorage.setItem('missionLoadDate', today);
+      localStorage.setItem('missionLoadedToday', 'false');
+    }
+    
+    // 如果今天還沒載入過任務，才載入
+    if (!hasLoadedToday) {
+      loadDailyTasks(); // 載入每日任務
+      localStorage.setItem('missionLoadedToday', 'true');
+    }
+  }
+  
+  // 移除手動刷新功能 - 任務完全固定，只有凌晨12點重置
+  function refreshMissionTasks() {
+    // 完全禁用手動刷新
+    alert('任務已固定，請等待凌晨12點重置！');
   }
   function closeMissionModal() {
     document.getElementById('missionModal').style.display = 'none';
@@ -311,6 +333,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success && data.message.includes('每日重置已執行')) {
                 console.log('每日重置已執行，重新載入任務...');
+                // 只有在真正需要重置時才重新載入任務
+                // 清除localStorage，讓任務重新載入
+                localStorage.removeItem('missionLoadDate');
+                localStorage.removeItem('missionLoadedToday');
                 // 重新載入每日任務
                 if (window.loadDailyTasks) {
                     window.loadDailyTasks();
@@ -461,6 +487,13 @@ document.addEventListener('DOMContentLoaded', function() {
   loadRecentGames();
   loadPopularGames();
 });
+
+// 手動檢查任務狀態（只在需要時調用）
+function checkAndUpdateTasks() {
+  // 這個函數現在被禁用了，因為任務已經固定
+  // 如果需要檢查任務狀態，請使用手動刷新按鈕
+  console.log('任務狀態檢查已禁用，任務已固定');
+}
 </script>
 
 

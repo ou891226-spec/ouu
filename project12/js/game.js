@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 從按鈕的類名獲取難度
                     let difficulty = 'easy';
                     if (button.classList.contains('normal')) {
-                        difficulty = 'medium';
+                        difficulty = 'normal';
                     } else if (button.classList.contains('hard')) {
                         difficulty = 'hard';
                     }
@@ -725,7 +725,8 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (this.difficulty) {
                 case 'easy':
                     return '簡單';
-                case 'medium':
+                case 'normal':
+                case 'medium': // 保持向後兼容
                     return '普通';
                 case 'hard':
                     return '困難';
@@ -756,7 +757,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'easy':
                     rewardScore = 20;
                     break;
-                case 'medium':
+                case 'normal':
+                case 'medium': // 保持向後兼容
                     rewardScore = 50;
                     break;
                 case 'hard':
@@ -794,13 +796,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 更新彈窗內的難度、分數等資訊
             const difficultyLabel = document.getElementById('game-over-difficulty');
+            console.log('當前難度:', this.difficulty);
+            console.log('難度文字:', this.getDifficultyText());
             difficultyLabel.textContent = this.getDifficultyText();
             difficultyLabel.className = 'difficulty-label ' + this.difficulty;
             
             document.getElementById('game-over-score').textContent = this.score;            
             
-            // 遊戲失敗時不記錄任何分數
-            console.log('遊戲失敗，不記錄任何分數');
+            // 遊戲失敗時記錄0分
+            console.log('遊戲失敗，記錄0分');
+            if (typeof saveGameRecord === 'function') {
+                console.log('遊戲失敗，呼叫 saveGameRecord，分數：0');
+                saveGameRecord(memberId, 0, this.difficulty, 60);
+            }
 
             // 顯示彈窗
             this.gameOverModal.style.display = 'block';
@@ -943,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // 檢查並更新任務狀態
-        if (difficulty === 'medium') {
+        if (difficulty === 'normal') {
             fetch("update_task_status.php", {
                 method: "POST",
                 headers: {

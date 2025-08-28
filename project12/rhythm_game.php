@@ -1,37 +1,50 @@
 <?php
 require_once 'check_login.php';
-require_once 'rhythm_game_db.php';
+require_once 'db_connect.php';
  
 // 獲取難度設定
 $difficulties = [];
 
 try {
-    // 嘗試查詢專門的節奏遊戲難度設定表
-    $stmt = $pdo->query("SELECT * FROM rhythm_game_difficulty_settings WHERE is_active = true");
-    $difficulties = $stmt->fetchAll();
+    // 使用統一的 difficulty_settings 表查詢節奏遊戲設定 (game_id = 7)
+    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 7 ORDER BY difficulty");
+    $db_difficulties = $stmt->fetchAll();
+    
+    // 轉換為節奏遊戲需要的格式
+    $difficulties = [];
+    foreach ($db_difficulties as $setting) {
+        $difficulties[] = [
+            'difficulty_level' => $setting['difficulty'],
+            'note_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 5 : 7),
+            'time_limit' => $setting['time_limit'] ?? 60,
+            'speed' => $setting['difficulty'] === 'easy' ? 1.0 : ($setting['difficulty'] === 'normal' ? 1.5 : 2.0),
+            'pass_score' => $setting['pass_score'] ?? 100,
+            'is_active' => true
+        ];
+    }
 } catch (PDOException $e) {
-    // 如果表不存在，使用預設設定
+    // 如果查詢失敗，使用預設設定
     $difficulties = [
         [
             'difficulty_level' => 'easy',
             'note_count' => 3,
             'time_limit' => 60,
             'speed' => 1.0,
-            'pass_score' => 100,
+            'pass_score' => 1200,
             'is_active' => true
         ],
         [
             'difficulty_level' => 'normal',
             'note_count' => 5,
-            'time_limit' => 90,
+            'time_limit' => 60,
             'speed' => 1.5,
-            'pass_score' => 200,
+            'pass_score' => 800,
             'is_active' => true
         ],
         [
             'difficulty_level' => 'hard',
             'note_count' => 7,
-            'time_limit' => 120,
+            'time_limit' => 60,
             'speed' => 2.0,
             'pass_score' => 300,
             'is_active' => true

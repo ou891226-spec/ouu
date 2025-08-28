@@ -571,3 +571,163 @@ button {
     margin-top: 1px;
     line-height: 1.1;
   }
+
+/* 平板設備響應式設計 */
+@media screen and (max-width: 1024px) and (min-width: 768px) {
+  .game-container {
+    padding: 2rem 0;
+    margin: 20px auto;
+  }
+  
+  h1 {
+    font-size: 28px;
+    margin: 10px 0;
+  }
+  
+  .score-board {
+    gap: 15px;
+    padding: 8px;
+    max-width: 450px;
+  }
+  
+  .score-board span {
+    font-size: 1rem;
+  }
+  
+  #game {
+    width: 500px;
+    height: 350px;
+    margin: 15px auto;
+  }
+  
+  #basket {
+    width: 120px;
+    height: 50px;
+    left: 190px;
+  }
+  
+  .control-buttons {
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+  }
+  
+  button {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+    min-width: 100px;
+  }
+  
+  /* 難度選擇彈窗 */
+  .modal-content {
+    width: 80%;
+    max-width: 500px;
+    padding: 2rem;
+  }
+  
+  .difficulty-btn {
+    padding: 1.2rem 1.5rem;
+    font-size: 1.1rem;
+    margin: 0.8rem 0;
+  }
+  
+  /* 說明彈窗 */
+  .help-content {
+    margin: 1rem 0 0.3rem 0;
+  }
+  
+  .help-content h3 {
+    font-size: 1.1rem;
+    margin: 1rem 0 0.4rem 0;
+  }
+  
+  .help-content ul li {
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+  
+  .help-content p {
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+}
+
+/* 小型平板設備 */
+@media screen and (max-width: 767px) and (min-width: 481px) {
+  .game-container {
+    padding: 1.5rem 0;
+    margin: 15px auto;
+  }
+  
+  h1 {
+    font-size: 24px;
+    margin: 8px 0;
+  }
+  
+  .score-board {
+    gap: 12px;
+    padding: 6px;
+    max-width: 400px;
+    flex-wrap: wrap;
+  }
+  
+  .score-board span {
+    font-size: 0.9rem;
+  }
+  
+  #game {
+    width: 450px;
+    height: 300px;
+    margin: 12px auto;
+  }
+  
+  #basket {
+    width: 100px;
+    height: 40px;
+    left: 175px;
+  }
+  
+  .control-buttons {
+    gap: 0.6rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+  
+  button {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    min-width: 90px;
+  }
+  
+  /* 難度選擇彈窗 */
+  .modal-content {
+    width: 90%;
+    max-width: 450px;
+    padding: 1.5rem;
+  }
+  
+  .difficulty-btn {
+    padding: 1rem 1.2rem;
+    font-size: 1rem;
+    margin: 0.6rem 0;
+  }
+  
+  /* 說明彈窗 */
+  .help-content {
+    margin: 0.8rem 0 0.2rem 0;
+  }
+  
+  .help-content h3 {
+    font-size: 1rem;
+    margin: 0.8rem 0 0.3rem 0;
+  }
+  
+  .help-content ul li {
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+  
+  .help-content p {
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+}

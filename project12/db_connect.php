@@ -1,7 +1,14 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// 只在非 AJAX 請求時顯示錯誤
+if (!isset($_POST['ajax']) || $_POST['ajax'] !== '1') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(0);
+}
 
 $host = 'smartfun-senior.mysql.database.azure.com';
 $user = 's1411131021';

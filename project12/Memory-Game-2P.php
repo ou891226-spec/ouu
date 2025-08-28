@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require_once 'check_login.php';
-require_once 'db_connect_memory_game.php';
+require_once 'db_connect.php';
 
 // 處理遊戲結果保存的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
