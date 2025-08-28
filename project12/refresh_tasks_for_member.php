@@ -1,7 +1,15 @@
 <?php
 include 'db.php';
 
-$member_id = 23;
+// 從GET參數或SESSION獲取member_id
+$member_id = $_GET['member_id'] ?? $_SESSION['member_id'] ?? null;
+
+if (!$member_id) {
+    echo "<h1>錯誤</h1>";
+    echo "<p>請提供有效的用戶ID</p>";
+    echo "<p>使用方法：refresh_tasks_for_member.php?member_id=用戶ID</p>";
+    exit;
+}
 
 echo "<h1>刷新用戶 $member_id 的每日任務</h1>";
 
@@ -51,6 +59,7 @@ try {
 
     $pdo->commit();
     echo "<p>任務刷新完成！</p>";
+    echo "<p><a href='index.php'>返回首頁</a></p>";
 
 } catch (Exception $e) {
     $pdo->rollBack();

@@ -299,7 +299,7 @@ foreach ($tables_to_check as $table => $description) {
             <?php endforeach; ?>
         </tbody>
         </table>
-        </form>
+       </form>
         
         <?php if (isset($cleared_tables) && !empty($cleared_tables)): ?>
         <h2>✅ 清空結果</h2>

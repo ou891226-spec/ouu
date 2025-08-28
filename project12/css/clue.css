@@ -5,7 +5,7 @@ body {
     padding: 0;
 }
 .main-container {
-    max-width: 600px;
+    max-width: 760px;
     margin: 48px auto 0 auto;
     background: #fff;
     border-radius: 22px;
@@ -13,8 +13,8 @@ body {
     padding: 48px 36px 36px 36px;
 }
 #image-block img {
-    max-width: 600px;
-    max-height: 450px;
+    max-width: 720px;
+    max-height: 540px;
     border-radius: 16px;
     box-shadow: 0 4px 18px rgba(0,0,0,0.13);
 }
@@ -128,7 +128,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 18px 24px;
-  max-width: 700px;
+  max-width: 840px;
   margin: 0 auto 18px auto;
 }
 .options-flex .option-btn {

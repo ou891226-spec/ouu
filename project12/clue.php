@@ -18,6 +18,8 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
     // 記錄遊戲開始時間（只在第一次初始化時記錄）
     if (!isset($_SESSION['game_start_time'])) {
         $_SESSION['game_start_time'] = time();
+        // 重置防重复保存标志（只在新的游戏会话开始时）
+        unset($_SESSION['game_record_saved']);
     }
 
     // 檢查上一題答案
@@ -47,8 +49,8 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $stmt3->execute([$pass_bounce, $member_id]);
         }
         
-        // 儲存遊戲紀錄到 game_records 表
-        if (isset($_SESSION['member_id'])) {
+        // 儲存遊戲紀錄到 game_records 表（防重复保存）
+        if (isset($_SESSION['member_id']) && !isset($_SESSION['game_record_saved'])) {
             $member_id = $_SESSION['member_id'];
             $play_date = date('Y-m-d H:i:s');
             $game_type = '記憶力';
@@ -58,29 +60,46 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $play_time = $_POST['game_time'] ?? (isset($_SESSION['game_start_time']) ? 
                 time() - $_SESSION['game_start_time'] : null);
             
-            $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
-            $stmt4->execute([
-                'member_id' => $member_id,
-                'game_id' => $game_id,
-                'difficulty' => $difficulty,
-                'score' => $pass_bounce, // 使用固定的獎勵分數
-                'play_date' => $play_date,
-                'play_time' => $play_time,
-                'game_type' => $game_type,
-                'is_single_player' => $is_single_player,
-                'opponent_id' => null
-            ]);
+            // 修正：根據是否過關決定保存的分數
+            $score_to_save = $pass ? $pass_bounce : 0;
             
-            // 檢查並完成所有相關任務
-            require_once 'check_and_grant_achievements.php';
-            checkAndCompleteAllTasks($member_id, '記憶力');
+            // 檢查是否已經有相同的記錄（防止重複）
+            $check_sql = "SELECT COUNT(*) as count FROM game_records 
+                         WHERE member_id = ? AND game_id = ? AND difficulty = ? 
+                         AND score = ? AND play_date = ? AND play_time = ?";
+            $check_stmt = $pdo->prepare($check_sql);
+            $check_stmt->execute([$member_id, $game_id, $difficulty, $score_to_save, $play_date, $play_time]);
+            $existing_count = $check_stmt->fetch()['count'];
+            
+            if ($existing_count == 0) {
+                $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
+                $stmt4->execute([
+                    'member_id' => $member_id,
+                    'game_id' => $game_id,
+                    'difficulty' => $difficulty,
+                    'score' => $score_to_save, // 修正：使用正確的分數
+                    'play_date' => $play_date,
+                    'play_time' => $play_time,
+                    'game_type' => $game_type,
+                    'is_single_player' => $is_single_player,
+                    'opponent_id' => null
+                ]);
+                
+                // 檢查並完成所有相關任務
+                require_once 'check_and_grant_achievements.php';
+                checkAndCompleteAllTasks($member_id, '記憶力');
+            }
+            
+            // 標記已保存，防止重複保存
+            $_SESSION['game_record_saved'] = true;
         }
         
-        // 清空 session
+        // 清空 session（保留防重复标志）
         $_SESSION['clue_total'] = 0;
         $_SESSION['clue_correct'] = 0;
         $_SESSION['used_question_ids'] = [];
         unset($_SESSION['game_start_time']); // 清除遊戲開始時間
+        // 注意：不删除 $_SESSION['game_record_saved']，防止重复保存
         
         echo json_encode([
             'end' => true,
@@ -110,8 +129,8 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $stmt3->execute([$pass_bounce, $member_id]);
         }
         
-        // 儲存遊戲紀錄到 game_records 表
-        if (isset($_SESSION['member_id'])) {
+        // 儲存遊戲紀錄到 game_records 表（防重复保存）
+        if (isset($_SESSION['member_id']) && !isset($_SESSION['game_record_saved'])) {
             $member_id = $_SESSION['member_id'];
             $play_date = date('Y-m-d H:i:s');
             $game_type = '記憶力';
@@ -120,29 +139,46 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             // 使用前端傳送的遊戲時間
             $play_time = $_POST['game_time'] ?? null;
             
-            $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
-            $stmt4->execute([
-                'member_id' => $member_id,
-                'game_id' => $game_id,
-                'difficulty' => $difficulty,
-                'score' => $final_score,
-                'play_date' => $play_date,
-                'play_time' => $play_time,
-                'game_type' => $game_type,
-                'is_single_player' => $is_single_player,
-                'opponent_id' => null
-            ]);
+            // 修正：根據是否過關決定保存的分數
+            $score_to_save = $pass ? $pass_bounce : 0;
             
-            // 檢查並完成所有相關任務
-            require_once 'check_and_grant_achievements.php';
-            checkAndCompleteAllTasks($member_id, '記憶力');
+            // 檢查是否已經有相同的記錄（防止重複）
+            $check_sql = "SELECT COUNT(*) as count FROM game_records 
+                         WHERE member_id = ? AND game_id = ? AND difficulty = ? 
+                         AND score = ? AND play_date = ? AND play_time = ?";
+            $check_stmt = $pdo->prepare($check_sql);
+            $check_stmt->execute([$member_id, $game_id, $difficulty, $score_to_save, $play_date, $play_time]);
+            $existing_count = $check_stmt->fetch()['count'];
+            
+            if ($existing_count == 0) {
+                $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
+                $stmt4->execute([
+                    'member_id' => $member_id,
+                    'game_id' => $game_id,
+                    'difficulty' => $difficulty,
+                    'score' => $score_to_save, // 修正：使用正確的分數
+                    'play_date' => $play_date,
+                    'play_time' => $play_time,
+                    'game_type' => $game_type,
+                    'is_single_player' => $is_single_player,
+                    'opponent_id' => null
+                ]);
+                
+                // 檢查並完成所有相關任務
+                require_once 'check_and_grant_achievements.php';
+                checkAndCompleteAllTasks($member_id, '記憶力');
+            }
+            
+            // 標記已保存，防止重複保存
+            $_SESSION['game_record_saved'] = true;
         }
         
-        // 清空 session
+        // 清空 session（保留防重复标志）
         $_SESSION['clue_total'] = 0;
         $_SESSION['clue_correct'] = 0;
         $_SESSION['used_question_ids'] = [];
         unset($_SESSION['game_start_time']); // 清除遊戲開始時間
+        // 注意：不删除 $_SESSION['game_record_saved']，防止重复保存
         
         echo json_encode([
             'end' => true,
@@ -212,32 +248,40 @@ if (!$difficulty) {
                 background: rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; z-index: 9999;
             }
             #difficulty-modal .modal-content {
-                background: #fff; padding: 32px 36px 32px 36px; border-radius: 20px; text-align: center;
+                background: #fff; padding: 44px 44px 40px 44px; border-radius: 24px; text-align: center;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-                min-width: 340px;
+                min-width: 420px;
+                width: 560px;
                 position: relative;
+                font-size: 1.1rem;
+                min-height: 72vh;
+                max-height: 86vh;
+                overflow: auto;
+                display: flex;
+                flex-direction: column;
             }
             .modal-header {
-                display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px;
+                display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; margin-bottom: 28px;
             }
             .modal-title {
-                font-size: 2rem; font-weight: bold; color: #222;
+                font-size: 2.4rem; font-weight: bold; color: #222;
                 letter-spacing: 2px;
             }
-            .modal-help {
-                display: flex; align-items: center; font-size: 1.1rem; color: #888; cursor: pointer;
-                user-select: none;
+            .icon-block { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+            .icon-block .circle {
+                width: 40px; height: 40px; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center;
+                font-weight: bold; color: #000; background: #fff;
             }
-            .modal-help .help-icon {
-                width: 22px; height: 22px; border-radius: 50%; background: #f3f3f3; border: 1.5px solid #bbb;
-                display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 4px;
-                font-size: 1.1rem;
-            }
+            .icon-block .label { font-size: 1.05rem; color: #555; }
+            .icon-link { text-decoration: none; color: inherit; }
             .difficulty-btn {
-                display: block; width: 100%; margin: 0 auto 18px auto; padding: 18px 0; font-size: 1.3rem; font-weight: bold;
+                display: block; width: 100%; margin: 0 auto 35px auto; padding: 35px 0; font-size: 1.65rem; font-weight: bold;
                 border: none; border-radius: 16px; cursor: pointer; transition: filter 0.15s;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.06);
                 letter-spacing: 1px;
+            }
+            .difficulty-list {
+                display: flex; flex-direction: column; gap: 18px; flex: 1; justify-content: center; margin: 8px 0 20px 0;
             }
             .difficulty-btn:last-child { margin-bottom: 0; }
             .difficulty-btn.easy { background: #2ecc40; color: #fff; }
@@ -253,27 +297,41 @@ if (!$difficulty) {
             }
             #help-modal-bg.active { display: flex; }
             #help-modal {
-                background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-                padding: 32px 28px 24px 28px; max-width: 350px; text-align: left; position: relative;
+                background: #fff; border-radius: 18px; box-shadow: 0 6px 28px rgba(0,0,0,0.2);
+                padding: 36px 32px 28px 32px; max-width: 560px; width: 560px; text-align: left; position: relative;
             }
-            #help-modal h3 { margin-top: 0; font-size: 1.3rem; font-weight: bold; }
-            #help-modal p { font-size: 1.05rem; color: #333; line-height: 1.7; margin-bottom: 0; }
+            #help-modal h3 { margin-top: 0; font-size: 2rem; font-weight: bold; }
+            #help-modal p { font-size: 1.5rem; color: #333; line-height: 2.0; margin-bottom: 0; }
             #help-modal .close-btn {
-                position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.3rem; color: #888; cursor: pointer;
+                position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.6rem; color: #888; cursor: pointer;
             }
             #help-modal .close-btn:hover { color: #222; }
+            /* 返回按鈕 */
+            .return-btn { text-decoration: none; color: inherit; }
+            .return-btn img { width: 28px; height: 28px; display: block; }
         </style>
     </head>
     <body>
         <div id="difficulty-modal">
             <div class="modal-content">
                 <div class="modal-header">
+                    <div class="icon-block">
+                        <a href="index.php" class="return-btn icon-link" aria-label="返回首頁">
+                            <div class="circle"><img src="img/return-icon.png" alt="返回" style="width:20px;height:20px;"></div>
+                        </a>
+                        <span class="label">返回</span>
+                    </div>
                     <span class="modal-title">難度選擇</span>
-                    <span class="modal-help" id="show-help"><span class="help-icon">?</span>說明</span>
+                    <div class="icon-block" id="show-help" style="cursor:pointer;">
+                        <div class="circle">?</div>
+                        <span class="label">說明</span>
+                    </div>
                 </div>
-                <button class="difficulty-btn easy" data-difficulty="easy">簡單</button>
-                <button class="difficulty-btn medium" data-difficulty="normal">普通</button>
-                <button class="difficulty-btn hard" data-difficulty="hard">困難</button>
+                <div class="difficulty-list">
+                    <button class="difficulty-btn easy" data-difficulty="easy">簡單</button>
+                    <button class="difficulty-btn medium" data-difficulty="normal">普通</button>
+                    <button class="difficulty-btn hard" data-difficulty="hard">困難</button>
+                </div>
             </div>
         </div>
         <!-- 說明彈窗 -->

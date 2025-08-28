@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (lastLoadDate !== today) {
     localStorage.setItem('missionLoadDate', today);
     localStorage.setItem('missionLoadedToday', 'false');
+    localStorage.removeItem('missionShownToday'); // 重置今日顯示標記
   }
   
   // 如果今天還沒載入過任務，才載入
@@ -18,6 +19,33 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem('missionLoadedToday', 'true');
   } else {
     console.log("今天已經載入過任務，跳過自動載入");
+  }
+  
+  // 檢查用戶是否選擇自動顯示每日任務彈窗，且今天還沒顯示過
+  const autoShowMission = localStorage.getItem('autoShowMission') !== 'false'; // 預設為true
+  const hasShownToday = localStorage.getItem('missionShownToday') === 'true';
+  
+  if (autoShowMission && !hasShownToday) {
+    // 自動顯示每日任務彈窗（延遲2秒顯示）
+    setTimeout(() => {
+      const missionModal = document.getElementById('missionModal');
+      const modalOverlay = document.getElementById('modalOverlay');
+      
+      if (missionModal && modalOverlay) {
+        console.log("自動顯示每日任務彈窗（首次顯示）");
+        missionModal.style.display = 'flex';
+        modalOverlay.style.display = 'block';
+        
+        // 無論是否已載入過，都重新載入任務以確保顯示最新狀態
+        console.log("重新載入任務以確保顯示最新狀態");
+        loadDailyTasks();
+        
+        // 標記今天已經顯示過
+        localStorage.setItem('missionShownToday', 'true');
+      }
+    }, 2000); // 延遲2秒顯示
+  } else if (hasShownToday) {
+    console.log("今天已經顯示過每日任務彈窗，跳過自動顯示");
   }
 });
 
@@ -58,13 +86,33 @@ function getTaskIcon(taskType) {
 function loadDailyTasks() {
   console.log("開始載入每日任務...");
   
-  fetch("get_daily_tasks_fixed.php")
+  fetch("get_daily_tasks_fixed.php", {
+    method: 'GET',
+    credentials: 'same-origin', // 确保传递会话信息
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
     .then(response => {
       console.log("收到回應:", response.status);
+      console.log("回應狀態:", response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return response.json();
     })
     .then(tasks => {
       console.log("任務資料:", tasks);
+      console.log("任務類型:", typeof tasks);
+      console.log("任務長度:", Array.isArray(tasks) ? tasks.length : '不是陣列');
+      
+      // 检查是否是错误响应
+      if (tasks && tasks.error) {
+        console.error("API返回错误:", tasks.error);
+        throw new Error("API错误: " + tasks.error);
+      }
       
       const container = document.getElementById("daily-tasks-container");
       if (!container) {
@@ -75,6 +123,7 @@ function loadDailyTasks() {
       container.innerHTML = ""; // 清空舊內容
 
       if (!Array.isArray(tasks) || tasks.length === 0) {
+        console.log("沒有任務或任務不是陣列");
         container.innerHTML = `
           <div style="text-align: center; padding: 20px; color: #666;">
             <div style="font-size: 24px; margin-bottom: 10px;">📋</div>
@@ -85,8 +134,9 @@ function loadDailyTasks() {
         return;
       }
 
-      tasks.forEach(task => {
-        console.log("處理任務:", task);
+      console.log("開始處理", tasks.length, "個任務");
+      tasks.forEach((task, index) => {
+        console.log(`處理任務 ${index + 1}:`, task);
         
         const item = document.createElement("div");
         item.className = "mission-item";
@@ -122,12 +172,14 @@ function loadDailyTasks() {
           ${btnHtml}
         `;
         container.appendChild(item);
+        console.log(`任務 ${index + 1} 已添加到DOM`);
       });
       
       console.log("任務載入完成，共載入", tasks.length, "個任務");
     })
     .catch(error => {
       console.error("載入任務失敗：", error);
+      console.error("錯誤詳情：", error.message);
       
       const container = document.getElementById("daily-tasks-container");
       if (container) {
@@ -135,7 +187,8 @@ function loadDailyTasks() {
           <div style="text-align: center; padding: 20px; color: #666;">
             <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
             <div style="font-size: 16px; margin-bottom: 5px;">載入任務失敗</div>
-            <div style="font-size: 14px; color: #999;">請重新整理頁面</div>
+            <div style="font-size: 14px; color: #999;">錯誤: ${error.message}</div>
+            <div style="font-size: 12px; color: #999; margin-top: 10px;">請重新整理頁面</div>
           </div>
         `;
       }

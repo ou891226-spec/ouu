@@ -1,4 +1,7 @@
 <?php
+// 設定PHP時區為台北時間
+date_default_timezone_set('Asia/Taipei');
+
 // 只在非 AJAX 請求時顯示錯誤
 if (!isset($_POST['ajax']) || $_POST['ajax'] !== '1') {
     ini_set('display_errors', 1);

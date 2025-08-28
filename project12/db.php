@@ -1,4 +1,7 @@
 <?php
+// 設定PHP時區為台北時間
+date_default_timezone_set('Asia/Taipei');
+
 $host = 'smartfun-senior.mysql.database.azure.com';
 $user = 's1411131021';
 $pass = 'Test12345'; // 變數名要和下面一致

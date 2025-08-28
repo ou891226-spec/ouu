@@ -14,6 +14,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalTitle = document.getElementById('modal-title');
     const modalContent = document.getElementById('modal-content');
 
+    // 防重复保存标志
+    let hasSavedRecord = false;
+    let saveRequestInProgress = false; // 请求进行中标志
+    let gameSessionId = Date.now(); // 游戏会话ID，用于标识单次游戏
+
+    // 保存游戏记录的函数
+    function saveGameRecord(pass, score, pass_bounce) {
+        // 防止重复保存
+        if (hasSavedRecord) {
+            console.log('游戏记录已经保存过，跳过重复保存', {gameSessionId});
+            return;
+        }
+        
+        // 防止请求进行中
+        if (saveRequestInProgress) {
+            console.log('保存请求正在进行中，跳过重复请求', {gameSessionId});
+            return;
+        }
+        
+        hasSavedRecord = true;
+        saveRequestInProgress = true;
+        console.log('开始保存游戏记录...', {pass, score, pass_bounce, gameSessionId});
+        
+        const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
+        const data = new URLSearchParams();
+        data.append('ajax', '1');
+        data.append('difficulty', difficulty);
+        data.append('game_time', gameTime);
+        data.append('force_end', '1');
+        data.append('final_score', score);
+        data.append('session_id', gameSessionId); // 添加会话ID
+        
+        // 添加时间戳防止缓存
+        data.append('timestamp', Date.now());
+        
+        fetch('clue.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: data.toString()
+        })
+        .then(response => {
+            console.log('服务器响应状态:', response.status, {gameSessionId});
+            return response.json();
+        })
+        .then(result => {
+            console.log('游戏记录保存结果:', result, {gameSessionId});
+            saveRequestInProgress = false; // 请求完成
+        })
+        .catch(err => {
+            console.error('儲存遊戲記錄失敗:', err, {gameSessionId});
+            // 保存失败时重置标志，允许重试
+            hasSavedRecord = false;
+            saveRequestInProgress = false;
+        });
+    }
+
     function showResultModal(pass, score, difficulty, pass_bounce) {
       resultModal.style.display = 'flex';
       if (pass) {
@@ -23,6 +79,9 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTitle.textContent = '遊戲失敗';
         modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>未在時間內達成分數`;
       }
+      
+      // 保存游戏记录（防重复机制在saveGameRecord内部）
+      saveGameRecord(pass, score, pass_bounce);
     }
     document.getElementById('play-again-btn').onclick = function() { location.reload(); };
     document.getElementById('back-home-btn').onclick = function() { window.location.href = 'index.php'; };
@@ -38,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let gameStartTime = Date.now(); // 記錄遊戲開始時間
     let clueCorrect = 0; // 追蹤答對的題數
     let clueTotal = 0; // 追蹤總題數
+    let questionTimeout = null; // 新增：問題超時計時器
     const main = document.querySelector('.main-container');
     const difficulty = new URLSearchParams(window.location.search).get('difficulty');
     
@@ -67,9 +127,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     showQuestion();
+                    
+                    // 新增：設置問題超時計時器（30秒後自動結束）
+                    questionTimeout = setTimeout(function() {
+                        if (!questionShown) {
+                            // 超時未回答，記錄為答錯
+                            handleTimeoutAnswer();
+                        }
+                    }, 30000); // 30秒超時
                 }
             }
         }, 1000);
+    }
+
+    // 新增：處理超時未回答的情況
+    function handleTimeoutAnswer() {
+        if (questionShown) return; // 已經回答過了
+        
+        questionShown = true;
+        clearTimeout(questionTimeout);
+        
+        // 顯示超時結果
+        document.getElementById('question-block').style.display = 'none';
+        document.getElementById('result-block').style.display = 'block';
+        document.getElementById('correct-answer').textContent = correctAnswer;
+        document.getElementById('result-msg').textContent = '時間到！';
+        document.getElementById('result-msg').style.color = 'red';
+        
+        // 不增加答對數，只增加總題數
+        clueTotal++;
+        
+        // 更新全局變數
+        window.clueCorrect = clueCorrect;
+        window.clueTotal = clueTotal;
+        
+        // 延遲後載入下一題
+        setTimeout(function(){
+            loadQuestion('timeout'); // 傳送特殊標記表示超時
+        }, 1200);
     }
 
     function loadQuestion(userAns = null) {
@@ -77,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = new URLSearchParams();
         data.append('ajax', '1');
         data.append('difficulty', difficulty);
-        if (userAns !== null) {
+        if (userAns !== null && userAns !== 'timeout') {
             data.append('user_answer', userAns);
             data.append('correct_answer', correctAnswer);
         }
@@ -98,6 +193,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 showResultModal(res.pass, res.score, res.difficulty, res.pass_bounce);
                 return;
             }
+            
+            // 檢查是否有錯誤
+            if (res.error) {
+                console.error('服務器錯誤:', res.error);
+                return;
+            }
+            
+            // 檢查題目是否存在
+            if (!res.question) {
+                console.error('沒有收到題目數據');
+                return;
+            }
+            
             // 顯示新題目
             currentQuestion = res.question;
             correctAnswer = currentQuestion.correct_answer_text;
@@ -148,34 +256,19 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (difficulty === 'hard') pass_bounce = 100;
         }
         
-        // 顯示結果
+        // 顯示結果（saveGameRecord會在showResultModal中自動調用）
         showResultModal(pass, currentScore, difficulty, pass_bounce);
-        
-        // 儲存遊戲記錄（後端會自動處理會員ID）
-        const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
-        const data = new URLSearchParams();
-        data.append('ajax', '1');
-        data.append('difficulty', difficulty);
-        data.append('game_time', gameTime);
-        data.append('force_end', '1');
-        data.append('final_score', currentScore);
-        
-        fetch('clue.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: data.toString()
-        }).catch(err => console.error('儲存遊戲記錄失敗:', err));
     };
     document.getElementById('resetBtn').onclick = function() {
-        if (confirm('確定要重新開始遊戲嗎？')) {
-            location.reload();
-        }
+        // 直接回到線索遊戲的難度選擇頁面，不需要確認
+        window.location.href = 'clue.php';
     };
 
     function showQuestionOnce() {
         if (!questionShown) {
             showQuestion();
             clearInterval(timer);
+            clearTimeout(questionTimeout); // 清除超時計時器
             questionShown = true;
         }
     }

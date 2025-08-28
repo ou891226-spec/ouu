@@ -217,22 +217,12 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     document.getElementById('missionModal').style.display = 'flex';
     document.getElementById('modalOverlay').style.display = 'block';
     
-    // 檢查今天是否已經載入過任務
-    const today = new Date().toDateString();
-    const lastLoadDate = localStorage.getItem('missionLoadDate');
-    const hasLoadedToday = localStorage.getItem('missionLoadedToday') === 'true';
+    // 每次打開彈窗都重新載入任務，確保顯示最新狀態
+    console.log("打開每日任務彈窗，重新載入任務");
+    loadDailyTasks();
     
-    // 如果是新的一天，重置狀態
-    if (lastLoadDate !== today) {
-      localStorage.setItem('missionLoadDate', today);
-      localStorage.setItem('missionLoadedToday', 'false');
-    }
-    
-    // 如果今天還沒載入過任務，才載入
-    if (!hasLoadedToday) {
-      loadDailyTasks(); // 載入每日任務
-      localStorage.setItem('missionLoadedToday', 'true');
-    }
+    // 更新自動顯示設置的checkbox狀態
+    updateAutoShowCheckbox();
   }
   
   // 移除手動刷新功能 - 任務完全固定，只有凌晨12點重置
