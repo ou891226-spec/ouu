@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
-                $completed_tasks = checkAndCompleteAllTasks($member_id, '反應力');
+                $completed_tasks = checkAndCompleteAllTasks($member_id, '反應力', $playTime);
                 
                 // 確保沒有其他輸出
                 if (ob_get_length()) ob_clean();

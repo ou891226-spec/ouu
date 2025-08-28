@@ -25,6 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const autoShowMission = localStorage.getItem('autoShowMission') !== 'false'; // 預設為true
   const hasShownToday = localStorage.getItem('missionShownToday') === 'true';
   
+  // 強制重新載入任務數據（無論是否已載入過）
+  console.log("強制重新載入每日任務數據");
+  loadDailyTasks();
+  
   if (autoShowMission && !hasShownToday) {
     // 自動顯示每日任務彈窗（延遲2秒顯示）
     setTimeout(() => {
@@ -36,16 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
         missionModal.style.display = 'flex';
         modalOverlay.style.display = 'block';
         
-        // 無論是否已載入過，都重新載入任務以確保顯示最新狀態
-        console.log("重新載入任務以確保顯示最新狀態");
-        loadDailyTasks();
-        
         // 標記今天已經顯示過
         localStorage.setItem('missionShownToday', 'true');
       }
     }, 2000); // 延遲2秒顯示
   } else if (hasShownToday) {
     console.log("今天已經顯示過每日任務彈窗，跳過自動顯示");
+  } else if (!autoShowMission) {
+    console.log("用戶已關閉自動顯示每日任務彈窗");
   }
 });
 

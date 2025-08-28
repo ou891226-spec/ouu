@@ -303,7 +303,7 @@ function checkAndCompleteComplexTasks($member_id) {
 }
 
 // 新增：檢查並完成所有相關任務
-function checkAndCompleteAllTasks($member_id, $game_type = null) {
+function checkAndCompleteAllTasks($member_id, $game_type = null, $play_time = 0) {
     global $pdo;
     
     try {
@@ -314,7 +314,7 @@ function checkAndCompleteAllTasks($member_id, $game_type = null) {
                 '記憶力' => ['記憶力遊戲', '記憶力'],
                 '算數邏輯力' => ['算數邏輯力', '算術邏輯', '算菜錢遊戲', '蔬菜遊戲'],
                 '邏輯力' => ['邏輯力', '2048遊戲'],
-                '反應力' => ['反應力', '反應力遊戲'],
+                '反應力' => ['反應力', '反應力遊戲', '接金蛋遊戲', '接金蛋', '接蛋遊戲'],
                 '節奏遊戲' => ['節奏遊戲', '節奏'],
                 '接金蛋遊戲' => ['接金蛋遊戲', '接金蛋', '接蛋遊戲'],
                 '看字選色遊戲' => ['看字選色遊戲', '看字選色'],
@@ -361,12 +361,58 @@ function checkAndCompleteAllTasks($member_id, $game_type = null) {
             }
         }
         
+        // 檢查基於遊戲時間的任務
+        if ($play_time > 0) {
+            checkTimeBasedTasks($member_id, $play_time);
+        }
+        
         // 檢查複雜任務
         checkAndCompleteComplexTasks($member_id);
         
         return true;
     } catch (Exception $e) {
         error_log("檢查任務時發生錯誤：" . $e->getMessage());
+        return false;
+    }
+}
+
+// 新增：檢查基於遊戲時間的任務
+function checkTimeBasedTasks($member_id, $play_time) {
+    global $pdo;
+    
+    try {
+        // 檢查30秒內完成遊戲的任務
+        if ($play_time <= 30) {
+            $speed_task_sql = "
+            SELECT mt.task_id, mt.completed_date, d.task_description, d.reward_achievement
+            FROM member_tasks mt
+            JOIN daily_tasks d ON mt.task_id = d.task_id
+            WHERE mt.member_id = ? AND mt.completed_date IS NULL 
+            AND d.task_description LIKE '%30秒%'
+            ";
+            
+            $speed_stmt = $pdo->prepare($speed_task_sql);
+            $speed_stmt->execute([$member_id]);
+            $speed_tasks = $speed_stmt->fetchAll();
+            
+            foreach ($speed_tasks as $task) {
+                // 完成任務
+                $complete_task_sql = "UPDATE member_tasks SET completed_date = NOW() WHERE member_id = ? AND task_id = ?";
+                $complete_stmt = $pdo->prepare($complete_task_sql);
+                $complete_stmt->execute([$member_id, $task['task_id']]);
+                
+                error_log("用戶 $member_id 完成速度任務 {$task['task_id']}：{$task['task_description']} (遊戲時間: {$play_time}秒)");
+                
+                // 記錄可領取的成就
+                if ($task['reward_achievement']) {
+                    error_log("用戶 $member_id 可領取速度成就：{$task['reward_achievement']}");
+                }
+            }
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("檢查時間任務時發生錯誤：" . $e->getMessage());
         return false;
     }
 }
