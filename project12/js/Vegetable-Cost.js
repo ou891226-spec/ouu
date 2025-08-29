@@ -472,7 +472,7 @@ function generateHardQuestion() {
         console.log('生成預算能買哪些題型');
         // 預算能買哪些 - 困難版本
         // 降低預算，增加挑戰性
-        const budget = [50, 60, 70, 80][Math.floor(Math.random() * 4)];
+        let budget = [40, 45, 50, 55, 60, 65][Math.floor(Math.random() * 6)];
         
         // 簡化的正確答案生成
         let validCombos = [];
@@ -485,17 +485,40 @@ function generateHardQuestion() {
             }
         }
         
-        // 如果沒有符合預算的組合，快速調整
+        // 如果沒有符合預算的組合，重新選擇物品
         if (validCombos.length === 0) {
-            const minSum = Math.min(...selectedItems.map(item => item.price)) * 2;
-            const adjustedBudget = Math.max(budget, minSum + 20);
-            for (let i = 0; i < selectedItems.length && validCombos.length < 5; i++) {
-                for (let j = i + 1; j < selectedItems.length && validCombos.length < 5; j++) {
-                    let sum = selectedItems[i].price + selectedItems[j].price;
-                    if (sum <= adjustedBudget) {
-                        validCombos.push([selectedItems[i], selectedItems[j]]);
+            // 重新選擇更便宜的物品組合
+            const cheapestItems = selectedItems.sort((a, b) => a.price - b.price).slice(0, 4);
+            for (let i = 0; i < cheapestItems.length && validCombos.length < 5; i++) {
+                for (let j = i + 1; j < cheapestItems.length && validCombos.length < 5; j++) {
+                    let sum = cheapestItems[i].price + cheapestItems[j].price;
+                    if (sum <= budget) {
+                        validCombos.push([cheapestItems[i], cheapestItems[j]]);
                     }
                 }
+            }
+            
+            // 如果還是沒有，重新生成預算
+            if (validCombos.length === 0) {
+                // 找到最便宜的兩個物品組合
+                const minSum = Math.min(...selectedItems.map(item => item.price)) * 2;
+                const maxSum = selectedItems.sort((a, b) => a.price - b.price).slice(0, 2).reduce((sum, item) => sum + item.price, 0);
+                
+                // 重新生成預算，確保至少有一個組合符合
+                const newBudget = Math.max(budget, maxSum + 5);
+                
+                // 重新生成所有符合新預算的組合
+                for (let i = 0; i < selectedItems.length && validCombos.length < 5; i++) {
+                    for (let j = i + 1; j < selectedItems.length && validCombos.length < 5; j++) {
+                        let sum = selectedItems[i].price + selectedItems[j].price;
+                        if (sum <= newBudget) {
+                            validCombos.push([selectedItems[i], selectedItems[j]]);
+                        }
+                    }
+                }
+                
+                // 更新問題中的預算顯示
+                budget = newBudget;
             }
         }
         
@@ -510,14 +533,14 @@ function generateHardQuestion() {
         
         // 生成3個錯誤選項（價格超過預算的組合）
         let attempts = 0;
-        while (options.length < 4 && attempts < 100) {
+        while (options.length < 4 && attempts < 500) {
             let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             if (item1 !== item2) {
                 let sum = item1.price + item2.price;
                 let comboKey = [item1.name, item2.name].sort().join('+');
-                // 確保選項價格超過預算，這樣就只有一個正確答案
-                if (sum > budget && !usedCombos.has(comboKey)) {
+                // 確保選項價格明顯超過預算，這樣就只有一個正確答案
+                if (sum > budget + 20 && !usedCombos.has(comboKey)) {
                     options.push([item1, item2]);
                     usedCombos.add(comboKey);
                 }
@@ -527,7 +550,7 @@ function generateHardQuestion() {
         
         // 如果還是不夠4個選項，生成一些更貴的組合
         let fallbackTries = 0;
-        while (options.length < 4 && fallbackTries < 50) {
+        while (options.length < 4 && fallbackTries < 200) {
             let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             if (item1 !== item2) {
@@ -546,11 +569,11 @@ function generateHardQuestion() {
         if (options.length < 4) {
             // 找到所有價格超過預算的組合
             let expensiveCombos = [];
-        for (let i = 0; i < selectedItems.length; i++) {
-            for (let j = i + 1; j < selectedItems.length; j++) {
-                let sum = selectedItems[i].price + selectedItems[j].price;
+            for (let i = 0; i < selectedItems.length; i++) {
+                for (let j = i + 1; j < selectedItems.length; j++) {
+                    let sum = selectedItems[i].price + selectedItems[j].price;
                     let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
-                    if (sum > budget && !usedCombos.has(comboKey)) {
+                    if (sum > budget + 15 && !usedCombos.has(comboKey)) {
                         expensiveCombos.push([selectedItems[i], selectedItems[j]]);
                     }
                 }
@@ -568,8 +591,10 @@ function generateHardQuestion() {
             if (options.length < 4) {
                 for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
                     for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
+                        let sum = selectedItems[i].price + selectedItems[j].price;
                         let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
-                        if (!usedCombos.has(comboKey)) {
+                        // 只添加價格超過預算的組合作為錯誤選項
+                        if (sum > budget && !usedCombos.has(comboKey)) {
                             options.push([selectedItems[i], selectedItems[j]]);
                             usedCombos.add(comboKey);
                         }
@@ -579,7 +604,7 @@ function generateHardQuestion() {
         }
         
         let questionText = selectedItems.map(item => `<img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${budget}</span>，可以買哪些東西回家？`;
+        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${budget}</span>，足夠可以買哪些東西回家？`;
         
         options = options.map(opt => ({ 
             text: opt.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋'),
@@ -607,7 +632,7 @@ function generateHardQuestion() {
         console.log('生成只能買兩樣題型');
         // 只能買兩樣/湊滿不超過金額 - 困難版本
         // 降低預算，增加挑戰性
-        const limit = [60, 70, 80, 90][Math.floor(Math.random() * 4)];
+        let limit = [40, 45, 50, 55, 60, 65][Math.floor(Math.random() * 6)];
         
         // 先選擇一些較貴的物品，確保有挑戰性
         let expensiveItems = selectedItems.filter(item => item.price > 30);
@@ -630,19 +655,26 @@ function generateHardQuestion() {
             }
         }
         
-        // 如果沒有符合預算的組合，調整預算
+        // 如果沒有符合預算的組合，重新生成預算
         if (validCombos.length === 0) {
-            const minSum = Math.min(...selectedItems.map(item => item.price)) * 2;
-            const adjustedLimit = Math.max(limit, minSum + 20);
-            validCombos = [];
+            // 找到最便宜的兩個物品組合
+            const maxSum = selectedItems.sort((a, b) => a.price - b.price).slice(0, 2).reduce((sum, item) => sum + item.price, 0);
+            
+            // 重新生成預算，確保至少有一個組合符合
+            const newLimit = Math.max(limit, maxSum + 5);
+            
+            // 重新生成所有符合新預算的組合
             for (let i = 0; i < selectedItems.length; i++) {
                 for (let j = i + 1; j < selectedItems.length; j++) {
                     let sum = selectedItems[i].price + selectedItems[j].price;
-                    if (sum <= adjustedLimit) {
+                    if (sum <= newLimit) {
                         validCombos.push([selectedItems[i], selectedItems[j]]);
                     }
                 }
             }
+            
+            // 更新問題中的預算顯示
+            limit = newLimit;
         }
         
         // 選擇一個正確答案
@@ -655,23 +687,25 @@ function generateHardQuestion() {
         usedCombos.add(answerCombo.map(i => i.name).sort().join('+'));
         
         // 生成3個錯誤選項（價格超過預算的組合）
-        for (let i = 0; i < 20 && options.length < 4; i++) {
+        let attempts = 0;
+        while (options.length < 4 && attempts < 500) {
             let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             if (item1 !== item2) {
                 let sum = item1.price + item2.price;
                 let comboKey = [item1.name, item2.name].sort().join('+');
-                // 確保選項價格超過預算，這樣就只有一個正確答案
-                if (sum > limit && !usedCombos.has(comboKey)) {
+                // 確保選項價格明顯超過預算，這樣就只有一個正確答案
+                if (sum > limit + 20 && !usedCombos.has(comboKey)) {
                     options.push([item1, item2]);
                     usedCombos.add(comboKey);
                 }
             }
+            attempts++;
         }
         
         // 如果還是不夠4個選項，生成一些更貴的組合
         let fallbackTries = 0;
-        while (options.length < 4 && fallbackTries < 50) {
+        while (options.length < 4 && fallbackTries < 200) {
             let item1 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             let item2 = selectedItems[Math.floor(Math.random() * selectedItems.length)];
             if (item1 !== item2) {
@@ -687,36 +721,45 @@ function generateHardQuestion() {
         }
         
         // 如果還是不夠4個選項，強制添加一些錯誤組合
-        while (options.length < 4) {
-            for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
-                for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
-                    let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+        if (options.length < 4) {
+            // 找到所有價格超過預算的組合
+            let expensiveCombos = [];
+            for (let i = 0; i < selectedItems.length; i++) {
+                for (let j = i + 1; j < selectedItems.length; j++) {
                     let sum = selectedItems[i].price + selectedItems[j].price;
-                    // 只添加價格超過預算的組合作為錯誤選項
-                    if (!usedCombos.has(comboKey) && sum > limit) {
-                        options.push([selectedItems[i], selectedItems[j]]);
-                        usedCombos.add(comboKey);
+                    let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
+                    if (sum > limit + 15 && !usedCombos.has(comboKey)) {
+                        expensiveCombos.push([selectedItems[i], selectedItems[j]]);
                     }
                 }
             }
-            // 如果還是沒有足夠的選項，添加任何未使用的組合
+            
+            // 隨機選擇一些貴的組合
+            while (options.length < 4 && expensiveCombos.length > 0) {
+                let randomIndex = Math.floor(Math.random() * expensiveCombos.length);
+                let combo = expensiveCombos.splice(randomIndex, 1)[0];
+                options.push(combo);
+                usedCombos.add(combo.map(i => i.name).sort().join('+'));
+            }
+            
+            // 如果還是不夠，添加任何未使用的組合（但標記為錯誤）
             if (options.length < 4) {
                 for (let i = 0; i < selectedItems.length && options.length < 4; i++) {
                     for (let j = i + 1; j < selectedItems.length && options.length < 4; j++) {
+                        let sum = selectedItems[i].price + selectedItems[j].price;
                         let comboKey = [selectedItems[i].name, selectedItems[j].name].sort().join('+');
-                        if (!usedCombos.has(comboKey)) {
+                        // 只添加價格超過預算的組合作為錯誤選項
+                        if (sum > limit && !usedCombos.has(comboKey)) {
                             options.push([selectedItems[i], selectedItems[j]]);
                             usedCombos.add(comboKey);
                         }
                     }
                 }
             }
-            // 如果還是沒有足夠的選項，跳出循環避免無限循環
-            if (options.length < 4) break;
         }
         
         let questionText = selectedItems.map(item => `<img src="${item.name.includes('蛋') ? 'img/catch_egg.png' : `img/${item.image}`}" alt="${item.name}" style="width: ${item.name.includes('蛋') ? '32px' : '24px'}; height: ${item.name.includes('蛋') ? '32px' : '24px'}; vertical-align: middle; margin-right: 5px;">${item.name} $${item.price}`).join('<br>');
-        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${limit}</span>，只能買兩樣，湊滿<span style="color: red; font-weight: bold;">不超過這個金額</span>，可以買哪些？`;
+        questionText += `<br><br>阿嬤只帶了<span style="color: red; font-weight: bold;">$${limit}</span>，足夠只能買兩樣，湊滿<span style="color: red; font-weight: bold;">不超過這個金額</span>，可以買哪些？`;
         
         options = options.map(opt => ({ 
             text: opt.map(i => `<img src="${i.name.includes('蛋') ? 'img/catch_egg.png' : `img/${i.image}`}" alt="${i.name}" style="width: ${i.name.includes('蛋') ? '32px' : '20px'}; height: ${i.name.includes('蛋') ? '32px' : '20px'}; vertical-align: middle; margin-right: 3px;">${i.name}`).join('＋'),
@@ -1056,9 +1099,9 @@ function endGame() {
     gamePaused = false;
     // 過關分數設定
     let passScore = 0;
-    if (currentDifficulty === 'easy') passScore = 15;
-    else if (currentDifficulty === 'normal') passScore = 20;
-    else if (currentDifficulty === 'hard') passScore = 25;
+    if (currentDifficulty === 'easy') passScore = 20;
+    else if (currentDifficulty === 'normal') passScore = 30;
+    else if (currentDifficulty === 'hard') passScore = 50;
     
     // 獎勵分數設定
     let rewardScore = 0;

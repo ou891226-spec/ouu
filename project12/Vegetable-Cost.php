@@ -143,15 +143,15 @@ if (!isset($_SESSION['member_id'])) {
             <div class="difficulty-btn-group">
                 <button class="difficulty-btn easy-mode" data-difficulty="easy">
                     <div class="diff-main">簡單模式（簡單加減計算）</div>
-                    <div class="diff-sub">80秒，目標：30分</div>
+                    <div class="diff-sub">80秒，目標：20分</div>
                 </button>
                 <button class="difficulty-btn normal-mode" data-difficulty="normal">
                     <div class="diff-main">普通模式（促銷優惠計算）</div>
-                    <div class="diff-sub">150秒，目標：60分</div>
+                    <div class="diff-sub">150秒，目標：30分</div>
                 </button>
                 <button class="difficulty-btn hard-mode" data-difficulty="hard">
                     <div class="diff-main">困難模式（複雜組合計算）</div>
-                    <div class="diff-sub">200秒，目標：90分</div>
+                    <div class="diff-sub">200秒，目標：50分</div>
                 </button>
             </div>
         </div>
@@ -168,9 +168,9 @@ if (!isset($_SESSION['member_id'])) {
                 <h3>🔹 遊戲規則</h3>
                 <ul>
                     <li>每答對一題得3分</li>
-                    <li>簡單：30分過關，獎勵20分（簡單加減計算）</li>
-                    <li>中等：60分過關，獎勵50分（促銷優惠計算）</li>
-                    <li>困難：90分過關，獎勵100分（複雜組合計算）</li>
+                    <li>簡單：20分過關，獎勵20分（簡單加減計算）</li>
+                    <li>中等：30分過關，獎勵50分（促銷優惠計算）</li>
+                    <li>困難：50分過關，獎勵100分（複雜組合計算）</li>
                 </ul>
                 </ul>
             </div>
