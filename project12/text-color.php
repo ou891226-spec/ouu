@@ -371,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
             <button class="back-button" onclick="handleBackButton()">
-                <span class="back-arrow">⬅</span>
+                <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
             <h2>選擇難度</h2>
@@ -546,26 +546,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (difficulty === 'hard') {
                 if (Math.random() < 0.5) {
-                    const trapType = Math.floor(Math.random() * 5);
+                    const trapType = Math.floor(Math.random() * 4); // 減少到4種，移除透明度效果
                     
                     switch(trapType) {
                         case 0:
                             document.getElementById('targetColorText').innerHTML = 
-                                `<span style="color:${randomDisplayColor.code}; font-weight:bold; opacity:0.2;">${displayText}</span>`;
+                                `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:blink 0.3s infinite;">${displayText}</span>`;
                             break;
                         case 1:
                             document.getElementById('targetColorText').innerHTML = 
-                                `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:blink 0.3s infinite;">${displayText}</span>`;
+                                `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:gradient 0.5s infinite;">${displayText}</span>`;
                             break;
                         case 2:
                             document.getElementById('targetColorText').innerHTML = 
-                                `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:gradient 0.5s infinite;">${displayText}</span>`;
-                            break;
-                        case 3:
-                            document.getElementById('targetColorText').innerHTML = 
                                 `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:shake 0.2s infinite;">${displayText}</span>`;
                             break;
-                        case 4:
+                        case 3:
                             document.getElementById('targetColorText').innerHTML = 
                                 `<span style="color:${randomDisplayColor.code}; font-weight:bold; animation:rotate 1s infinite;">${displayText}</span>`;
                             break;
@@ -581,31 +577,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             let container = document.getElementById('buttonContainer');
             container.innerHTML = '';
+            
+            // 移除之前的難度模式樣式
+            container.classList.remove('hard-mode', 'normal-mode');
 
-            selectedColors.forEach(color => {
-                let btn = document.createElement('button');
-                btn.className = 'color-btn';
-                if (difficulty === 'hard' && Math.random() < 0.4) {
-                    const effectType = Math.floor(Math.random() * 4);
-                    switch(effectType) {
-                        case 0:
-                            btn.style.opacity = '0.3';
-                            break;
-                        case 1:
-                            btn.classList.add('pulse');
-                            break;
-                        case 2:
-                            btn.classList.add('shake');
-                            break;
-                        case 3:
-                            btn.classList.add('rotate');
-                            break;
+            if (difficulty === 'hard') {
+                // 困難模式：上面3個，下面2個
+                container.classList.add('hard-mode');
+                
+                // 創建上面一行（3個按鈕）
+                const topRow = document.createElement('div');
+                topRow.className = 'top-row';
+                
+                // 創建下面一行（2個按鈕）
+                const bottomRow = document.createElement('div');
+                bottomRow.className = 'bottom-row';
+                
+                selectedColors.forEach((color, index) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'color-btn';
+                    
+                    // 添加隨機效果
+                    if (Math.random() < 0.4) {
+                        const effectType = Math.floor(Math.random() * 3);
+                        switch(effectType) {
+                            case 0:
+                                btn.classList.add('pulse');
+                                break;
+                            case 1:
+                                btn.classList.add('shake');
+                                break;
+                            case 2:
+                                btn.classList.add('rotate');
+                                break;
+                        }
                     }
-                }
-                btn.style.backgroundColor = color.code;
-                btn.onclick = () => checkAnswer(color.name);
-                container.appendChild(btn);
-            });
+                    
+                    btn.style.backgroundColor = color.code;
+                    btn.onclick = () => checkAnswer(color.name);
+                    
+                    // 前3個放在上面，後2個放在下面
+                    if (index < 3) {
+                        topRow.appendChild(btn);
+                    } else {
+                        bottomRow.appendChild(btn);
+                    }
+                });
+                
+                container.appendChild(topRow);
+                container.appendChild(bottomRow);
+            } else if (difficulty === 'normal') {
+                // 普通模式：上面2個，下面2個
+                container.classList.add('normal-mode');
+                
+                // 創建上面一行（2個按鈕）
+                const topRow = document.createElement('div');
+                topRow.className = 'top-row';
+                
+                // 創建下面一行（2個按鈕）
+                const bottomRow = document.createElement('div');
+                bottomRow.className = 'bottom-row';
+                
+                selectedColors.forEach((color, index) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'color-btn';
+                    btn.style.backgroundColor = color.code;
+                    btn.onclick = () => checkAnswer(color.name);
+                    
+                    // 前2個放在上面，後2個放在下面
+                    if (index < 2) {
+                        topRow.appendChild(btn);
+                    } else {
+                        bottomRow.appendChild(btn);
+                    }
+                });
+                
+                container.appendChild(topRow);
+                container.appendChild(bottomRow);
+            } else {
+                // 簡單模式：保持原來的水平排列
+                selectedColors.forEach(color => {
+                    let btn = document.createElement('button');
+                    btn.className = 'color-btn';
+                    btn.style.backgroundColor = color.code;
+                    btn.onclick = () => checkAnswer(color.name);
+                    container.appendChild(btn);
+                });
+            }
 
             // 調整按鈕大小
             adjustButtonSize(selectedColors.length);

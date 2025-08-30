@@ -8,57 +8,99 @@ body {
 
 .game-container {
     background-color: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
     text-align: center;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
 h1 {
     color: #333;
     margin-bottom: 20px;
+    font-size: 2.5em;
 }
 
 h2 {
     color: #666;
     margin-bottom: 20px;
+    font-size: 1.8em;
 }
 
 .score-board {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     background-color: #f8f8f8;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 25px;
+    border-radius: 12px;
 }
 
 .score-item {
-    font-size: 18px;
+    font-size: 22px;
     color: #333;
 }
 
 #buttonContainer {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin: 30px 0;
+    gap: 25px;
+    margin: 40px 0;
     flex-wrap: wrap;
-    max-width: 800px;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
 }
 
+/* 困難模式特殊佈局：上面3個，下面2個 */
+#buttonContainer.hard-mode {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+}
+
+#buttonContainer.hard-mode .top-row {
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+}
+
+#buttonContainer.hard-mode .bottom-row {
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+}
+
+/* 普通模式特殊佈局：上面2個，下面2個 */
+#buttonContainer.normal-mode {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+}
+
+#buttonContainer.normal-mode .top-row {
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+#buttonContainer.normal-mode .bottom-row {
+    display: flex;
+    gap: 35px;
+    justify-content: center;
+    padding: 0 20px;
+}
+
 .color-btn {
-    width: 150px;
-    height: 150px;
+    width: 180px;
+    height: 180px;
     border: none;
-    border-radius: 10px;
+    border-radius: 15px;
     cursor: pointer;
     transition: transform 0.2s;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: bold;
     color: white;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -73,14 +115,14 @@ button {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 16px 32px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 18px;
-    margin: 10px;
+    font-size: 24px;
+    margin: 15px;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 8px;
     transition: background-color 0.3s;
 }
 
@@ -89,7 +131,7 @@ button:hover {
 }
 
 #targetColorText {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: bold;
     margin: 20px 0;
 }
@@ -264,12 +306,12 @@ button:hover {
 /* 難度選擇彈窗專屬樣式 */
 #difficultyModal .modal-content {
     background: white;
-    padding: 30px;
-    border-radius: 15px;
+    padding: 40px;
+    border-radius: 20px;
     width: 90%;
-    max-width: 400px;
+    max-width: 500px;
     position: relative;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     animation: modalPop 0.3s ease-out;
 }
 
@@ -371,14 +413,14 @@ button:hover {
 .difficulty-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin: 20px 0;
+    gap: 20px;
+    margin: 30px 0;
 }
 
 .difficulty-btn {
-    padding: 20px;
+    padding: 25px;
     border: none;
-    border-radius: 12px;
+    border-radius: 15px;
     font-size: 18px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -386,16 +428,16 @@ button:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
 }
 
 .difficulty-btn .difficulty-name {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: bold;
 }
 
 .difficulty-btn .difficulty-desc {
-    font-size: 14px;
+    font-size: 16px;
     opacity: 0.9;
 }
 

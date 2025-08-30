@@ -115,7 +115,7 @@ $colors = $stmt->fetchAll();
     <div id="theme-modal" class="modal">
         <div class="modal-content">
             <button class="back-button" onclick="handleBackButton()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
-                <span class="back-arrow">⬅</span>
+                <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
             <h2>選擇主題</h2>
@@ -146,7 +146,7 @@ $colors = $stmt->fetchAll();
     <div id="difficulty-modal" class="modal hidden">
         <div class="modal-content">
             <button id="backToThemeBtn" class="back-button" onclick="showThemeModal()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
-                <span class="back-arrow">⬅</span>
+                <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
             <h2>選擇難度</h2>

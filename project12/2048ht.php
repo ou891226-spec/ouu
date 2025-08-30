@@ -95,7 +95,7 @@ if (
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
             <button class="back-button" onclick="handleBackButton()">
-                <span class="back-arrow">⬅</span>
+                <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
             <h2>選擇難度</h2>
