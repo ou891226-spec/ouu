@@ -9,12 +9,11 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>全部遊戲</title>
+  <title>遊戲首頁</title>
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
   <link rel="stylesheet" href="css/global-invitation.css" />
-  
 </head>
 <body>
 
@@ -25,8 +24,8 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
+  <a href="index.php" class="jelly-btn jelly-red">首頁</a>
   <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
-  <a href="game-categories.php" class="jelly-btn jelly-red">遊戲分類</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -387,19 +386,19 @@ function displayDefaultGames() {
   grid.innerHTML = `
     <div class="game-block">
       <div class="game-item">
-        <a href="Catch-Egg Game.php"><img src="img/egg.jpg" alt="接金蛋" /></a>
+        <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋" /></a>
       </div>
       <div class="game-title">接金蛋</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="rhythm_game.php"><img src="img/rhythm.jpg" alt="節奏遊戲" /></a>
+        <a href="rhythm_game.php"><img src="img/rhythm1.png" alt="節奏遊戲" /></a>
       </div>
       <div class="game-title">節奏遊戲</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="text-color.php"><img src="img/color.jpg" alt="看字選色"></a>
+        <a href="text-color.php"><img src="img/text_color111.png" alt="看字選色"></a>
       </div>
       <div class="game-title">看字選色</div>
     </div>
@@ -453,24 +452,26 @@ function displayDefaultPopularGames() {
   grid.innerHTML = `
     <div class="game-block">
       <div class="game-item">
-        <a href="2048ht.php"><img src="img/2048.png" alt="2048" /></a>
+        <a href="2048ht.php"><img src="img/game_20481.png" alt="2048" /></a>
       </div>
       <div class="game-title">2048</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="Memory-Game.php"><img src="img/card.jpg" alt="翻牌對對樂" /></a>
+        <a href="Memory-Game.php"><img src="img/card1.png" alt="翻牌對對樂" /></a>
       </div>
       <div class="game-title">翻牌對對樂</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="prisoner.php"><img src="img/prisoner.jpg" alt="追蹤犯人"></a>
+        <a href="prisoner.php"><img src="img/prisoner1.png" alt="追蹤犯人"></a>
       </div>
       <div class="game-title">追蹤犯人</div>
     </div>
   `;
 }
+
+
 
 // 頁面載入時執行
 document.addEventListener('DOMContentLoaded', function() {

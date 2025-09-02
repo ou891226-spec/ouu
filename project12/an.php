@@ -18,7 +18,7 @@ require_once 'check_login.php';
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
-  <a href="game-categories.php" class="jelly-btn jelly-red">遊戲分類</a>
+  <a href="index.php" class="jelly-btn jelly-red">首頁</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">

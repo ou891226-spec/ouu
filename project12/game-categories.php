@@ -81,8 +81,8 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
+  <a href="index.php" class="jelly-btn jelly-red">首頁</a>
   <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
-  <a href="game-categories.php" class="jelly-btn jelly-red">遊戲分類</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -189,6 +189,18 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- 主要內容 -->
 <div class="category-container">
   <h1 class="page-title">遊戲分類</h1>
+  
+  <!-- 提示訊息 -->
+  <div style="text-align: center; margin-bottom: 40px; padding: 20px; background: #667eea; color: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+    <h3 style="margin: 0 0 15px 0; font-size: 1.5rem;">🎮 新功能上線！</h3>
+    <p style="margin: 0 0 20px 0; font-size: 1.1rem; opacity: 0.9;">
+      遊戲分類功能已整合到主頁面，現在您可以在首頁直接按分類瀏覽遊戲，使用體驗更順暢！
+    </p>
+    <a href="index.php" style="display: inline-block; background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: bold; transition: all 0.3s ease; border: 2px solid rgba(255,255,255,0.3);">
+      🏠 前往首頁體驗
+    </a>
+  </div>
+  
   <div class="category-grid">
     <a href="react.php" class="category-card">
       <span class="category-icon">⚡</span>

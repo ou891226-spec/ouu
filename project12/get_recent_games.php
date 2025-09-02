@@ -50,13 +50,15 @@ try {
     
     // 遊戲對應的圖片和連結
     $game_mappings = [
-        '2048' => ['img' => 'img/2048.png', 'link' => '2048ht.php', 'title' => '2048'],
-        '記憶力' => ['img' => 'img/card.jpg', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
-        '追蹤犯人遊戲' => ['img' => 'img/prisoner.jpg', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
-        '節奏遊戲' => ['img' => 'img/rhythm.jpg', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
-        '反應力' => ['img' => 'img/egg.jpg', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
-        '看字選色遊戲' => ['img' => 'img/color.jpg', 'link' => 'text-color.php', 'title' => '看字選色'],
-        '算數邏輯力' => ['img' => 'img/vegetable.jpg', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢']
+        '2048' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
+        '記憶力' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
+        '追蹤犯人遊戲' => ['img' => 'img/prisoner1.png?v=2', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
+        '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
+        '反應力' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
+        '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
+        '算數邏輯力' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
+        '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
+        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.php', 'title' => '過河遊戲']
     ];
     
     $formatted_games = [];
@@ -73,7 +75,7 @@ try {
         // 如果找不到對應，使用預設值
         if (!$game_info) {
             $game_info = [
-                'img' => 'img/game_2048.png',
+                'img' => 'img/game_20481.png?v=2',
                 'link' => 'game-category.php',
                 'title' => $game_type
             ];
@@ -96,7 +98,7 @@ try {
             [
                 'game_type' => '接金蛋遊戲',
                 'title' => '接金蛋',
-                'img' => 'img/egg.jpg',
+                'img' => 'img/egg1.png?v=2',
                 'link' => 'Catch-Egg Game.php',
                 'play_count' => 0,
                 'last_played' => null,
@@ -105,7 +107,7 @@ try {
             [
                 'game_type' => '節奏遊戲',
                 'title' => '節奏遊戲',
-                'img' => 'img/rhythm.jpg',
+                'img' => 'img/rhythm1.png?v=2',
                 'link' => 'rhythm_game.php',
                 'play_count' => 0,
                 'last_played' => null,
@@ -114,7 +116,7 @@ try {
             [
                 'game_type' => '看字選色遊戲',
                 'title' => '看字選色',
-                'img' => 'img/color.jpg',
+                'img' => 'img/text_color111.png?v=2',
                 'link' => 'text-color.php',
                 'play_count' => 0,
                 'last_played' => null,

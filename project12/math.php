@@ -24,7 +24,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
-  <a href="game-categories.php" class="jelly-btn jelly-red">遊戲分類</a>
+  <a href="index.php" class="jelly-btn jelly-red">首頁</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -48,7 +48,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   </div>
 
   <!-- 返回按鈕 -->
-  <div class="back-button" onclick="window.location.href='game-categories.php'">
+  <div class="back-button" onclick="window.location.href='index.php'">
     <div class="back-icon">
       <span class="back-arrow">⬅</span>
     </div>

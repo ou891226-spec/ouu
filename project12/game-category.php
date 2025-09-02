@@ -14,6 +14,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
   <link rel="stylesheet" href="css/global-invitation.css" />
+  <link rel="stylesheet" href="css/game-category-tabs.css" />
 </head>
 <body>
 
@@ -21,8 +22,8 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
+  <a href="index.php" class="jelly-btn jelly-red">首頁</a>
   <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
-  <a href="game-categories.php" class="jelly-btn jelly-red">遊戲分類</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -255,93 +256,191 @@ function togglePassword() {
 }
 </script>
 
-<!-- 切換按鈕 -->
-<div class="mode-switch">
-  <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem; color: #333;">全部遊戲</h2>
-  <button id="singleBtn" class="mode-btn active">單人遊戲</button>
-  <button id="doubleBtn" class="mode-btn">雙人遊戲</button>
+<!-- 遊戲分類標籤 -->
+<div class="category-tabs">
+  <button class="category-tab active" onclick="showCategory('all')">
+    <span class="tab-icon">🎮</span>
+    全部遊戲
+  </button>
+  <button class="category-tab" onclick="showCategory('reaction')">
+    <span class="tab-icon">⚡</span>
+    反應力
+  </button>
+  <button class="category-tab" onclick="showCategory('memory')">
+    <span class="tab-icon">🧠</span>
+    記憶力
+  </button>
+  <button class="category-tab" onclick="showCategory('logic')">
+    <span class="tab-icon">🔢</span>
+    算術邏輯
+  </button>
 </div>
 
-<!-- 單人遊戲 -->
-<div id="single-player-section" class="section" style="display: block !important;">
+<!-- 全部遊戲內容 -->
+<div id="all-games" class="category-games active">
+  <!-- 切換按鈕 -->
+  <div class="mode-switch">
+    <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem; color: #333;">全部遊戲</h2>
+    <button id="singleBtn" class="mode-btn active">單人遊戲</button>
+    <button id="doubleBtn" class="mode-btn">雙人遊戲</button>
+  </div>
+
+  <!-- 單人遊戲 -->
+  <div id="single-player-section" class="section" style="display: block !important;">
+    <div class="game-grid">
+      <div class="game-block">
+        <div class="game-item">
+          <a href="text-color.php"><img src="img/text_color111.png" alt="看字選色"></a>
+        </div>
+        <div class="game-title">看字選色</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
+        </div>
+        <div class="game-title">接金蛋</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="2048ht.php"><img src="img/game_20481.png" alt="2048"></a>
+        </div>
+        <div class="game-title">2048</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="Memory-Game.php"><img src="img/card1.png" alt="翻牌對對樂"></a>
+        </div>
+        <div class="game-title">翻牌對對樂</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="prisoner.php"><img src="img/prisoner1.png" alt="追蹤犯人"></a>
+        </div>
+        <div class="game-title">追蹤犯人</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="rhythm_game.php"><img src="img/rhythm1.png" alt="節奏遊戲"></a>
+        </div>
+        <div class="game-title">節奏遊戲</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="clue.php"><img src="img/clue11.png" alt="圖片線索問答"></a>
+        </div>
+        <div class="game-title">圖片線索問答</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="Vegetable-Cost.php"><img src="img/vegetable1.png" alt="算菜錢"></a>
+        </div>
+        <div class="game-title">算菜錢</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="river.php"><img src="img/river1.png" alt="過河遊戲"></a>
+        </div>
+        <div class="game-title">過河遊戲</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 雙人遊戲 -->
+  <div id="double-player-section" class="section" style="display: none;">
+    <div class="game-grid">
+      <div class="game-block">
+        <div class="game-item">
+          <a href="Memory-Game-2P.php"><img src="img/card.jpg" alt="翻牌對對樂"></a>
+        </div>
+        <div class="game-title">翻牌對對樂-雙人</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="rhythm_game_multiplayer.php"><img src="img/rhythm.jpg" alt="節奏遊戲"></a>
+        </div>
+        <div class="game-title">節奏遊戲-雙人</div>
+      </div>
+      <div class="game-block">
+        <div class="game-item">
+          <a href="vegetable_cost_2P.php"><img src="img/vegetable.jpg" alt="算菜錢"></a>
+        </div>
+        <div class="game-title">算菜錢-雙人</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 反應力遊戲 -->
+<div id="reaction-games" class="category-games">
+  <h2>反應力遊戲</h2>
   <div class="game-grid">
     <div class="game-block">
       <div class="game-item">
-        <a href="text-color.php"><img src="img/color.jpg" alt="看字選色"></a>
+        <a href="text-color.php"><img src="img/text_color111.png" alt="看字選色"></a>
       </div>
       <div class="game-title">看字選色</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="Catch-Egg Game.php"><img src="img/egg.jpg" alt="接金蛋"></a>
+        <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
       </div>
       <div class="game-title">接金蛋</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="2048ht.php"><img src="img/2048.png" alt="2048"></a>
+        <a href="rhythm_game.php"><img src="img/rhythm1.png" alt="節奏遊戲"></a>
       </div>
-      <div class="game-title">2048</div>
+      <div class="game-title">節奏遊戲</div>
     </div>
+  </div>
+</div>
+
+<!-- 記憶力遊戲 -->
+<div id="memory-games" class="category-games">
+  <h2>記憶力遊戲</h2>
+  <div class="game-grid">
     <div class="game-block">
       <div class="game-item">
-        <a href="Memory-Game.php"><img src="img/card.jpg" alt="翻牌對對樂"></a>
+        <a href="Memory-Game.php"><img src="img/card1.png" alt="翻牌對對樂"></a>
       </div>
       <div class="game-title">翻牌對對樂</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="prisoner.php"><img src="img/prisoner.jpg" alt="追蹤犯人"></a>
-      </div>
-      <div class="game-title">追蹤犯人</div>
-    </div>
-    <div class="game-block">
-      <div class="game-item">
-        <a href="rhythm_game.php"><img src="img/rhythm.jpg" alt="節奏遊戲"></a>
-      </div>
-      <div class="game-title">節奏遊戲</div>
-    </div>
-    <div class="game-block">
-      <div class="game-item">
-        <a href="clue.php"><img src="img/clue.img" alt="圖片線索問答"></a>
+        <a href="clue.php"><img src="img/clue11.png" alt="圖片線索問答"></a>
       </div>
       <div class="game-title">圖片線索問答</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="Vegetable-Cost.php"><img src="img/vegetable.jpg" alt="算菜錢"></a>
+        <a href="prisoner.php"><img src="img/prisoner1.png" alt="追蹤犯人"></a>
+      </div>
+      <div class="game-title">追蹤犯人</div>
+    </div>
+  </div>
+</div>
+
+<!-- 算術邏輯遊戲 -->
+<div id="logic-games" class="category-games">
+  <h2>算術邏輯遊戲</h2>
+  <div class="game-grid">
+    <div class="game-block">
+      <div class="game-item">
+        <a href="2048ht.php"><img src="img/game_20481.png" alt="2048"></a>
+      </div>
+      <div class="game-title">2048</div>
+    </div>
+    <div class="game-block">
+      <div class="game-item">
+        <a href="Vegetable-Cost.php"><img src="img/vegetable1.png" alt="算菜錢"></a>
       </div>
       <div class="game-title">算菜錢</div>
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="river.php"><img src="img/river.png" alt="過河遊戲"></a>
+        <a href="river.php"><img src="img/river1.png" alt="過河遊戲"></a>
       </div>
       <div class="game-title">過河遊戲</div>
-    </div>
-  </div>
-</div>
-
-<!-- 雙人遊戲 -->
-<div id="double-player-section" class="section" style="display: none;">
-  <div class="game-grid">
-    <div class="game-block">
-      <div class="game-item">
-        <a href="Memory-Game-2P.php"><img src="img/card.jpg" alt="翻牌對對樂"></a>
-      </div>
-      <div class="game-title">翻牌對對樂-雙人</div>
-    </div>
-    <div class="game-block">
-      <div class="game-item">
-        <a href="rhythm_game_multiplayer.php"><img src="img/rhythm.jpg" alt="節奏遊戲"></a>
-      </div>
-      <div class="game-title">節奏遊戲-雙人</div>
-    </div>
-    <div class="game-block">
-      <div class="game-item">
-        <a href="vegetable_cost_2P.php"><img src="img/vegetable.jpg" alt="算菜錢"></a>
-      </div>
-      <div class="game-title">算菜錢-雙人</div>
     </div>
   </div>
 </div>
@@ -432,6 +531,7 @@ function togglePassword() {
 <script src="js/avatar-upload.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/global-invitation-checker.js"></script>
+<script src="js/category-tabs.js"></script>
 
 
 </body>

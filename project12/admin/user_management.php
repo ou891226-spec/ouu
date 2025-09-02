@@ -60,7 +60,8 @@ $total_pages = ceil($total_users / $per_page);
 // 獲取用戶列表
 $sql = "SELECT m.*, 
         (SELECT session_id FROM user_behavior_log ubl WHERE ubl.member_id = m.member_id ORDER BY ubl.created_at DESC LIMIT 1) as latest_session_id,
-        (SELECT created_at FROM user_behavior_log ubl WHERE ubl.member_id = m.member_id ORDER BY ubl.created_at DESC LIMIT 1) as last_activity_time
+        (SELECT created_at FROM user_behavior_log ubl WHERE ubl.member_id = m.member_id ORDER BY ubl.created_at DESC LIMIT 1) as last_activity_time,
+        (SELECT COUNT(*) FROM user_online_status uos WHERE uos.member_id = m.member_id AND uos.is_online = 1 AND uos.last_activity >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)) as recent_activity_count
         FROM member m $where_clause ORDER BY m.member_id DESC LIMIT $per_page OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -69,9 +70,9 @@ $users = $stmt->fetchAll();
 // 獲取統計數據
 $stats_sql = "SELECT 
     COUNT(*) as total_users,
-    (SELECT COUNT(DISTINCT member_id) FROM user_behavior_log WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)) as active_users,
-    COUNT(*) as inactive_users,
-    COUNT(*) as new_users_7d,
+            (SELECT COUNT(DISTINCT member_id) FROM user_online_status WHERE is_online = 1 AND last_activity >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)) as active_users,
+    (SELECT COUNT(*) FROM member) as inactive_users,
+    (SELECT COUNT(*) FROM member) as new_users_7d,
     (SELECT COUNT(DISTINCT session_id) FROM user_behavior_log) as total_sessions
 FROM member";
 $stats_stmt = $pdo->prepare($stats_sql);
@@ -194,7 +195,7 @@ $stats = $stats_stmt->fetch();
             </div>
             <div class="stat-card">
                 <h3><?php echo number_format($stats['active_users']); ?></h3>
-                <p>活躍用戶</p>
+                <p>活躍用戶 (目前線上)</p>
             </div>
             <div class="stat-card">
                 <h3><?php echo number_format($stats['new_users_7d']); ?></h3>
@@ -241,11 +242,21 @@ $stats = $stats_stmt->fetch();
                         <td><?php echo htmlspecialchars($user['account']); ?></td>
                         <td><?php echo htmlspecialchars($user['member_name'] ?? $user['name'] ?? '-'); ?></td>
                         <td>
-                            <span class="status-active">活躍</span>
+                            <?php if ($user['recent_activity_count'] > 0): ?>
+                                <span class="status-active">活躍</span>
+                            <?php else: ?>
+                                <span class="status-inactive">非活躍</span>
+                            <?php endif; ?>
                         </td>
-                        <td><?php echo isset($user['created_at']) && $user['created_at'] ? date('m月d日 H:i', strtotime($user['created_at'])) : '-'; ?></td>
+                        <td><?php echo '-'; ?></td>
                         <td><?php echo isset($user['last_activity_time']) && $user['last_activity_time'] ? date('m月d日 H:i', strtotime($user['last_activity_time'])) : '-'; ?></td>
-                        <td><?php echo isset($user['latest_session_id']) && $user['latest_session_id'] ? substr($user['latest_session_id'], 0, 20) . '...' : '-'; ?></td>
+                        <td>
+                            <?php if (isset($user['latest_session_id']) && $user['latest_session_id']): ?>
+                                <?php echo substr($user['latest_session_id'], 0, 20) . '...'; ?>
+                            <?php else: ?>
+                                <span style="color: #999; font-style: italic;">無活動記錄</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
