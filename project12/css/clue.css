@@ -80,6 +80,15 @@ body {
 .orange-btn:hover {
     background: #ff8c00 !important;
 }
+
+/* 暫停按鈕特殊樣式，覆蓋 orange-btn 類 */
+#pauseBtn {
+    background: #ffa500 !important;
+    color: #fff !important;
+}
+#pauseBtn:hover {
+    background: #ff8c00 !important;
+}
 #result-block {
     margin-top: 32px;
     text-align: center;

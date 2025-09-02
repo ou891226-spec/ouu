@@ -1,7 +1,7 @@
 body {
   font-family: "Microsoft JhengHei", sans-serif;
   text-align: center;
-  background-color: #fff;
+  background-color: #4C732F;
   margin: 0;
   padding: 20px;
 }
@@ -60,14 +60,19 @@ h1 {
   margin: 0 auto 20px;
   border: 2px solid #333;
   overflow: hidden;
-  background-color: #ffcf4a;
+  background-color: #B9835C;
 }
 
 .note img {
   width: 100px;
   height: 100px;
   pointer-events: none;
-  z-index: 2;
+
+  /* 將 z-index 設定為最高 */
+  z-index: 5; 
+
+  /* 確保透明度是 1，讓它完全不透明 */
+  opacity: 1; 
 }
 
 #noteTrack .note {
@@ -76,27 +81,31 @@ h1 {
 }
 
 #hitZone {
-  position: relative;  /* ⬅️ 必加，讓內部元素可以定位 */
+  position: relative;
   top: 50px;
   left: 20px;
   width: 100px;
   height: 100px;
-  border: 2px dashed red;
-  z-index: 10;
 
-   /* 加入本壘板圖片 */
-  background-image: url('../img/home.png');  /* 換成你的圖片路徑 */
+  /* 將這裡的 border 改成 10px solid #fff; 讓邊框變粗 */
+  border: 10px solid #fff;
+
+  /* 確保 z-index 是最低的，例如 1 */
+  z-index: 1;
+
+  /* 本壘板圖片樣式，可以透過 rgba() 設定透明度 */
+  background-image: url('../img/home.png');
   background-size: 200%;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.8;
-  z-index: 1;
 
-  /* 移除紅框與透明背景 */
-  border: none;
-  background-color: transparent;
+  /* 你現在的 background-color 沒作用，可以移除 */
+  /* background-color: #B9835C; */
 
-  pointer-events: auto; /* 要讓點擊有效 */
+  /* 使用 opacity 讓本壘板圖案半透明，這裡可以調整數值 */
+  opacity: 0.8; 
+
+  pointer-events: auto;
   cursor: pointer;
 }
 
@@ -105,7 +114,7 @@ h1 {
   white-space: nowrap;          /* 不要換行 */
   display: inline-block;        /* 保持 inline，方便定位 */
   position: absolute;
-  top: -30px;           /* 控制「打擊區」距離上方多少 */
+  top: -50px;           /* 控制「打擊區」距離上方多少 */
   left: 50%;            /* 置中 */
   transform: translateX(-50%);
   font-size: 28px;      /* 字變大 */
@@ -115,11 +124,18 @@ h1 {
 
 
 #bat img {
-  width: 80px;
+  width: 100px;
   transform: rotate(0deg);
   transform-origin: left center;
   transition: transform 0.15s ease;
-  z-index: 3;
+  z-index: 5;
+}
+
+#bat {
+  position: absolute; /* 新增：讓 z-index 生效 */
+  top: 50px; /* 根據你的需求調整位置 */
+  left: 10px; /* 根據你的需求調整位置 */
+  z-index: 10; /* 將球棒的 z-index 設定為最高 */
 }
 
 #bat.swing img {

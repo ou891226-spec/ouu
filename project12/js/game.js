@@ -834,10 +834,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pauseButton) {
                 if (this.isPaused) {
                     pauseButton.textContent = '繼續遊戲';
-                    pauseButton.classList.add('paused');
+                    pauseButton.style.background = '#4CAF50'; // 綠色
                 } else {
                     pauseButton.textContent = '暫停遊戲';
-                    pauseButton.classList.remove('paused');
+                    pauseButton.style.background = '#FF8C00'; // 橘色
                 }
             }
         }

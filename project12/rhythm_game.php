@@ -143,10 +143,10 @@ try {
             <div id="noteTrack"></div>
             <div id="hitZone">
                 <span class="hit-label">打擊區</span>
-                <div id="bat">
-                    <img src="img/bat.png" alt="球棒" />
-                </div> <!-- ← 球棒圖案 -->
-            </div>
+            </div>    
+            <div id="bat">
+                <img src="img/bat.png" alt="球棒" />
+            </div> <!-- ← 球棒圖案 -->
         </div>
 
         <div class="button-group">

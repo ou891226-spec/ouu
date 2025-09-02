@@ -237,7 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('pauseBtn').onclick = function() {
         paused = !paused;
-        this.textContent = paused ? '繼續遊戲' : '暫停遊戲';
+        if (paused) {
+            this.textContent = '繼續遊戲';
+            this.style.setProperty('background', '#4CAF50', 'important'); // 綠色
+        } else {
+            this.textContent = '暫停遊戲';
+            this.style.setProperty('background', '#FF8C00', 'important'); // 橘色
+        }
     };
     document.getElementById('endBtn').onclick = function() {
         // 直接結束遊戲，不顯示確認視窗

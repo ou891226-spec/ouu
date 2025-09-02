@@ -33,6 +33,10 @@ let passScore = 200;
 let perfectCount = 0, goodCount = 0, missCount = 0;
 let currentDifficulty = 'easy';
 let noteTimeoutId = null;
+let moveInterval = null;
+let timerInterval = null;
+let startTime = null;
+let pauseTime = 0; // 新增：用於記錄暫停的時間點
 
 // 獲取會員ID
 const memberIdInput = document.getElementById('member-id');
@@ -67,7 +71,7 @@ function startGame() {
   gameRunning = true;
   spawnNoteWithRhythm();
   moveInterval = setInterval(moveNotes, 16);
-  const startTime = Date.now();
+  startTime = Date.now();
 
   timerInterval = setInterval(() => {
     if (paused) return;
@@ -83,7 +87,7 @@ function spawnNoteWithRhythm() {
   spawnNote();
   const delay = rhythmPattern[rhythmIndex];
   rhythmIndex = (rhythmIndex + 1) % rhythmPattern.length;
-  noteTimeoutId = setTimeout(spawnNoteWithRhythm, delay); // ← 儲存 ID
+  noteTimeoutId = setTimeout(spawnNoteWithRhythm, delay);
 }
 
 
@@ -114,22 +118,25 @@ function moveNotes() {
       note.remove();
       notes.splice(index, 1);
       missCount++;
-      statusText.textContent = `❌ Miss！（目前：${score}）`;
     }
   });
 }
 
 function handleHit() {
   if (!gameRunning || paused) return;
+
+  // 在這裡呼叫揮棒函式，確保只要點擊打擊區就一定會揮棒
+  swingBat();
+
   const zoneLeft = hitZone.getBoundingClientRect().left;
   const zoneRight = zoneLeft + hitZone.offsetWidth;
-  let hitResult = ''; // 在這裡宣告 hitResult
-  let scoreToAdd = 0; // 在這裡宣告 scoreToAdd
+  let hitResult = '';
+  let scoreToAdd = 0;
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
     const noteBox = note.getBoundingClientRect();
     const center = noteBox.left + noteBox.width / 2;
-    let tolerance = currentDifficulty === 'easy' ? 30 : currentDifficulty === 'normal' ? 20 : 10;
+    let tolerance = currentDifficulty === 'easy' ? 40 : currentDifficulty === 'normal' ? 30 : 20;
     if (center >= zoneLeft - tolerance && center <= zoneRight + tolerance) {
       flashHitZone();
       const diff = Math.abs(center - (zoneLeft + hitZone.offsetWidth / 2));
@@ -153,9 +160,7 @@ function handleHit() {
         highScoreDisplay.textContent = score;
         localStorage.setItem("rhythmHighScore", score);
       }
-      // 呼叫新的函式來顯示結果，並傳入正確的參數
-      showHitResult(hitResult, scoreToAdd); // 新增這行
-
+      showHitResult(hitResult, scoreToAdd);
       note.remove();
       notes.splice(i, 1);
       break;
@@ -168,7 +173,6 @@ function showHitResult(result, score) {
   resultDiv.className = "hit-result";
   resultDiv.textContent = `${result} +${score}`;
 
-  // 設定樣式
   resultDiv.style.position = "absolute";
   resultDiv.style.left = "50%";
   resultDiv.style.top = "50%";
@@ -180,8 +184,7 @@ function showHitResult(result, score) {
   resultDiv.style.zIndex = "1000";
   resultDiv.style.pointerEvents = "none";
 
-  // 將結果 div 附加到遊戲區域
-  const gameArea = document.getElementById("gameArea"); // 或其他您希望它出現的父元素
+  const gameArea = document.getElementById("gameArea");
   gameArea.appendChild(resultDiv);
 
   let opacity = 1;
@@ -199,10 +202,9 @@ function showHitResult(result, score) {
   }, 50);
 }
 
-
 function flashHitZone() {
-  hitZone.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
-  setTimeout(() => hitZone.style.backgroundColor = 'rgba(255, 0, 0, 0.05)', 100);
+  hitZone.style.backgroundColor = '#FFD700'; // 例如，改成金黃色
+  setTimeout(() => hitZone.style.backgroundColor = '#B9835C', 100); // 100 毫秒後恢復為打擊區的顏色
 }
 
 function togglePause() {
@@ -210,21 +212,45 @@ function togglePause() {
   if (paused) {
     bgm.pause();
     pauseButton.textContent = "繼續遊戲";
-    clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
+    pauseButton.style.background = '#4CAF50'; // 綠色
+    clearTimeout(noteTimeoutId);
+    clearInterval(moveInterval);
+    clearInterval(timerInterval);
+    // 記錄暫停時的時間
+    pauseTime = Date.now();
   } else {
+    // 計算暫停的持續時間
+    const pauseDuration = Date.now() - pauseTime;
+
+    // 將暫停時間加到每個音符的生成時間上，讓它們從暫停位置繼續
+    notes.forEach(note => {
+      const spawnTime = parseInt(note.dataset.spawnTime);
+      note.dataset.spawnTime = spawnTime + pauseDuration;
+    });
+
+    // 將暫停時間加到遊戲開始時間，確保計時器正確
+    startTime += pauseDuration;
+
     bgm.play();
     pauseButton.textContent = "暫停遊戲";
-    spawnNoteWithRhythm(); // ← 重新開始節奏
+    pauseButton.style.background = '#FF8C00'; // 橘色
+    spawnNoteWithRhythm();
+    moveInterval = setInterval(moveNotes, 16);
+    timerInterval = setInterval(() => {
+      const remaining = 60 - Math.floor((Date.now() - startTime) / 1000);
+      gameTime = remaining;
+      timerDisplay.textContent = remaining;
+      if (remaining <= 0) endGame();
+    }, 500);
   }
 }
 
-
 function endGame(forceEnd = false) {
-  console.log("endGame() called."); // 新增偵錯訊息
-  console.log("Current Score:", score); // 新增偵錯訊息
-  console.log("Pass Score:", passScore); // 新增偵錯訊息
-  console.log("Force End:", forceEnd); // 新增偵錯訊息
-  console.log("Is game passed?", score >= passScore); // 新增偵錯訊息
+  console.log("endGame() called.");
+  console.log("Current Score:", score);
+  console.log("Pass Score:", passScore);
+  console.log("Force End:", forceEnd);
+  console.log("Is game passed?", score >= passScore);
 
   gameRunning = false;
   clearInterval(moveInterval);
@@ -232,51 +258,48 @@ function endGame(forceEnd = false) {
   bgm.pause();
   bgm.currentTime = 0;
   
-  clearTimeout(noteTimeoutId); // ← 清除節奏出現的 setTimeout
+  clearTimeout(noteTimeoutId);
 
   let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 1;
-  let recordScore = 0; // 初始化 recordScore
+  let recordScore = 0;
 
-  // 計算 recordScore，強制結束時給予 0 分
   if (forceEnd) {
-    recordScore = 0; // 強制結束給予 0 分
-    console.log("Force end. Record score set to 0."); // 新增偵錯訊息
-  } else if (score >= passScore) { // 判斷是否過關
+    recordScore = 0;
+    console.log("Force end. Record score set to 0.");
+  } else if (score >= passScore) {
     if (currentDifficulty === 'easy') recordScore = 20;
     else if (currentDifficulty === 'normal') recordScore = 50;
     else if (currentDifficulty === 'hard') recordScore = 100;
-    console.log("Game passed! Calculated record score:", recordScore); // 新增偵錯訊息
+    console.log("Game passed! Calculated record score:", recordScore);
   } else {
-    recordScore = 0; // 未過關則記錄 0 分
-    console.log("Game not passed. Record score set to 0."); // 新增偵錯訊息
+    recordScore = 0;
+    console.log("Game not passed. Record score set to 0.");
   }
 
-  // 總是嘗試送分數到後端
-  console.log("Attempting to save score..."); // 新增偵錯訊息
+  console.log("Attempting to save score...");
   fetch('save_rhythm_game.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       member_id: sendMemberId,
-      difficulty: currentDifficulty, // 直接使用英文難度名稱
-      score: recordScore, // 使用計算後的 recordScore
-      play_time: 60 - gameTime, // 遊玩秒數
-      is_passed: score >= passScore // 傳送是否過關
+      difficulty: currentDifficulty,
+      score: recordScore,
+      play_time: 60 - gameTime,
+      is_passed: score >= passScore
     })
   })
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      console.log('成績已儲存！', data); // 新增偵錯訊息
+      console.log('成績已儲存！', data);
     } else {
-      console.error('儲存失敗：', data.message); // 新增偵錯訊息
+      console.error('儲存失敗：', data.message);
     }
   })
   .catch(error => {
-    console.error('Fetch error:', error); // 新增錯誤捕獲
+    console.error('Fetch error:', error);
   });
 
-  // 檢查並更新任務狀態
   if (score >= passScore && currentDifficulty === 'normal') {
     fetch("update_task_status.php", {
       method: "POST",
@@ -302,7 +325,6 @@ function endGame(forceEnd = false) {
     });
   }
 
-  // 修正 showEndModal 的分數參數，確保顯示的是 recordScore
   showEndModal(forceEnd ? false : score >= passScore, recordScore, currentDifficulty);
 }
 
@@ -319,7 +341,6 @@ function resetGame() {
   timerDisplay.textContent = "60";
 }
 
-// Modal 操作
 window.onload = () => difficultyModal.style.display = 'flex';
 difficultyOptions.forEach(option => {
   option.addEventListener('click', () => {
@@ -334,12 +355,11 @@ difficultyOptions.forEach(option => {
 
 pauseButton.addEventListener("click", togglePause);
 infoBtn.addEventListener("click", () => infoModal.style.display = "flex");
-// 關閉說明視窗的函數
+
 function closeInfoModal() {
   infoModal.style.display = "none";
 }
 
-// 綁定關閉按鈕事件
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.querySelector('.close-btn');
   if (closeBtn) {
@@ -348,10 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 restartButton.addEventListener("click", () => location.reload());
-endButton.addEventListener("click", () => endGame(true)); // true 表示強制結束，不給分
+endButton.addEventListener("click", () => endGame(true));
 document.getElementById("gameArea").addEventListener("click", handleHit);
 
-// 結束後顯示結果 modal
 function showEndModal(success, score, levelStr) {
   const modal = document.getElementById('result-modal');
   const title = document.getElementById('result-title');
@@ -362,42 +381,20 @@ function showEndModal(success, score, levelStr) {
   const levelName = levelStr === 'easy' ? '簡單' : levelStr === 'normal' ? '普通' : '困難';
   difficulty.textContent = '難度：' + levelName;
   
-  // 根據難度顯示固定分數
   let fixedScore = 0;
-  if (levelStr === 'easy') fixedScore = 20; // 簡單
-  else if (levelStr === 'normal') fixedScore = 50; // 普通
-  else if (levelStr === 'hard') fixedScore = 100; // 困難
+  if (levelStr === 'easy') fixedScore = 20;
+  else if (levelStr === 'normal') fixedScore = 50;
+  else if (levelStr === 'hard') fixedScore = 100;
   
   message.innerHTML = success ? '得分：' + fixedScore + '<br>過關分數：+' + fixedScore : '未在時間內達成分數';
 
   modal.style.display = 'flex';
 }
 
-
-document.addEventListener("DOMContentLoaded", function () {
-  const hitZone = document.getElementById("hitZone");
-  const bat = document.getElementById("bat");
-
-  hitZone.addEventListener("click", function () {
-    bat.classList.add("swing");
-
-    // 揮棒完移除 class，恢復原狀
-    setTimeout(() => {
-      bat.classList.remove("swing");
-    }, 150); // 跟 CSS transition 時間一致
-  });
-});
-
-const bat = document.getElementById('bat');
-
 function swingBat() {
   bat.classList.add('swing');
 
-  // 動畫結束後移除 class 以便下次可以再觸發
   setTimeout(() => {
     bat.classList.remove('swing');
-  }, 300); // 要跟 animation 的 duration 對應（0.3 秒）
+  }, 300);
 }
-
-// 例如你想在按下按鈕或點某區塊揮棒
-document.addEventListener('click', swingBat);

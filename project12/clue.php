@@ -454,7 +454,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
             <p>正確答案：<span id="correct-answer"></span></p>
         </div>
         <div class="control-btns">
-            <button id="pauseBtn" class="orange-btn">暫停遊戲</button>
+            <button id="pauseBtn">暫停遊戲</button>
             <button id="endBtn" class="red-btn">結束遊戲</button>
             <button id="resetBtn" class="blue-btn">重新開始</button>
         </div>
