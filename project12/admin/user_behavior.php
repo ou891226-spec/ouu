@@ -20,7 +20,7 @@ $where_conditions = [];
 $params = [];
 
 // 過濾掉非遊戲行為，只顯示遊戲相關行為
-$where_conditions[] = "ubl.action_type IN ('game_start', 'game_exit', 'game_complete')";
+        $where_conditions[] = "ubl.action_type IN ('game_exit', 'game_complete')";
 
 if ($action_type_filter) {
     $where_conditions[] = "ubl.action_type = ?";
@@ -147,7 +147,7 @@ $stats_sql = "
         COUNT(CASE WHEN ubl.action_type = 'game_complete' THEN 1 END) as game_completes
     FROM user_behavior_log ubl 
     LEFT JOIN member m ON ubl.member_id = m.member_id 
-        WHERE ubl.action_type IN ('game_start', 'game_exit', 'game_complete')
+        WHERE ubl.action_type IN ('game_exit', 'game_complete')
     $where_clause
 ";
 $stats_stmt = $pdo->prepare($stats_sql);
@@ -170,7 +170,7 @@ try {
     $action_types_params = [];
     
     // 只過濾遊戲相關行為
-    $action_types_where_conditions[] = "ubl.action_type IN ('game_start', 'game_exit', 'game_complete')";
+    $action_types_where_conditions[] = "ubl.action_type IN ('game_exit', 'game_complete')";
     
     if ($date_filter) {
         switch ($date_filter) {
@@ -208,202 +208,125 @@ try {
     $action_types = [];
 }
 
-// 1. 遊戲快速退出率分析
+// 1. 遊戲完成統計分析
 try {
-    // 為快速退出分析創建專門的過濾條件
-    $quick_exit_where_conditions = [];
-    $quick_exit_params = [];
+    // 為遊戲完成分析創建專門的過濾條件
+    $game_complete_where_conditions = [];
+    $game_complete_params = [];
     
     if ($date_filter) {
         switch ($date_filter) {
             case 'today':
-                $quick_exit_where_conditions[] = "DATE(ubl.created_at) = CURDATE()";
+                $game_complete_where_conditions[] = "DATE(ubl.created_at) = CURDATE()";
                 break;
             case 'week':
-                $quick_exit_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+                $game_complete_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
                 break;
             case 'month':
-                $quick_exit_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                $game_complete_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
                 break;
         }
     }
     
     if ($user_search) {
-        $quick_exit_where_conditions[] = "m.member_name LIKE ?";
-        $quick_exit_params[] = "%$user_search%";
+        $game_complete_where_conditions[] = "m.member_name LIKE ?";
+        $game_complete_params[] = "%$user_search%";
     }
     
-    $quick_exit_where_clause = $quick_exit_where_conditions ? 'AND ' . implode(' AND ', $quick_exit_where_conditions) : '';
+    $game_complete_where_clause = $game_complete_where_conditions ? 'AND ' . implode(' AND ', $game_complete_where_conditions) : '';
     
-    $quick_exit_sql = "
+    $game_complete_sql = "
         SELECT 
             ubl.game_type,
-            COUNT(*) as total_games,
+            COUNT(*) as total_completes,
+            COUNT(DISTINCT ubl.member_id) as unique_players
+        FROM user_behavior_log ubl 
+        LEFT JOIN member m ON ubl.member_id = m.member_id 
+        WHERE ubl.action_type = 'game_complete' 
+        AND ubl.game_type IS NOT NULL
+        $game_complete_where_clause
+        GROUP BY ubl.game_type 
+        HAVING total_completes >= 1
+        ORDER BY total_completes DESC
+    ";
+    
+    $game_complete_stmt = $pdo->prepare($game_complete_sql);
+    $game_complete_stmt->execute($game_complete_params);
+    $game_complete_data = $game_complete_stmt->fetchAll();
+} catch (Exception $e) {
+    $game_complete_data = [];
+}
+
+// 2. 遊戲退出統計分析
+try {
+    // 為遊戲退出分析創建專門的過濾條件
+    $game_exit_where_conditions = [];
+    $game_exit_params = [];
+    
+    if ($date_filter) {
+        switch ($date_filter) {
+            case 'today':
+                $game_exit_where_conditions[] = "DATE(ubl.created_at) = CURDATE()";
+                break;
+            case 'week':
+                $game_exit_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+                break;
+            case 'month':
+                $game_exit_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                break;
+        }
+    }
+    
+    if ($user_search) {
+        $game_exit_where_conditions[] = "m.member_name LIKE ?";
+        $game_exit_params[] = "%$user_search%";
+    }
+    
+    $game_exit_where_clause = $game_exit_where_conditions ? 'AND ' . implode(' AND ', $game_exit_where_conditions) : '';
+    
+    $game_exit_sql = "
+        SELECT 
+            ubl.game_type,
+            COUNT(*) as total_exits,
+            COUNT(DISTINCT ubl.member_id) as unique_players,
             COUNT(CASE WHEN EXISTS (
                 SELECT 1 FROM user_behavior_log ubl2 
                 WHERE ubl2.member_id = ubl.member_id 
                 AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_exit' 
+                AND ubl2.action_type = 'game_complete' 
                 AND ubl2.created_at > ubl.created_at
                 AND ubl2.game_type = ubl.game_type
                 AND TIMESTAMPDIFF(SECOND, ubl.created_at, ubl2.created_at) <= 15
-            ) THEN 1 END) as quick_exits,
-            ROUND(COUNT(CASE WHEN EXISTS (
+            ) THEN 1 END) as quick_exits_15s,
+            COUNT(CASE WHEN EXISTS (
                 SELECT 1 FROM user_behavior_log ubl2 
                 WHERE ubl2.member_id = ubl.member_id 
                 AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_exit' 
+                AND ubl2.action_type = 'game_complete' 
                 AND ubl2.created_at > ubl.created_at
                 AND ubl2.game_type = ubl.game_type
-                AND TIMESTAMPDIFF(SECOND, ubl.created_at, ubl2.created_at) <= 15
-            ) THEN 1 END) * 100.0 / COUNT(*), 2) as quick_exit_rate
-        FROM user_behavior_log ubl 
-        LEFT JOIN member m ON ubl.member_id = m.member_id 
-        WHERE ubl.action_type = 'game_start' 
-        AND ubl.game_type IS NOT NULL
-        $quick_exit_where_clause
-        GROUP BY ubl.game_type 
-        HAVING total_games >= 1
-        ORDER BY quick_exit_rate DESC
-    ";
-    
-    $quick_exit_stmt = $pdo->prepare($quick_exit_sql);
-    $quick_exit_stmt->execute($quick_exit_params);
-    $quick_exit_data = $quick_exit_stmt->fetchAll();
-} catch (Exception $e) {
-    $quick_exit_data = [];
-}
-
-// 2. 重複遊玩次數與遊玩時間分析
-try {
-    // 為重複遊玩分析創建專門的過濾條件
-    $repeat_play_where_conditions = [];
-    $repeat_play_params = [];
-    
-    if ($date_filter) {
-        switch ($date_filter) {
-            case 'today':
-                $repeat_play_where_conditions[] = "DATE(ubl.created_at) = CURDATE()";
-                break;
-            case 'week':
-                $repeat_play_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
-                break;
-            case 'month':
-                $repeat_play_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
-                break;
-        }
-    }
-    
-    if ($user_search) {
-        $repeat_play_where_conditions[] = "m.member_name LIKE ?";
-        $repeat_play_params[] = "%$user_search%";
-    }
-    
-    $repeat_play_where_clause = $repeat_play_where_conditions ? 'AND ' . implode(' AND ', $repeat_play_where_conditions) : '';
-    
-    $repeat_play_sql = "
-        SELECT 
-            ubl.game_type,
-            ubl.member_id,
-            m.member_name,
-            COUNT(*) as play_count,
-            AVG(CASE WHEN EXISTS (
-                SELECT 1 FROM user_behavior_log ubl2 
-                WHERE ubl2.member_id = ubl.member_id 
-                AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_exit' 
-                AND ubl2.created_at > ubl.created_at
-                AND ubl2.game_type = ubl.game_type
-            ) THEN TIMESTAMPDIFF(SECOND, ubl.created_at, 
-                (SELECT MIN(ubl2.created_at) 
-                 FROM user_behavior_log ubl2 
-                 WHERE ubl2.member_id = ubl.member_id 
-                 AND ubl2.session_id = ubl.session_id 
-                 AND ubl2.action_type = 'game_exit' 
-                 AND ubl2.created_at > ubl.created_at
-                 AND ubl2.game_type = ubl.game_type))
-            ELSE 300 END) as avg_play_time_seconds
+                AND TIMESTAMPDIFF(SECOND, ubl.created_at, ubl2.created_at) <= 30
+            ) THEN 1 END) as quick_exits_30s
         FROM user_behavior_log ubl 
         LEFT JOIN member m ON ubl.member_id = m.member_id
-        WHERE ubl.action_type = 'game_start' 
+        WHERE ubl.action_type = 'game_exit' 
         AND ubl.game_type IS NOT NULL
-        $repeat_play_where_clause
-        GROUP BY ubl.game_type, ubl.member_id 
-        HAVING play_count >= 1
-        ORDER BY play_count DESC, avg_play_time_seconds DESC
+        $game_exit_where_clause
+        GROUP BY ubl.game_type 
+        HAVING total_exits >= 1
+        ORDER BY total_exits DESC
         LIMIT 15
     ";
     
-    $repeat_play_stmt = $pdo->prepare($repeat_play_sql);
-    $repeat_play_stmt->execute($repeat_play_params);
-    $repeat_play_data = $repeat_play_stmt->fetchAll();
+    $game_exit_stmt = $pdo->prepare($game_exit_sql);
+    $game_exit_stmt->execute($game_exit_params);
+    $game_exit_data = $game_exit_stmt->fetchAll();
 } catch (Exception $e) {
-    $repeat_play_data = [];
+    $game_exit_data = [];
 }
 
-// 3. 瀏覽後無動作分析
-try {
-    // 為瀏覽無動作分析創建專門的過濾條件（不排除 page_view）
-    $browse_where_conditions = [];
-    $browse_params = [];
-    
-    if ($date_filter) {
-        switch ($date_filter) {
-            case 'today':
-                $browse_where_conditions[] = "DATE(ubl.created_at) = CURDATE()";
-                break;
-            case 'week':
-                $browse_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
-                break;
-            case 'month':
-                $browse_where_conditions[] = "ubl.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
-                break;
-        }
-    }
-    
-    if ($user_search) {
-        $browse_where_conditions[] = "m.member_name LIKE ?";
-        $browse_params[] = "%$user_search%";
-    }
-    
-    $browse_where_clause = $browse_where_conditions ? 'AND ' . implode(' AND ', $browse_where_conditions) : '';
-    
-    $browse_no_action_sql = "
-        SELECT 
-            ubl.page_url,
-            COUNT(*) as browse_count,
-            COUNT(CASE WHEN EXISTS (
-                SELECT 1 FROM user_behavior_log ubl2 
-                WHERE ubl2.member_id = ubl.member_id 
-                AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_start' 
-                AND ubl2.created_at > ubl.created_at 
-                AND ubl2.created_at < DATE_ADD(ubl.created_at, INTERVAL 5 MINUTE)
-            ) THEN 1 END) as started_games,
-            ROUND((COUNT(*) - COUNT(CASE WHEN EXISTS (
-                SELECT 1 FROM user_behavior_log ubl2 
-                WHERE ubl2.member_id = ubl.member_id 
-                AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_start' 
-                AND ubl2.created_at > ubl.created_at 
-                AND ubl2.created_at < DATE_ADD(ubl.created_at, INTERVAL 5 MINUTE)
-            ) THEN 1 END)) * 100.0 / COUNT(*), 2) as no_action_rate
-        FROM user_behavior_log ubl 
-        LEFT JOIN member m ON ubl.member_id = m.member_id 
-        WHERE ubl.action_type = 'page_view' 
-        AND ubl.page_url LIKE '%game%'
-        $browse_where_clause
-        GROUP BY ubl.page_url 
-        HAVING browse_count >= 1
-        ORDER BY no_action_rate DESC
-    ";
-    
-    $browse_no_action_stmt = $pdo->prepare($browse_no_action_sql);
-    $browse_no_action_stmt->execute($browse_params);
-    $browse_no_action_data = $browse_no_action_stmt->fetchAll();
-} catch (Exception $e) {
-    $browse_no_action_data = [];
-}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -478,7 +401,6 @@ try {
         }
         .action-type { padding: 4px 8px; border-radius: 3px; color: white; font-size: 12px; }
         .action-page_view { background: #28a745; }
-        .action-game_start { background: #007bff; }
         .action-game_complete { background: #28a745; }
         .action-game_exit { background: #dc3545; }
         .action-login { background: #17a2b8; }
@@ -513,7 +435,7 @@ try {
                     <label>行為類型：</label>
                     <select name="action_type">
                         <option value="">全部</option>
-                        <option value="game_start" <?php echo $action_type_filter === 'game_start' ? 'selected' : ''; ?>>遊戲開始</option>
+
                         <option value="game_complete" <?php echo $action_type_filter === 'game_complete' ? 'selected' : ''; ?>>遊戲完成</option>
                         <option value="game_exit" <?php echo $action_type_filter === 'game_exit' ? 'selected' : ''; ?>>遊戲退出</option>
                     </select>
@@ -575,7 +497,7 @@ try {
                                 <?php 
                                 $labels = [
                                     'page_view' => '頁面瀏覽',
-                                    'game_start' => '遊戲開始',
+
                                     'game_complete' => '遊戲完成',
                                     'game_exit' => '遊戲退出',
                                     'login' => '登入',
@@ -594,36 +516,77 @@ try {
             </table>
         </div>
         
-        <!-- 1. 遊戲快速退出率分析 -->
+        <!-- 1. 遊戲完成統計分析 -->
         <div class="behavior-analysis">
-            <h2>🎮 遊戲快速退出率分析</h2>
-            <p><em>分析使用者在遊玩時間少於15秒就退出遊戲的情況，幫助找出需要優化的遊戲</em></p>
+            <h2>🎮 遊戲完成統計分析</h2>
+            <p><em>分析各遊戲的完成次數和參與玩家數量</em></p>
             
-            <?php if (empty($quick_exit_data)): ?>
-                <p style="color: #666; text-align: center; padding: 20px;">暫無快速退出數據</p>
+            <?php if (empty($game_complete_data)): ?>
+                <p style="color: #666; text-align: center; padding: 20px;">暫無遊戲完成數據</p>
             <?php else: ?>
                 <table>
                     <thead>
                         <tr>
                             <th>遊戲類型</th>
-                            <th>總遊戲次數</th>
-                            <th>快速退出次數</th>
-                            <th>快速退出率</th>
-                            <th>建議</th>
+                            <th>完成次數</th>
+                            <th>參與玩家數</th>
+                            <th>平均完成率</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($quick_exit_data as $row): ?>
-                            <tr class="<?php echo $row['quick_exit_rate'] > 30 ? 'warning' : ($row['quick_exit_rate'] > 15 ? 'highlight' : 'success'); ?>">
+                        <?php foreach ($game_complete_data as $row): ?>
+                            <tr>
                                 <td><?php echo htmlspecialchars($row['game_type']); ?></td>
-                                <td><?php echo number_format($row['total_games']); ?></td>
-                                <td><?php echo number_format($row['quick_exits']); ?></td>
-                                <td><strong><?php echo $row['quick_exit_rate']; ?>%</strong></td>
+                                <td><strong><?php echo number_format($row['total_completes']); ?></strong></td>
+                                <td><?php echo number_format($row['unique_players']); ?></td>
+                                <td><?php echo $row['unique_players'] > 0 ? round($row['total_completes'] / $row['unique_players'], 1) : 0; ?> 次/人</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        
+        <!-- 2. 遊戲退出統計分析 -->
+        <div class="behavior-analysis">
+            <h2>🔄 遊戲退出統計分析</h2>
+            <p><em>分析各遊戲的退出次數和參與玩家數量</em></p>
+            
+            <?php if (empty($game_exit_data)): ?>
+                <p style="color: #666; text-align: center; padding: 20px;">暫無遊戲退出數據</p>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>遊戲類型</th>
+                            <th>退出次數</th>
+                            <th>參與玩家數</th>
+                            <th>平均退出率</th>
+                            <th>≤15秒退出</th>
+                            <th>≤30秒退出</th>
+                            <th>快速退出率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($game_exit_data as $row): ?>
+                            <?php 
+                            $quick_exit_rate_15s = $row['total_exits'] > 0 ? round(($row['quick_exits_15s'] / $row['total_exits']) * 100, 1) : 0;
+                            $quick_exit_rate_30s = $row['total_exits'] > 0 ? round(($row['quick_exits_30s'] / $row['total_exits']) * 100, 1) : 0;
+                            $row_class = $quick_exit_rate_15s > 30 ? 'warning' : ($quick_exit_rate_15s > 15 ? 'highlight' : 'success');
+                            ?>
+                            <tr class="<?php echo $row_class; ?>">
+                                <td><?php echo htmlspecialchars($row['game_type']); ?></td>
+                                <td><strong><?php echo number_format($row['total_exits']); ?></strong></td>
+                                <td><?php echo number_format($row['unique_players']); ?></td>
+                                <td><?php echo $row['unique_players'] > 0 ? round($row['total_exits'] / $row['unique_players'], 1) : 0; ?> 次/人</td>
+                                <td><?php echo number_format($row['quick_exits_15s']); ?></td>
+                                <td><?php echo number_format($row['quick_exits_30s']); ?></td>
                                 <td>
-                                    <?php if ($row['quick_exit_rate'] > 30): ?>
-                                        <span style="color: #dc3545;">⚠️ 需要立即優化</span>
-                                    <?php elseif ($row['quick_exit_rate'] > 15): ?>
-                                        <span style="color: #ffc107;">⚠️ 建議優化</span>
+                                    <strong><?php echo $quick_exit_rate_15s; ?>%</strong>
+                                    <?php if ($quick_exit_rate_15s > 30): ?>
+                                        <span style="color: #dc3545;">⚠️ 需要優化</span>
+                                    <?php elseif ($quick_exit_rate_15s > 15): ?>
+                                        <span style="color: #ffc107;">⚠️ 建議改善</span>
                                     <?php else: ?>
                                         <span style="color: #28a745;">✅ 表現良好</span>
                                     <?php endif; ?>
@@ -635,116 +598,7 @@ try {
             <?php endif; ?>
         </div>
         
-        <!-- 2. 重複遊玩次數與遊玩時間 -->
-        <div class="behavior-analysis">
-            <h2>🔄 重複遊玩次數與遊玩時間</h2>
-            <p><em>分析用戶對遊戲的黏著度和喜愛度</em></p>
-            
-            <?php if (empty($repeat_play_data)): ?>
-                <p style="color: #666; text-align: center; padding: 20px;">暫無重複遊玩數據</p>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>遊戲類型</th>
-                            <th>用戶</th>
-                            <th>遊玩次數</th>
-                            <th>平均遊玩時間</th>
-                            <th>黏著度評級</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($repeat_play_data as $row): ?>
-                            <?php 
-                            $avg_minutes = round($row['avg_play_time_seconds'] / 60, 1);
-                            $engagement_level = '';
-                            $engagement_class = '';
-                            
-                            if ($row['play_count'] >= 10 && $avg_minutes >= 5) {
-                                $engagement_level = '🔥 極高';
-                                $engagement_class = 'success';
-                            } elseif ($row['play_count'] >= 5 && $avg_minutes >= 3) {
-                                $engagement_level = '⭐ 高';
-                                $engagement_class = 'success';
-                            } elseif ($row['play_count'] >= 3 && $avg_minutes >= 2) {
-                                $engagement_level = '👍 中等';
-                                $engagement_class = 'highlight';
-                            } else {
-                                $engagement_level = '📊 一般';
-                                $engagement_class = '';
-                            }
-                            ?>
-                            <tr class="<?php echo $engagement_class; ?>">
-                                <td><?php echo htmlspecialchars($row['game_type']); ?></td>
-                                <td><?php echo htmlspecialchars($row['member_name'] ?? '用戶' . $row['member_id']); ?></td>
-                                <td><strong><?php echo $row['play_count']; ?></strong> 次</td>
-                                <td><?php echo $avg_minutes; ?> 分鐘</td>
-                                <td><?php echo $engagement_level; ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-        
-        <!-- 3. 瀏覽後無動作分析 -->
-        <div class="behavior-analysis">
-            <h2>👀 瀏覽後無動作分析</h2>
-            <p><em>分析用戶瀏覽遊戲頁面但未開始遊戲的情況</em></p>
-            
-            <?php if (empty($browse_no_action_data)): ?>
-                <p style="color: #666; text-align: center; padding: 20px;">暫無瀏覽無動作數據</p>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>頁面</th>
-                            <th>瀏覽次數</th>
-                            <th>開始遊戲次數</th>
-                            <th>無動作率</th>
-                            <th>建議</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        // 定義檔案路徑到遊戲名稱的對應
-                        $path_to_game_name = [
-                            '/game/蔬菜成本.php' => '算菜錢',
-                            '/game/記憶遊戲.php' => '翻牌對對樂',
-                            '/game/河流遊戲.php' => '過河遊戲',
-                            '/game/2048.php' => '2048',
-                            '/game/節奏遊戲.php' => '節奏遊戲',
-                            '/game/接金蛋.php' => '接金蛋',
-                            '/game/追蹤犯人.php' => '追蹤犯人',
-                            '/game/看字選色遊戲.php' => '看字選色遊戲',
-                            '/game/線索遊戲.php' => '線索遊戲',
-                            '/game-category.php' => '遊戲分類頁面'
-                        ];
-                        
-                        foreach ($browse_no_action_data as $row): 
-                            // 轉換檔案路徑為遊戲名稱
-                            $display_page_name = $path_to_game_name[$row['page_url']] ?? $row['page_url'];
-                        ?>
-                            <tr class="<?php echo $row['no_action_rate'] > 70 ? 'warning' : ($row['no_action_rate'] > 50 ? 'highlight' : 'success'); ?>">
-                                <td><?php echo htmlspecialchars($display_page_name); ?></td>
-                                <td><?php echo number_format($row['browse_count']); ?></td>
-                                <td><?php echo number_format($row['started_games']); ?></td>
-                                <td><strong><?php echo $row['no_action_rate']; ?>%</strong></td>
-                                <td>
-                                    <?php if ($row['no_action_rate'] > 70): ?>
-                                        <span style="color: #dc3545;">⚠️ 需要優化頁面設計</span>
-                                    <?php elseif ($row['no_action_rate'] > 50): ?>
-                                        <span style="color: #ffc107;">⚠️ 建議改善介紹內容</span>
-                                    <?php else: ?>
-                                        <span style="color: #28a745;">✅ 轉換率良好</span>
-                                    <?php endif; ?>
-                                </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php endif; ?>
-        </div>
+
         
         <div class="records">
             <h2>行為記錄列表 (共 <?php echo number_format($total_records); ?> 筆)</h2>
@@ -806,8 +660,7 @@ try {
                             <span class="action-type action-<?php echo htmlspecialchars($record['action_type'] ?? ''); ?>">
                                 <?php 
                                 $labels = [
-                                    'page_view' => '頁面瀏覽',
-                                    'game_start' => '遊戲開始',
+                                    'page_view' => '頁面瀏覽',                            
                                     'game_complete' => '遊戲完成',
                                     'game_exit' => '遊戲退出',
                                     'login' => '登入',

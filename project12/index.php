@@ -1,8 +1,36 @@
 <?php
 require_once 'check_login.php';
+require_once 'avatar_helper.php';
 $account = isset($_SESSION['account']) ? $_SESSION['account'] : '訪客';
-$name = isset($_SESSION['name']) ? $_SESSION['name'] : '您好';
-$avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlspecialchars($_SESSION['avatar_url']) : 'img/big.jpg';
+$name = isset($_SESSION['name']) ? $_SESSION['name'] : '使用者';
+
+// 強制從資料庫讀取頭像路徑，忽略Session中的舊值
+require_once 'db.php';
+try {
+    $sql = "SELECT avatar FROM member WHERE member_id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$_SESSION['member_id']]);
+    $result = $stmt->fetch();
+    
+    if ($result && $result['avatar']) {
+        // 如果資料庫有頭像路徑，使用它
+        $avatar_url = $result['avatar'];
+        // 同時更新Session
+        $_SESSION['avatar_url'] = $avatar_url;
+    } else {
+        // 如果資料庫沒有頭像路徑，強制生成
+        $avatar_url = getAvatarPath($_SESSION['member_id'], $name, null);
+        // 更新資料庫
+        if ($avatar_url) {
+            $update_sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
+            $update_stmt = $pdo->prepare($update_sql);
+            $update_stmt->execute([$avatar_url, $_SESSION['member_id']]);
+        }
+    }
+} catch (Exception $e) {
+    // 如果出錯，使用預設邏輯
+    $avatar_url = getAvatarPath($_SESSION['member_id'], $name, null);
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -57,7 +85,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       <span class="notification-bell">🔔</span>
     </a>
     <a href="#" onclick="openProfileModal(event); return false;">
-      <img src="<?php echo $avatar_url; ?>" alt="使用者" class="profile" />
+      <img src="<?php echo htmlspecialchars($avatar_url); ?>" alt="使用者" class="profile" />
     </a>
   </div>
 </header>
