@@ -209,15 +209,6 @@ $colors = $stmt->fetchAll();
             <span class="close-btn" onclick="closeHelpModal()">×</span>
         </div>
     </div>
-                
-                <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
-                </div>
-            </div>
-            <span class="close-btn" onclick="closeHelpModal()">×</span>
-        </div>
-    </div>
     
     <!-- 遊戲結束視窗 -->
     <div id="game-over-modal" class="modal hidden">
