@@ -62,7 +62,7 @@ try {
         '邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
         '算數邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
         '算菜錢遊戲' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => '2048ht.php', 'title' => '過河遊戲'],
+        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
         '記憶力' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '翻牌對對樂' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '追蹤犯人遊戲' => ['img' => 'img/prisoner1.png?v=2', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
@@ -74,7 +74,7 @@ try {
         '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.php', 'title' => '過河遊戲']
+        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲']
     ];
     
     $formatted_games = [];

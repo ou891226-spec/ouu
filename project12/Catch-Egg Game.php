@@ -242,23 +242,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:1.5rem;">
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                <!-- 視頻播放區域 -->
+                <div id="egg-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="egg-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/egg1.mp4" type="video/mp4">
+                        您的瀏覽器不支援視頻播放。
+                    </video>
                 </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
-                    在時間內用籃子接住從上方掉下來的金蛋，避免掉落地面，爭取高分！
+                
+                <!-- 說明文字和按鈕區域 (並排顯示) -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 1rem;margin-bottom:2rem;">
+                    <!-- 說明文字 -->
+                    <div id="egg-instruction-text" style="font-size:24px;font-weight:bold;color:#3b82f6;flex:1;">
+                        動動手指左右拖曳籃子接蛋
+                    </div>
+                    
+                    <!-- 下一步按鈕 -->
+                    <div id="egg-next-step-btn" style="margin-left:2rem;">
+                        <button id="egg-next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:14px 28px;border-radius:8px;font-size:20px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                            下一步
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="egg-step-indicator" style="color:#6b7280;font-size:18px;">步驟 1/2</span>
                 </div>
-                <ul style="margin-left:2.2rem;">
-                    <li>動動手指左右拖曳籃子接蛋</li>
-                    <li>接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:2.2em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分</li>
-                    <li>時間內達到目標分數就過關！</li>
-                </ul>
             </div>
         </div>
     </div>

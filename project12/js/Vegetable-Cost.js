@@ -1156,10 +1156,146 @@ function exitGame() {
 // 遊戲說明視窗
 function openHelpModal() {
     document.getElementById('help-modal').classList.remove('hidden');
+    
+    // 初始化視頻播放邏輯
+    initVegetableVideoPlayback();
+    
+    // 強制綁定下一步按鈕事件
+    bindNextStepButton();
+    
+    // 延遲再次綁定，確保DOM完全加載
+    setTimeout(() => {
+        bindNextStepButton();
+    }, 200);
+}
+
+// 綁定下一步按鈕事件
+function bindNextStepButton() {
+    const nextStepButton = document.getElementById('vegetable-next-step-button');
+    if (nextStepButton) {
+        // 清除之前的所有事件監聽器
+        const newButton = nextStepButton.cloneNode(true);
+        nextStepButton.parentNode.replaceChild(newButton, nextStepButton);
+        
+        // 重新綁定事件
+        newButton.onclick = goToVegetableNextStep;
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('換算菜錢下一步按鈕被點擊了！');
+            goToVegetableNextStep();
+        });
+        
+        console.log('換算菜錢下一步按鈕事件已重新綁定');
+    } else {
+        console.error('找不到換算菜錢下一步按鈕元素');
+    }
 }
 
 function closeHelpModal() {
     document.getElementById('help-modal').classList.add('hidden');
+}
+
+// 初始化換算菜錢視頻連續播放
+function initVegetableVideoPlayback() {
+    const video = document.getElementById('vegetable-current-video');
+    const instructionText = document.getElementById('vegetable-instruction-text');
+    const stepIndicator = document.getElementById('vegetable-step-indicator');
+    const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    
+    // 清除之前的事件監聽器
+    video.removeEventListener('ended', handleVegetableVideoEnd);
+    
+    // 設置第一個視頻
+    video.src = 'gd/vegetable1.mp4';
+    instructionText.textContent = '計算阿嬤買菜的總金額';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 設置當前視頻標記
+    video.setAttribute('data-current-video', 'vegetable1');
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 添加視頻結束事件監聽器
+    video.addEventListener('ended', handleVegetableVideoEnd);
+    
+    // 強制加載視頻
+    video.load();
+    
+    // 添加下一步按鈕點擊事件
+    const nextStepButton = document.getElementById('vegetable-next-step-button');
+    if (nextStepButton) {
+        nextStepButton.onclick = goToVegetableNextStep;
+        console.log('換算菜錢下一步按鈕事件已綁定到 initVegetableVideoPlayback');
+        
+        // 測試按鈕是否真的可以點擊
+        nextStepButton.addEventListener('click', function() {
+            console.log('換算菜錢下一步按鈕被點擊了！');
+            goToVegetableNextStep();
+        });
+    } else {
+        console.error('找不到換算菜錢下一步按鈕元素');
+    }
+}
+
+// 處理換算菜錢視頻結束事件
+function handleVegetableVideoEnd() {
+    const video = document.getElementById('vegetable-current-video');
+    const currentVideo = video.getAttribute('data-current-video');
+    
+    console.log('換算菜錢視頻結束事件觸發，當前視頻：', currentVideo);
+    
+    if (currentVideo === 'vegetable1') {
+        // 第一個視頻播完，等待用戶點擊下一步
+        console.log('第一個換算菜錢視頻播完，等待用戶點擊下一步');
+    } else if (currentVideo === 'vegetable2') {
+        // 第二個視頻播完，自動回到第一個
+        console.log('第二個換算菜錢視頻播完，自動回到第一個');
+        goToVegetableFirstStep();
+    }
+}
+
+// 前往換算菜錢下一步
+function goToVegetableNextStep() {
+    const video = document.getElementById('vegetable-current-video');
+    const instructionText = document.getElementById('vegetable-instruction-text');
+    const stepIndicator = document.getElementById('vegetable-step-indicator');
+    const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    
+    // 切換到第二個視頻
+    video.src = 'gd/vegetable2.mp4';
+    video.setAttribute('data-current-video', 'vegetable2');
+    instructionText.innerHTML = '每答對一題得3分<br>時間內達到目標分數就過關！';
+    stepIndicator.textContent = '步驟 2/2';
+    
+    // 隱藏下一步按鈕（第二步不需要）
+    nextStepBtn.style.display = 'none';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
+}
+
+// 回到換算菜錢第一步
+function goToVegetableFirstStep() {
+    const video = document.getElementById('vegetable-current-video');
+    const instructionText = document.getElementById('vegetable-instruction-text');
+    const stepIndicator = document.getElementById('vegetable-step-indicator');
+    const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    
+    // 切換到第一個視頻
+    video.src = 'gd/vegetable1.mp4';
+    video.setAttribute('data-current-video', 'vegetable1');
+    instructionText.textContent = '計算阿嬤買菜的總金額';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
 }
 
 // 設為全局可訪問

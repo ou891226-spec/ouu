@@ -573,10 +573,118 @@ function endGame() {
 // 說明彈窗控制
 function showEggHelp() {
     document.getElementById('egg-help-modal').classList.remove('hidden');
+    
+    // 初始化視頻播放邏輯
+    initEggVideoPlayback();
+    
+    // 確保下一步按鈕事件被正確綁定
+    setTimeout(() => {
+        const nextStepButton = document.getElementById('egg-next-step-button');
+        if (nextStepButton) {
+            nextStepButton.onclick = goToEggNextStep;
+            console.log('接金蛋下一步按鈕事件已綁定');
+        }
+    }, 100);
 }
 
 function closeEggHelpModal() {
     document.getElementById('egg-help-modal').classList.add('hidden');
+}
+
+// 初始化接金蛋視頻連續播放
+function initEggVideoPlayback() {
+    const video = document.getElementById('egg-current-video');
+    const instructionText = document.getElementById('egg-instruction-text');
+    const stepIndicator = document.getElementById('egg-step-indicator');
+    const nextStepBtn = document.getElementById('egg-next-step-btn');
+    
+    // 清除之前的事件監聽器
+    video.removeEventListener('ended', handleEggVideoEnd);
+    
+    // 設置第一個視頻
+    video.src = 'gd/egg1.mp4';
+    instructionText.textContent = '動動手指左右拖曳籃子接蛋';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 設置當前視頻標記
+    video.setAttribute('data-current-video', 'egg1');
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 添加視頻結束事件監聽器
+    video.addEventListener('ended', handleEggVideoEnd);
+    
+    // 強制加載視頻
+    video.load();
+    
+    // 添加下一步按鈕點擊事件
+    const nextStepButton = document.getElementById('egg-next-step-button');
+    if (nextStepButton) {
+        nextStepButton.onclick = goToEggNextStep;
+        console.log('接金蛋下一步按鈕事件已綁定到 initEggVideoPlayback');
+    } else {
+        console.error('找不到接金蛋下一步按鈕元素');
+    }
+}
+
+// 處理接金蛋視頻結束事件
+function handleEggVideoEnd() {
+    const video = document.getElementById('egg-current-video');
+    const currentVideo = video.getAttribute('data-current-video');
+    
+    console.log('接金蛋視頻結束事件觸發，當前視頻：', currentVideo);
+    
+    if (currentVideo === 'egg1') {
+        // 第一個視頻播完，等待用戶點擊下一步
+        console.log('第一個接金蛋視頻播完，等待用戶點擊下一步');
+    } else if (currentVideo === 'egg2') {
+        // 第二個視頻播完，自動回到第一個
+        console.log('第二個接金蛋視頻播完，自動回到第一個');
+        goToEggFirstStep();
+    }
+}
+
+// 前往接金蛋下一步
+function goToEggNextStep() {
+    const video = document.getElementById('egg-current-video');
+    const instructionText = document.getElementById('egg-instruction-text');
+    const stepIndicator = document.getElementById('egg-step-indicator');
+    const nextStepBtn = document.getElementById('egg-next-step-btn');
+    
+    // 切換到第二個視頻
+    video.src = 'gd/egg2.mp4';
+    video.setAttribute('data-current-video', 'egg2');
+    instructionText.innerHTML = '接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:2.2em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分<br>時間內達到目標分數就過關！';
+    stepIndicator.textContent = '步驟 2/2';
+    
+    // 隱藏下一步按鈕（第二步不需要）
+    nextStepBtn.style.display = 'none';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
+}
+
+// 回到接金蛋第一步
+function goToEggFirstStep() {
+    const video = document.getElementById('egg-current-video');
+    const instructionText = document.getElementById('egg-instruction-text');
+    const stepIndicator = document.getElementById('egg-step-indicator');
+    const nextStepBtn = document.getElementById('egg-next-step-btn');
+    
+    // 切換到第一個視頻
+    video.src = 'gd/egg1.mp4';
+    video.setAttribute('data-current-video', 'egg1');
+    instructionText.textContent = '動動手指左右拖曳籃子接蛋';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
 }
 
 // 結束彈窗控制

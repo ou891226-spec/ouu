@@ -237,9 +237,6 @@
         </div>
     </div>
 
-    <!-- 會員ID設定 -->
-    <input type="hidden" id="member-id" value="9">
-    
     <script src="js/river.script.js"></script>
 </body>
 </html>

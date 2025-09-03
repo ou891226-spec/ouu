@@ -1,7 +1,3 @@
-// 獲取會員ID
-const memberIdInput = document.getElementById('member-id');
-const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
-
 // 遊戲狀態
 let gameState = {
     items: [],
@@ -498,9 +494,9 @@ function handleWin() {
     
     // 計算分數
     const scoreRewards = {
-        "easy": 20,
-        "normal": 50,
-        "hard": 100
+        "easy": 10,
+        "normal": 30,
+        "hard": 50
     };
     
     gameState.score = scoreRewards[gameState.mode];
@@ -514,9 +510,6 @@ function handleWin() {
     
     document.getElementById("success-difficulty").textContent = difficultyNames[gameState.mode];
     document.getElementById("success-score").textContent = gameState.score;
-    
-    // 保存分數到資料庫
-    saveScoreToServer(gameState.score, gameState.mode);
     
     // 顯示成功對話框
     showModal("game-success-modal");
@@ -696,35 +689,4 @@ function backToInviteFriends() {
 function showHelp() {
     // 這裡可以添加顯示幫助的邏輯
     showScreen("rules-screen");
-}
-
-// 保存分數到伺服器
-function saveScoreToServer(score, difficulty) {
-    const difficultyText = difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難';
-
-    const data = {
-        member_id: memberId,
-        difficulty: difficultyText,
-        score: score,
-        play_time: 0 // 過河遊戲沒有時間限制
-    };
-
-    fetch('save_river_game.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            console.log("✅ 過河遊戲成績已儲存");
-        } else {
-            console.error("❌ 儲存失敗：", result.message);
-        }
-    })
-    .catch(err => {
-        console.error("❌ 發送錯誤：", err);
-    });
 }

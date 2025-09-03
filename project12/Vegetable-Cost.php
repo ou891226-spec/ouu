@@ -160,19 +160,38 @@ if (!isset($_SESSION['member_id'])) {
     <!-- 遊戲說明視窗 -->
     <div id="help-modal" class="modal hidden">
         <div class="modal-content">
-            <h2>🎮 遊戲說明</h2>
-            <div class="help-content">
-                <h3>🔹 遊戲目標</h3>
-                <p>計算阿嬤買菜的總金額！</p>
-
-                <h3>🔹 遊戲規則</h3>
-                <ul>
-                    <li>每答對一題得3分</li>
-                    <li>簡單：20分過關，獎勵20分（簡單加減計算）</li>
-                    <li>中等：30分過關，獎勵50分（促銷優惠計算）</li>
-                    <li>困難：50分過關，獎勵100分（複雜組合計算）</li>
-                </ul>
-                </ul>
+            <h2 style="text-align:center;">
+                <span style="font-size:2rem;vertical-align:middle;">🎮</span>
+                <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
+            </h2>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 1rem;">
+                <!-- 視頻播放區域 -->
+                <div id="vegetable-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="vegetable-current-video" width="100%" height="auto" controls style="max-width:900px;width:95%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/vegetable1.mp4" type="video/mp4">
+                        您的瀏覽器不支援視頻播放。
+                    </video>
+                </div>
+                
+                <!-- 說明文字和按鈕區域 (並排顯示) -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0.5rem;margin-bottom:2rem;">
+                    <!-- 說明文字 -->
+                    <div id="vegetable-instruction-text" style="font-size:26px;font-weight:bold;color:#3b82f6;flex:1;">
+                        計算阿嬤買菜的總金額
+                    </div>
+                    
+                    <!-- 下一步按鈕 -->
+                    <div id="vegetable-next-step-btn" style="margin-left:2rem;">
+                        <button id="vegetable-next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:16px 32px;border-radius:8px;font-size:22px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                            下一步
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="vegetable-step-indicator" style="color:#6b7280;font-size:20px;">步驟 1/2</span>
+                </div>
             </div>
             <span class="close-btn">×</span>
         </div>

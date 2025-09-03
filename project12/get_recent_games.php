@@ -58,7 +58,7 @@ try {
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
         '算數邏輯力' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.php', 'title' => '過河遊戲']
+        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲']
     ];
     
     $formatted_games = [];

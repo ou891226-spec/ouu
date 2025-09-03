@@ -78,6 +78,114 @@ const symbols = {
 // 顯示遊戲說明彈窗
 function showHelp() {
     document.getElementById('help-modal').classList.remove('hidden');
+    
+    // 初始化視頻播放邏輯
+    initVideoPlayback();
+    
+    // 確保下一步按鈕事件被正確綁定
+    setTimeout(() => {
+        const nextStepButton = document.getElementById('next-step-button');
+        if (nextStepButton) {
+            nextStepButton.onclick = goToNextStep;
+            console.log('下一步按鈕事件已綁定');
+        }
+    }, 100);
+}
+
+// 初始化視頻連續播放
+function initVideoPlayback() {
+    const video = document.getElementById('current-video');
+    const instructionText = document.getElementById('instruction-text');
+    const stepIndicator = document.getElementById('step-indicator');
+    const nextStepBtn = document.getElementById('next-step-btn');
+    
+    // 清除之前的事件監聽器
+    video.removeEventListener('ended', handleVideoEnd);
+    
+    // 設置第一個視頻
+    video.src = 'gd/card1.mp4';
+    instructionText.textContent = '選主題、選難度';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 設置當前視頻標記
+    video.setAttribute('data-current-video', 'card1');
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 添加視頻結束事件監聽器
+    video.addEventListener('ended', handleVideoEnd);
+    
+    // 強制加載視頻
+    video.load();
+    
+    // 添加下一步按鈕點擊事件
+    const nextStepButton = document.getElementById('next-step-button');
+    if (nextStepButton) {
+        nextStepButton.onclick = goToNextStep;
+        console.log('下一步按鈕事件已綁定到 initVideoPlayback');
+    } else {
+        console.error('找不到下一步按鈕元素');
+    }
+}
+
+// 處理視頻結束事件
+function handleVideoEnd() {
+    const video = document.getElementById('current-video');
+    const currentVideo = video.getAttribute('data-current-video');
+    
+    console.log('視頻結束事件觸發，當前視頻：', currentVideo);
+    
+    if (currentVideo === 'card1') {
+        // 第一個視頻播完，顯示下一步按鈕（不自動切換）
+        console.log('第一個視頻播完，等待用戶點擊下一步');
+    } else if (currentVideo === 'card2') {
+        // 第二個視頻播完，自動回到第一個
+        console.log('第二個視頻播完，自動回到第一個');
+        goToFirstStep();
+    }
+}
+
+// 前往下一步
+function goToNextStep() {
+    const video = document.getElementById('current-video');
+    const instructionText = document.getElementById('instruction-text');
+    const stepIndicator = document.getElementById('step-indicator');
+    const nextStepBtn = document.getElementById('next-step-btn');
+    
+    // 切換到第二個視頻
+    video.src = 'gd/card2.mp4';
+    video.setAttribute('data-current-video', 'card2');
+    instructionText.innerHTML = '點卡片翻面，比對圖案<br>時間內完成配對！';
+    stepIndicator.textContent = '步驟 2/2';
+    
+    // 隱藏下一步按鈕（第二步不需要）
+    nextStepBtn.style.display = 'none';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
+}
+
+// 回到第一步
+function goToFirstStep() {
+    const video = document.getElementById('current-video');
+    const instructionText = document.getElementById('instruction-text');
+    const stepIndicator = document.getElementById('step-indicator');
+    const nextStepBtn = document.getElementById('next-step-btn');
+    
+    // 切換到第一個視頻
+    video.src = 'gd/card1.mp4';
+    video.setAttribute('data-current-video', 'card1');
+    instructionText.textContent = '選主題、選難度';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 顯示下一步按鈕
+    nextStepBtn.style.display = 'block';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
 }
 
 // 處理返回按鈕

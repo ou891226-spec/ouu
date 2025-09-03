@@ -176,23 +176,34 @@ $colors = $stmt->fetchAll();
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:1.5rem;">
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.2rem;">目標</span>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                <!-- 視頻播放區域 -->
+                <div id="video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/card1.mp4" type="video/mp4">
+                        您的瀏覽器不支援視頻播放。
+                    </video>
                 </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;font-size:20px;">
-                    時間內翻開卡片找出一樣的兩張，全部配對成功就過關！
+                
+                <!-- 說明文字和按鈕區域 (並排顯示) -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 1rem;margin-bottom:2rem;">
+                    <!-- 說明文字 -->
+                    <div id="instruction-text" style="font-size:24px;font-weight:bold;color:#3b82f6;flex:1;">
+                        選主題、選難度
+                    </div>
+                    
+                    <!-- 下一步按鈕 -->
+                    <div id="next-step-btn" style="margin-left:2rem;">
+                        <button id="next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:14px 28px;border-radius:8px;font-size:20px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                            下一步
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.2rem;">玩法</span>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="step-indicator" style="color:#6b7280;font-size:18px;">步驟 1/2</span>
                 </div>
-                <ul style="margin-left:2.2rem;font-size:20px;">
-                    <li>選主題、選難度</li>
-                    <li>點卡片翻面，比對圖案</li>
-                    <li>時間內完成配對！</li>
-                </ul>
             </div>
             <span class="close-btn" onclick="closeHelpModal()">×</span>
         </div>
