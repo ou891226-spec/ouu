@@ -165,7 +165,7 @@ if (!isset($_SESSION['member_id'])) {
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
             <div class="help-content" style="margin-top:2.5rem;padding:0 1rem;">
-                <!-- 視頻播放區域 -->
+                <!-- 影片播放區域 -->
                 <div id="vegetable-video-container" style="text-align:center;margin-bottom:2.5rem;">
                     <video id="vegetable-current-video" width="100%" height="auto" controls style="max-width:900px;width:95%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/vegetable1.mp4" type="video/mp4">
@@ -174,15 +174,22 @@ if (!isset($_SESSION['member_id'])) {
                 </div>
                 
                 <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0.5rem;margin-bottom:2rem;">
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <!-- 上一步按鈕 -->
+                    <div id="vegetable-prev-step-btn" style="display:none;">
+                        <button id="vegetable-prev-step-button" onclick="goToVegetablePrevStep()" class="game-step-button prev-step" style="padding:16px 32px;font-size:22px;">
+                            上一步
+                        </button>
+                    </div>
+                    
                     <!-- 說明文字 -->
-                    <div id="vegetable-instruction-text" style="font-size:26px;font-weight:bold;color:#3b82f6;flex:1;">
+                    <div id="vegetable-instruction-text" class="game-instruction-text" style="font-size:26px;flex:3;text-align:center;min-width:300px;">
                         計算阿嬤買菜的總金額
                     </div>
                     
                     <!-- 下一步按鈕 -->
                     <div id="vegetable-next-step-btn" style="margin-left:2rem;">
-                        <button id="vegetable-next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:16px 32px;border-radius:8px;font-size:22px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        <button id="vegetable-next-step-button" class="game-step-button next-step" style="padding:16px 32px;font-size:22px;">
                             下一步
                         </button>
                     </div>
@@ -190,7 +197,7 @@ if (!isset($_SESSION['member_id'])) {
                 
                 <!-- 進度指示器 -->
                 <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="vegetable-step-indicator" style="color:#6b7280;font-size:20px;">步驟 1/2</span>
+                    <span id="vegetable-step-indicator" class="game-step-indicator" style="font-size:20px;">步驟 1/2</span>
                 </div>
             </div>
             <span class="close-btn">×</span>

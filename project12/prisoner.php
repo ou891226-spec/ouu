@@ -101,30 +101,47 @@ try {
     <!-- 🟡 新增：遊戲說明彈窗 -->
     <div id="info-modal" class="modal" style="display:none;">
       <div class="modal-content">
+        <span class="close-btn" onclick="closeInfoModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size: 30px;">×</span>
         <h2 style="text-align:center;">
             <span style="font-size:2rem;vertical-align:middle;">🎮</span>
             <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
         </h2>
-        <div class="help-content" style="margin-top:1.5rem;">
-            <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+        <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+            <!-- 影片播放區域 -->
+            <div id="prisoner-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                <video id="prisoner-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <source src="gd/prisoner1.mp4" type="video/mp4">
+                    您的瀏覽器不支援影片播放。
+                </video>
             </div>
-            <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
-                時間內記住犯人出現的順序，按順序點擊洞，累積足夠分數就過關！
+            
+            <!-- 說明文字和按鈕區域 (並排顯示) -->
+            <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                <!-- 上一步按鈕 -->
+                <div id="prisoner-prev-step-btn" style="display:none;">
+                    <button id="prisoner-prev-step-button" onclick="goToPrisonerPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                        上一步
+                    </button>
+                </div>
+                
+                <!-- 說明文字 -->
+                <div id="prisoner-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                    記住犯人出現的順序，按順序點擊洞
+                </div>
+                
+                <!-- 下一步按鈕 -->
+                <div id="prisoner-next-step-btn" style="margin-left:2rem;">
+                    <button id="prisoner-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                        下一步
+                    </button>
+                </div>
             </div>
-            <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+            
+            <!-- 進度指示器 -->
+            <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                <span id="prisoner-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
             </div>
-            <ul style="margin-left:2.2rem;">
-                <li>選擇難度後開始遊戲</li>
-                <li>記住犯人出現的順序</li>
-                <li>按順序點擊洞，答對 +2 分</li>
-                <li>時間內累積足夠分數過關！</li>
-            </ul>
         </div>
-        <span class="close-btn" onclick="closeInfoModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size: 30px;">×</span>
       </div>
     </div>
 

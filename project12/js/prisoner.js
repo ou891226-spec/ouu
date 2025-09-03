@@ -248,7 +248,95 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 
 document.getElementById('info-btn').addEventListener('click', () => {
   document.getElementById('info-modal').style.display = 'flex';
+  // 初始化犯人視頻播放邏輯
+  initPrisonerVideoPlayback();
 });
+
+// 初始化犯人視頻播放邏輯
+function initPrisonerVideoPlayback() {
+  const video = document.getElementById('prisoner-current-video');
+  const instructionText = document.getElementById('prisoner-instruction-text');
+  const stepIndicator = document.getElementById('prisoner-step-indicator');
+  const nextStepBtn = document.getElementById('prisoner-next-step-btn');
+  const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
+  
+  if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
+    console.error('找不到犯人遊戲說明元素');
+    return;
+  }
+  
+  // 設置第一個視頻
+  video.src = 'gd/prisoner1.mp4';
+  instructionText.textContent = '記住犯人出現的順序，按順序點擊洞';
+  stepIndicator.textContent = '步驟 1/2';
+  
+  // 設置當前視頻標記
+  video.setAttribute('data-current-video', 'prisoner1');
+  
+  // 顯示下一步按鈕，隱藏上一步按鈕
+  nextStepBtn.style.display = 'block';
+  prevStepBtn.style.display = 'none';
+  
+  // 強制加載視頻
+  video.load();
+  
+  // 添加下一步按鈕點擊事件
+  const nextStepButton = document.getElementById('prisoner-next-step-button');
+  if (nextStepButton) {
+    nextStepButton.onclick = goToPrisonerNextStep;
+    console.log('犯人下一步按鈕事件已綁定');
+  }
+}
+
+// 前往犯人下一步
+function goToPrisonerNextStep() {
+  const video = document.getElementById('prisoner-current-video');
+  const instructionText = document.getElementById('prisoner-instruction-text');
+  const stepIndicator = document.getElementById('prisoner-step-indicator');
+  const nextStepBtn = document.getElementById('prisoner-next-step-btn');
+  const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
+  
+  // 切換到第二個視頻
+  video.src = 'gd/prisoner2.mp4';
+  video.setAttribute('data-current-video', 'prisoner2');
+  instructionText.innerHTML = '按順序點擊洞，答對 +2 分<br>時間內累積足夠分數過關！';
+  stepIndicator.textContent = '步驟 2/2';
+  
+  // 隱藏下一步按鈕，顯示上一步按鈕
+  nextStepBtn.style.display = 'none';
+  prevStepBtn.style.display = 'block';
+  
+  // 加載並播放視頻
+  video.load();
+  video.play();
+}
+
+// 回到犯人上一步
+function goToPrisonerPrevStep() {
+  const video = document.getElementById('prisoner-current-video');
+  const instructionText = document.getElementById('prisoner-instruction-text');
+  const stepIndicator = document.getElementById('prisoner-step-indicator');
+  const nextStepBtn = document.getElementById('prisoner-next-step-btn');
+  const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
+  
+  // 切換到第一個視頻
+  video.src = 'gd/prisoner1.mp4';
+  video.setAttribute('data-current-video', 'prisoner1');
+  instructionText.textContent = '記住犯人出現的順序，按順序點擊洞';
+  stepIndicator.textContent = '步驟 1/2';
+  
+  // 顯示下一步按鈕，隱藏上一步按鈕
+  nextStepBtn.style.display = 'block';
+  prevStepBtn.style.display = 'none';
+  
+  // 加載並播放視頻
+  video.load();
+  video.play();
+}
+
+// 設為全局可訪問
+window.goToPrisonerNextStep = goToPrisonerNextStep;
+window.goToPrisonerPrevStep = goToPrisonerPrevStep;
 
 // 關閉說明視窗的函數
 function closeInfoModal() {

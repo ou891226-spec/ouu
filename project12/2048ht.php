@@ -143,29 +143,45 @@ if (
     <div id="instructions-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close-button" id="close-instructions">&times;</span>
-            <h2>
+            <h2 style="text-align:center;">
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:1.5rem;">
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                <!-- 影片播放區域 -->
+                <div id="2048-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="2048-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/2048-1.mp4" type="video/mp4">
+                        您的瀏覽器不支援影片播放。
+                    </video>
                 </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
-                    在時間內合併相同數字的方塊，達到目標分數即可破關！
+                
+                <!-- 說明文字和按鈕區域 (並排顯示) -->
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <!-- 上一步按鈕 -->
+                    <div id="2048-prev-step-btn" style="display:none;">
+                        <button id="2048-prev-step-button" onclick="goTo2048PrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                            上一步
+                        </button>
+                    </div>
+                    
+                    <!-- 說明文字 -->
+                    <div id="2048-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                        合併相同數字的方塊，達到目標分數
+                    </div>
+                    
+                    <!-- 下一步按鈕 -->
+                    <div id="2048-next-step-btn" style="margin-left:2rem;">
+                        <button id="2048-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                            下一步
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="2048-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
-                <ul style="margin-left:2.2rem;">
-                    <li>選擇難度開始遊戲</li>
-                    <li>使用方向鍵或滑動手勢移動方塊</li>
-                    <li>相同數字的方塊合併會加分</li>
-                    <li>每次移動後會隨機出現新方塊（2或4）</li>
-                    <li>無法移動時遊戲結束</li>
-                </ul>
             </div>
         </div>
     </div>
@@ -255,6 +271,8 @@ if (
                 showInstructionsBtn.onclick = () => {
                     instructionsModal.style.display = 'block';
                     instructionsModal.classList.add('show');
+                    // 初始化2048視頻播放邏輯
+                    init2048VideoPlayback();
                 };
                 
                 closeInstructionsBtn.onclick = () => {
@@ -269,6 +287,92 @@ if (
                     }
                 };
             }
+            
+            // 初始化2048視頻播放邏輯
+            function init2048VideoPlayback() {
+                const video = document.getElementById('2048-current-video');
+                const instructionText = document.getElementById('2048-instruction-text');
+                const stepIndicator = document.getElementById('2048-step-indicator');
+                const nextStepBtn = document.getElementById('2048-next-step-btn');
+                const prevStepBtn = document.getElementById('2048-prev-step-btn');
+                
+                if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
+                    console.error('找不到2048遊戲說明元素');
+                    return;
+                }
+                
+                // 設置第一個視頻
+                video.src = 'gd/2048-1.mp4';
+                instructionText.textContent = '合併相同數字的方塊，達到目標分數';
+                stepIndicator.textContent = '步驟 1/2';
+                
+                // 設置當前視頻標記
+                video.setAttribute('data-current-video', '2048-1');
+                
+                // 顯示下一步按鈕，隱藏上一步按鈕
+                nextStepBtn.style.display = 'block';
+                prevStepBtn.style.display = 'none';
+                
+                // 強制加載視頻
+                video.load();
+                
+                // 添加下一步按鈕點擊事件
+                const nextStepButton = document.getElementById('2048-next-step-button');
+                if (nextStepButton) {
+                    nextStepButton.onclick = goTo2048NextStep;
+                    console.log('2048下一步按鈕事件已綁定');
+                }
+            }
+            
+            // 前往2048下一步
+            function goTo2048NextStep() {
+                const video = document.getElementById('2048-current-video');
+                const instructionText = document.getElementById('2048-instruction-text');
+                const stepIndicator = document.getElementById('2048-step-indicator');
+                const nextStepBtn = document.getElementById('2048-next-step-btn');
+                const prevStepBtn = document.getElementById('2048-prev-step-btn');
+                
+                // 切換到第二個視頻
+                video.src = 'gd/2048-2.mp4';
+                video.setAttribute('data-current-video', '2048-2');
+                instructionText.innerHTML = '使用方向鍵或滑動手勢移動方塊<br>相同數字的方塊合併會加分！';
+                stepIndicator.textContent = '步驟 2/2';
+                
+                // 隱藏下一步按鈕，顯示上一步按鈕
+                nextStepBtn.style.display = 'none';
+                prevStepBtn.style.display = 'block';
+                
+                // 加載並播放視頻
+                video.load();
+                video.play();
+            }
+            
+            // 回到2048上一步
+            function goTo2048PrevStep() {
+                const video = document.getElementById('2048-current-video');
+                const instructionText = document.getElementById('2048-instruction-text');
+                const stepIndicator = document.getElementById('2048-step-indicator');
+                const nextStepBtn = document.getElementById('2048-next-step-btn');
+                const prevStepBtn = document.getElementById('2048-prev-step-btn');
+                
+                // 切換到第一個視頻
+                video.src = 'gd/2048-1.mp4';
+                video.setAttribute('data-current-video', '2048-1');
+                instructionText.textContent = '合併相同數字的方塊，達到目標分數';
+                stepIndicator.textContent = '步驟 1/2';
+                
+                // 顯示下一步按鈕，隱藏上一步按鈕
+                nextStepBtn.style.display = 'block';
+                prevStepBtn.style.display = 'none';
+                
+                // 加載並播放視頻
+                video.load();
+                video.play();
+            }
+            
+            // 設為全局可訪問
+            window.goTo2048NextStep = goTo2048NextStep;
+            window.goTo2048PrevStep = goTo2048PrevStep;
             
             debugLog('遊戲界面初始化完成');
         }

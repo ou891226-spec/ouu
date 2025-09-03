@@ -338,14 +338,47 @@ if (!$difficulty) {
         <div id="help-modal-bg">
             <div id="help-modal">
                 <button class="close-btn" id="close-help">×</button>
-                <h3>遊戲說明</h3>
-                <p>
-                    1. 選擇難度後，會依據難度出題。<br>
-                    2. 進入遊戲後，請仔細觀察圖片，倒數結束後會出現題目。<br>
-                    3. 請在限定時間內選擇正確答案。<br>
-                    4. 每個難度的答題時間不同，難度越高時間越短。<br>
-                    5. 祝你玩得愉快！
-                </p>
+                <h3 style="text-align:center;">
+                    <span style="font-size:2rem;vertical-align:middle;">🎮</span>
+                    <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
+                </h3>
+                <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                    <!-- 影片播放區域 -->
+                    <div id="clue-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                        <video id="clue-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                            <source src="gd/clue1.mp4" type="video/mp4">
+                            您的瀏覽器不支援影片播放。
+                        </video>
+                    </div>
+                    
+                    <!-- 說明文字和按鈕區域 (並排顯示) -->
+                    <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                        <!-- 上一步按鈕 -->
+                        <div id="clue-prev-step-btn" style="display:none;">
+                            <button id="clue-prev-step-button" onclick="goToCluePrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                                上一步
+                            </button>
+                        </div>
+                        
+                        <!-- 說明文字 -->
+                        <div id="clue-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                            仔細觀察圖片，倒數結束後選擇答案
+                        </div>
+                        
+                        <!-- 下一步按鈕 -->
+                        <div id="clue-next-step-btn" style="margin-left:2rem;">
+                            <button id="clue-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                                下一步
+                            </button>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 進度指示器 -->
+                    <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                        <span id="clue-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
+                    </div>
+                </div>
             </div>
         </div>
         <script>
@@ -359,6 +392,8 @@ if (!$difficulty) {
             const helpModalBg = document.getElementById('help-modal-bg');
             document.getElementById('show-help').onclick = function() {
                 helpModalBg.classList.add('active');
+                // 初始化圖片線索影片播放邏輯
+                initClueVideoPlayback();
             };
             document.getElementById('close-help').onclick = function() {
                 helpModalBg.classList.remove('active');
@@ -366,6 +401,92 @@ if (!$difficulty) {
             helpModalBg.onclick = function(e) {
                 if (e.target === helpModalBg) helpModalBg.classList.remove('active');
             };
+            
+            // 初始化圖片線索視影片播放邏輯
+            function initClueVideoPlayback() {
+                const video = document.getElementById('clue-current-video');
+                const instructionText = document.getElementById('clue-instruction-text');
+                const stepIndicator = document.getElementById('clue-step-indicator');
+                const nextStepBtn = document.getElementById('clue-next-step-btn');
+                const prevStepBtn = document.getElementById('clue-prev-step-btn');
+                
+                if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
+                    console.error('找不到圖片線索遊戲說明元素');
+                    return;
+                }
+                
+                // 設置第一個影片
+                video.src = 'gd/clue1.mp4';
+                instructionText.textContent = '仔細觀察圖片，倒數結束後選擇答案';
+                stepIndicator.textContent = '步驟 1/2';
+                
+                // 設置當前影片標記
+                video.setAttribute('data-current-video', 'clue1');
+                
+                // 顯示下一步按鈕，隱藏上一步按鈕
+                nextStepBtn.style.display = 'block';
+                prevStepBtn.style.display = 'none';
+                
+                // 強制加載影片
+                video.load();
+                
+                // 添加下一步按鈕點擊事件
+                const nextStepButton = document.getElementById('clue-next-step-button');
+                if (nextStepButton) {
+                    nextStepButton.onclick = goToClueNextStep;
+                    console.log('圖片線索下一步按鈕事件已綁定');
+                }
+            }
+            
+            // 前往圖片線索下一步
+            function goToClueNextStep() {
+                const video = document.getElementById('clue-current-video');
+                const instructionText = document.getElementById('clue-instruction-text');
+                const stepIndicator = document.getElementById('clue-step-indicator');
+                const nextStepBtn = document.getElementById('clue-next-step-btn');
+                const prevStepBtn = document.getElementById('clue-prev-step-btn');
+                
+                // 切換到第二個影片
+                video.src = 'gd/clue2.mp4';
+                video.setAttribute('data-current-video', 'clue2');
+                instructionText.innerHTML = '每個難度的答題時間不同<br>難度越高時間越短，祝你玩得愉快！';
+                stepIndicator.textContent = '步驟 2/2';
+                
+                // 隱藏下一步按鈕，顯示上一步按鈕
+                nextStepBtn.style.display = 'none';
+                prevStepBtn.style.display = 'block';
+                
+                // 加載並播放視影片
+                video.load();
+                video.play();
+            }
+            
+            // 回到圖片線索上一步
+            function goToCluePrevStep() {
+                const video = document.getElementById('clue-current-video');
+                const instructionText = document.getElementById('clue-instruction-text');
+                const stepIndicator = document.getElementById('clue-step-indicator');
+                const nextStepBtn = document.getElementById('clue-next-step-btn');
+                const prevStepBtn = document.getElementById('clue-prev-step-btn');
+                
+                // 切換到第一個影片
+                video.src = 'gd/clue1.mp4';
+                video.setAttribute('data-current-video', 'clue1');
+                instructionText.textContent = '仔細觀察圖片，倒數結束後選擇答案';
+                stepIndicator.textContent = '步驟 1/2';
+                
+                // 顯示下一步按鈕，隱藏上一步按鈕
+                nextStepBtn.style.display = 'block';
+                prevStepBtn.style.display = 'none';
+                
+                // 加載並播放視影片
+                video.load();
+                video.play();
+            }
+            
+            // 設為全局可訪問
+            window.goToClueNextStep = goToClueNextStep;
+            window.goToCluePrevStep = goToCluePrevStep;
         </script>
     </body>
     </html>

@@ -354,7 +354,97 @@ difficultyOptions.forEach(option => {
 });
 
 pauseButton.addEventListener("click", togglePause);
-infoBtn.addEventListener("click", () => infoModal.style.display = "flex");
+infoBtn.addEventListener("click", () => {
+  infoModal.style.display = "flex";
+  // 初始化節奏視頻播放邏輯
+  initRhythmVideoPlayback();
+});
+
+// 初始化節奏視頻播放邏輯
+function initRhythmVideoPlayback() {
+  const video = document.getElementById('rhythm-current-video');
+  const instructionText = document.getElementById('rhythm-instruction-text');
+  const stepIndicator = document.getElementById('rhythm-step-indicator');
+  const nextStepBtn = document.getElementById('rhythm-next-step-btn');
+  const prevStepBtn = document.getElementById('rhythm-prev-step-btn');
+  
+  if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
+    console.error('找不到節奏遊戲說明元素');
+    return;
+  }
+  
+  // 設置第一個視頻
+  video.src = 'gd/rhythm1.mp4';
+  instructionText.textContent = '跟著音符的節奏點擊打擊區';
+  stepIndicator.textContent = '步驟 1/2';
+  
+  // 設置當前視頻標記
+  video.setAttribute('data-current-video', 'rhythm1');
+  
+  // 顯示下一步按鈕，隱藏上一步按鈕
+  nextStepBtn.style.display = 'block';
+  prevStepBtn.style.display = 'none';
+  
+  // 強制加載視頻
+  video.load();
+  
+  // 添加下一步按鈕點擊事件
+  const nextStepButton = document.getElementById('rhythm-next-step-button');
+  if (nextStepButton) {
+    nextStepButton.onclick = goToRhythmNextStep;
+    console.log('節奏下一步按鈕事件已綁定');
+  }
+}
+
+// 前往節奏下一步
+function goToRhythmNextStep() {
+  const video = document.getElementById('rhythm-current-video');
+  const instructionText = document.getElementById('rhythm-instruction-text');
+  const stepIndicator = document.getElementById('rhythm-step-indicator');
+  const nextStepBtn = document.getElementById('rhythm-next-step-btn');
+  const prevStepBtn = document.getElementById('rhythm-prev-step-btn');
+  
+  // 切換到第二個視頻
+  video.src = 'gd/rhythm2.mp4';
+  video.setAttribute('data-current-video', 'rhythm2');
+  instructionText.innerHTML = 'Miss不給分、Good+10分、Perfect+20分<br>時間內累積足夠分數過關！';
+  stepIndicator.textContent = '步驟 2/2';
+  
+  // 隱藏下一步按鈕，顯示上一步按鈕
+  nextStepBtn.style.display = 'none';
+  prevStepBtn.style.display = 'block';
+  
+  // 加載並播放視頻
+  video.load();
+  video.play();
+}
+
+// 回到節奏上一步
+function goToRhythmPrevStep() {
+  const video = document.getElementById('rhythm-current-video');
+  const instructionText = document.getElementById('rhythm-instruction-text');
+  const stepIndicator = document.getElementById('rhythm-step-indicator');
+  const nextStepBtn = document.getElementById('rhythm-next-step-btn');
+  const prevStepBtn = document.getElementById('rhythm-prev-step-btn');
+  
+  // 切換到第一個視頻
+  video.src = 'gd/rhythm1.mp4';
+  video.setAttribute('data-current-video', 'rhythm1');
+  instructionText.textContent = '跟著音符的節奏點擊打擊區';
+  stepIndicator.textContent = '步驟 1/2';
+  
+  // 顯示下一步按鈕，隱藏上一步按鈕
+  nextStepBtn.style.display = 'block';
+  prevStepBtn.style.display = 'none';
+  
+  // 加載並播放視頻
+  video.load();
+  video.play();
+}
+
+// 設為全局可訪問
+window.goToRhythmNextStep = goToRhythmNextStep;
+window.goToRhythmPrevStep = goToRhythmPrevStep;
 
 function closeInfoModal() {
   infoModal.style.display = "none";

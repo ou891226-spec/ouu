@@ -177,7 +177,6 @@ $colors = $stmt->fetchAll();
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
             <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-                <!-- 視頻播放區域 -->
                 <div id="video-container" style="text-align:center;margin-bottom:2.5rem;">
                     <video id="current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/card1.mp4" type="video/mp4">
@@ -185,29 +184,41 @@ $colors = $stmt->fetchAll();
                     </video>
                 </div>
                 
-                <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 1rem;margin-bottom:2rem;">
-                    <!-- 說明文字 -->
-                    <div id="instruction-text" style="font-size:24px;font-weight:bold;color:#3b82f6;flex:1;">
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <div id="prev-step-btn">
+                        <button id="prev-step-button" onclick="goToPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                            上一步
+                        </button>
+                    </div>
+                    
+                    <div id="instruction-text" class="game-instruction-text" style="font-size:24px;text-align:center; min-width: 180px;">
                         選主題、選難度
                     </div>
                     
-                    <!-- 下一步按鈕 -->
-                    <div id="next-step-btn" style="margin-left:2rem;">
-                        <button id="next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:14px 28px;border-radius:8px;font-size:20px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                    <div id="next-step-btn">
+                        <button id="next-step-button" onclick="goToNextStep()" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
                             下一步
                         </button>
                     </div>
                 </div>
                 
-                <!-- 進度指示器 -->
                 <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="step-indicator" style="color:#6b7280;font-size:18px;">步驟 1/2</span>
+                    <span id="step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
             <span class="close-btn" onclick="closeHelpModal()">×</span>
         </div>
     </div>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
+                </div>
+            </div>
+            <span class="close-btn" onclick="closeHelpModal()">×</span>
+        </div>
+    </div>
+    
     <!-- 遊戲結束視窗 -->
     <div id="game-over-modal" class="modal hidden">
         <div class="modal-content">

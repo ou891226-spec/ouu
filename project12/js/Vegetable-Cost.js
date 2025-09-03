@@ -1202,6 +1202,7 @@ function initVegetableVideoPlayback() {
     const instructionText = document.getElementById('vegetable-instruction-text');
     const stepIndicator = document.getElementById('vegetable-step-indicator');
     const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    const prevStepBtn = document.getElementById('vegetable-prev-step-btn');
     
     // 清除之前的事件監聽器
     video.removeEventListener('ended', handleVegetableVideoEnd);
@@ -1214,8 +1215,9 @@ function initVegetableVideoPlayback() {
     // 設置當前視頻標記
     video.setAttribute('data-current-video', 'vegetable1');
     
-    // 顯示下一步按鈕
+    // 顯示下一步按鈕，隱藏上一步按鈕
     nextStepBtn.style.display = 'block';
+    prevStepBtn.style.display = 'none';
     
     // 添加視頻結束事件監聽器
     video.addEventListener('ended', handleVegetableVideoEnd);
@@ -1262,6 +1264,7 @@ function goToVegetableNextStep() {
     const instructionText = document.getElementById('vegetable-instruction-text');
     const stepIndicator = document.getElementById('vegetable-step-indicator');
     const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    const prevStepBtn = document.getElementById('vegetable-prev-step-btn');
     
     // 切換到第二個視頻
     video.src = 'gd/vegetable2.mp4';
@@ -1269,8 +1272,9 @@ function goToVegetableNextStep() {
     instructionText.innerHTML = '每答對一題得3分<br>時間內達到目標分數就過關！';
     stepIndicator.textContent = '步驟 2/2';
     
-    // 隱藏下一步按鈕（第二步不需要）
+    // 隱藏下一步按鈕，顯示上一步按鈕
     nextStepBtn.style.display = 'none';
+    prevStepBtn.style.display = 'block';
     
     // 加載並播放視頻
     video.load();
@@ -1283,6 +1287,7 @@ function goToVegetableFirstStep() {
     const instructionText = document.getElementById('vegetable-instruction-text');
     const stepIndicator = document.getElementById('vegetable-step-indicator');
     const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    const prevStepBtn = document.getElementById('vegetable-prev-step-btn');
     
     // 切換到第一個視頻
     video.src = 'gd/vegetable1.mp4';
@@ -1290,8 +1295,32 @@ function goToVegetableFirstStep() {
     instructionText.textContent = '計算阿嬤買菜的總金額';
     stepIndicator.textContent = '步驟 1/2';
     
-    // 顯示下一步按鈕
+    // 顯示下一步按鈕，隱藏上一步按鈕
     nextStepBtn.style.display = 'block';
+    prevStepBtn.style.display = 'none';
+    
+    // 加載並播放視頻
+    video.load();
+    video.play();
+}
+
+// 回到換算菜錢上一步
+function goToVegetablePrevStep() {
+    const video = document.getElementById('vegetable-current-video');
+    const instructionText = document.getElementById('vegetable-instruction-text');
+    const stepIndicator = document.getElementById('vegetable-step-indicator');
+    const nextStepBtn = document.getElementById('vegetable-next-step-btn');
+    const prevStepBtn = document.getElementById('vegetable-prev-step-btn');
+    
+    // 切換到第一個視頻
+    video.src = 'gd/vegetable1.mp4';
+    video.setAttribute('data-current-video', 'vegetable1');
+    instructionText.textContent = '計算阿嬤買菜的總金額';
+    stepIndicator.textContent = '步驟 1/2';
+    
+    // 顯示下一步按鈕，隱藏上一步按鈕
+    nextStepBtn.style.display = 'block';
+    prevStepBtn.style.display = 'none';
     
     // 加載並播放視頻
     video.load();

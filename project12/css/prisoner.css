@@ -590,5 +590,148 @@ line-height: 1 !important;
   line-height: 1.1;
 }
 
+/* 統一的按鈕顏色方案 */
+.game-step-button {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.game-step-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.game-step-button.prev-step {
+    background-color: #6b7280;
+    color: white;
+}
+
+.game-step-button.next-step {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.game-step-button.prev-step:hover {
+    background-color: #4b5563;
+}
+
+.game-step-button.next-step:hover {
+    background-color: #2563eb;
+}
+
+/* 統一的說明文字顏色 */
+.game-instruction-text {
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+/* 統一的步驟指示器顏色 */
+.game-step-indicator {
+    color: #6b7280;
+}
+
+/* 犯人遊戲特定的說明文字樣式 */
+#prisoner-instruction-text {
+    min-width: 300px;
+    flex: 3;
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.4;
+}
+
+/* 犯人遊戲按鈕容器樣式 */
+#prisoner-prev-step-btn,
+#prisoner-next-step-btn {
+    flex-shrink: 0;
+}
+
+/* 犯人遊戲說明文字容器響應式設計 */
+@media (max-width: 768px) {
+    #prisoner-instruction-text {
+        min-width: 250px;
+        flex: 2;
+        font-size: 20px;
+    }
+}
+
+/* 統一的按鈕顏色方案 - 增加優先級 */
+#info-modal .game-step-button {
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+    background-color: transparent !important;
+    color: inherit !important;
+    flex: none !important;
+    margin: 0 !important;
+    padding: 14px 28px !important;
+    font-size: 20px !important;
+    font-weight: normal !important;
+    min-height: auto !important;
+    touch-action: auto !important;
+}
+
+#info-modal .game-step-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+}
+
+#info-modal .game-step-button.prev-step {
+    background-color: #6b7280 !important;
+    color: white !important;
+}
+
+#info-modal .game-step-button.next-step {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+#info-modal .game-step-button.prev-step:hover {
+    background-color: #4b5563 !important;
+}
+
+#info-modal .game-step-button.next-step:hover {
+    background-color: #2563eb !important;
+}
+
+/* 統一的說明文字顏色 - 增加優先級 */
+#info-modal .game-instruction-text {
+    color: #3b82f6 !important;
+    font-weight: bold !important;
+}
+
+/* 統一的步驟指示器顏色 - 增加優先級 */
+#info-modal .game-step-indicator {
+    color: #6b7280 !important;
+}
+
+/* 犯人遊戲特定的說明文字樣式 - 增加優先級 */
+#info-modal #prisoner-instruction-text {
+    min-width: 320px !important;
+    flex: 3 !important;
+    text-align: center !important;
+    padding: 0 20px !important;
+    line-height: 1.4 !important;
+}
+
+/* 犯人遊戲按鈕容器樣式 - 增加優先級 */
+#info-modal #prisoner-prev-step-btn,
+#info-modal #prisoner-next-step-btn {
+    flex-shrink: 0 !important;
+}
+
+/* 犯人遊戲說明文字容器響應式設計 - 增加優先級 */
+@media (max-width: 768px) {
+    #info-modal #prisoner-instruction-text {
+        min-width: 250px !important;
+        flex: 2 !important;
+        font-size: 20px !important;
+    }
+}
+
 
 

@@ -397,30 +397,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- 遊戲說明視窗 -->
     <div id="help-modal" class="modal">
         <div class="modal-content">
+            <span class="close-btn" onclick="closeHelpModal()">×</span>
             <h2 style="text-align:center;">
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:1.5rem;">
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">目標</span>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                <!-- 影片播放區域 -->
+                <div id="textcolor-video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="textcolor-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/textcolor1.mp4" type="video/mp4">
+                        您的瀏覽器不支援影片播放。
+                    </video>
                 </div>
-                <div style="margin-left:2.2rem;margin-bottom:1.2rem;">
-                    根據文字的意思選擇正確的顏色，在時間內獲得高分！
+                
+                <!-- 說明文字和按鈕區域 (並排顯示) -->
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <!-- 上一步按鈕 -->
+                    <div id="textcolor-prev-step-btn" style="display:none;">
+                        <button id="textcolor-prev-step-button" onclick="goToTextColorPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                            上一步
+                        </button>
+                    </div>
+                    
+                    <!-- 說明文字 -->
+                    <div id="textcolor-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                        根據文字的意思選擇正確的顏色
+                    </div>
+                    
+                    <!-- 下一步按鈕 -->
+                    <div id="textcolor-next-step-btn" style="margin-left:2rem;">
+                        <button id="textcolor-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                            下一步
+                        </button>
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;margin-bottom:0.5rem;">
-                    <span style="color:#3b82f6;font-size:1.2rem;margin-right:0.5rem;">◆</span>
-                    <span style="font-weight:bold;font-size:1.1rem;">玩法</span>
+                
+                <!-- 進度指示器 -->
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="textcolor-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
-                <ul style="margin-left:2.2rem;">
-                    <li>畫面上會出現一個顏色名稱，如「紅」、「藍」、「綠」</li>
-                    <li>注意：我們看的是字的「意思」，不是字的顏色</li>
-                    <li>例如：寫著「紅」字，就要選「紅色」選項</li>
-                    <li>在時間內選擇正確的顏色獲得分數</li>
-                </ul>
             </div>
-            <span class="close-btn" onclick="closeHelpModal()">×</span>
         </div>
     </div>
 
@@ -1028,11 +1045,100 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 helpModal.classList.remove('hidden');
                 helpModal.classList.add('show');
                 console.log('Help modal should be visible now');
+                // 初始化看字選色影片播放邏輯
+                initTextColorVideoPlayback();
             } else {
                 console.error('Help modal not found');
             }
         }
+        
+        // 初始化看字選色視頻播放邏輯
+        function initTextColorVideoPlayback() {
+            const video = document.getElementById('textcolor-current-video');
+            const instructionText = document.getElementById('textcolor-instruction-text');
+            const stepIndicator = document.getElementById('textcolor-step-indicator');
+            const nextStepBtn = document.getElementById('textcolor-next-step-btn');
+            const prevStepBtn = document.getElementById('textcolor-prev-step-btn');
+            
+            if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
+                console.error('找不到看字選色遊戲說明元素');
+                return;
+            }
+            
+            // 設置第一個影片
+            video.src = 'gd/textcolor1.mp4';
+            instructionText.textContent = '根據文字的意思選擇正確的顏色';
+            stepIndicator.textContent = '步驟 1/2';
+            
+            // 設置當前影片標記
+            video.setAttribute('data-current-video', 'textcolor1');
+            
+            // 顯示下一步按鈕，隱藏上一步按鈕
+            nextStepBtn.style.display = 'block';
+            prevStepBtn.style.display = 'none';
+            
+            // 強制加載影片
+            video.load();
+            
+            // 添加下一步按鈕點擊事件
+            const nextStepButton = document.getElementById('textcolor-next-step-button');
+            if (nextStepButton) {
+                nextStepButton.onclick = goToTextColorNextStep;
+                console.log('看字選色下一步按鈕事件已綁定');
+            }
+        }
+        
+        // 前往看字選色下一步
+        function goToTextColorNextStep() {
+            const video = document.getElementById('textcolor-current-video');
+            const instructionText = document.getElementById('textcolor-instruction-text');
+            const stepIndicator = document.getElementById('textcolor-step-indicator');
+            const nextStepBtn = document.getElementById('textcolor-next-step-btn');
+            const prevStepBtn = document.getElementById('textcolor-prev-step-btn');
+            
+            // 切換到第二個視頻
+            video.src = 'gd/textcolor2.mp4';
+            video.setAttribute('data-current-video', 'textcolor2');
+            instructionText.innerHTML = '注意：我們看的是字的「意思」<br>不是字的顏色，在時間內選擇正確的顏色獲得分數！';
+            stepIndicator.textContent = '步驟 2/2';
+            
+            // 隱藏下一步按鈕，顯示上一步按鈕
+            nextStepBtn.style.display = 'none';
+            prevStepBtn.style.display = 'block';
+            
+            // 加載並播放視頻
+            video.load();
+            video.play();
+        }
+        
+        // 回到看字選色上一步
+        function goToTextColorPrevStep() {
+            const video = document.getElementById('textcolor-current-video');
+            const instructionText = document.getElementById('textcolor-instruction-text');
+            const stepIndicator = document.getElementById('textcolor-step-indicator');
+            const nextStepBtn = document.getElementById('textcolor-next-step-btn');
+            const prevStepBtn = document.getElementById('textcolor-prev-step-btn');
+            
+            // 切換到第一個視頻
+            video.src = 'gd/textcolor1.mp4';
+            video.setAttribute('data-current-video', 'textcolor1');
+            instructionText.textContent = '根據文字的意思選擇正確的顏色';
+            stepIndicator.textContent = '步驟 1/2';
+            
+            // 顯示下一步按鈕，隱藏上一步按鈕
+            nextStepBtn.style.display = 'block';
+            prevStepBtn.style.display = 'none';
+            
+            // 加載並播放視頻
+            video.load();
+            video.play();
+        }
+        
+        // 設為全局可訪問
+        window.goToTextColorNextStep = goToTextColorNextStep;
+        window.goToTextColorPrevStep = goToTextColorPrevStep;
 
+        // 關閉說明彈窗函數
         function closeHelpModal() {
             const helpModal = document.getElementById('help-modal');
             if (helpModal) {

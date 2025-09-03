@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
             <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-                <!-- 視頻播放區域 -->
+                <!-- 影片播放區域 -->
                 <div id="egg-video-container" style="text-align:center;margin-bottom:2.5rem;">
                     <video id="egg-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/egg1.mp4" type="video/mp4">
@@ -252,15 +252,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 </div>
                 
                 <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:space-between;align-items:center;margin:0 1rem;margin-bottom:2rem;">
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <!-- 上一步按鈕 -->
+                    <div id="egg-prev-step-btn" style="display:none;">
+                        <button id="egg-prev-step-button" onclick="goToEggPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                            上一步
+                        </button>
+                    </div>
+                    
                     <!-- 說明文字 -->
-                    <div id="egg-instruction-text" style="font-size:24px;font-weight:bold;color:#3b82f6;flex:1;">
+                    <div id="egg-instruction-text" class="game-instruction-text" style="font-size:24px;flex:1;text-align:center;">
                         動動手指左右拖曳籃子接蛋
                     </div>
                     
                     <!-- 下一步按鈕 -->
                     <div id="egg-next-step-btn" style="margin-left:2rem;">
-                        <button id="egg-next-step-button" style="background-color:#3b82f6;color:white;border:none;padding:14px 28px;border-radius:8px;font-size:20px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                        <button id="egg-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
                             下一步
                         </button>
                     </div>
@@ -268,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 
                 <!-- 進度指示器 -->
                 <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="egg-step-indicator" style="color:#6b7280;font-size:18px;">步驟 1/2</span>
+                    <span id="egg-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
         </div>

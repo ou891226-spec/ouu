@@ -740,3 +740,70 @@ button:hover {
 span highlight-text{
   color: red;
 }
+
+/* 算菜錢遊戲特定的說明文字樣式 */
+#vegetable-instruction-text {
+    min-width: 300px;
+    flex: 3;
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.4;
+}
+
+/* 算菜錢遊戲按鈕容器樣式 */
+#vegetable-prev-step-btn,
+#vegetable-next-step-btn {
+    flex-shrink: 0;
+}
+
+/* 算菜錢遊戲說明文字容器響應式設計 */
+@media (max-width: 768px) {
+    #vegetable-instruction-text {
+        min-width: 250px;
+        flex: 2;
+        font-size: 22px;
+    }
+}
+
+/* 統一的按鈕顏色方案 */
+.game-step-button {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.game-step-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.game-step-button.prev-step {
+    background-color: #6b7280;
+    color: white;
+}
+
+.game-step-button.next-step {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.game-step-button.prev-step:hover {
+    background-color: #4b5563;
+}
+
+.game-step-button.next-step:hover {
+    background-color: #2563eb;
+}
+
+/* 統一的說明文字顏色 */
+.game-instruction-text {
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+/* 統一的步驟指示器顏色 */
+.game-step-indicator {
+    color: #6b7280;
+}

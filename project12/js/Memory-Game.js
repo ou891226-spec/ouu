@@ -12,14 +12,12 @@ let gridSize = 4;
 let gamePaused = false;
 let currentScore = 0;
 let highScore = localStorage.getItem('highScore') || 0;
-// 假設我們有一個計時器
 let timer;
-let timeLimit = 60; // 60秒的時間限制
+let timeLimit = 60;
 let score = 0;
-let difficulty = "普通"; // 假設難度是普通
-let targetScore = 100; // 假設目標分數是100
+let difficulty = "普通";
+let targetScore = 100;
 let totalPairs = 0;
-// === 新增：紀錄遊戲開始與結束時間 ===
 let gameStartTimestamp = null;
 let gameEndTimestamp = null;
 
@@ -36,7 +34,7 @@ const gameSettings = {
         baseScore: 50
     },
     hard: {
-        gridSize: 8,  // 8列
+        gridSize: 8,
         timeLimit: 180,
         baseScore: 100
     }
@@ -78,114 +76,88 @@ const symbols = {
 // 顯示遊戲說明彈窗
 function showHelp() {
     document.getElementById('help-modal').classList.remove('hidden');
-    
     // 初始化視頻播放邏輯
     initVideoPlayback();
-    
-    // 確保下一步按鈕事件被正確綁定
-    setTimeout(() => {
-        const nextStepButton = document.getElementById('next-step-button');
-        if (nextStepButton) {
-            nextStepButton.onclick = goToNextStep;
-            console.log('下一步按鈕事件已綁定');
-        }
-    }, 100);
 }
 
 // 初始化視頻連續播放
 function initVideoPlayback() {
     const video = document.getElementById('current-video');
-    const instructionText = document.getElementById('instruction-text');
-    const stepIndicator = document.getElementById('step-indicator');
-    const nextStepBtn = document.getElementById('next-step-btn');
     
     // 清除之前的事件監聽器
     video.removeEventListener('ended', handleVideoEnd);
     
     // 設置第一個視頻
     video.src = 'gd/card1.mp4';
-    instructionText.textContent = '選主題、選難度';
-    stepIndicator.textContent = '步驟 1/2';
-    
-    // 設置當前視頻標記
     video.setAttribute('data-current-video', 'card1');
     
-    // 顯示下一步按鈕
-    nextStepBtn.style.display = 'block';
+    // 顯示「上一步」和「下一步」按鈕
+    document.getElementById('prev-step-button').style.display = 'none';
+    document.getElementById('next-step-button').style.display = 'block';
+    
+    updateInstructionUI('card1');
     
     // 添加視頻結束事件監聽器
     video.addEventListener('ended', handleVideoEnd);
     
     // 強制加載視頻
     video.load();
-    
-    // 添加下一步按鈕點擊事件
-    const nextStepButton = document.getElementById('next-step-button');
-    if (nextStepButton) {
-        nextStepButton.onclick = goToNextStep;
-        console.log('下一步按鈕事件已綁定到 initVideoPlayback');
-    } else {
-        console.error('找不到下一步按鈕元素');
-    }
 }
 
-// 處理視頻結束事件
+// 處理視頻結束事件 (這裡不需要自動跳轉，用戶手動切換)
 function handleVideoEnd() {
     const video = document.getElementById('current-video');
-    const currentVideo = video.getAttribute('data-current-video');
-    
-    console.log('視頻結束事件觸發，當前視頻：', currentVideo);
-    
-    if (currentVideo === 'card1') {
-        // 第一個視頻播完，顯示下一步按鈕（不自動切換）
-        console.log('第一個視頻播完，等待用戶點擊下一步');
-    } else if (currentVideo === 'card2') {
-        // 第二個視頻播完，自動回到第一個
-        console.log('第二個視頻播完，自動回到第一個');
-        goToFirstStep();
-    }
+    console.log('視頻播放結束');
 }
 
 // 前往下一步
 function goToNextStep() {
     const video = document.getElementById('current-video');
-    const instructionText = document.getElementById('instruction-text');
-    const stepIndicator = document.getElementById('step-indicator');
-    const nextStepBtn = document.getElementById('next-step-btn');
+    const currentStep = video.getAttribute('data-current-video');
     
-    // 切換到第二個視頻
-    video.src = 'gd/card2.mp4';
-    video.setAttribute('data-current-video', 'card2');
-    instructionText.innerHTML = '點卡片翻面，比對圖案<br>時間內完成配對！';
-    stepIndicator.textContent = '步驟 2/2';
+    if (currentStep === 'card1') {
+        video.src = 'gd/card2.mp4';
+        video.setAttribute('data-current-video', 'card2');
+        updateInstructionUI('card2');
+    }
     
-    // 隱藏下一步按鈕（第二步不需要）
-    nextStepBtn.style.display = 'none';
-    
-    // 加載並播放視頻
     video.load();
     video.play();
 }
 
-// 回到第一步
-function goToFirstStep() {
+// 回到上一步
+function goToPrevStep() {
     const video = document.getElementById('current-video');
-    const instructionText = document.getElementById('instruction-text');
-    const stepIndicator = document.getElementById('step-indicator');
-    const nextStepBtn = document.getElementById('next-step-btn');
+    const currentStep = video.getAttribute('data-current-video');
     
-    // 切換到第一個視頻
-    video.src = 'gd/card1.mp4';
-    video.setAttribute('data-current-video', 'card1');
-    instructionText.textContent = '選主題、選難度';
-    stepIndicator.textContent = '步驟 1/2';
+    if (currentStep === 'card2') {
+        video.src = 'gd/card1.mp4';
+        video.setAttribute('data-current-video', 'card1');
+        updateInstructionUI('card1');
+    }
     
-    // 顯示下一步按鈕
-    nextStepBtn.style.display = 'block';
-    
-    // 加載並播放視頻
     video.load();
     video.play();
+}
+
+// 更新說明文字和按鈕顯示
+function updateInstructionUI(videoName) {
+    const instructionText = document.getElementById('instruction-text');
+    const stepIndicator = document.getElementById('step-indicator');
+    const prevStepButton = document.getElementById('prev-step-button');
+    const nextStepButton = document.getElementById('next-step-button');
+    
+    if (videoName === 'card1') {
+        instructionText.textContent = '選主題、選難度';
+        stepIndicator.textContent = '步驟 1/2';
+        prevStepButton.style.display = 'none';
+        nextStepButton.style.display = 'block';
+    } else if (videoName === 'card2') {
+        instructionText.innerHTML = '點卡片翻面，比對圖案<br>時間內完成配對！';
+        stepIndicator.textContent = '步驟 2/2';
+        prevStepButton.style.display = 'block';
+        nextStepButton.style.display = 'none';
+    }
 }
 
 // 處理返回按鈕
