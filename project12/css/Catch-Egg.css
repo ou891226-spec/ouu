@@ -783,3 +783,72 @@ button {
 .gameover-info .gameover-row:last-child {
     margin-bottom: 0;
 }
+
+/* 接金蛋遊戲說明文字容器寬度 */
+#egg-instruction-text {
+    flex: 4 !important;
+    min-width: 450px !important;
+    max-width: 600px !important;
+    padding: 0 15px !important;
+}
+
+/* 接金蛋遊戲按鈕容器樣式 */
+#egg-prev-step-btn,
+#egg-next-step-btn {
+    flex-shrink: 0;
+}
+
+/* 接金蛋遊戲說明視窗樣式 */
+#egg-help-modal .modal-content {
+    width: 85% !important;
+    max-width: 650px !important;
+    min-height: auto !important;
+    padding: 1rem 1.5rem !important;
+}
+
+/* 接金蛋遊戲說明視窗內容緊湊化 */
+#egg-help-modal .modal-content h2 {
+    margin-bottom: 1rem !important;
+}
+
+#egg-help-modal .help-content {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+#egg-help-modal #egg-video-container {
+    margin-bottom: 1.5rem !important;
+}
+
+#egg-help-modal #egg-step-indicator {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* 接金蛋遊戲說明文字容器響應式設計 */
+@media (max-width: 768px) {
+    #egg-instruction-text {
+        min-width: 280px !important;
+        flex: 2 !important;
+        font-size: 20px !important;
+    }
+    
+    #egg-help-modal .modal-content {
+        width: 88% !important;
+        max-width: 500px !important;
+        padding: 0.8rem 1rem !important;
+    }
+    
+    #egg-help-modal .modal-content h2 {
+        margin-bottom: 0.8rem !important;
+    }
+    
+    #egg-help-modal .help-content {
+        margin-top: 0.8rem !important;
+        margin-bottom: 0.8rem !important;
+    }
+    
+    #egg-help-modal #egg-video-container {
+        margin-bottom: 1rem !important;
+    }
+}

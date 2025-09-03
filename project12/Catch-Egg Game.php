@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     
                     <!-- 說明文字 -->
                     <div id="egg-instruction-text" class="game-instruction-text" style="font-size:24px;flex:1;text-align:center;">
-                        動動手指左右拖曳籃子接蛋
+                    先選擇遊戲困難度
                     </div>
                     
                     <!-- 下一步按鈕 -->

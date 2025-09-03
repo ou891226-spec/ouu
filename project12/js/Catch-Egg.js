@@ -624,7 +624,7 @@ function initEggVideoPlayback() {
     
     // 設置第一個視頻
     video.src = 'gd/egg1.mp4';
-    instructionText.textContent = '動動手指左右拖曳籃子接蛋';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 設置當前視頻標記
@@ -678,7 +678,7 @@ function goToEggNextStep() {
     // 切換到第二個視頻
     video.src = 'gd/egg2.mp4';
     video.setAttribute('data-current-video', 'egg2');
-    instructionText.innerHTML = '接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分<br>時間內達到目標分數就過關！';
+    instructionText.innerHTML = '動動手指左右拖曳籃子接蛋，接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分<br>時間內達到目標分數就過關！';
     stepIndicator.textContent = '步驟 2/2';
     
     // 隱藏下一步按鈕，顯示上一步按鈕
@@ -701,7 +701,7 @@ function goToEggPrevStep() {
     // 切換到第一個視頻
     video.src = 'gd/egg1.mp4';
     video.setAttribute('data-current-video', 'egg1');
-    instructionText.textContent = '動動手指左右拖曳籃子接蛋';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 顯示下一步按鈕，隱藏上一步按鈕
@@ -724,7 +724,7 @@ function goToEggFirstStep() {
     // 切換到第一個視頻
     video.src = 'gd/egg1.mp4';
     video.setAttribute('data-current-video', 'egg1');
-    instructionText.textContent = '動動手指左右拖曳籃子接蛋';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 顯示下一步按鈕，隱藏上一步按鈕
