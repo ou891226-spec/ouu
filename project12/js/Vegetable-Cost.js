@@ -1111,19 +1111,28 @@ function endGame() {
     
     // 顯示 modal
     const modal = document.getElementById('game-over-modal');
-    let title = '';
-    let msg = '';
-    if (score >= passScore) {
-        title = '恭喜破關';
-        msg = `難度：${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br>獲得分數：${rewardScore}`;
-    } else {
-        title = '遊戲失敗';
-        msg = `難度：${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br>未在時間內達成分數`;
-    }
-    modal.querySelector('.gameover-title').innerHTML = title;
-    modal.querySelector('.gameover-msg').innerHTML = msg;
-    modal.classList.remove('hidden');
     const playTime = (currentDifficulty === 'easy' ? 80 : currentDifficulty === 'normal' ? 150 : 200) - timer;
+    
+    let title = '';
+    const difficultyName = currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難';
+    
+    if (score >= passScore) {
+        title = '🎉恭喜破關';
+    } else {
+        title = '⏰遊戲失敗';
+        rewardScore = 0;
+    }
+    
+    // 設置標題
+    modal.querySelector('.gameover-title').innerHTML = title;
+    
+    // 設置四行信息
+    document.getElementById('vegetable-gameover-difficulty').textContent = difficultyName;
+    document.getElementById('vegetable-gameover-earned-score').textContent = score;
+    document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
+    document.getElementById('vegetable-gameover-bonus').textContent = score >= passScore ? '+' + rewardScore : '0';
+    
+    modal.classList.remove('hidden');
     
     // 傳遞獎勵分數而不是實際遊戲分數
     let finalRewardScore = 0;

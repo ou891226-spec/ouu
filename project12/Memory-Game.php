@@ -215,7 +215,11 @@ $colors = $stmt->fetchAll();
         <div class="modal-content">
             <h2 id="game-over-title">遊戲結束</h2>
             <div class="result-details">
-                <p id="result-message"></p>
+                <div class="gameover-info">
+                    <div class="gameover-row">難度：<span id="memory-gameover-difficulty">簡單</span></div>
+                    <div class="gameover-row">遊戲時間：<span id="memory-gameover-time">60秒</span></div>
+                    <div class="gameover-row">過關分數：<span id="memory-gameover-bonus">+20</span></div>
+                </div>
             </div>
             <div class="result-buttons">
                 <button onclick="replayGame()">再玩一次</button>

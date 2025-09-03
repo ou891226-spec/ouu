@@ -20,6 +20,7 @@ const gameOverSound = document.getElementById('gameOverSound');
 let score = 0;
 let highScore = 0;
 let timeLeft = 60;
+let totalTime = 60; // 記錄總時間用於計算
 let itemInterval;
 let countdown;
 let gameStarted = false;
@@ -29,6 +30,18 @@ let currentDifficulty = 'easy';
 // 選擇難度
 function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
+    
+    // 根據難度設定時間
+    if (difficulty === 'easy') {
+        timeLeft = 60;
+        totalTime = 60;
+    } else if (difficulty === 'normal') {
+        timeLeft = 80;
+        totalTime = 80;
+    } else if (difficulty === 'hard') {
+        timeLeft = 120;
+        totalTime = 120;
+    }
     fetch("Catch-Egg Game.php", {
         method: "POST",
         headers: {
@@ -86,7 +99,6 @@ function showCountdown(callback) {
 function startGameTimer() {
     score = 0;
     updateScore();
-    timeLeft = 60;
     document.getElementById('timer').textContent = timeLeft;
     gameStarted = true;
     gamePaused = false;
@@ -138,7 +150,7 @@ function resetGame() {
   // bgm.currentTime = 0; // 移除背景音樂
  
   score = 0;
-  timeLeft = 60;
+  // timeLeft 保持當前難度的設定
   gameStarted = false;
   gamePaused = false;
  
@@ -530,6 +542,14 @@ function endGame() {
     
     // 遊戲結束音效已移除 - 只有接到物品時才有音效
     
+    // 確保 totalTime 有正確的值
+    if (!totalTime) {
+        if (currentDifficulty === 'easy') totalTime = 60;
+        else if (currentDifficulty === 'normal') totalTime = 80;
+        else if (currentDifficulty === 'hard') totalTime = 120;
+        else totalTime = 60; // 默認值
+    }
+    
     // 計算獎勵分數
     let bonusScore = 0;
     if (currentDifficulty === 'easy' && score >= 200) {
@@ -721,13 +741,28 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
     document.getElementById('difficulty-modal').style.display = 'none';
     const modal = document.getElementById('egg-game-over-modal');
     const title = document.getElementById('egg-game-over-title');
-    const message = document.getElementById('egg-result-message');
-    title.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
-    if (isWin) {
-        message.innerHTML = `難度 : ${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br><br>獲得分數 : ${score}<br>過關獎勵 : +${bonusScore}`;
-    } else {
-        message.innerHTML = `難度 : ${currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難'}<br><br>您的分數 : ${score}<br>未達到過關標準！`;
+    
+    // 計算遊戲時間（總時間減去剩餘時間）
+    // 確保 totalTime 有正確的值
+    if (!totalTime) {
+        if (currentDifficulty === 'easy') totalTime = 60;
+        else if (currentDifficulty === 'normal') totalTime = 80;
+        else if (currentDifficulty === 'hard') totalTime = 120;
+        else totalTime = 60; // 默認值
     }
+    const playTime = totalTime - timeLeft;
+    
+    // 獲取難度名稱
+    const difficultyName = currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難';
+    
+    title.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
+    
+    // 設置四行信息
+    document.getElementById('egg-gameover-difficulty').textContent = difficultyName;
+    document.getElementById('egg-gameover-earned-score').textContent = score;
+    document.getElementById('egg-gameover-time').textContent = playTime + '秒';
+    document.getElementById('egg-gameover-bonus').textContent = isWin ? '+' + bonusScore : '0';
+    
     modal.classList.remove('hidden');
 }
 
@@ -742,6 +777,10 @@ function eggReturnToMain() {
 
 // 初始化
 window.onload = function() {
+    // 確保初始變量設定
+    totalTime = 60; // 默認簡單模式時間
+    timeLeft = 60;
+    
     document.getElementById('difficulty-modal').style.display = 'flex';
     if (pauseBtn) pauseBtn.onclick = pauseGame;
     if (resumeBtn) resumeBtn.onclick = resumeGame;

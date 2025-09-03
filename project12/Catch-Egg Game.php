@@ -286,7 +286,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         <div class="modal-content">
             <h2 id="egg-game-over-title">遊戲結束</h2>
             <div class="result-details">
-                <p id="egg-result-message"></p>
+                <div class="gameover-info">
+                    <div class="gameover-row">難度：<span id="egg-gameover-difficulty">簡單</span></div>
+                    <div class="gameover-row">獲得分數：<span id="egg-gameover-earned-score">20</span></div>
+                    <div class="gameover-row">遊戲時間：<span id="egg-gameover-time">60秒</span></div>
+                    <div class="gameover-row">過關分數：<span id="egg-gameover-bonus">+20</span></div>
+                </div>
             </div>
             <div class="result-buttons">
                 <button onclick="eggReplayGame()">再玩一次</button>

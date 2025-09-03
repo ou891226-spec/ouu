@@ -526,7 +526,6 @@ function showGameOver(isWin) {
     }
     const gameOverModal = document.getElementById('game-over-modal');
     const gameOverTitle = document.getElementById('game-over-title');
-    const resultMessage = document.getElementById('result-message');
  
     // 獲取難度中文名稱
     const difficultyNames = {
@@ -534,19 +533,27 @@ function showGameOver(isWin) {
         'normal': '普通',
         'hard': '困難'
     };
+    
+    // 獲取過關分數
+    let rewardScore = 0;
+    if (currentDifficulty === 'easy') rewardScore = 20;
+    else if (currentDifficulty === 'normal') rewardScore = 50;
+    else if (currentDifficulty === 'hard') rewardScore = 100;
  
     // 設置標題
     gameOverTitle.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
    
-    // 設置結果訊息
+    // 設置三行信息
+    document.getElementById('memory-gameover-difficulty').textContent = difficultyNames[currentDifficulty];
+    document.getElementById('memory-gameover-time').textContent = playTime + '秒';
+    document.getElementById('memory-gameover-bonus').textContent = isWin ? '+' + rewardScore : '0';
+ 
+    // 計算分數用於保存
     let score = 0;
     if (isWin) {
         score = calculateScore();
-        resultMessage.innerHTML = `難度 : ${difficultyNames[currentDifficulty]}<br><br>獲得分數 : ${score}<br><br>遊戲時間 : ${playTime}秒`;
-    } else {
-        resultMessage.innerHTML = `難度 : ${difficultyNames[currentDifficulty]}<br><br>未在時間內達成分數`;
     }
- 
+    
     // 儲存遊戲結果（帶分數與 play_time）
     saveGameResult(isWin, score, playTime);
     

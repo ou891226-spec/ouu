@@ -774,3 +774,12 @@ button {
 .game-step-indicator {
     color: #6b7280;
 }
+
+/* 接金蛋遊戲破關畫面行間距 */
+.gameover-info .gameover-row {
+    margin-bottom: 20px;
+}
+
+.gameover-info .gameover-row:last-child {
+    margin-bottom: 0;
+}

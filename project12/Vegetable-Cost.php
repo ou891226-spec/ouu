@@ -117,7 +117,12 @@ if (!isset($_SESSION['member_id'])) {
         <div class="modal-content gameover-modal-content">
             <h2 class="gameover-title">遊戲結束</h2>
             <div class="gameover-desc">
-                <p class="gameover-msg">難度：困難<br>未在時間內達成分數</p>
+                <div class="gameover-info">
+                    <div class="gameover-row">難度：<span id="vegetable-gameover-difficulty">簡單模式</span></div>
+                    <div class="gameover-row">獲得分數：<span id="vegetable-gameover-earned-score">20</span></div>
+                    <div class="gameover-row">遊戲時間：<span id="vegetable-gameover-time">80秒</span></div>
+                    <div class="gameover-row">過關分數：<span id="vegetable-gameover-bonus">+20</span></div>
+                </div>
             </div>
             <div class="gameover-btn-group">
                 <button id="modal-restart-btn" class="gameover-btn retry-btn" onclick="restartGame()">再玩一次</button>
