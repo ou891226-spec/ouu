@@ -111,12 +111,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("back-to-start").addEventListener("click", () => {
-        showScreen("start-screen");
+        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+        if (document.referrer && document.referrer !== window.location.href) {
+            history.back();
+        } else {
+            window.location.href = 'index.php';
+        }
     });
     
     // 規則畫面按鈕
     document.getElementById("back-from-rules").addEventListener("click", () => {
-        showScreen("start-screen");
+        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+        if (document.referrer && document.referrer !== window.location.href) {
+            history.back();
+        } else {
+            window.location.href = 'index.php';
+        }
     });
     
     document.getElementById("go-to-difficulty").addEventListener("click", () => {

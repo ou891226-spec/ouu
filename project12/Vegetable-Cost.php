@@ -146,7 +146,7 @@ if (!isset($_SESSION['member_id'])) {
     <div id="difficulty-modal" class="modal">
         <div class="modal-content" style="padding: 2.5rem 2rem 2rem 2rem;">
             <div class="difficulty-modal-header">
-                <a href="index.php" class="back-btn">
+                <a href="javascript:void(0)" onclick="smartReturn()" class="back-btn">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#222" stroke-width="2"/><polyline points="13 8 9 12 13 16" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="9" y1="12" x2="17" y2="12" stroke="#222" stroke-width="2" stroke-linecap="round"/></svg>
                     <span>返回</span>
                 </a>
@@ -223,6 +223,15 @@ if (!isset($_SESSION['member_id'])) {
     <script>
         // 將PHP變數傳遞給JavaScript
         window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
+
+        function smartReturn() {
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'index.php';
+            }
+        }
     </script>
     <script src="js/Vegetable-Cost.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>

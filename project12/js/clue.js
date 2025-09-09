@@ -84,7 +84,14 @@ document.addEventListener('DOMContentLoaded', function() {
       saveGameRecord(pass, score, pass_bounce);
     }
     document.getElementById('play-again-btn').onclick = function() { location.reload(); };
-    document.getElementById('back-home-btn').onclick = function() { window.location.href = 'index.php'; };
+    document.getElementById('back-home-btn').onclick = function() { 
+        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+        if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
+            history.back();
+        } else {
+            window.location.href = 'index.php';
+        }
+    };
 
     // 主要流程重寫
     let currentQuestion = null;
@@ -266,8 +273,12 @@ document.addEventListener('DOMContentLoaded', function() {
         showResultModal(pass, currentScore, difficulty, pass_bounce);
     };
     document.getElementById('resetBtn').onclick = function() {
-        // 直接回到線索遊戲的難度選擇頁面，不需要確認
-        window.location.href = 'clue.php';
+        // 智能返回：回到上一頁，如果沒有上一頁則回到線索遊戲難度選擇頁面
+        if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
+            history.back();
+        } else {
+            window.location.href = 'clue.php';
+        }
     };
 
     function showQuestionOnce() {

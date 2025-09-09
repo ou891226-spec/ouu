@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <span class="help-icon">?</span>
                 <div class="help-label">說明</div>
             </button>
-            <h2>難度選擇</h2>
+            <h2>選擇難度</h2>
             <?php
             // 從統一的 difficulty_settings 表讀取接金蛋遊戲的難度設定
             $stmt = $pdo->query("SELECT difficulty, pass_score FROM difficulty_settings WHERE game_id = 2 ORDER BY difficulty");

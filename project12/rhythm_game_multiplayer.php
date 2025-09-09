@@ -186,7 +186,7 @@ try {
         <div class="help-label">說明</div>
       </button>
 
-      <h2>難度選擇</h2>
+      <h2>選擇難度</h2>
       <div class="difficulty-options">
         <div class="difficulty-option easy" data-difficulty="easy">簡單 (3個)</div>
         <div class="difficulty-option medium" data-difficulty="normal">普通 (5個)</div>

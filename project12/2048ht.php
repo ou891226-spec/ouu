@@ -411,7 +411,12 @@ if (
 
         // 返回主頁按鈕處理
         function handleBackButton() {
-            window.location.href = 'index.php';
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'index.php';
+            }
         }
     </script>
     <script>

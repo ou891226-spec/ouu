@@ -167,7 +167,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
     <div id="friend-invite-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="back-button" onclick="window.location.href='index.php'">
+                <button class="back-button" onclick="smartReturn()">
                     <span class="back-label">返回</span>
                 </button>
                 <h2 class="modal-title">邀請好友對戰</h2>
@@ -518,6 +518,15 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
         window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
         window.currentUser = <?php echo json_encode($current_user); ?>;
         window.friends = <?php echo json_encode($friends); ?>;
+
+        function smartReturn() {
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'index.php';
+            }
+        }
     </script>
     <script src="js/vegetable_cost_2P.js"></script>
 </body>

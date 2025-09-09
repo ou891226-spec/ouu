@@ -2870,7 +2870,12 @@ function returnToMain() {
     }
     window.onbeforeunload = null;
     
-    window.location.href = 'game-category.php';
+    // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+    } else {
+        window.location.href = 'game-category.php';
+    }
 }
 
 // 關閉說明視窗
@@ -5756,7 +5761,12 @@ function confirmReturn() {
             themeModal.classList.remove('hidden');
         } else {
             // 其他情況返回主選單
-            window.location.href = 'game-category.php';
+            // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+    } else {
+        window.location.href = 'game-category.php';
+    }
         }
     }, 500);
 }
@@ -5786,7 +5796,12 @@ function handleBackButton() {
         showReturnConfirmModal();
     } else {
         // 直接返回主選單（包括邀請頁面）
+        // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+    } else {
         window.location.href = 'game-category.php';
+    }
     }
 }
 

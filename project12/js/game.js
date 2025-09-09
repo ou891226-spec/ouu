@@ -382,7 +382,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (backToMenuWinButton) {
                 backToMenuWinButton.addEventListener('click', () => {
                     console.log('遊戲勝利彈窗中的「返回主頁」按鈕被點擊');
-                    window.location.href = 'index.php'; // 直接導向首頁
+                    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+                    if (document.referrer && document.referrer !== window.location.href) {
+                        history.back();
+                    } else {
+                        window.location.href = 'index.php';
+                    }
                 });
             }
         }
@@ -414,8 +419,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (backToMenuButton) {
                 backToMenuButton.addEventListener('click', () => {
                     console.log('返回主頁按鈕被點擊');
-                    // 直接將頁面導向至 index.php
-                    window.location.href = 'index.php';
+                    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+                    if (document.referrer && document.referrer !== window.location.href) {
+                        history.back();
+                    } else {
+                        window.location.href = 'index.php';
+                    }
                 });
             }
         }

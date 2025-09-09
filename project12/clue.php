@@ -256,24 +256,26 @@ if (!$difficulty) {
                 background: rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; z-index: 9999;
             }
             #difficulty-modal .modal-content {
-                background: #fff; padding: 44px 44px 40px 44px; border-radius: 24px; text-align: center;
+                background: #fff; padding: 32px 36px 28px 36px; border-radius: 20px; text-align: center;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-                min-width: 420px;
-                width: 560px;
+                min-width: 350px;
+                width: 450px;
                 position: relative;
-                font-size: 1.1rem;
-                min-height: 72vh;
-                max-height: 86vh;
+                font-size: 1.0rem;
+                min-height: 60vh;
+                max-height: 75vh;
                 overflow: auto;
                 display: flex;
                 flex-direction: column;
             }
             .modal-header {
-                display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; margin-bottom: 28px;
+                display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
+                position: relative;
             }
             .modal-title {
-                font-size: 2.4rem; font-weight: bold; color: #222;
-                letter-spacing: 2px;
+                font-size: 1.8rem; font-weight: bold; color: #222;
+                letter-spacing: 1px;
+                white-space: nowrap;
             }
             .icon-block { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
             .icon-block .circle {
@@ -283,20 +285,20 @@ if (!$difficulty) {
             .icon-block .label { font-size: 1.05rem; color: #555; }
             .icon-link { text-decoration: none; color: inherit; }
             .difficulty-btn {
-                display: block; width: 100%; margin: 0 auto 35px auto; padding: 35px 0; font-size: 1.65rem; font-weight: bold;
-                border: none; border-radius: 16px; cursor: pointer; transition: filter 0.15s;
+                display: block; width: 100%; margin: 0 auto 25px auto; padding: 28px 0; font-size: 1.4rem; font-weight: bold;
+                border: none; border-radius: 14px; cursor: pointer; transition: filter 0.15s;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.06);
                 letter-spacing: 1px;
             }
             .difficulty-list {
-                display: flex; flex-direction: column; gap: 18px; flex: 1; justify-content: center; margin: 8px 0 20px 0;
+                display: flex; flex-direction: column; gap: 15px; flex: 1; justify-content: center; margin: 8px 0 16px 0;
             }
             .difficulty-btn:last-child { margin-bottom: 0; }
-            .difficulty-btn.easy { background: #2ecc40; color: #fff; }
+            .difficulty-btn.easy { background: #2ecc40; color: #000; }
             .difficulty-btn.easy:hover { filter: brightness(0.95); }
-            .difficulty-btn.medium { background: #ffe066; color: #444; }
+            .difficulty-btn.medium { background: #ffe066; color: #000; }
             .difficulty-btn.medium:hover { filter: brightness(0.97); }
-            .difficulty-btn.hard { background: #ff4d4f; color: #fff; }
+            .difficulty-btn.hard { background: #ff4d4f; color: #000; }
             .difficulty-btn.hard:hover { filter: brightness(0.95); }
             /* 說明彈窗 */
             #help-modal-bg {
@@ -315,21 +317,59 @@ if (!$difficulty) {
             }
             #help-modal .close-btn:hover { color: #222; }
             /* 返回按鈕 */
-            .return-btn { text-decoration: none; color: inherit; }
-            .return-btn img { width: 28px; height: 28px; display: block; }
+            .back-button {
+                position: absolute !important;
+                top: 0.1rem !important;
+                left: 0.2rem !important;
+                width: 45px !important;
+                height: 45px !important;
+                border-radius: 50% !important;
+                border: 2px solid #000 !important;
+                background: #fff !important;
+                color: #222 !important;
+                font-size: 1.6rem !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 9999 !important;
+            }
+            .back-button .back-arrow {
+                font-size: 1.6rem;
+                font-weight: 900;
+                line-height: 1;
+            }
+            .back-button .back-label {
+                position: absolute !important;
+                left: 50% !important;
+                top: 100% !important;
+                transform: translateX(-50%) !important;
+                font-size: 1.05rem !important;
+                color: #666 !important;
+                margin-top: 0.5rem !important;
+                user-select: none;
+                white-space: nowrap;
+                line-height: 1.1;
+            }
+            .back-button:hover {
+                background: #f2f2f2;
+                color: #111;
+                border-color: #000 !important;
+            }
         </style>
     </head>
     <body>
         <div id="difficulty-modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <div class="icon-block">
-                        <a href="index.php" class="return-btn icon-link" aria-label="返回首頁">
-                            <div class="circle"><img src="img/return-icon.png" alt="返回" style="width:20px;height:20px;"></div>
-                        </a>
-                        <span class="label">返回</span>
+                    <button class="back-button" onclick="smartReturn()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
+                        <span class="back-arrow">←</span>
+                        <div class="back-label">返回</div>
+                    </button>
+                    <div style="flex: 1; text-align: center; margin-left: 3rem;">
+                        <span class="modal-title">選擇難度</span>
                     </div>
-                    <span class="modal-title">難度選擇</span>
                     <div class="icon-block" id="show-help" style="cursor:pointer;">
                         <div class="circle">?</div>
                         <span class="label">說明</span>
@@ -370,7 +410,7 @@ if (!$difficulty) {
                         
                         <!-- 說明文字 -->
                         <div id="clue-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
-                            仔細觀察圖片，倒數結束後選擇答案
+                            選擇難度後即可進入到遊戲畫面
                         </div>
                         
                         <!-- 下一步按鈕 -->
@@ -390,6 +430,15 @@ if (!$difficulty) {
             </div>
         </div>
         <script>
+            function smartReturn() {
+                // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+                if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
+                    history.back();
+                } else {
+                    window.location.href = 'index.php';
+                }
+            }
+
             document.querySelectorAll('.difficulty-btn').forEach(btn => {
                 btn.onclick = function() {
                     const diff = this.getAttribute('data-difficulty');
@@ -425,7 +474,7 @@ if (!$difficulty) {
                 
                 // 設置第一個影片
                 video.src = 'gd/clue1.mp4';
-                instructionText.textContent = '仔細觀察圖片，倒數結束後選擇答案';
+                instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
                 stepIndicator.textContent = '步驟 1/2';
                 
                 // 設置當前影片標記
@@ -457,7 +506,7 @@ if (!$difficulty) {
                 // 切換到第二個影片
                 video.src = 'gd/clue2.mp4';
                 video.setAttribute('data-current-video', 'clue2');
-                instructionText.innerHTML = '每個難度的答題時間不同<br>難度越高時間越短，祝你玩得愉快！';
+                instructionText.innerHTML = '仔細觀察圖片，倒數結束後選擇答案';
                 stepIndicator.textContent = '步驟 2/2';
                 
                 // 隱藏下一步按鈕，顯示上一步按鈕
@@ -480,7 +529,7 @@ if (!$difficulty) {
                 // 切換到第一個影片
                 video.src = 'gd/clue1.mp4';
                 video.setAttribute('data-current-video', 'clue1');
-                instructionText.textContent = '仔細觀察圖片，倒數結束後選擇答案';
+                instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
                 stepIndicator.textContent = '步驟 1/2';
                 
                 // 顯示下一步按鈕，隱藏上一步按鈕

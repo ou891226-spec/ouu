@@ -2205,7 +2205,12 @@ function restartGame() {
 
 // 退出遊戲
 function exitGame() {
-    window.location.href = 'index.php';
+    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+    } else {
+        window.location.href = 'index.php';
+    }
 }
 
 // 開始遊戲（帶難度）

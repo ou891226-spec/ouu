@@ -956,7 +956,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>獲得分數：${passBonus}</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="smartReturn()">返回主頁</button>
                 `;
             } else {
                 // 失敗
@@ -965,7 +965,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>未在時間內達成分數</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="smartReturn()">返回主頁</button>
                 `;
             }
             document.getElementById('endGameContent').innerHTML = modalHtml;
@@ -1046,7 +1046,16 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         }
 
         function handleBackButton() {
-            window.location.href = 'index.php';
+            smartReturn();
+        }
+
+        function smartReturn() {
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'index.php';
+            }
         }
 
         function showHelp() {
@@ -1078,7 +1087,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             
             // 設置第一個影片
             video.src = 'gd/textcolor1.mp4';
-            instructionText.textContent = '根據文字的意思選擇正確的顏色';
+            instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
             stepIndicator.textContent = '步驟 1/2';
             
             // 設置當前影片標記
@@ -1110,7 +1119,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             // 切換到第二個視頻
             video.src = 'gd/textcolor2.mp4';
             video.setAttribute('data-current-video', 'textcolor2');
-            instructionText.innerHTML = '注意：我們看的是字的「意思」<br>不是字的顏色，在時間內選擇正確的顏色獲得分數！';
+            instructionText.innerHTML = '注意：我們看的是字的「意思」<br>不是字的顏色，並且在時間內選擇正確的顏色獲得分數！';
             stepIndicator.textContent = '步驟 2/2';
             
             // 隱藏下一步按鈕，顯示上一步按鈕
@@ -1133,7 +1142,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             // 切換到第一個視頻
             video.src = 'gd/textcolor1.mp4';
             video.setAttribute('data-current-video', 'textcolor1');
-            instructionText.textContent = '根據文字的意思選擇正確的顏色';
+            instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
             stepIndicator.textContent = '步驟 1/2';
             
             // 顯示下一步按鈕，隱藏上一步按鈕

@@ -90,7 +90,7 @@ try {
               <div class="help-label">說明</div>
           </div>
 
-          <h2>難度選擇</h2>
+          <h2>選擇難度</h2>
           <div class="difficulty-option easy" data-level="3">簡單 (3個)</div>
           <div class="difficulty-option medium" data-level="4">普通 (4個)</div>
           <div class="difficulty-option hard" data-level="5">困難 (5個)</div>
@@ -152,7 +152,7 @@ try {
         <p id="result-score"></p>
         <div>
           <button onclick="location.reload()">再玩一次</button>
-          <button onclick="window.location.href='index.php'">返回主頁</button>
+          <button onclick="smartReturn()">返回主頁</button>
         </div>
       </div>
     </div>
@@ -209,6 +209,16 @@ try {
     </div>
   </div>
 
+  <script>
+    function smartReturn() {
+      // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+      if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+      } else {
+        window.location.href = 'index.php';
+      }
+    }
+  </script>
   <script src="js/prisoner.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>
