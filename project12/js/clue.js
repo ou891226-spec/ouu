@@ -85,11 +85,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById('play-again-btn').onclick = function() { location.reload(); };
     document.getElementById('back-home-btn').onclick = function() { 
-        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-        if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
-            history.back();
+        // 由於遊戲流程是：上一頁 -> 難度選擇頁面 -> 遊戲頁面
+        // 我們需要跳過難度選擇頁面，直接返回到上一頁
+        if (history.length > 2) {
+            history.go(-2);  // 返回兩步，跳過難度選擇頁面
         } else {
-            window.location.href = 'index.php';
+            window.location.href = 'index.php';  // 備用方案：返回首頁
         }
     };
 

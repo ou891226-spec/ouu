@@ -363,7 +363,7 @@ if (!$difficulty) {
         <div id="difficulty-modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button class="back-button" onclick="smartReturn()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
+                    <button class="back-button" onclick="history.back()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
                         <span class="back-arrow">←</span>
                         <div class="back-label">返回</div>
                     </button>
@@ -430,14 +430,6 @@ if (!$difficulty) {
             </div>
         </div>
         <script>
-            function smartReturn() {
-                // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-                if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
-                    history.back();
-                } else {
-                    window.location.href = 'index.php';
-                }
-            }
 
             document.querySelectorAll('.difficulty-btn').forEach(btn => {
                 btn.onclick = function() {

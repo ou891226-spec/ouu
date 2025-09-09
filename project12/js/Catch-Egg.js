@@ -804,12 +804,7 @@ function eggReplayGame() {
 }
 
 function eggReturnToMain() {
-    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-    if (document.referrer && document.referrer !== window.location.href) {
-        history.back();
-    } else {
-        window.location.href = 'index.php';
-    }
+    history.back();
 }
 
 // 初始化
@@ -836,24 +831,10 @@ window.onload = function() {
         console.log('音效已載入，音量設定為 0.5');
     }
     
-    // 添加返回按鈕事件
+    // 返回按鈕事件已在HTML中直接綁定為 onclick="history.back()"
     const backBtn = document.getElementById('back-btn');
     if (backBtn) {
-        console.log('找到返回按鈕，添加事件監聽器');
-        backBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('返回按鈕被點擊');
-            window.location.href = 'index.php';
-        });
-        
-        // 也添加 onclick 事件作為備用
-        backBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('返回按鈕 onclick 被觸發');
-            window.location.href = 'index.php';
-        };
+        console.log('找到返回按鈕，已在HTML中綁定事件');
     } else {
         console.log('找不到返回按鈕元素');
     }

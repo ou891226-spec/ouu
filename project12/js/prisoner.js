@@ -21,9 +21,7 @@ let isPaused = false;
 const memberIdInput = document.getElementById('member-id'); 
 const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
 
-document.getElementById('back-btn').addEventListener('click', () => {
-  window.location.href = 'index.php';
-});
+// 返回按鈕已在HTML中直接綁定onclick事件
 
 
 startBtn.addEventListener('click', startGame);

@@ -1179,6 +1179,7 @@ function restartGame() {
 
 function exitGame() {
     // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+    console.log('exitGame被調用，執行智能返回');
     if (document.referrer && document.referrer !== window.location.href) {
         history.back();
     } else {

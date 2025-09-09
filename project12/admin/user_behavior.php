@@ -564,7 +564,6 @@ try {
                             <th>參與玩家數</th>
                             <th>平均退出率</th>
                             <th>≤15秒退出</th>
-                            <th>≤30秒退出</th>
                             <th>快速退出率</th>
                         </tr>
                     </thead>
@@ -581,7 +580,6 @@ try {
                                 <td><?php echo number_format($row['unique_players']); ?></td>
                                 <td><?php echo $row['unique_players'] > 0 ? round($row['total_exits'] / $row['unique_players'], 1) : 0; ?> 次/人</td>
                                 <td><?php echo number_format($row['quick_exits_15s']); ?></td>
-                                <td><?php echo number_format($row['quick_exits_30s']); ?></td>
                                 <td>
                                     <strong><?php echo $quick_exit_rate_15s; ?>%</strong>
                                     <?php if ($quick_exit_rate_15s > 30): ?>
@@ -616,14 +614,14 @@ try {
                 <tbody>
                     <?php if (isset($error_message)): ?>
                     <tr>
-                        <td colspan="5" style="text-align: center; color: red; padding: 20px;">
+                        <td colspan="4" style="text-align: center; color: red; padding: 20px;">
                             <strong>錯誤：</strong><?php echo htmlspecialchars($error_message); ?><br>
                             <a href="add_missing_fields.php" style="color: blue; text-decoration: underline;">點擊這裡添加缺失字段</a>
                         </td>
                     </tr>
                     <?php elseif (empty($records)): ?>
                     <tr>
-                        <td colspan="5" style="text-align: center; color: #666; padding: 20px;">
+                        <td colspan="4" style="text-align: center; color: #666; padding: 20px;">
                             暫無行為記錄數據
                         </td>
                     </tr>

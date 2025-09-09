@@ -375,7 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- 難度選擇視窗 -->
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
-            <button class="back-button" onclick="handleBackButton()">
+            <button class="back-button" onclick="history.back()">
                 <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>

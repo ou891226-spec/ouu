@@ -261,7 +261,7 @@ h1 {
     margin: 8px 0;
   }
   
-  .modal-content button {
+  .modal-content button:not(.back-button):not(.help-btn) {
     padding: 10px 20px;
     margin: 15px 10px 0;
     font-size: 25px;
@@ -272,15 +272,15 @@ h1 {
     transition: background-color 0.2s ease;
   }
   
-  .modal-content button:first-child {
+  .modal-content button:not(.back-button):not(.help-btn):first-child {
     background-color: #F91519; /* 再玩一次（紅色） */
   }
   
-  .modal-content button:last-child {
+  .modal-content button:not(.back-button):not(.help-btn):last-child {
     background-color: #1d3557; /* 返回主頁（藍色） */
   }
   
-  .modal-content button:hover {
+  .modal-content button:not(.back-button):not(.help-btn):hover {
     opacity: 0.9;
     transform: scale(1.05);
   }
@@ -514,48 +514,56 @@ h1 {
     }
 }
 
-/* 返回按鈕容器 */
+/* 返回按鈕樣式（與圖像線索遊戲完全一致） */
+  #difficulty-modal .back-button,
   .back-button {
-    position: absolute;
-    top: 1.2rem;
-    left: 1.2rem;
-    text-align: center;
-    z-index: 10;
+      position: absolute !important;
+      top: 1.0rem !important;
+      left: 2.2rem !important;
+      width: 45px !important;
+      height: 45px !important;
+      border-radius: 50% !important;
+      border: 2px solid #000 !important;
+      background: #fff !important;
+      color: #222 !important;
+      font-size: 1.6rem !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 9999 !important;
+      pointer-events: auto !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
   }
-
-  /* 按鈕樣式：圓形、黑框、白底 */
-  .back-arrow {
-    width: 2.7rem!important;
-    height: 2.7rem!important;
-    border-radius: 50%!important;
-    border: 3px solid #000!important;
-    background-color: #fff!important;
-    font-size: 24px!important;
-    cursor: pointer!important;
-    display: flex!important;
-    align-items: center!important;
-    justify-content: center!important;
+  #difficulty-modal .back-button .back-arrow,
+  .back-button .back-arrow {
+      font-size: 1.6rem !important;
+      font-weight: 900 !important;
+      line-height: 1 !important;
+      color: #222 !important;
+      stroke-width: 3px !important;
+      font-family: Arial, sans-serif !important;
+      text-shadow: 0 0 1px #000 !important;
   }
-
-  /* 文字說明 */
-  .btn-label {
-    font-size: 1.15rem;
-    color: #888;
-    margin-top: 0.18rem;
-    letter-spacing: 0.18em;
-    font-weight: 700;
-    line-height: 1.1;
-    text-align: center;
+  #difficulty-modal .back-button .back-label,
+  .back-button .back-label {
+      position: absolute !important;
+      left: 50% !important;
+      top: 100% !important;
+      transform: translateX(-50%) !important;
+      font-size: 1.05rem !important;
+      color: #666 !important;
+      margin-top: 0.8rem !important;
+      user-select: none !important;
+      white-space: nowrap !important;
+      line-height: 1.1 !important;
   }
-
-  /* 箭頭樣式（可再客製） */
-  .arrow {
-    font-weight: 700!important;
-    color: #000!important;
-    font-size: 2.5rem!important;
-    text-align: center!important;
-    margin-top: 1px;
-    line-height: 1.1;
+  #difficulty-modal .back-button:hover,
+  .back-button:hover {
+      background: #f2f2f2 !important;
+      color: #111 !important;
+      border-color: #000 !important;
   }
 
   .dual-container {

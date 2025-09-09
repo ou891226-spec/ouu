@@ -101,7 +101,7 @@ try {
   <!-- 好友邀請視窗 -->
   <div id="friend-invite-modal" class="modal show">
     <div class="modal-content">
-      <button class="back-button" onclick="handleBackButton()">
+      <button class="back-button" onclick="history.back()">
         <span class="back-arrow">⬅</span>
         <div class="back-label">返回</div>
       </button>

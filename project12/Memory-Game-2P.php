@@ -199,7 +199,7 @@ $colors = $stmt->fetchAll();
     <!-- 好友邀請視窗 -->
     <div id="friend-invite-modal" class="modal">
         <div class="modal-content">
-            <button class="back-button" onclick="handleBackButton()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
+            <button class="back-button" onclick="history.back()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
                 <span class="back-arrow">⬅</span>
                 <div class="back-label">返回</div>
             </button>

@@ -92,9 +92,9 @@ if (
 </head>
 <body>
     <!-- 難度選擇彈窗 -->
-    <div id="difficultyModal" class="modal">
-        <div class="modal-content">
-            <button class="back-button" onclick="handleBackButton()">
+    <div id="difficultyModal" class="modal" style="align-items: flex-start !important; padding-top: 0vh !important;">
+        <div class="modal-content" style="transform: translateY(-10vh) !important;">
+            <button class="back-button" onclick="history.back()">
                 <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
@@ -140,8 +140,8 @@ if (
     </div>
 
     <!-- 遊戲說明彈窗 -->
-    <div id="instructions-modal" class="modal" style="display:none;">
-        <div class="modal-content">
+    <div id="instructions-modal" class="modal" style="display:none; align-items: flex-start !important; padding-top: 0vh !important;">
+        <div class="modal-content" style="transform: translateY(-18vh) !important; min-width: 480px !important; max-width: 580px !important;">
             <span class="close-button" id="close-instructions">&times;</span>
             <h2 style="text-align:center;">
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
@@ -157,7 +157,7 @@ if (
                 </div>
                 
                 <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                <div style="display:flex;justify-content:center;align-items:center;margin:0.5rem 1rem 1rem 1rem; gap: 20px;">
                     <!-- 上一步按鈕 -->
                     <div id="2048-prev-step-btn" style="display:none;">
                         <button id="2048-prev-step-button" onclick="goTo2048PrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
@@ -167,7 +167,7 @@ if (
                     
                     <!-- 說明文字 -->
                     <div id="2048-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
-                        合併相同數字的方塊，達到目標分數
+                        先選擇遊戲困難度
                     </div>
                     
                     <!-- 下一步按鈕 -->
@@ -179,7 +179,7 @@ if (
                 </div>
                 
                 <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                <div style="text-align:center;margin-top:1rem;margin-bottom:1rem;">
                     <span id="2048-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
@@ -270,7 +270,13 @@ if (
             
             if (showInstructionsBtn && closeInstructionsBtn && instructionsModal) {
                 showInstructionsBtn.onclick = () => {
-                    instructionsModal.style.display = 'block';
+                    const modalContent = instructionsModal.querySelector('.modal-content');
+                    instructionsModal.style.display = 'flex';
+                    instructionsModal.style.alignItems = 'flex-start';
+                    instructionsModal.style.paddingTop = '0vh';
+                    modalContent.style.transform = 'translateY(-18vh)';
+                    modalContent.style.minWidth = '480px';
+                    modalContent.style.maxWidth = '580px';
                     instructionsModal.classList.add('show');
                     // 初始化2048視頻播放邏輯
                     init2048VideoPlayback();
@@ -304,7 +310,7 @@ if (
                 
                 // 設置第一個視頻
                 video.src = 'gd/2048-1.mp4';
-                instructionText.textContent = '合併相同數字的方塊，達到目標分數';
+                instructionText.textContent = '先選擇遊戲困難度';
                 stepIndicator.textContent = '步驟 1/2';
                 
                 // 設置當前視頻標記
@@ -336,7 +342,7 @@ if (
                 // 切換到第二個視頻
                 video.src = 'gd/2048-2.mp4';
                 video.setAttribute('data-current-video', '2048-2');
-                instructionText.innerHTML = '使用方向鍵或滑動手勢移動方塊<br>相同數字的方塊合併會加分！';
+                instructionText.innerHTML = '動動手指或鍵盤上下左右建滑動方塊，相同數字會合併（如2+2=4）最高128分，目標是在限時內達到指定分數就過關！';
                 stepIndicator.textContent = '步驟 2/2';
                 
                 // 隱藏下一步按鈕，顯示上一步按鈕
@@ -359,7 +365,7 @@ if (
                 // 切換到第一個視頻
                 video.src = 'gd/2048-1.mp4';
                 video.setAttribute('data-current-video', '2048-1');
-                instructionText.textContent = '合併相同數字的方塊，達到目標分數';
+                instructionText.textContent = '先選擇遊戲困難度';
                 stepIndicator.textContent = '步驟 1/2';
                 
                 // 顯示下一步按鈕，隱藏上一步按鈕
@@ -384,13 +390,25 @@ if (
                 debugLog('DOM 加載完成，開始初始化遊戲界面');
                 initGameUI();
                 // 顯示難度選擇彈窗
-                document.getElementById('difficultyModal').classList.add('show');
+                const difficultyModal = document.getElementById('difficultyModal');
+                const modalContent = difficultyModal.querySelector('.modal-content');
+                difficultyModal.style.display = 'flex';
+                difficultyModal.style.alignItems = 'flex-start';
+                difficultyModal.style.paddingTop = '0vh';
+                modalContent.style.transform = 'translateY(-10vh)';
+                difficultyModal.classList.add('show');
             });
         } else {
             debugLog('DOM 已加載，立即初始化遊戲界面');
             initGameUI();
             // 顯示難度選擇彈窗
-            document.getElementById('difficultyModal').classList.add('show');
+            const difficultyModal = document.getElementById('difficultyModal');
+            const modalContent = difficultyModal.querySelector('.modal-content');
+            difficultyModal.style.display = 'flex';
+            difficultyModal.style.alignItems = 'flex-start';
+            difficultyModal.style.paddingTop = '0vh';
+            modalContent.style.transform = 'translateY(-10vh)';
+            difficultyModal.classList.add('show');
         }
 
         // 修改遊戲結束時的處理

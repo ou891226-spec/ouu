@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         <div class="modal-content">
             <!-- 🔙 返回鍵：左上角 -->
             <div class="back-button">
-                <button class="back-arrow" id="back-btn" title="返回">
+                <button class="back-arrow" id="back-btn" title="返回" onclick="history.back()">
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                         <circle cx="16" cy="16" r="15" stroke="black" stroke-width="2.5" fill="white"/>
                         <polygon points="20,9 12,16 20,23 20,18 25,18 25,14 20,14" fill="black"/>

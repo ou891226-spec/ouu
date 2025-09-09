@@ -77,12 +77,10 @@ try {
         <div id="difficulty-modal" class="modal">
             <div class="modal-content" style="position:relative;">
                 <!-- 🔙 返回鍵：左上角 -->
-                <div class="back-button">
-                    <button class="back-arrow" id="back-btn" title="返回">
-                        <span class="arrow">&larr;</span>
-                    </button>
-                    <div class="btn-label">返回</div>
-                </div>
+                <button class="back-button" id="back-btn" onclick="window.history.back(); return false;" style="position:absolute;top:1.0rem;left:2.2rem;z-index:10;">
+                    <span class="back-arrow">←</span>
+                    <div class="back-label">返回</div>
+                </button>
 
                 <!-- ❓ 說明鍵：右上角 -->
                 <div style="position:absolute; top:1.2rem; right:1.2rem; text-align:center; z-index:10;">
@@ -151,7 +149,7 @@ try {
                 <p id="result-score"></p>
                 <div>
                     <button onclick="location.reload()">再玩一次</button>
-                    <button onclick="smartReturn()">返回主頁</button>
+                    <button onclick="history.back()">返回主頁</button>
                 </div>
             </div>
         </div>
@@ -174,16 +172,6 @@ try {
 
         <audio id="bgm" preload="auto"></audio>
     </div>    
-    <script>
-        function smartReturn() {
-            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-            if (document.referrer && document.referrer !== window.location.href) {
-                history.back();
-            } else {
-                window.location.href = 'index.php';
-            }
-        }
-    </script>
     <script src="js/rhythm_game.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>
