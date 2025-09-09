@@ -51,6 +51,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'score' => $data['score'],
             'member_id' => $data['member_id']
         ]);
+        
+        // 記錄遊戲行為軌跡
+        require_once 'log_game_behavior.php';
+        logGameBehavior(
+            $data['member_id'], 
+            '算數邏輯力', 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $data['score'], 
+            $data['difficulty']
+        );
        
         // 提交交易
         $pdo->commit();
@@ -119,9 +129,10 @@ if (!isset($_SESSION['member_id'])) {
             <div class="gameover-desc">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="vegetable-gameover-difficulty">簡單模式</span></div>
-                    <div class="gameover-row">獲得分數：<span id="vegetable-gameover-earned-score">20</span></div>
-                    <div class="gameover-row">遊戲時間：<span id="vegetable-gameover-time">80秒</span></div>
-                    <div class="gameover-row">過關分數：<span id="vegetable-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="vegetable-earned-row">獲得分數：<span id="vegetable-gameover-earned-score">20</span></div>
+                    <div class="gameover-row" id="vegetable-time-row">遊戲時間：<span id="vegetable-gameover-time">80秒</span></div>
+                    <div class="gameover-row" id="vegetable-bonus-row">過關分數：<span id="vegetable-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="vegetable-fail-message" style="display: none;">未在時間內達成分數</div>
                 </div>
             </div>
             <div class="gameover-btn-group">
@@ -189,7 +200,7 @@ if (!isset($_SESSION['member_id'])) {
                     
                     <!-- 說明文字 -->
                     <div id="vegetable-instruction-text" class="game-instruction-text" style="font-size:26px;flex:3;text-align:center;min-width:300px;">
-                        計算阿嬤買菜的總金額
+                        先選擇遊戲困難度
                     </div>
                     
                     <!-- 下一步按鈕 -->
@@ -214,5 +225,6 @@ if (!isset($_SESSION['member_id'])) {
         window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
     </script>
     <script src="js/Vegetable-Cost.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html> 

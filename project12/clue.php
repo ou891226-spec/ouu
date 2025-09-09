@@ -85,6 +85,10 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
                     'opponent_id' => null
                 ]);
                 
+                // 記錄遊戲行為軌跡
+                require_once 'log_game_behavior.php';
+                logGameBehavior($member_id, '記憶力', $play_time, $score_to_save, $difficulty);
+                
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
                 checkAndCompleteAllTasks($member_id, '記憶力');
@@ -163,6 +167,10 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
                     'is_single_player' => $is_single_player,
                     'opponent_id' => null
                 ]);
+                
+                // 記錄遊戲行為軌跡
+                require_once 'log_game_behavior.php';
+                logGameBehavior($member_id, '記憶力', $play_time, $score_to_save, $difficulty);
                 
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
@@ -581,5 +589,6 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
         </div>
     </div>
     <script src="js/clue.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html> 

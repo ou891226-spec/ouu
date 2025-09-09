@@ -296,7 +296,7 @@ button {
   border-radius: 1rem;
   text-align: center;
   width: 90%;
-  max-width: 550px;
+  max-width: 320px;  /* 進一步縮小到 320px */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
 }
@@ -620,7 +620,7 @@ button {
   /* 難度選擇彈窗 */
   .modal-content {
     width: 80%;
-    max-width: 500px;
+    max-width: 300px;
     padding: 2rem;
   }
   
@@ -701,7 +701,7 @@ button {
   /* 難度選擇彈窗 */
   .modal-content {
     width: 90%;
-    max-width: 450px;
+    max-width: 280px;
     padding: 1.5rem;
   }
   

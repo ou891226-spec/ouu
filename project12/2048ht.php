@@ -46,7 +46,7 @@ if (
             'game_id' => 4,
             'difficulty' => $difficulty,
             'score' => $record_score,
-            'play_time' => $data['play_time'],
+            'play_time' => null, // 設為null避免在行為軌跡分析中產生誤導
             'game_type' => '邏輯力',
             'is_single_player' => 1,
             'opponent_id' => null
@@ -189,11 +189,11 @@ if (
     <!-- 遊戲勝利彈窗 -->
     <div id="win-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h2>恭喜破關</h2>
+            <h2>🎉 恭喜破關</h2>
             <p>難度：<span id="win-difficulty"></span></p>
-            <p>遊戲分數：<span id="win-game-score"></span></p>
-            <p>獎勵分數：<span id="win-reward-score"></span></p>
+            <p>獲得分數：<span id="win-game-score"></span></p>
             <p>最高分數：<span id="win-best-score"></span></p>
+            <p>過關分數：<span id="win-reward-score"></span></p>
             <div class="modal-buttons">
                 <button id="continue-game" class="btn red-button">再玩一次</button>
                 <button id="new-game" class="btn dark-blue-button">返回主頁</button>
@@ -204,8 +204,9 @@ if (
     <!-- 遊戲失敗彈窗 -->
     <div id="game-over-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h2>遊戲失敗</h2> <p>難度：<span id="game-over-difficulty"></span></p>
-            <p>獲得分數：<span id="game-over-score"></span></p>
+            <h2>⏰ 遊戲失敗</h2>
+            <p>難度：<span id="game-over-difficulty"></span></p>
+            <p>未在時間內達成分數</p>
             <div class="modal-buttons">
                 <button id="try-again" class="btn red-button">再玩一次</button>
                 <button id="back-to-menu" class="btn dark-blue-button">返回主頁</button>
@@ -432,6 +433,6 @@ if (
         document.addEventListener('DOMContentLoaded', checkTouchDevice);
     </script>
     <script src="js/game.js"></script>
-    <script src="js/auto-save-time.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>

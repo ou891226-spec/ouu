@@ -772,8 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 顯示遊戲分數和獎勵分數
             document.getElementById('win-game-score').textContent = this.score;
-            document.getElementById('win-reward-score').textContent = rewardScore;
-            document.getElementById('win-best-score').textContent = this.bestScore;
+            document.getElementById('win-reward-score').textContent = '+' + rewardScore;
             
             // 計算實際遊玩時間
             const playTime = this.gameStartTime ? Math.floor((Date.now() - this.gameStartTime) / 1000) : 0;
@@ -794,11 +793,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 調整標題為「遊戲失敗」
-            const modalTitle = this.gameOverModal.querySelector('h2');
-            if (modalTitle) {
-                modalTitle.textContent = '遊戲失敗';
-            }
+            // 標題已在HTML中設定為「⏰ 遊戲失敗」，無需修改
+            // const modalTitle = this.gameOverModal.querySelector('h2');
+            // if (modalTitle) {
+            //     modalTitle.textContent = '遊戲失敗';
+            // }
 
             // 更新彈窗內的難度、分數等資訊
             const difficultyLabel = document.getElementById('game-over-difficulty');
@@ -807,7 +806,8 @@ document.addEventListener('DOMContentLoaded', () => {
             difficultyLabel.textContent = this.getDifficultyText();
             difficultyLabel.className = 'difficulty-label ' + this.difficulty;
             
-            document.getElementById('game-over-score').textContent = this.score;            
+            // 不再需要設置分數，因為已改為固定文字「未在時間內達成分數」
+            // document.getElementById('game-over-score').textContent = this.score;            
             
             // 計算實際遊玩時間
             const currentTime = Date.now();

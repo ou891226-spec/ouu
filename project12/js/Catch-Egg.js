@@ -534,8 +534,21 @@ function resumeGame() {
 
 // 結束遊戲
 function endGame() {
+    gameStarted = false;  // 重置遊戲狀態
+    gamePaused = false;   // 重置暫停狀態
     clearInterval(itemInterval);
     clearInterval(countdown);
+    
+    // 清理所有掉落的物品
+    const items = game.querySelectorAll('.gold, .white, .bomb');
+    items.forEach(item => {
+        if (item.fallInterval) {
+            clearInterval(item.fallInterval);
+        }
+        if (item.parentNode) {
+            game.removeChild(item);
+        }
+    });
     
     // bgm.pause(); // 移除背景音樂
     // bgm.currentTime = 0; // 移除背景音樂
@@ -678,7 +691,7 @@ function goToEggNextStep() {
     // 切換到第二個視頻
     video.src = 'gd/egg2.mp4';
     video.setAttribute('data-current-video', 'egg2');
-    instructionText.innerHTML = '動動手指左右拖曳籃子接蛋，接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分<br>時間內達到目標分數就過關！';
+    instructionText.innerHTML = '動動手指左右拖曳籃子接蛋，接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋+10分，<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋+3分，<span style="font-size:1.2em;">💣</span>炸彈-20分<br>在時間內達到目標分數就過關！';
     stepIndicator.textContent = '步驟 2/2';
     
     // 隱藏下一步按鈕，顯示上一步按鈕
@@ -757,11 +770,30 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
     
     title.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
     
-    // 設置四行信息
+    // 設置結果訊息
+    const earnedRow = document.getElementById('egg-earned-row');
+    const timeRow = document.getElementById('egg-time-row');
+    const bonusRow = document.getElementById('egg-bonus-row');
+    const failMessage = document.getElementById('egg-fail-message');
+    
     document.getElementById('egg-gameover-difficulty').textContent = difficultyName;
-    document.getElementById('egg-gameover-earned-score').textContent = score;
-    document.getElementById('egg-gameover-time').textContent = playTime + '秒';
-    document.getElementById('egg-gameover-bonus').textContent = isWin ? '+' + bonusScore : '0';
+    
+    if (isWin) {
+        // 勝利時顯示所有資訊，隱藏失敗訊息
+        document.getElementById('egg-gameover-earned-score').textContent = score;
+        document.getElementById('egg-gameover-time').textContent = playTime + '秒';
+        document.getElementById('egg-gameover-bonus').textContent = '+' + bonusScore;
+        if (earnedRow) earnedRow.style.display = 'block';
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
+        if (failMessage) failMessage.style.display = 'none';
+    } else {
+        // 失敗時隱藏詳細資訊，顯示失敗訊息
+        if (earnedRow) earnedRow.style.display = 'none';
+        if (timeRow) timeRow.style.display = 'none';
+        if (bonusRow) bonusRow.style.display = 'none';
+        if (failMessage) failMessage.style.display = 'block';
+    }
     
     modal.classList.remove('hidden');
 }

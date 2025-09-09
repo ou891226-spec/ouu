@@ -26,9 +26,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: registerForm.php?error=此帳號已存在，請重新選擇帳號");
         exit();
     }
+    // 使用 password_hash() 進行安全的密碼加鹽處理
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    
     $query = "INSERT INTO `member` (member_name, account, password) VALUES (?, ?, ?)";
     $stmt = $pdo->prepare($query);
-    if ($stmt->execute([$name, $id, $password])) {
+    if ($stmt->execute([$name, $id, $hashed_password])) {
         $new_member_id = $pdo->lastInsertId();
         
         // 產生預設頭像
@@ -69,11 +72,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } catch (Exception $e) {
             error_log("[register.php] 分配任務失敗: " . $e->getMessage());
         }
-        echo "姓名: " . htmlspecialchars($name) . "<br>";
-        echo "帳號: " . htmlspecialchars($id) . "<br>";
-        echo "密碼: " . htmlspecialchars($password) . "<br>"; 
-        echo "註冊成功！<br><br>";
-        echo "<a href='login.php' style='display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;'>返回登入頁面</a>";
+        // 重定向到美觀的註冊成功頁面
+        $success_url = "register_success.php?name=" . urlencode($name) . "&account=" . urlencode($id);
+        header("Location: $success_url");
+        exit();
     } else {
         header("Location: registerForm.php?error=註冊失敗，請稍後再試");
     }

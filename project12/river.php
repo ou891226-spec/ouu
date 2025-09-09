@@ -61,7 +61,7 @@ $username = $_SESSION['username'] ?? '玩家';
                     </div>
                 </div>
                 <div class="dialog-buttons">
-                    <button id="back-to-start" class="btn-secondary">返回主選單</button>
+                    <button id="back-to-start" class="btn-secondary">返回主頁</button>
                 </div>
             </div>
         </div>
@@ -158,7 +158,7 @@ $username = $_SESSION['username'] ?? '玩家';
             </div>
             
             <div class="rules-footer">
-                <button id="back-from-rules" class="btn-secondary">返回主選單</button>
+                <button id="back-from-rules" class="btn-secondary">返回主頁</button>
                 <button id="go-to-difficulty" class="btn-primary">選擇難度</button>
             </div>
         </div>
@@ -243,6 +243,7 @@ $username = $_SESSION['username'] ?? '玩家';
     <input type="hidden" id="csrf-token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
 
     <script src="js/river.script.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
     <script>
         // 將PHP變數傳遞給JavaScript
         window.gameConfig = {

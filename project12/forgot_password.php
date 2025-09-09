@@ -76,10 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $update_stmt = $pdo->prepare($update_sql);
                 $update_stmt->execute([$hashed_password, $account]);
                 
-                // 4. 顯示成功訊息
-                // 向用戶顯示明文密碼（僅此一次），提醒立即修改
-                $message = "密碼已重設為隨機密碼：{$random_password}，請登入後立即修改密碼";
-                $message_type = "success";
+                // 4. 重導向到登入頁面
+                // 將新密碼作為 session 暫存，在登入頁面顯示
+                $_SESSION['reset_password_success'] = true;
+                $_SESSION['reset_account'] = $account;
+                $_SESSION['new_password'] = $random_password;
+                
+                header("Location: login.php?password_reset=1");
+                exit();
             } catch (PDOException $e) {
                 $message = "重設密碼時發生錯誤，請稍後再試";
                 $message_type = "error";
@@ -89,251 +93,283 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>樂齡智趣網 - 忘記密碼</title>
     <link rel="stylesheet" href="css/login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- 品牌標誌 -->
+            <div class="brand-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h1 class="brand-title">忘記密碼</h1>
+                <p class="brand-subtitle">重設您的密碼，重新開始遊戲之旅</p>
+            </div>
+            
+            <!-- 訊息顯示 -->
+            <?php if (!empty($message)): ?>
+            <div class="message-card <?php echo $message_type; ?>">
+                <div class="message-icon">
+                    <?php if ($message_type == 'success'): ?>
+                        <i class="fas fa-check-circle"></i>
+                    <?php else: ?>
+                        <i class="fas fa-exclamation-triangle"></i>
+                    <?php endif; ?>
+                </div>
+                <div class="message-content">
+                    <?php echo $message; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- 說明卡片 -->
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> 密碼重設說明</h3>
+                <div class="info-steps">
+                    <div class="step-item">
+                        <span class="step-number">1</span>
+                        <span class="step-text">請輸入您的帳號</span>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-number">2</span>
+                        <span class="step-text">系統會將您的密碼重設為隨機密碼</span>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-number">3</span>
+                        <span class="step-text">請使用新密碼登入後立即修改密碼</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 重設密碼表單 -->
+            <form action="" method="post" class="login-form" id="resetForm">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <div class="input-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <input type="text" name="account" placeholder="請輸入帳號" required class="form-input">
+                    </div>
+                </div>
+                
+                <button type="submit" class="login-btn" id="resetBtn">
+                    <i class="fas fa-redo-alt"></i>
+                    重設密碼
+                </button>
+            </form>
+            
+            <!-- 返回連結 -->
+            <div class="form-links">
+                <a href="login.php" class="register-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <?php echo ($message_type == 'success') ? '重新登入' : '返回登入頁面'; ?>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 背景裝飾 -->
+        <div class="bg-decoration">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+            <div class="floating-shape shape-4"></div>
+            <div class="floating-shape shape-5"></div>
+        </div>
+    </div>
+    
+    <!-- 自定義樣式 -->
     <style>
-        body {
-            background: #f5f6fa;
-            min-height: 100vh;
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            margin: 0;
+        .message-card {
+            background: white;
+            border-radius: 16px;
             padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+        
+        .message-card.success {
+            border-left-color: #4CAF50;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+        }
+        
+        .message-card.error {
+            border-left-color: #f44336;
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        }
+        
+        .message-icon {
+            font-size: 24px;
+            min-width: 30px;
+        }
+        
+        .message-card.success .message-icon {
+            color: #4CAF50;
+        }
+        
+        .message-card.error .message-icon {
+            color: #f44336;
+        }
+        
+        .message-content {
+            flex: 1;
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        
+        .message-card.success .message-content {
+            color: #2d5a2d;
+        }
+        
+        .message-card.error .message-content {
+            color: #c62828;
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8e9 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease-out 0.2s forwards;
+        }
+        
+        .info-card h3 {
+            font-size: 18px;
+            color: #1565c0;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-steps {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        h1 {
-            color: #4CAF50;
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 30px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .message {
-            padding: 15px;
-            margin: 15px auto;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            animation: slideInUp 0.6s ease-out;
-            position: relative;
-            overflow: hidden;
+            gap: 12px;
         }
         
-        .message::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-        }
-        
-        .message.success {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .message.success::before {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-        }
-        
-        .message.error {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .message.error::before {
-            background: linear-gradient(90deg, #f44336, #d32f2f);
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 12px 25px;
-            font-size: 16px;
-            color: white;
-            text-decoration: none;
-            background: #4CAF50;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            animation: fadeIn 1s ease-out 0.5s both;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .back-link:hover {
-            background: #45a049;
-        }
-        
-        .info-box {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            color: #0066cc;
-            padding: 15px;
-            margin: 15px auto;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.5;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            animation: slideInUp 0.6s ease-out 0.2s both;
-        }
-
-        .info-box strong {
-            color: #d32f2f;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        form {
-            width: 90%;
-            max-width: 450px;
-            animation: slideInUp 0.6s ease-out 0.4s both;
-            padding-bottom: 5px;
-        }
-
-        .input-box {
-            background: white;
-            border-radius: 5px;
-            padding: 3px 15px;
-            margin-bottom: 3px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .step-item {
             display: flex;
             align-items: center;
-            border: 1px solid #e0e0e0;
+            gap: 12px;
         }
-
-        .input-box img {
-            width: 25px;
-            height: 25px;
-            margin-right: 15px;
-            opacity: 0.7;
-        }
-
-        .input-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            background: transparent;
-            color: #333;
-        }
-
-        .input-box input::placeholder {
-            color: #999;
-        }
-
-        .login-btn {
-            width: auto;
-            padding: 10px 25px;
-            background: #4CAF50;
+        
+        .step-number {
+            background: #2196f3;
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 24px;
         }
-
-        .login-btn:hover {
-            background: #45a049;
+        
+        .step-text {
+            font-size: 14px;
+            color: #37474f;
+            line-height: 1.4;
         }
-
-        .login-btn:active {
-            transform: translateY(0);
+        
+        .logo-icon i.fa-key {
+            color: white;
         }
-
-        /* 動畫效果 */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        
         @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        /* 響應式設計 */
+        
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
+            .message-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
             }
             
-            .message, .info-box, form {
-                width: 95%;
+            .step-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
             }
             
-            .input-box {
-                padding: 15px;
+            .step-text {
+                font-size: 13px;
             }
         }
     </style>
-</head>
-<body>
-
-<?php if (!empty($message)): ?>
-    <div class="message <?php echo $message_type; ?>">
-        <?php echo $message; ?>
-    </div>
-<?php endif; ?>
-
-<div class="info-box">
-    <strong>忘記密碼說明：</strong><br>
-    1. 請輸入您的帳號<br>
-    2. 系統會將您的密碼重設為隨機密碼<br>
-    3. 請使用新密碼登入後立即修改密碼
-</div>
-
-<form action="" method="post">
-    <div class="input-box">
-        <img src="img/user.png" alt="User">
-        <input type="text" name="account" placeholder="請輸入帳號" required>
-    </div>
-    <button class="login-btn" type="submit">重設密碼</button>
-</form>
-
-<a class="back-link" href="login.php">返回登入頁面</a>
-
+    
+    <script>
+        // 頁面載入動畫
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelector('.brand-logo').classList.add('animate');
+            }, 200);
+            
+            setTimeout(() => {
+                document.querySelector('.login-form').classList.add('animate');
+            }, 600);
+            
+            setTimeout(() => {
+                document.querySelector('.form-links').classList.add('animate');
+            }, 800);
+        });
+        
+        // 輸入框焦點效果
+        const inputs = document.querySelectorAll('.form-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value === '') {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+        });
+        
+        // 防止重複提交
+        const resetForm = document.getElementById('resetForm');
+        const resetBtn = document.getElementById('resetBtn');
+        let isSubmitting = false;
+        
+        if (resetForm) {
+            resetForm.addEventListener('submit', function(e) {
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                isSubmitting = true;
+                resetBtn.disabled = true;
+                resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+                resetBtn.style.opacity = '0.7';
+                resetBtn.style.cursor = 'not-allowed';
+            });
+        }
+    </script>
 </body>
 </html>

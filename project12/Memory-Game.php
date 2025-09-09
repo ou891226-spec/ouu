@@ -54,6 +54,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 提交交易
         $pdo->commit();
         
+        // 記錄遊戲行為軌跡
+        require_once 'log_game_behavior.php';
+        logGameBehavior(
+            $data['member_id'], 
+            '記憶力', 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $data['score'], 
+            $data['difficulty']
+        );
+        
         // 觸發任務和成就檢查
         require_once 'check_and_grant_achievements.php';
         checkAndCompleteAllTasks($data['member_id'], '記憶力');
@@ -177,8 +187,8 @@ $colors = $stmt->fetchAll();
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
             <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-                <div id="video-container" style="text-align:center;margin-bottom:2.5rem;">
-                    <video id="current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <div id="video-container" style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:2.5rem;">
+                    <video id="current-video" width="100%" height="auto" controls preload="auto" style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:block;">
                         <source src="gd/card1.mp4" type="video/mp4">
                         您的瀏覽器不支援視頻播放。
                     </video>
@@ -192,7 +202,7 @@ $colors = $stmt->fetchAll();
                     </div>
                     
                     <div id="instruction-text" class="game-instruction-text" style="font-size:24px;text-align:center; min-width: 180px;">
-                        選主題、選難度
+                        先選擇主題，再選擇難度
                     </div>
                     
                     <div id="next-step-btn">
@@ -217,13 +227,14 @@ $colors = $stmt->fetchAll();
             <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="memory-gameover-difficulty">簡單</span></div>
-                    <div class="gameover-row">遊戲時間：<span id="memory-gameover-time">60秒</span></div>
-                    <div class="gameover-row">過關分數：<span id="memory-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="memory-time-row">遊戲時間：<span id="memory-gameover-time">60秒</span></div>
+                    <div class="gameover-row" id="memory-bonus-row">過關分數：<span id="memory-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="memory-fail-message" style="display: none;">未在時間內達成分數</div>
                 </div>
             </div>
             <div class="result-buttons">
                 <button onclick="replayGame()">再玩一次</button>
-                <button onclick="returnToMain()">返回主選單</button>
+                <button onclick="returnToMain()">返回主頁</button>
             </div>
         </div>
     </div>
@@ -237,6 +248,5 @@ $colors = $stmt->fetchAll();
         localStorage.setItem('member_id', memberId);
     </script>
     <script src="js/Memory-Game.js"></script>
-    <script src="js/auto-save-time.js"></script>
 </body>
 </html> 

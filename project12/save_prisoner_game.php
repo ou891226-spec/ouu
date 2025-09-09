@@ -61,6 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    'member_id' => $data['member_id']
                ]);
         
+        // 記錄遊戲行為軌跡
+        require_once 'log_game_behavior.php';
+        logGameBehavior(
+            $data['member_id'], 
+            $gameType, 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $final_score, 
+            $data['difficulty']
+        );
+        
         // 檢查並完成所有相關任務
         require_once 'check_and_grant_achievements.php';
         checkAndCompleteAllTasks($data['member_id'], '追蹤犯人遊戲');

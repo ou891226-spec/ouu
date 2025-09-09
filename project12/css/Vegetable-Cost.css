@@ -12,10 +12,13 @@ body {
 /* 隱藏狀態列和分數時間顯示 */
 .status-bar,
 .score,
-.time,
+/* 移除時間隱藏，讓時間正常顯示 */
+.time {
+  display: block !important;
+}
 #scoreValue,
 #timeValue {
-  display: none !important;
+  display: inline !important;
 }
 
 /* 遊戲容器 */

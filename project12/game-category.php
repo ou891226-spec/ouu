@@ -281,8 +281,8 @@ function togglePassword() {
   <!-- 切換按鈕 -->
   <div class="mode-switch">
     <h2 style="text-align: center; margin-bottom: 20px; font-size: 2rem; color: #333;">全部遊戲</h2>
-    <button id="singleBtn" class="mode-btn active">單人遊戲</button>
-    <button id="doubleBtn" class="mode-btn">雙人遊戲</button>
+    <!-------------------- <button id="singleBtn" class="mode-btn active">單人遊戲</button> -->
+    <!-- <button id="doubleBtn" class="mode-btn">雙人遊戲</button> -->
   </div>
 
   <!-- 單人遊戲 -->
@@ -346,7 +346,7 @@ function togglePassword() {
   </div>
 
   <!-- 雙人遊戲 -->
-  <div id="double-player-section" class="section" style="display: none;">
+  <!-- <div id="double-player-section" class="section" style="display: none;">
     <div class="game-grid">
       <div class="game-block">
         <div class="game-item">
@@ -367,7 +367,7 @@ function togglePassword() {
         <div class="game-title">算菜錢-雙人</div>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>
 
 <!-- 反應力遊戲 -->
@@ -486,11 +486,12 @@ function togglePassword() {
   // 等待 DOM 載入完成後再執行
   document.addEventListener('DOMContentLoaded', function() {
     const singleBtn = document.getElementById("singleBtn");
-    const doubleBtn = document.getElementById("doubleBtn");
+    // const doubleBtn = document.getElementById("doubleBtn");
     const singleSection = document.getElementById("single-player-section");
-    const doubleSection = document.getElementById("double-player-section");
+    // const doubleSection = document.getElementById("double-player-section");
 
-    if (singleBtn && doubleBtn && singleSection && doubleSection) {
+    ////////////////////////// 雙人遊戲功能已暫時停用
+    /* if (singleBtn && doubleBtn && singleSection && doubleSection) {
       singleBtn.addEventListener("click", () => {
         singleSection.style.display = "block";
         doubleSection.style.display = "none";
@@ -504,7 +505,7 @@ function togglePassword() {
         doubleBtn.classList.add("active");
         singleBtn.classList.remove("active");
       });
-    }
+    } */
   });
 
   function validateSearch() {

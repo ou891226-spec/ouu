@@ -37,6 +37,10 @@ if ($game_type === '反應力' || $game_type === '節奏遊戲' || $game_type ==
     $logic_stmt->execute([$score, $member_id]);
 }
 
+// 記錄遊戲行為軌跡
+require_once 'log_game_behavior.php';
+logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty);
+
 // 檢查並授予成就
 require_once 'check_and_grant_achievements.php';
 

@@ -136,6 +136,19 @@ $records = $stmt->fetchAll();
     $records = [];
 }
 
+// 定義遊戲類型到中文名稱的對應
+$game_type_to_name = [
+    '記憶力' => '翻牌對對樂',
+    '算數邏輯力' => '算菜錢',
+    '反應力' => '接金蛋',
+    '策略思維' => '2048',
+    '注意力' => '看字選色',
+    '邏輯推理' => '圖片線索問答',
+    '節奏感' => '節奏遊戲',
+    '追蹤能力' => '追蹤犯人',
+    '過河遊戲' => '過河遊戲'
+];
+
 // 獲取統計數據
 try {
 $stats_sql = "
@@ -289,24 +302,12 @@ try {
             ubl.game_type,
             COUNT(*) as total_exits,
             COUNT(DISTINCT ubl.member_id) as unique_players,
-            COUNT(CASE WHEN EXISTS (
-                SELECT 1 FROM user_behavior_log ubl2 
-                WHERE ubl2.member_id = ubl.member_id 
-                AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_complete' 
-                AND ubl2.created_at > ubl.created_at
-                AND ubl2.game_type = ubl.game_type
-                AND TIMESTAMPDIFF(SECOND, ubl.created_at, ubl2.created_at) <= 15
-            ) THEN 1 END) as quick_exits_15s,
-            COUNT(CASE WHEN EXISTS (
-                SELECT 1 FROM user_behavior_log ubl2 
-                WHERE ubl2.member_id = ubl.member_id 
-                AND ubl2.session_id = ubl.session_id 
-                AND ubl2.action_type = 'game_complete' 
-                AND ubl2.created_at > ubl.created_at
-                AND ubl2.game_type = ubl.game_type
-                AND TIMESTAMPDIFF(SECOND, ubl.created_at, ubl2.created_at) <= 30
-            ) THEN 1 END) as quick_exits_30s
+            COUNT(CASE WHEN JSON_EXTRACT(ubl.additional_data, '$.play_time') <= 15 
+                AND JSON_EXTRACT(ubl.additional_data, '$.play_time') > 0 
+                THEN 1 END) as quick_exits_15s,
+            COUNT(CASE WHEN JSON_EXTRACT(ubl.additional_data, '$.play_time') <= 30 
+                AND JSON_EXTRACT(ubl.additional_data, '$.play_time') > 0 
+                THEN 1 END) as quick_exits_30s
         FROM user_behavior_log ubl 
         LEFT JOIN member m ON ubl.member_id = m.member_id
         WHERE ubl.action_type = 'game_exit' 
@@ -536,7 +537,7 @@ try {
                     <tbody>
                         <?php foreach ($game_complete_data as $row): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($row['game_type']); ?></td>
+                                <td><?php echo htmlspecialchars($game_type_to_name[$row['game_type']] ?? $row['game_type']); ?></td>
                                 <td><strong><?php echo number_format($row['total_completes']); ?></strong></td>
                                 <td><?php echo number_format($row['unique_players']); ?></td>
                                 <td><?php echo $row['unique_players'] > 0 ? round($row['total_completes'] / $row['unique_players'], 1) : 0; ?> 次/人</td>
@@ -575,7 +576,7 @@ try {
                             $row_class = $quick_exit_rate_15s > 30 ? 'warning' : ($quick_exit_rate_15s > 15 ? 'highlight' : 'success');
                             ?>
                             <tr class="<?php echo $row_class; ?>">
-                                <td><?php echo htmlspecialchars($row['game_type']); ?></td>
+                                <td><?php echo htmlspecialchars($game_type_to_name[$row['game_type']] ?? $row['game_type']); ?></td>
                                 <td><strong><?php echo number_format($row['total_exits']); ?></strong></td>
                                 <td><?php echo number_format($row['unique_players']); ?></td>
                                 <td><?php echo $row['unique_players'] > 0 ? round($row['total_exits'] / $row['unique_players'], 1) : 0; ?> 次/人</td>
@@ -630,25 +631,28 @@ try {
                     <?php 
                     // 定義檔案路徑到遊戲名稱的對應
                     $path_to_game_name = [
-                        '/game/蔬菜成本.php' => '算菜錢',
-                        '/game/記憶遊戲.php' => '翻牌對對樂',
-                        '/game/河流遊戲.php' => '過河遊戲',
-                        '/game/2048.php' => '2048',
-                        '/game/節奏遊戲.php' => '節奏遊戲',
-                        '/game/接金蛋.php' => '接金蛋',
-                        '/game/追蹤犯人.php' => '追蹤犯人',
-                        '/game/看字選色遊戲.php' => '看字選色遊戲',
-                        '/game/線索遊戲.php' => '線索遊戲',
-                        '/game-category.php' => '遊戲分類頁面'
+                        '/project12/Vegetable-Cost.php' => '算菜錢',
+                        '/project12/Memory-Game.php' => '翻牌對對樂',
+                        '/project12/river.php' => '過河遊戲',
+                        '/project12/2048ht.php' => '2048',
+                        '/project12/rhythm_game.php' => '節奏遊戲',
+                        '/project12/Catch-Egg Game.php' => '接金蛋',
+                        '/project12/prisoner.php' => '追蹤犯人',
+                        '/project12/text-color.php' => '看字選色',
+                        '/project12/clue.php' => '圖片線索問答',
+                        '/project12/vegetable_cost_2P.php' => '算菜錢(雙人)',
+                        '/project12/Memory-Game-2P.php' => '翻牌對對樂(雙人)'
                     ];
                     
                     foreach ($records as $record): 
-                        // 轉換檔案路徑為遊戲名稱
+                        // 轉換為遊戲名稱，優先使用 game_type
                         $display_name = '';
-                        if (isset($record['page_url']) && $record['page_url']) {
+                        if (isset($record['game_type']) && $record['game_type']) {
+                            // 優先使用 game_type 對應的中文名稱
+                            $display_name = $game_type_to_name[$record['game_type']] ?? $record['game_type'];
+                        } elseif (isset($record['page_url']) && $record['page_url']) {
+                            // 如果沒有 game_type，使用 page_url 對應
                             $display_name = $path_to_game_name[$record['page_url']] ?? $record['page_url'];
-                        } elseif (isset($record['game_type']) && $record['game_type']) {
-                            $display_name = $record['game_type'];
                         } else {
                             $display_name = '-';
                         }

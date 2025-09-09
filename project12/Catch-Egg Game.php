@@ -97,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     'member_id' => $member_id
                 ]);
 
+                // 記錄遊戲行為軌跡
+                require_once 'log_game_behavior.php';
+                logGameBehavior($member_id, '反應力', $playTime, $score, $difficulty);
+                
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
                 $completed_tasks = checkAndCompleteAllTasks($member_id, '反應力', $playTime);
@@ -288,14 +292,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="egg-gameover-difficulty">簡單</span></div>
-                    <div class="gameover-row">獲得分數：<span id="egg-gameover-earned-score">20</span></div>
-                    <div class="gameover-row">遊戲時間：<span id="egg-gameover-time">60秒</span></div>
-                    <div class="gameover-row">過關分數：<span id="egg-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="egg-earned-row">獲得分數：<span id="egg-gameover-earned-score">20</span></div>
+                    <div class="gameover-row" id="egg-time-row">遊戲時間：<span id="egg-gameover-time">60秒</span></div>
+                    <div class="gameover-row" id="egg-bonus-row">過關分數：<span id="egg-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="egg-fail-message" style="display: none;">未在時間內達成分數</div>
                 </div>
             </div>
             <div class="result-buttons">
                 <button onclick="eggReplayGame()">再玩一次</button>
-                <button onclick="eggReturnToMain()">返回主選單</button>
+                <button onclick="eggReturnToMain()">返回主頁</button>
             </div>
         </div>
     </div>
@@ -319,6 +324,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         
     </script>
     <script src="js/Catch-Egg.js"></script>
-    <!-- <script src="js/auto-save-time-fixed.js"></script> -->
+    <!-- <script src="js/auto-save-time-fixed.js"></script> --> <!-- 移除：此腳本是為2048遊戲設計的 -->
 </body>
 </html> 

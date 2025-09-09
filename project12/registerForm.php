@@ -1,25 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-    <title>註冊表單</title>
-    <link href="css/register.css" rel="stylesheet" type="text/css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶註冊 - 樂齡智趣網</title>
+    <link href="css/login.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <h2>註冊</h2>
+    <div class="bg-decoration"></div>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <!-- 品牌標誌 -->
+            <div class="brand-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1>樂齡智趣網</h1>
+                <p>歡迎加入！開始您的智能遊戲之旅</p>
+            </div>
 
-    <?php
-    if (isset($_GET['error'])) {
-        echo "<p style='color:red'>" . $_GET['error'] . "</p>";
-    }
-    ?>
+            <!-- 錯誤訊息 -->
+            <?php if (isset($_GET['error'])): ?>
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span><?php echo htmlspecialchars($_GET['error']); ?></span>
+            </div>
+            <?php endif; ?>
+            
+            <!-- 註冊表單 -->
+            <form action="register.php" method="post" class="login-form">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="name" class="form-input" required>
+                        <label class="form-label">姓名</label>
+                    </div>
+                </div>
 
-    <form action="register.php" method="post">
-        姓名: <input type="text" name="name"><br><br>
-        帳號: <input type="text" name="id"><br><br>
-        請輸入密碼: <input type="password" name="password"><br><br>
-        再輸入一次密碼: <input type="password" name="confirm_password"><br><br>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" name="id" class="form-input" required>
+                        <label class="form-label">帳號</label>
+                    </div>
+                </div>
 
-        <input type="submit" value="註冊使用者">
-    </form>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" class="form-input" required>
+                        <label class="form-label">請輸入密碼</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="confirm_password" class="form-input" required>
+                        <label class="form-label">再輸入一次密碼</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-user-plus"></i>
+                    註冊帳號
+                </button>
+            </form>
+
+            <!-- 表單連結 -->
+            <div class="form-links">
+                <a href="login.php" class="register-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    已有帳號？立即登入
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 頁面載入動畫
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelector('.brand-logo').classList.add('animate');
+            }, 200);
+            
+            setTimeout(() => {
+                document.querySelector('.login-form').classList.add('animate');
+            }, 400);
+            
+            setTimeout(() => {
+                document.querySelector('.form-links').classList.add('animate');
+            }, 600);
+        });
+        
+        // 輸入框焦點效果
+        const inputs = document.querySelectorAll('.form-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value === '') {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+
+            // 檢查初始值
+            if (input.value !== '') {
+                input.parentElement.classList.add('focused');
+            }
+        });
+
+        // 密碼確認驗證
+        const password = document.querySelector('input[name="password"]');
+        const confirmPassword = document.querySelector('input[name="confirm_password"]');
+        
+        function validatePasswords() {
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('密碼不一致');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        }
+
+        password.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+    </script>
 </body>
 </html>

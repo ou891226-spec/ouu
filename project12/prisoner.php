@@ -210,6 +210,6 @@ try {
   </div>
 
   <script src="js/prisoner.js"></script>
-  <script src="js/auto-save-time.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>

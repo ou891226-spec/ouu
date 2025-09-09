@@ -69,6 +69,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'score' => $data['player2_score'],
             'member_id' => $data['player2_id']
         ]);
+        
+        // 記錄雙人遊戲行為軌跡
+        require_once 'log_game_behavior.php';
+        logGameBehavior(
+            $data['player1_id'], 
+            '記憶力', 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $data['player1_score'], 
+            $data['difficulty']
+        );
+        logGameBehavior(
+            $data['player2_id'], 
+            '記憶力', 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $data['player2_score'], 
+            $data['difficulty']
+        );
        
         // 提交交易
         $pdo->commit();
@@ -406,7 +423,7 @@ $colors = $stmt->fetchAll();
             </div>
             <div class="result-buttons">
                 <button onclick="replayGame()">再玩一次</button>
-                <button onclick="returnToMain()">返回主選單</button>
+                <button onclick="returnToMain()">返回主頁</button>
             </div>
         </div>
     </div>
@@ -458,7 +475,7 @@ $colors = $stmt->fetchAll();
 
             </div>
             <div class="player-quit-buttons">
-                <button onclick="returnToMainFromQuit()" class="primary-btn">返回主選單</button>
+                <button onclick="returnToMainFromQuit()" class="primary-btn">返回主頁</button>
             </div>
         </div>
     </div>
@@ -535,7 +552,7 @@ $colors = $stmt->fetchAll();
     <script src="js/enhanced-sync.js?v=<?php echo time(); ?>"></script>
     <script src="js/memory-game-client.js?v=<?php echo time(); ?>"></script>
     <script src="js/Memory-Game-2P.js?v=<?php echo time(); ?>"></script>
-    <script src="js/auto-save-time.js?v=<?php echo time(); ?>"></script>
+    <script src="js/auto-save-time-fixed.js?v=<?php echo time(); ?>"></script>
     <script src="js/sync-optimization.js?v=<?php echo time(); ?>"></script>
     <script>
         // 初始化 WebSocket 事件處理器

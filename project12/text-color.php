@@ -257,6 +257,11 @@ function recordGameResult($score, $playTime, $difficulty) {
                     'opponent_id' => null
                 ]);
                 $record_stmt->closeCursor();
+                
+                // 記錄遊戲行為軌跡
+                require_once 'log_game_behavior.php';
+                logGameBehavior($member_id, $game_type, $playTime, $record_score, $difficulty);
+                
                 return true;
             }
         }
@@ -868,7 +873,12 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             timeEl.textContent = '0';
             
             endTime = new Date();
+            // 確保 startTime 存在，如果沒有則設為當前時間減去預設時間
+            if (!startTime) {
+                startTime = new Date(endTime.getTime() - (difficultySettings[difficulty].time_limit * 1000));
+            }
             const playTime = Math.floor((endTime - startTime) / 1000); // 計算遊玩時間（秒）
+            console.log('Game end - Start time:', startTime, 'End time:', endTime, 'Play time:', playTime);
             
             if (score > highScore) {
                 highScore = score;
@@ -986,6 +996,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 timeLeft = difficultySettings[difficulty].time_limit;
                 timeEl.textContent = timeLeft.toString();
                 gameStarted = false;
+                startTime = null; // 重置開始時間
                 clearInterval(timer);
                 clearInterval(distractionInterval);
                 clearInterval(questionTimer);
@@ -1189,5 +1200,6 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         });
     </script>
     <script src="js/achievements.js"></script>
+    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>

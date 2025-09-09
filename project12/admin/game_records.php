@@ -92,9 +92,9 @@ $stats_sql = "
     SELECT 
         COUNT(*) as total_records,
         COUNT(DISTINCT gr.member_id) as unique_users,
-        SUM(gr.play_time) as total_playtime,
+        SUM(CASE WHEN gr.play_time IS NOT NULL THEN gr.play_time ELSE 0 END) as total_playtime,
         AVG(gr.score) as avg_score,
-        AVG(gr.play_time) as avg_playtime
+        AVG(CASE WHEN gr.play_time IS NOT NULL THEN gr.play_time ELSE NULL END) as avg_playtime
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
     LEFT JOIN games g ON gr.game_id = g.game_id 
@@ -212,6 +212,7 @@ $stats = $stats_stmt->fetch();
             <a href="user_behavior.php">行為軌跡</a>
             <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
+            <a href="delete_test_records.php" style="color: #dc3545;">🗑️ 刪除測試記錄</a>
         </div>
         
         <div class="filters">
@@ -315,7 +316,7 @@ $stats = $stats_stmt->fetch();
                         <td><?php echo htmlspecialchars($record['game_name'] ?? '-'); ?></td>
                         <td><?php echo $record['score']; ?></td>
                         <td><?php echo htmlspecialchars($record['difficulty'] ?? '一般'); ?></td>
-                        <td><?php echo $record['play_time']; ?>秒</td>
+                        <td><?php echo $record['play_time'] ? $record['play_time'] . '秒' : '-'; ?></td>
                         <td><?php echo date('m月d日 H:i', strtotime($record['play_date'])); ?></td>
                     </tr>
                     <?php endforeach; ?>

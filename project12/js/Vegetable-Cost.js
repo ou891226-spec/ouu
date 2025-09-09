@@ -1126,11 +1126,30 @@ function endGame() {
     // 設置標題
     modal.querySelector('.gameover-title').innerHTML = title;
     
-    // 設置四行信息
+    // 設置結果訊息
+    const earnedRow = document.getElementById('vegetable-earned-row');
+    const timeRow = document.getElementById('vegetable-time-row');
+    const bonusRow = document.getElementById('vegetable-bonus-row');
+    const failMessage = document.getElementById('vegetable-fail-message');
+    
     document.getElementById('vegetable-gameover-difficulty').textContent = difficultyName;
-    document.getElementById('vegetable-gameover-earned-score').textContent = score;
-    document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
-    document.getElementById('vegetable-gameover-bonus').textContent = score >= passScore ? '+' + rewardScore : '0';
+    
+    if (score >= passScore) {
+        // 勝利時顯示所有資訊，隱藏失敗訊息
+        document.getElementById('vegetable-gameover-earned-score').textContent = score;
+        document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
+        document.getElementById('vegetable-gameover-bonus').textContent = '+' + rewardScore;
+        if (earnedRow) earnedRow.style.display = 'block';
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
+        if (failMessage) failMessage.style.display = 'none';
+    } else {
+        // 失敗時隱藏詳細資訊，顯示失敗訊息
+        if (earnedRow) earnedRow.style.display = 'none';
+        if (timeRow) timeRow.style.display = 'none';
+        if (bonusRow) bonusRow.style.display = 'none';
+        if (failMessage) failMessage.style.display = 'block';
+    }
     
     modal.classList.remove('hidden');
     
@@ -1218,7 +1237,7 @@ function initVegetableVideoPlayback() {
     
     // 設置第一個視頻
     video.src = 'gd/vegetable1.mp4';
-    instructionText.textContent = '計算阿嬤買菜的總金額';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 設置當前視頻標記
@@ -1278,7 +1297,7 @@ function goToVegetableNextStep() {
     // 切換到第二個視頻
     video.src = 'gd/vegetable2.mp4';
     video.setAttribute('data-current-video', 'vegetable2');
-    instructionText.innerHTML = '每答對一題得3分<br>時間內達到目標分數就過關！';
+    instructionText.innerHTML = '每答對一題得3分<br>在時間內達到目標分數就過關！';
     stepIndicator.textContent = '步驟 2/2';
     
     // 隱藏下一步按鈕，顯示上一步按鈕
@@ -1301,7 +1320,7 @@ function goToVegetableFirstStep() {
     // 切換到第一個視頻
     video.src = 'gd/vegetable1.mp4';
     video.setAttribute('data-current-video', 'vegetable1');
-    instructionText.textContent = '計算阿嬤買菜的總金額';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 顯示下一步按鈕，隱藏上一步按鈕
@@ -1324,7 +1343,7 @@ function goToVegetablePrevStep() {
     // 切換到第一個視頻
     video.src = 'gd/vegetable1.mp4';
     video.setAttribute('data-current-video', 'vegetable1');
-    instructionText.textContent = '計算阿嬤買菜的總金額';
+    instructionText.textContent = '先選擇遊戲困難度';
     stepIndicator.textContent = '步驟 1/2';
     
     // 顯示下一步按鈕，隱藏上一步按鈕

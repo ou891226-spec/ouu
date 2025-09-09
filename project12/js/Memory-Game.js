@@ -78,6 +78,26 @@ function showHelp() {
     document.getElementById('help-modal').classList.remove('hidden');
     // 初始化視頻播放邏輯
     initVideoPlayback();
+    // 嘗試啟用音頻（需要用戶互動）
+    enableAudio();
+}
+
+// 啟用音頻功能
+function enableAudio() {
+    const video = document.getElementById('current-video');
+    // 創建用戶互動事件來啟用音頻
+    const enableSound = () => {
+        video.muted = false;
+        video.volume = 1.0;
+        console.log('音頻已啟用');
+        // 移除事件監聽器，避免重複執行
+        document.removeEventListener('click', enableSound);
+        document.removeEventListener('touchstart', enableSound);
+    };
+    
+    // 添加點擊和觸摸事件監聽器
+    document.addEventListener('click', enableSound);
+    document.addEventListener('touchstart', enableSound);
 }
 
 // 初始化視頻連續播放
@@ -100,8 +120,18 @@ function initVideoPlayback() {
     // 添加視頻結束事件監聽器
     video.addEventListener('ended', handleVideoEnd);
     
-    // 強制加載視頻
+    // 添加播放事件監聽器來隱藏音頻提示
+    video.addEventListener('play', function() {
+        const audioNotice = document.getElementById('audio-notice');
+        if (audioNotice && !video.muted) {
+            audioNotice.style.display = 'none';
+        }
+    });
+    
+    // 強制加載視頻並確保聲音開啟
     video.load();
+    video.muted = false;
+    video.volume = 1.0;
 }
 
 // 處理視頻結束事件 (這裡不需要自動跳轉，用戶手動切換)
@@ -122,6 +152,8 @@ function goToNextStep() {
     }
     
     video.load();
+    video.muted = false;
+    video.volume = 1.0;
     video.play();
 }
 
@@ -137,6 +169,8 @@ function goToPrevStep() {
     }
     
     video.load();
+    video.muted = false;
+    video.volume = 1.0;
     video.play();
 }
 
@@ -148,12 +182,12 @@ function updateInstructionUI(videoName) {
     const nextStepButton = document.getElementById('next-step-button');
     
     if (videoName === 'card1') {
-        instructionText.textContent = '選主題、選難度';
+        instructionText.textContent = '先選擇主題，再選擇難度';
         stepIndicator.textContent = '步驟 1/2';
         prevStepButton.style.display = 'none';
         nextStepButton.style.display = 'block';
     } else if (videoName === 'card2') {
-        instructionText.innerHTML = '點卡片翻面，比對圖案<br>時間內完成配對！';
+        instructionText.innerHTML = '點卡片翻面，比對圖案<br>在時間內完成配對！';
         stepIndicator.textContent = '步驟 2/2';
         prevStepButton.style.display = 'block';
         nextStepButton.style.display = 'none';
@@ -449,16 +483,75 @@ function resumeGame() {
  
 // 結束遊戲
 function endGame() {
-    clearInterval(gameTimer);
+    console.log('endGame 函數被調用');
+    
+    if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+    }
+    
     canFlip = false;
+    
+    // 隱藏控制按鈕
+    const endBtn = document.getElementById('endBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    if (endBtn) endBtn.classList.add('hidden');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (resetBtn) resetBtn.classList.add('hidden');
+    
     showGameOver(false);
 }
  
-// 綁定按鈕事件
-document.getElementById('pauseBtn').onclick = pauseGame;
-document.getElementById('resumeBtn').onclick = resumeGame;
-document.getElementById('endBtn').onclick = endGame;
-document.getElementById('resetBtn').onclick = resetGame;
+// 綁定按鈕事件 - 添加DOM檢查
+document.addEventListener('DOMContentLoaded', function() {
+    bindGameButtons();
+});
+
+// 備用綁定（如果DOMContentLoaded已經觸發）
+if (document.readyState === 'loading') {
+    // DOM還在載入中，等待DOMContentLoaded
+} else {
+    // DOM已載入完成，直接綁定
+    bindGameButtons();
+}
+
+// 綁定遊戲按鈕函數
+function bindGameButtons() {
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const endBtn = document.getElementById('endBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    console.log('綁定按鈕狀態:', {
+        pauseBtn: !!pauseBtn,
+        resumeBtn: !!resumeBtn,
+        endBtn: !!endBtn,
+        resetBtn: !!resetBtn
+    });
+    
+    if (pauseBtn) {
+        pauseBtn.onclick = pauseGame;
+        console.log('暫停按鈕已綁定');
+    }
+    if (resumeBtn) {
+        resumeBtn.onclick = resumeGame;
+        console.log('繼續按鈕已綁定');
+    }
+    if (endBtn) {
+        endBtn.onclick = function(e) {
+            console.log('結束按鈕被點擊');
+            e.preventDefault();
+            endGame();
+        };
+        console.log('結束按鈕已綁定');
+    }
+    if (resetBtn) {
+        resetBtn.onclick = resetGame;
+        console.log('重置按鈕已綁定');
+    }
+}
  
 // 更新分數顯示
 function updateScoreDisplay() {
@@ -524,9 +617,18 @@ function showGameOver(isWin) {
     if (gameStartTimestamp && gameEndTimestamp) {
         playTime = Math.round((gameEndTimestamp - gameStartTimestamp) / 1000); // 單位：秒
     }
+    
+    // 檢查DOM元素是否存在
     const gameOverModal = document.getElementById('game-over-modal');
     const gameOverTitle = document.getElementById('game-over-title');
-    const resultMessage = document.getElementById('result-message');
+    const difficultySpan = document.getElementById('memory-gameover-difficulty');
+    const timeSpan = document.getElementById('memory-gameover-time');
+    const bonusSpan = document.getElementById('memory-gameover-bonus');
+    
+    if (!gameOverModal || !gameOverTitle) {
+        console.error('遊戲結束彈窗元素未找到');
+        return;
+    }
  
     // 獲取難度中文名稱
     const difficultyNames = {
@@ -540,11 +642,25 @@ function showGameOver(isWin) {
    
     // 設置結果訊息
     let score = 0;
+    const timeRow = document.getElementById('memory-time-row');
+    const bonusRow = document.getElementById('memory-bonus-row');
+    const failMessage = document.getElementById('memory-fail-message');
+    
     if (isWin) {
         score = calculateScore();
-        resultMessage.innerHTML = `難度 : ${difficultyNames[currentDifficulty]}<br><br>獲得分數 : ${score}<br><br>遊戲時間 : ${playTime}秒`;
+        if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
+        if (timeSpan) timeSpan.textContent = `${playTime}秒`;
+        if (bonusSpan) bonusSpan.textContent = `+${score}`;
+        // 勝利時顯示時間和分數，隱藏失敗訊息
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
+        if (failMessage) failMessage.style.display = 'none';
     } else {
-        resultMessage.innerHTML = `難度 : ${difficultyNames[currentDifficulty]}<br><br>未在時間內達成分數`;
+        if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
+        // 失敗時隱藏時間和分數，顯示失敗訊息
+        if (timeRow) timeRow.style.display = 'none';
+        if (bonusRow) bonusRow.style.display = 'none';
+        if (failMessage) failMessage.style.display = 'block';
     }
  
     // 儲存遊戲結果（帶分數與 play_time）
@@ -559,6 +675,7 @@ function showGameOver(isWin) {
  
     // 立即顯示遊戲結束視窗
     gameOverModal.classList.remove('hidden');
+    console.log('遊戲結束彈窗已顯示', { isWin, score, playTime });
 }
  
 // 顯示主選單

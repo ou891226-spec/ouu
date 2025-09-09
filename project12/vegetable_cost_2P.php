@@ -107,6 +107,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
                 'member_id' => $data['player2_id']
             ]);
         }
+        
+        // 記錄雙人遊戲行為軌跡
+        require_once 'log_game_behavior.php';
+        logGameBehavior(
+            $data['player1_id'], 
+            '算數邏輯力', 
+            isset($data['play_time']) ? $data['play_time'] : 0, 
+            $data['player1_score'], 
+            $data['difficulty']
+        );
+        // 只有真實玩家才記錄行為軌跡
+        if ($data['player2_id'] !== 'local_player') {
+            logGameBehavior(
+                $data['player2_id'], 
+                '算數邏輯力', 
+                isset($data['play_time']) ? $data['play_time'] : 0, 
+                $data['player2_score'], 
+                $data['difficulty']
+            );
+        }
        
         // 提交交易
         $pdo->commit();
@@ -295,7 +315,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
                 <p class="player-quit-message">對手已退出對戰</p>
             </div>
             <div class="player-quit-buttons">
-                <button onclick="returnToMainFromQuit()" class="primary-btn">返回主選單</button>
+                <button onclick="returnToMainFromQuit()" class="primary-btn">返回主頁</button>
             </div>
         </div>
     </div>

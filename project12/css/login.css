@@ -1,199 +1,893 @@
-body {
-    font-family: 'Arial', sans-serif;
-    font-size: 24px;
-    background-color: #f4f4f4;
-    color: #333;
+/* 登入頁面樣式 - 與註冊成功頁面保持一致的風格 */
+* {
     margin: 0;
     padding: 0;
-    text-align: center;
-    font-weight: bold;
-}
-
-
-h1 {
-    margin-top: 50px;
-    font-size: 48px;
-    color: #4CAF50;
-}
-
-
-form {
-    background-color: #fff;
-    padding: 60px;
-    margin: 40px auto;
-    width: 95%;
-    max-width: 600px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-    min-height: 300px; 
-}
-
-
-.input-box {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    font-size: 24px;
-}
-
-
-.input-box img {
-    width: 36px;
-    height: 36px;
-    margin-right: 15px;
-}
-
-
-.input-box input {
-    flex: 1;
-    padding: 16px;
-    font-size: 24px;
-    font-weight: bold;
-    border: 1px solid #ccc;
-    border-radius: 6px;
     box-sizing: border-box;
 }
 
+body {
+    font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+}
 
-.login-btn {
-    background-color: #4CAF50;
+.login-container {
+    width: 100%;
+    max-width: 650px;
+    padding: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 40px 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4CAF50, #45a049, #66bb6a);
+    border-radius: 24px 24px 0 0;
+}
+
+/* 品牌標誌 */
+.brand-logo {
+    margin-bottom: 30px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+
+.brand-logo.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.logo-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.logo-icon i {
+    font-size: 35px;
     color: white;
-    font-size: 26px;
-    padding: 18px;
-    width: 40%;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 20px;
+}
+
+.brand-title {
+    font-size: 32px;
     font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.brand-subtitle {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* 登入表單 */
+.login-form {
+    margin: 30px 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+
+.login-form.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.input-wrapper {
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 16px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.input-wrapper.focused {
+    border-color: #4CAF50;
+    background: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+    transform: translateY(-2px);
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 18px;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.input-wrapper.focused .input-icon {
+    color: #4CAF50;
+}
+
+.form-input {
+    width: 100%;
+    padding: 18px 18px 18px 50px;
+    font-size: 16px;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-input::placeholder {
+    color: #999;
+    transition: color 0.3s ease;
+}
+
+.input-wrapper.focused .form-input::placeholder {
+    color: #bbb;
+}
+
+/* 登入按鈕 */
+.login-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 16px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .login-btn:hover {
-    background-color: #45a049;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
 }
 
+.login-btn:active {
+    transform: translateY(-1px);
+}
+
+.login-btn i {
+    font-size: 16px;
+}
+
+/* 表單連結 */
+.form-links {
+    margin: 25px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.form-links.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.register-link,
 .forgot-password-link {
-    display: inline-block;
-    margin-top: 15px;
-    font-size: 20px;
-    color: #dc3545;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     text-decoration: none;
-}
-
-.forgot-password-link:hover {
-    text-decoration: underline;
-    color: #c82333;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    flex: 1;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .register-link {
-    display: inline-block;
-    margin-top: 30px;
-    font-size: 22px;
     color: #4CAF50;
-    text-decoration: none;
+    background: rgba(76, 175, 80, 0.1);
 }
 
 .register-link:hover {
-    text-decoration: underline;
+    background: rgba(76, 175, 80, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+}
+
+.forgot-password-link {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.forgot-password-link:hover {
+    background: rgba(220, 53, 69, 0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+}
+
+/* 特色提示 */
+.features-hint {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 25px;
+    border-left: 4px solid #4CAF50;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.features-hint.animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hint-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #2d5a2d;
+    font-weight: 500;
+}
+
+.hint-item:last-child {
+    margin-bottom: 0;
+}
+
+.hint-item i {
+    color: #4CAF50;
+    font-size: 16px;
+}
+
+/* 背景裝飾 */
+.bg-decoration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float 6s ease-in-out infinite;
+}
+
+.shape-1 {
+    width: 80px;
+    height: 80px;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 120px;
+    height: 120px;
+    top: 20%;
+    right: 10%;
+    animation-delay: 1s;
+}
+
+.shape-3 {
+    width: 60px;
+    height: 60px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 2s;
+}
+
+.shape-4 {
+    width: 100px;
+    height: 100px;
+    bottom: 10%;
+    right: 20%;
+    animation-delay: 3s;
+}
+
+.shape-5 {
+    width: 40px;
+    height: 40px;
+    top: 50%;
+    left: 5%;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
 }
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-    body {
-        font-size: 20px;
+    .login-container {
+        padding: 15px;
     }
     
-    h1 {
-        margin-top: 30px;
-        font-size: 36px;
+    .login-card {
+        padding: 30px 20px;
     }
     
-    form {
-        padding: 40px 30px;
-        margin: 20px auto;
-        width: 90%;
-        min-height: 250px;
+    .brand-title {
+        font-size: 28px;
     }
     
-    .input-box {
-        margin-bottom: 15px;
-        font-size: 20px;
+    .brand-subtitle {
+        font-size: 14px;
     }
     
-    .input-box img {
-        width: 30px;
-        height: 30px;
-        margin-right: 12px;
+    .logo-icon {
+        width: 70px;
+        height: 70px;
     }
     
-    .input-box input {
-        padding: 12px;
-        font-size: 20px;
+    .logo-icon i {
+        font-size: 30px;
     }
     
-    .login-btn {
-        font-size: 22px;
-        padding: 14px;
-        width: 50%;
-    }
-    
-    .forgot-password-link {
-        margin-top: 10px;
+    .form-input {
+        padding: 16px 16px 16px 45px;
         font-size: 16px;
     }
     
-    .register-link {
-        margin-top: 20px;
-        font-size: 18px;
+    .login-btn {
+        padding: 16px;
+        font-size: 16px;
+    }
+    
+    .form-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .register-link,
+    .forgot-password-link {
+        padding: 12px 16px;
+        font-size: 15px;
     }
 }
 
 @media (max-width: 480px) {
-    body {
-        font-size: 18px;
+    .login-card {
+        padding: 25px 15px;
     }
     
-    h1 {
-        margin-top: 20px;
-        font-size: 28px;
+    .brand-title {
+        font-size: 24px;
     }
     
-    form {
-        padding: 30px 20px;
-        margin: 15px auto;
-        width: 95%;
-        min-height: 200px;
+    .brand-subtitle {
+        font-size: 13px;
     }
     
-    .input-box {
-        margin-bottom: 12px;
-        font-size: 18px;
+    .logo-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 15px;
     }
     
-    .input-box img {
-        width: 26px;
-        height: 26px;
-        margin-right: 10px;
+    .logo-icon i {
+        font-size: 25px;
     }
     
-    .input-box input {
-        padding: 10px;
-        font-size: 18px;
+    .form-input {
+        padding: 14px 14px 14px 40px;
+        font-size: 15px;
+    }
+    
+    .input-icon {
+        left: 12px;
+        font-size: 16px;
     }
     
     .login-btn {
-        font-size: 20px;
-        padding: 12px;
-        width: 60%;
+        padding: 14px;
+        font-size: 15px;
     }
     
-    .forgot-password-link {
-        margin-top: 8px;
+    .hint-item {
+        font-size: 13px;
+    }
+    
+    .hint-item i {
         font-size: 14px;
     }
+}
+
+/* 載入動畫 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 輸入框動畫效果 */
+.form-input:focus {
+    animation: inputFocus 0.3s ease-out;
+}
+
+@keyframes inputFocus {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 按鈕點擊效果 */
+.login-btn:active {
+    animation: buttonClick 0.2s ease-out;
+}
+
+@keyframes buttonClick {
+    0% {
+        transform: translateY(-3px) scale(1);
+    }
+    50% {
+        transform: translateY(-1px) scale(0.98);
+    }
+    100% {
+        transform: translateY(-1px) scale(1);
+    }
+}
+
+/* 密碼重設成功訊息樣式 */
+.password-reset-success {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+    border: 2px solid #4CAF50;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
+    animation: successSlideIn 0.6s ease-out;
+}
+
+.password-reset-success .success-icon {
+    margin-bottom: 12px;
+}
+
+.password-reset-success .success-icon i {
+    font-size: 40px;
+    color: #4CAF50;
+    animation: successPulse 2s infinite;
+}
+
+.password-reset-success .success-content h3 {
+    color: #2E7D32;
+    font-size: 20px;
+    font-weight: 600;
+        margin-bottom: 12px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.password-reset-success .success-content p {
+    color: #388E3C;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.password-reset-success .new-password {
+    background: #ffffff;
+    color: #1B5E20;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid #4CAF50;
+    display: inline-block;
+    margin: 0 5px;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.password-reset-success .hint {
+    font-size: 12px;
+    color: #558B2F;
+    font-style: italic;
+    margin-top: 12px;
+}
+
+.copy-password-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 12px rgba(76, 175, 80, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.copy-password-btn:hover {
+    background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+}
+
+.copy-password-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.copy-password-btn i {
+    font-size: 12px;
+}
+
+/* 成功訊息動畫 */
+@keyframes successSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes successPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+    .password-reset-success {
+        padding: 15px 12px;
+        margin-bottom: 20px;
+    }
     
-    .register-link {
-        margin-top: 15px;
+    .password-reset-success .success-icon i {
+        font-size: 32px;
+    }
+    
+    .password-reset-success .success-content h3 {
+        font-size: 18px;
+    }
+    
+    .password-reset-success .success-content p {
+        font-size: 13px;
+    }
+    
+    .password-reset-success .new-password {
+        font-size: 14px;
+        padding: 5px 10px;
+        letter-spacing: 1px;
+    }
+    
+    .copy-password-btn {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+    
+    .password-reset-success .hint {
+        font-size: 11px;
+        margin-top: 10px;
+    }
+}
+
+/* 自定義通知樣式 */
+.custom-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 9999;
+    min-width: 280px;
+    max-width: 350px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(15px);
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Microsoft JhengHei', Arial, sans-serif;
+}
+
+.custom-notification.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.custom-notification.success {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.95) 0%, rgba(25, 118, 210, 0.95) 100%);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.custom-notification.error {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.95) 0%, rgba(211, 47, 47, 0.95) 100%);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 24px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    gap: 12px;
+    text-align: center;
+}
+
+.notification-content i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.notification-content span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+/* 成功通知特殊效果 */
+.custom-notification.success .notification-content i {
+    animation: successBounce 0.6s ease-out;
+}
+
+.custom-notification.error .notification-content i {
+    animation: errorShake 0.6s ease-out;
+}
+
+@keyframes successBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-8px);
+    }
+    60% {
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes errorShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-3px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(3px);
+    }
+}
+
+/* 錯誤訊息樣式 */
+.error-message {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    border: 2px solid #f44336;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #c62828;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.15);
+    animation: errorShakeIn 0.6s ease-out;
+}
+
+.error-message i {
+    font-size: 18px;
+    color: #f44336;
+}
+
+.error-message span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+@keyframes errorShakeIn {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    20% {
+        transform: translateX(10px);
+    }
+    40% {
+        transform: translateX(-5px);
+    }
+    60% {
+        transform: translateX(3px);
+    }
+    80% {
+        transform: translateX(-1px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 登入錯誤訊息樣式 */
+.login-error-message {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    border: 2px solid #f44336;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.15);
+    animation: errorSlideIn 0.6s ease-out;
+}
+
+.login-error-message .error-icon {
+    margin-bottom: 12px;
+}
+
+.login-error-message .error-icon i {
+    font-size: 40px;
+    color: #f44336;
+    animation: errorPulse 2s infinite;
+}
+
+.login-error-message .error-content h3 {
+    color: #c62828;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.login-error-message .error-content p {
+    color: #d32f2f;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+@keyframes errorSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes errorPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+/* 手機版錯誤訊息 */
+@media (max-width: 480px) {
+    .error-message {
+        padding: 12px 16px;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .error-message i {
         font-size: 16px;
+    }
+    
+    .login-error-message {
+        padding: 15px 12px;
+        margin-bottom: 20px;
+    }
+    
+    .login-error-message .error-icon i {
+        font-size: 32px;
+    }
+    
+    .login-error-message .error-content h3 {
+        font-size: 18px;
+    }
+    
+    .login-error-message .error-content p {
+        font-size: 13px;
+    }
+}
+
+/* 手機版通知樣式 */
+@media (max-width: 480px) {
+    .custom-notification {
+        top: 50%;
+        left: 50%;
+        right: auto;
+        min-width: 260px;
+        max-width: 300px;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    
+    .custom-notification.show {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .notification-content {
+        padding: 16px 20px;
+        font-size: 15px;
+    }
+    
+    .notification-content i {
+        font-size: 17px;
     }
 }
