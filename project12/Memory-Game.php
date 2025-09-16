@@ -111,6 +111,11 @@ $colors = $stmt->fetchAll();
             <span>剩餘時間：</span>
             <span id="timer">60</span>
         </div>
+        <div id="preview-countdown" class="preview-countdown hidden">
+            <span>記憶時間：</span>
+            <span id="countdown-timer">5</span>
+            <span>秒</span>
+        </div>
         <div id="game-board" class="game-board">
             <!-- 卡片將由 JavaScript 動態生成 -->
         </div>
@@ -227,9 +232,9 @@ $colors = $stmt->fetchAll();
             <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="memory-gameover-difficulty">簡單</span></div>
-                    <div class="gameover-row" id="memory-time-row">遊戲時間：<span id="memory-gameover-time">60秒</span></div>
-                    <div class="gameover-row" id="memory-bonus-row">過關分數：<span id="memory-gameover-bonus">+20</span></div>
-                    <div class="gameover-row" id="memory-fail-message" style="display: none;">未在時間內達成分數</div>
+                    <div class="gameover-row" id="memory-target-row">目標分數：<span id="memory-gameover-target">100</span></div>
+                    <div class="gameover-row" id="memory-score-row">獲得分數：<span id="memory-gameover-score">0</span></div>
+                    <div class="gameover-row" id="memory-fail-message" style="display: none;">未達成目標分數！</div>
                 </div>
             </div>
             <div class="result-buttons">

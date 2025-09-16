@@ -159,6 +159,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             <span class="label">剩餘時間：</span>
             <span id="timer" class="value">60</span>
         </div>
+        
+        <div class="score-guide">
+            <span class="guide-item">
+                <img src="img/egg.png" alt="金蛋" class="guide-icon">
+                <span class="guide-text">金蛋 +10分</span>
+            </span>
+            <span class="guide-item">
+                <img src="img/catch_egg.png" alt="白蛋" class="guide-icon">
+                <span class="guide-text">白蛋 +3分</span>
+            </span>
+            <span class="guide-item">
+                <img src="img/bomb.png" alt="炸彈" class="guide-icon">
+                <span class="guide-text">炸彈 -20分</span>
+            </span>
+        </div>
 
         <div id="game">
             <div id="basket"></div>
@@ -259,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
                     <!-- 上一步按鈕 -->
                     <div id="egg-prev-step-btn" style="display:none;">
-                        <button id="egg-prev-step-button" onclick="goToEggPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                        <button id="egg-prev-step-button" onclick="goToEggPrevStep()" class="game-step-button prev-step" style="padding:10px 20px;font-size:16px;">
                             上一步
                         </button>
                     </div>
@@ -292,10 +307,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="egg-gameover-difficulty">簡單</span></div>
+                    <div class="gameover-row" id="egg-target-row">目標分數：<span id="egg-gameover-target">200</span></div>
+                    <div class="gameover-row" id="egg-score-row">獲得分數：<span id="egg-gameover-score">0</span></div>
                     <div class="gameover-row" id="egg-earned-row">獲得分數：<span id="egg-gameover-earned-score">20</span></div>
                     <div class="gameover-row" id="egg-time-row">遊戲時間：<span id="egg-gameover-time">60秒</span></div>
                     <div class="gameover-row" id="egg-bonus-row">過關分數：<span id="egg-gameover-bonus">+20</span></div>
-                    <div class="gameover-row" id="egg-fail-message" style="display: none;">未在時間內達成分數</div>
+                    <div class="gameover-row" id="egg-fail-message" style="display: none;">未達成目標分數！</div>
                 </div>
             </div>
             <div class="result-buttons">
@@ -306,11 +323,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     </div>
 
     <!-- 音頻元素 -->
-    <audio id="catchSound">
+    <audio id="catchSound" preload="auto">
         <source src="music/gett.mp4" type="audio/mp4">
     </audio>
-    <audio id="bombSound">
-        <source src="music/gett.mp4" type="audio/mp4">
+    <audio id="bombSound" preload="auto">
+        <source src="music/boom.mp3" type="audio/mpeg">
+        <source src="music/boom.m4a" type="audio/mp4">
     </audio>
     <audio id="gameOverSound">
         <source src="music/gett.mp4" type="audio/mp4">

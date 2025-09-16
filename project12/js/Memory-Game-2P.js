@@ -11,6 +11,10 @@ let gamePaused = false;
 let gameStartTimestamp = null;
 let gameEndTimestamp = null;
 
+// 音效變數
+let flipSound = null;
+let bingoSound = null;
+
 // 回合計時器相關變數
 let turnTimer = null;
 let turnTimeLeft = 10;
@@ -49,6 +53,7 @@ let httpSyncEnabled = false; // 是否啟用 HTTP 同步
 
     // 頁面載入時初始化currentUserId
     document.addEventListener('DOMContentLoaded', function() {
+        initSounds(); // 初始化音效
         currentUserId = getCurrentMemberId();
         console.log('初始化currentUserId:', currentUserId);
         
@@ -1081,8 +1086,15 @@ function selectTheme(theme) {
         
         // 更新卡片顏色
         document.documentElement.style.setProperty('--card-back-color', themeStyle.cardBack);
-        document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
-        document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+        
+        // 蔬菜主題特別處理：使用稍微深一點的淺綠色作為卡片正面顏色和配對成功顏色
+        if (theme === 'vegetable') {
+            document.documentElement.style.setProperty('--card-front-color', '#D4E6D4');
+            document.documentElement.style.setProperty('--matched-color', '#D4E6D4');
+        } else {
+            document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
+            document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+        }
         document.documentElement.style.setProperty('--background-color', themeStyle.background);
         document.documentElement.style.setProperty('--container-color', themeStyle.container);
     }
@@ -1559,6 +1571,39 @@ function selectDifficulty(difficulty) {
 }
 
 
+
+// 初始化音效
+function initSounds() {
+    flipSound = new Audio('music/card.mp3');
+    flipSound.volume = 0.6; // 提高音量
+    flipSound.preload = 'auto';
+    
+    bingoSound = new Audio('music/Bingo.mp3');
+    bingoSound.volume = 0.4; // 提高音量
+    bingoSound.preload = 'auto';
+}
+
+// 播放翻牌音效
+function playFlipSound() {
+    if (flipSound) {
+        flipSound.currentTime = 0; // 重置音效到開始位置
+        flipSound.play().catch(e => {
+            // 如果播放失敗（例如用戶還沒與頁面互動），靜默處理
+            console.log('音效播放失敗:', e);
+        });
+    }
+}
+
+// 播放配對成功音效
+function playBingoSound() {
+    if (bingoSound) {
+        bingoSound.currentTime = 0; // 重置音效到開始位置
+        bingoSound.play().catch(e => {
+            // 如果播放失敗（例如用戶還沒與頁面互動），靜默處理
+            console.log('配對成功音效播放失敗:', e);
+        });
+    }
+}
 
 // 初始化遊戲
 function initializeGame() {
@@ -2072,6 +2117,9 @@ function flipCard(card) {
         canFlip = true;
     }
     
+    // 每翻一張牌都播放音效
+    playFlipSound();
+    
     // 立即更新本地狀態
     card.classList.add('flipped');
     flippedCards.push(card);
@@ -2262,6 +2310,9 @@ function checkMatchSync() {
     console.log('配對檢查:', card1.dataset.value, card2.dataset.value, '結果:', match);
     
     if (match) {
+        // 播放配對成功音效
+        playBingoSound();
+        
         // 配對成功（參考 phptest 的邏輯）
         card1.classList.add('matched');
         card2.classList.add('matched');
@@ -2351,6 +2402,9 @@ function switchTurn() {
 // 新增：處理配對結果的函數
 function handleMatchResult(isMatch, card1, card2) {
     if (isMatch) {
+        // 播放配對成功音效
+        playBingoSound();
+        
         // 配對成功
         card1.classList.add('matched');
         card2.classList.add('matched');
@@ -4526,8 +4580,15 @@ function checkGameSettings(invitationId, interval) {
                 const themeStyle = JSON.parse(themeData.theme_style);
                 // 更新卡片顏色
                 document.documentElement.style.setProperty('--card-back-color', themeStyle.cardBack);
-                document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
-                document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+                
+                // 蔬菜主題特別處理：使用稍微深一點的淺綠色作為卡片正面顏色和配對成功顏色
+                if (currentTheme === 'vegetable') {
+                    document.documentElement.style.setProperty('--card-front-color', '#D4E6D4');
+                    document.documentElement.style.setProperty('--matched-color', '#D4E6D4');
+                } else {
+                    document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
+                    document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+                }
                 document.documentElement.style.setProperty('--background-color', themeStyle.background);
                 document.documentElement.style.setProperty('--container-color', themeStyle.container);
                 console.log('主題已應用:', currentTheme, themeStyle);

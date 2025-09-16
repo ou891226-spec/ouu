@@ -5,8 +5,8 @@
 }
  
 :root {
-    --card-back-color: #FFB6C1;
-    --card-front-color: #FF69B4;
+    --card-back-color: #F8FCF8;
+    --card-front-color: #F8FCF8;
     --matched-color: #FFC0CB;
     --background-color: #FFF0F5;
     --container-color: white;
@@ -80,7 +80,33 @@ h2 {
     font-weight: bold;
     color: #4CAF50;
 }
- 
+
+/* 預覽倒數計時器樣式 */
+.preview-countdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 15px auto;
+    padding: 10px;
+    background-color: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    max-width: 300px;
+    font-size: 18px;
+    color: #856404;
+}
+
+.preview-countdown span {
+    font-weight: bold;
+}
+
+#countdown-timer {
+    color: #ff6b35;
+    font-size: 24px;
+    font-weight: 900;
+}
+
 #current-score {
     color: #0a5116;
 }
@@ -219,6 +245,9 @@ h2 {
     background-color: var(--card-front-color);
     transform: rotateY(180deg);
     font-size: 3.5rem !important;  /* 加大圖示 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
  
 .card-back {
@@ -838,7 +867,7 @@ h1 {
     }
 }
  
-/* 響應式設計 */
+/* 響應式設計 - 統一emoji大小 */
 @media (max-width: 768px) {
     .game-board {
         padding: 10px;
@@ -846,10 +875,10 @@ h1 {
     }
     
     .card-front {
-        font-size: 2.8rem !important;
+        font-size: 3.5rem !important;
     }
 }
- 
+
 @media (max-width: 480px) {
     .game-board {
         padding: 5px;
@@ -857,7 +886,60 @@ h1 {
     }
     
     .card-front {
-        font-size: 2.2rem !important;
+        font-size: 3.2rem !important;
+    }
+}
+
+/* 確保所有設備上emoji大小一致 - 加強優先級 */
+.card-front {
+    font-size: 3.5rem !important;
+    min-height: 3.5rem;
+    line-height: 1;
+}
+
+/* 手機設備 - 加強emoji大小 */
+@media (max-width: 480px) {
+    .card-front {
+        font-size: 3.5rem !important;
+        min-height: 3.5rem !important;
+    }
+}
+
+/* 平板設備 */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .card-front {
+        font-size: 3.5rem !important;
+        min-height: 3.5rem !important;
+    }
+}
+
+/* 桌面設備 */
+@media (min-width: 1025px) {
+    .card-front {
+        font-size: 3.5rem !important;
+        min-height: 3.5rem !important;
+    }
+}
+
+/* 強制emoji大小 - 最高優先級 */
+.card-front:not(:has(img)) {
+    font-size: 3.5rem !important;
+    min-height: 3.5rem !important;
+    line-height: 1 !important;
+}
+
+/* 針對所有設備的emoji強制大小 */
+@media (max-width: 768px) {
+    .card-front:not(:has(img)) {
+        font-size: 3.5rem !important;
+        min-height: 3.5rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-front:not(:has(img)) {
+        font-size: 3.5rem !important;
+        min-height: 3.5rem !important;
     }
 }
  
@@ -982,17 +1064,49 @@ h1 {
 
 @media (max-width: 600px) {
     .game-board.easy-mode {
-        width: min(90px, 98vw) !important;
+        width: min(400px, 95vw) !important;
     }
     .game-board:not(.easy-mode):not(.hard-mode) {
-        width: min(110px, 98vw) !important;
+        width: min(450px, 95vw) !important;
+        max-width: 95vw !important;
+        margin: 0 auto !important;
     }
     .game-board.hard-mode {
-        width: min(180px, 98vw) !important;
+        width: 90vw !important;
+        max-width: 90vw !important;
+        margin: 0 auto !important;
     }
     .card-front,
     .card-back {
         font-size: 0.45rem !important;
+    }
+    
+    /* 普通模式手機版特別處理 */
+    .game-container:has(.game-board:not(.easy-mode):not(.hard-mode)) {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        padding: 0.5rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 困難模式手機版特別處理 */
+    .game-container:has(.game-board.hard-mode) {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        padding: 0.3rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 確保困難模式遊戲板不會超出螢幕 */
+    .game-board.hard-mode {
+        overflow: visible !important;
+    }
+    
+    /* 困難模式卡片間距調整 */
+    .game-board.hard-mode {
+        gap: 2px !important;
     }
 }
 

@@ -98,9 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showScreen("rules-screen");
     });
     
-    document.getElementById("theme-btn").addEventListener("click", () => {
-        showThemeModal();
-    });
     
     // 難度選擇按鈕
     document.querySelectorAll('.difficulty-option').forEach(option => {
@@ -111,22 +108,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("back-to-start").addEventListener("click", () => {
-        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-        if (document.referrer && document.referrer !== window.location.href) {
-            history.back();
-        } else {
-            window.location.href = 'index.php';
-        }
+        showScreen("start-screen");
+    });
+    
+    document.getElementById("help-from-difficulty").addEventListener("click", () => {
+        showScreen("rules-screen");
     });
     
     // 規則畫面按鈕
     document.getElementById("back-from-rules").addEventListener("click", () => {
-        // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-        if (document.referrer && document.referrer !== window.location.href) {
-            history.back();
-        } else {
-            window.location.href = 'index.php';
-        }
+        showScreen("start-screen");
     });
     
     document.getElementById("go-to-difficulty").addEventListener("click", () => {
@@ -139,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("show-hint-btn").addEventListener("click", () => {
-        showHint();
+        nextHint();
     });
     
     document.getElementById("resetBtn").addEventListener("click", initGame);
@@ -193,6 +184,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // 選擇難度
 function selectDifficulty(difficulty) {
     gameState.mode = difficulty;
+    
+    // 移除所有選中狀態
+    document.querySelectorAll('.difficulty-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // 添加選中狀態到當前選項
+    const selectedOption = document.querySelector(`[data-difficulty="${difficulty}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
     
     // 更新難度顯示
     const difficultyNames = {
@@ -257,17 +259,81 @@ function initGame() {
     showHint();
 }
 
+// 提示系統
+let currentHintIndex = 0;
+const hintSets = {
+    easy: [
+        "💡 基本策略：羊是最關鍵的，要優先處理",
+        "💡 記住：狼和羊不能單獨在一起，羊和菜也不能單獨在一起",
+        "💡 關鍵概念：羊是唯一會被狼吃和吃菜的角色，所以必須小心處理",
+        "💡 安全原則：永遠不要讓狼和羊單獨在一起，也不要讓羊和菜單獨在一起",
+        "💡 成功秘訣：每次移動前都要檢查兩岸是否安全，避免違規",
+        "💡 思考方向：先運送哪個物品最安全？",
+        "💡 提示：先運羊，再運狼，然後把羊帶回來，運菜，最後運羊",
+        "💡 詳細步驟：1.運羊到右岸 2.空船回左岸 3.運狼到右岸 4.帶羊回左岸 5.運菜到右岸 6.空船回左岸 7.運羊到右岸",
+        "💡 最佳步數：7步可以完成簡單模式，試試看能否達到！"
+    ],
+    normal: [
+        "💡 記住：狗可以保護羊，但狗和狼會打架",
+        "💡 狗的作用：狗在右岸時，狼不能吃羊；狗在左岸時，狼不能吃羊",
+        "💡 危險組合：狗+狼（沒有羊）= 狗會咬死狼",
+        "💡 安全組合：狗+羊+狼 = 安全，狗+羊+菜 = 安全",
+        "💡 關鍵：狗是保護者，但要小心狗和狼的衝突",
+        "💡 思考方向：如何利用狗來保護羊？",
+        "💡 進階技巧：利用狗作為保護者，但要避免狗和狼的衝突",
+        "💡 失敗原因：最常見的錯誤是讓狗和狼單獨在一起",
+        "💡 提示：狗可以保護羊不被狼吃掉，但狗和狼不能單獨在一起（沒有羊時）",
+        "💡 策略：先運羊，再運狗，然後運狼，最後運菜",
+        "💡 步驟：羊→狗→羊→狼→羊→菜→羊",
+        "💡 詳細策略：1.運羊到右岸 2.空船回左岸 3.運狗到右岸 4.帶羊回左岸 5.運狼到右岸 6.空船回左岸 7.運羊到右岸 8.空船回左岸 9.運菜到右岸",
+        "💡 最佳步數：9步可以完成普通模式，挑戰自己吧！"
+    ],
+    hard: [
+        "💡 記住：困難模式有隨機事件，需要靈活應對",
+        "💡 狐狸的威脅：狐狸會偷吃菜，所以狐狸和菜不能單獨在一起",
+        "💡 船容量優勢：可以一次運兩個物品，大大減少步數",
+        "💡 隨機事件說明：暴風雨(8%機率)、船壞了(6%機率)、物品移動(4%機率)",
+        "💡 應對策略：遇到隨機事件時保持冷靜，重新規劃路線",
+        "💡 安全檢查：每次移動前檢查所有可能的違規組合",
+        "💡 高級技巧：預留安全物品，建立安全區域",
+        "💡 心理準備：困難模式需要耐心和策略，不要輕易放棄！",
+        "💡 思考方向：如何利用船的大容量來減少步數？",
+        "💡 提示：狐狸會偷吃菜，船可以載兩個物品，注意隨機事件！",
+        "💡 策略：利用船的大容量，一次運送多個物品",
+        "💡 關鍵：狐狸和菜不能單獨在一起，要特別小心",
+        "💡 步驟：先運羊和狗，再運狼和狐狸，最後運菜",
+        "💡 隨機事件：暴風雨會讓船回到上一步，船壞了只能載一個物品",
+        "💡 高級策略：預留安全物品在岸上，避免違規情況",
+        "💡 詳細步驟：1.運羊+狗到右岸 2.空船回左岸 3.運狼+狐狸到右岸 4.帶狗回左岸 5.運菜到右岸 6.空船回左岸 7.運狗到右岸",
+        "💡 最佳步數：7步可以完成困難模式，但隨機事件會增加難度"
+    ]
+};
+
 // 顯示提示
 function showHint() {
-    const hints = {
-        easy: "💡 提示：先運羊，再運狼，然後把羊帶回來，運菜，最後運羊",
-        normal: "💡 提示：狗可以保護羊不被狼吃掉，但狗和狼不能單獨在一起（沒有羊時）",
-        hard: "💡 提示：狐狸會偷吃菜，船可以載兩個物品，注意隨機事件！"
-    };
+    const hints = hintSets[gameState.mode] || hintSets.easy;
+    currentHintIndex = 0;
     
-    setTimeout(() => {
-        showMessage(hints[gameState.mode] || "💡 點擊物品選擇，點擊船移動");
-    }, 1000);
+    // 立即更新按鈕文字顯示當前提示編號
+    const hintBtn = document.getElementById("show-hint-btn");
+    if (hintBtn) {
+        hintBtn.textContent = `💡 提示 ${currentHintIndex + 1}/${hints.length}`;
+    }
+    
+    // 不自動顯示提示，等待用戶點擊按鈕
+}
+
+// 切換到下一個提示
+function nextHint() {
+    const hints = hintSets[gameState.mode] || hintSets.easy;
+    currentHintIndex = (currentHintIndex + 1) % hints.length;
+    const hintText = hints[currentHintIndex];
+    const hintWithCounter = `[${currentHintIndex + 1}/${hints.length}] ${hintText}`;
+    showMessage(hintWithCounter);
+    
+    // 更新按鈕文字顯示當前提示編號
+    const hintBtn = document.getElementById("show-hint-btn");
+    hintBtn.textContent = `💡 提示 ${currentHintIndex + 1}/${hints.length}`;
 }
 
 // 更新顯示
@@ -285,9 +351,7 @@ function updateDisplay() {
     // 更新遊戲資訊
     stepCountEl.textContent = `步數: ${gameState.stepCount}`;
     
-    // 更新分數顯示
-    const scoreEl = document.getElementById("score");
-    scoreEl.textContent = `分數: ${gameState.score}`;
+    // 分數顯示已移除
     
     boatCapacityEl.textContent = `船容量: ${gameState.boatCapacity}`;
     
@@ -566,7 +630,7 @@ function getRulesForMode() {
     
     if (gameState.mode === "normal" || gameState.mode === "hard") {
         baseRules.push({
-            check: (items) => items.includes("狼") && items.includes("狗") && !items.includes("羊"),
+            check: (items) => items.includes("狼") && items.includes("狗") && !items.includes("羊") && !items.includes("菜"),
             message: "狗咬死了狼！"
         });
     }
@@ -682,19 +746,6 @@ function hideModal(modalId) {
 }
 
 // 主題選擇視窗相關函數
-function showThemeModal() {
-    document.getElementById("theme-modal").classList.remove("hidden");
-}
-
-function hideThemeModal() {
-    document.getElementById("theme-modal").classList.add("hidden");
-}
-
-function backToInviteFriends() {
-    hideThemeModal();
-    // 這裡可以添加返回邀請朋友畫面的邏輯
-    showScreen("start-screen");
-}
 
 function showHelp() {
     // 這裡可以添加顯示幫助的邏輯

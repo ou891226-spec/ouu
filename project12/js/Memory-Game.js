@@ -21,6 +21,10 @@ let totalPairs = 0;
 let gameStartTimestamp = null;
 let gameEndTimestamp = null;
 
+// 音效變數
+let flipSound = null;
+let bingoSound = null;
+
 // 遊戲設置
 const gameSettings = {
     easy: {
@@ -207,8 +211,16 @@ function selectTheme(theme) {
    
     // 更新卡片顏色
     document.documentElement.style.setProperty('--card-back-color', themeStyle.cardBack);
-    document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
-    document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+    
+    // 蔬菜主題特別處理：使用稍微深一點的淺綠色作為卡片正面顏色和配對成功顏色
+    if (theme === 'vegetable') {
+        document.documentElement.style.setProperty('--card-front-color', '#D4E6D4');
+        document.documentElement.style.setProperty('--matched-color', '#D4E6D4');
+    } else {
+        document.documentElement.style.setProperty('--card-front-color', themeStyle.cardFront);
+        document.documentElement.style.setProperty('--matched-color', themeStyle.matched);
+    }
+    
     document.documentElement.style.setProperty('--background-color', themeStyle.background);
     document.documentElement.style.setProperty('--container-color', themeStyle.container);
    
@@ -217,7 +229,7 @@ function selectTheme(theme) {
         btn.classList.remove('active');
     });
     document.querySelector(`.${theme}-theme`).classList.add('active');
- 
+
     // 隱藏主題選擇，顯示難度選擇
     document.getElementById('theme-modal').classList.add('hidden');
     document.getElementById('difficulty-modal').classList.remove('hidden');
@@ -237,7 +249,51 @@ function selectDifficulty(difficulty) {
     // ===========
     initializeGame();
 }
- 
+
+// 初始化音效
+function initSounds() {
+    try {
+        flipSound = new Audio('music/card.mp3');
+        flipSound.volume = 0.6; // 提高音量
+        flipSound.preload = 'auto';
+        
+        bingoSound = new Audio('music/Bingo.mp3');
+        bingoSound.volume = 0.4; // 提高音量
+        bingoSound.playbackRate = 1.3; // 加快播放速度
+        bingoSound.preload = 'auto';
+        
+        console.log('音效初始化成功');
+    } catch (e) {
+        console.error('音效初始化失敗:', e);
+    }
+}
+
+// 播放翻牌音效
+function playFlipSound() {
+    if (flipSound) {
+        flipSound.currentTime = 0; // 重置音效到開始位置
+        flipSound.play().catch(e => {
+            // 如果播放失敗（例如用戶還沒與頁面互動），靜默處理
+            console.log('音效播放失敗:', e);
+        });
+    } else {
+        console.log('音效對象不存在');
+    }
+}
+
+// 播放配對成功音效
+function playBingoSound() {
+    if (bingoSound) {
+        bingoSound.currentTime = 0; // 重置音效到開始位置
+        bingoSound.play().catch(e => {
+            // 如果播放失敗（例如用戶還沒與頁面互動），靜默處理
+            console.log('配對成功音效播放失敗:', e);
+        });
+    } else {
+        console.log('配對成功音效對象不存在');
+    }
+}
+
 // 初始化遊戲
 function initializeGame() {
     // 重置遊戲狀態
@@ -303,9 +359,18 @@ function initializeGame() {
         card.style.height = cardSize;
         card.style.paddingBottom = '0';
     });
-    const allFronts = document.querySelectorAll('.card-front, .card-back');
+    // 只對圖片設定大小，emoji使用CSS統一大小
+    const allFronts = document.querySelectorAll('.card-front');
     allFronts.forEach(face => {
-        face.style.fontSize = fontSize;
+        // 只對包含圖片的卡片設定字體大小
+        if (face.querySelector('img')) {
+            face.style.fontSize = fontSize;
+        } else {
+            // 對emoji卡片完全清除內聯樣式，讓CSS生效
+            face.style.fontSize = '';
+            face.style.minHeight = '';
+            face.style.lineHeight = '';
+        }
     });
 
     // 設定 gameBoard 寬高
@@ -318,14 +383,11 @@ function initializeGame() {
     // 新增:
     setTimeout(adjustGameBoardSize, 0);
    
-    // 開始計時
-    startTimer();
-   
-    // 顯示控制按鈕
-    document.getElementById('pauseBtn').classList.remove('hidden');
-    document.getElementById('endBtn').classList.remove('hidden');
-    document.getElementById('resetBtn').classList.remove('hidden');
-    document.getElementById('resumeBtn').classList.add('hidden');
+    // 先顯示所有卡片5秒，然後蓋牌
+    showAllCards();
+    
+    // 顯示倒數計時器
+    startPreviewCountdown();
 }
  
 // 創建卡片
@@ -346,9 +408,9 @@ function createCard(symbol, index) {
             <div class="card-back"></div>
         `;
     } else {
-        // 如果是emoji，直接顯示，設定較大的字體
+        // 如果是emoji，直接顯示，使用CSS統一大小
         card.innerHTML = `
-            <div class="card-front" style="font-size: 5.5rem; display: flex; align-items: center; justify-content: center;">${symbol}</div>
+            <div class="card-front">${symbol}</div>
             <div class="card-back"></div>
         `;
     }
@@ -364,6 +426,10 @@ function createCard(symbol, index) {
 function flipCard(card) {
     if (!canFlip || card.classList.contains('flipped') || flippedCards.length >= 2) return;
    
+    // 每翻一張牌都播放音效
+    playFlipSound();
+    
+    // 立即響應，減少延遲感
     card.classList.add('flipped');
     flippedCards.push(card);
    
@@ -372,7 +438,8 @@ function flipCard(card) {
         document.getElementById('moves').textContent = moves;
         canFlip = false;
        
-        setTimeout(checkMatch, 1000);
+        // 減少延遲時間，讓遊戲更流暢
+        setTimeout(checkMatch, 800);
     }
 }
  
@@ -382,6 +449,9 @@ function checkMatch() {
     const match = card1.dataset.symbol === card2.dataset.symbol;
    
     if (match) {
+        // 播放配對成功音效
+        playBingoSound();
+        
         card1.classList.add('matched');
         card2.classList.add('matched');
         matchedPairs++;
@@ -457,6 +527,58 @@ function shuffleArray(array) {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+}
+
+// 顯示所有卡片（預覽功能）
+function showAllCards() {
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach(card => {
+        card.classList.add('flipped');
+    });
+}
+
+// 隱藏所有卡片（開始遊戲）
+function hideAllCards() {
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach(card => {
+        card.classList.remove('flipped');
+    });
+}
+
+// 開始預覽倒數計時器
+function startPreviewCountdown() {
+    const countdownElement = document.getElementById('countdown-timer');
+    const previewCountdown = document.getElementById('preview-countdown');
+    let countdown = 5;
+    
+    // 顯示倒數計時器
+    previewCountdown.classList.remove('hidden');
+    
+    // 更新倒數顯示
+    const updateCountdown = () => {
+        countdownElement.textContent = countdown;
+        countdown--;
+        
+        if (countdown >= 0) {
+            setTimeout(updateCountdown, 1000);
+        } else {
+            // 倒數結束，隱藏倒數計時器，開始遊戲
+            previewCountdown.classList.add('hidden');
+            hideAllCards();
+            
+            // 開始計時
+            startTimer();
+           
+            // 顯示控制按鈕
+            document.getElementById('pauseBtn').classList.remove('hidden');
+            document.getElementById('endBtn').classList.remove('hidden');
+            document.getElementById('resetBtn').classList.remove('hidden');
+            document.getElementById('resumeBtn').classList.add('hidden');
+        }
+    };
+    
+    // 開始倒數
+    updateCountdown();
 }
  
 // 暫停遊戲
@@ -622,44 +744,53 @@ function showGameOver(isWin) {
     const gameOverModal = document.getElementById('game-over-modal');
     const gameOverTitle = document.getElementById('game-over-title');
     const difficultySpan = document.getElementById('memory-gameover-difficulty');
-    const timeSpan = document.getElementById('memory-gameover-time');
-    const bonusSpan = document.getElementById('memory-gameover-bonus');
+    const targetSpan = document.getElementById('memory-gameover-target');
+    const scoreSpan = document.getElementById('memory-gameover-score');
     
     if (!gameOverModal || !gameOverTitle) {
         console.error('遊戲結束彈窗元素未找到');
         return;
     }
- 
+
     // 獲取難度中文名稱
     const difficultyNames = {
         'easy': '簡單',
         'normal': '普通',
         'hard': '困難'
     };
- 
+
+    // 獲取目標分數
+    const targetScores = {
+        'easy': 20,
+        'normal': 50,
+        'hard': 100
+    };
+
     // 設置標題
     gameOverTitle.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
    
     // 設置結果訊息
     let score = 0;
-    const timeRow = document.getElementById('memory-time-row');
-    const bonusRow = document.getElementById('memory-bonus-row');
+    const targetRow = document.getElementById('memory-target-row');
+    const scoreRow = document.getElementById('memory-score-row');
     const failMessage = document.getElementById('memory-fail-message');
     
     if (isWin) {
         score = calculateScore();
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
-        if (timeSpan) timeSpan.textContent = `${playTime}秒`;
-        if (bonusSpan) bonusSpan.textContent = `+${score}`;
-        // 勝利時顯示時間和分數，隱藏失敗訊息
-        if (timeRow) timeRow.style.display = 'block';
-        if (bonusRow) bonusRow.style.display = 'block';
+        if (targetSpan) targetSpan.textContent = targetScores[currentDifficulty];
+        if (scoreSpan) scoreSpan.textContent = `+${score}`;
+        // 勝利時顯示目標分數和獲得分數，隱藏失敗訊息
+        if (targetRow) targetRow.style.display = 'block';
+        if (scoreRow) scoreRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
-        // 失敗時隱藏時間和分數，顯示失敗訊息
-        if (timeRow) timeRow.style.display = 'none';
-        if (bonusRow) bonusRow.style.display = 'none';
+        if (targetSpan) targetSpan.textContent = targetScores[currentDifficulty];
+        if (scoreSpan) scoreSpan.textContent = score;
+        // 失敗時顯示目標分數和獲得分數，顯示失敗訊息
+        if (targetRow) targetRow.style.display = 'block';
+        if (scoreRow) scoreRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'block';
     }
  
@@ -736,6 +867,7 @@ function returnToMain() {
  
 // 頁面載入時初始化
 window.onload = function() {
+    initSounds(); // 初始化音效
     updateScoreDisplay();
     document.getElementById('theme-modal').classList.remove('hidden');
     document.getElementById('difficulty-modal').classList.add('hidden');
@@ -768,15 +900,31 @@ function adjustGameBoardSize() {
     } else {
         cols = 4; rows = 4; calcCols = 4; calcRows = 4;
     }
-    const gap = 6; // px
+    
+    const containerWidth = container.clientWidth;
+    const viewportWidth = window.innerWidth;
+    
+    // 手機上困難模式使用更小的間距
+    const gap = (viewportWidth <= 600 && cols === 8) ? 4 : 6; // px
     let maxCardSize;
     if (cols === 4 && rows === 3) {
         maxCardSize = 120;
     } else {
         maxCardSize = 90;
     }
-    const containerWidth = container.clientWidth;
-    const maxBoardWidth = Math.min(containerWidth, calcCols * maxCardSize + (calcCols - 1) * gap);
+    
+    // 手機上特別處理
+    let maxBoardWidth;
+    if (viewportWidth <= 600 && cols === 8) {
+        // 手機上困難模式：使用90%的視窗寬度，避免被擋到
+        maxBoardWidth = viewportWidth * 0.90;
+    } else if (viewportWidth <= 600 && cols === 4 && rows === 4) {
+        // 手機上普通模式：使用95%的視窗寬度，避免被擋到
+        maxBoardWidth = viewportWidth * 0.95;
+    } else {
+        maxBoardWidth = Math.min(containerWidth, calcCols * maxCardSize + (calcCols - 1) * gap);
+    }
+    
     const cardSize = Math.floor((maxBoardWidth - (calcCols - 1) * gap) / calcCols);
 
     // 設定 .game-board 寬高
@@ -789,15 +937,38 @@ function adjustGameBoardSize() {
         card.style.maxWidth = card.style.maxHeight = cardSize + 'px';
         card.style.paddingBottom = '0';
     });
-    // 圖示大小自動調整
+    // 圖示大小自動調整 - 只調整圖片，emoji使用CSS統一大小
     const fontSize = cardSize * 0.95;
-    document.querySelectorAll('.card-front, .card-back').forEach(face => {
-        face.style.fontSize = fontSize + 'px';
+    document.querySelectorAll('.card-front img').forEach(img => {
+        img.style.width = fontSize + 'px';
+        img.style.height = fontSize + 'px';
+    });
+    
+    // 確保emoji不受動態調整影響，使用CSS統一大小
+    document.querySelectorAll('.card-front').forEach(front => {
+        // 只對包含emoji的卡片（不包含img標籤的）保持CSS設定
+        if (!front.querySelector('img')) {
+            front.style.fontSize = ''; // 清除內聯樣式，讓CSS生效
+            front.style.minHeight = ''; // 清除內聯樣式
+            front.style.lineHeight = ''; // 清除內聯樣式
+        }
     });
 
     // 讓 .game-container 寬度自動比 .game-board 大 600px，永遠包住所有牌
     const boardWidth = board.offsetWidth;
-    container.style.width = (boardWidth + 600) + 'px';
+    
+    // 手機上特別處理：確保容器不會超出視窗
+    if (viewportWidth <= 600 && cols === 8) {
+        // 困難模式
+        container.style.width = '100vw';
+        container.style.maxWidth = '100vw';
+    } else if (viewportWidth <= 600 && cols === 4 && rows === 4) {
+        // 普通模式
+        container.style.width = '100vw';
+        container.style.maxWidth = '100vw';
+    } else {
+        container.style.width = (boardWidth + 600) + 'px';
+    }
 }
 
 // 視窗縮放時自動調整

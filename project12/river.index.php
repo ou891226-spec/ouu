@@ -8,8 +8,8 @@
 </head>
 <body>
     <!-- 開始畫面 -->
-    <div id="start-screen" class="screen active">
-        <div class="help-button">
+    <div id="start-screen" class="screen">
+        <div class="help-button help-button-top-left">
             <button id="help-btn" class="help-btn">❓</button>
         </div>
         <div class="start-container">
@@ -20,31 +20,35 @@
             </div>
             <div class="start-buttons">
                 <button id="start-game-btn" class="btn-primary">開始遊戲</button>
-                <button id="theme-btn" class="btn-secondary">選擇主題</button>
             </div>
         </div>
     </div>
 
     <!-- 難度選擇畫面 -->
-    <div id="difficulty-screen" class="screen">
-        <div class="difficulty-overlay">
-            <div class="difficulty-dialog">
-                <h2 class="dialog-title">選擇難度</h2>
-                <div class="difficulty-options">
-                    <div class="difficulty-option" data-difficulty="easy">
-                        <span class="option-name">簡單模式</span>
-                    </div>
-                    
-                    <div class="difficulty-option" data-difficulty="normal">
-                        <span class="option-name">普通模式</span>
-                    </div>
-                    
-                    <div class="difficulty-option" data-difficulty="hard">
-                        <span class="option-name">困難模式</span>
-                    </div>
+    <div id="difficulty-screen" class="screen active">
+        <div class="difficulty-container">
+            <div class="difficulty-header">
+                <button id="back-to-start" class="back-button">
+                    <span class="back-arrow">↶</span>
+                    <div class="back-label">返回</div>
+                </button>
+                <h2 class="difficulty-title">難度選擇</h2>
+                <button id="help-from-difficulty" class="help-button">
+                    <span class="help-icon">?</span>
+                    <div class="help-label">說明</div>
+                </button>
+            </div>
+            <div class="difficulty-options">
+                <div class="difficulty-option easy-option" data-difficulty="easy">
+                    <span class="option-name">簡單</span>
                 </div>
-                <div class="dialog-buttons">
-                    <button id="back-to-start" class="btn-secondary">返回主頁</button>
+                
+                <div class="difficulty-option normal-option" data-difficulty="normal">
+                    <span class="option-name">普通</span>
+                </div>
+                
+                <div class="difficulty-option hard-option" data-difficulty="hard">
+                    <span class="option-name">困難</span>
                 </div>
             </div>
         </div>
@@ -141,7 +145,8 @@
             </div>
             
             <div class="rules-footer">
-                <button id="back-from-rules" class="btn-secondary">返回主頁</button>
+                <button id="back-from-rules" class="btn-secondary">返回主選單</button>
+                <button id="watch-help-btn" class="btn-watch-help" onclick="showHelpModal()">🎮 觀看遊戲說明</button>
                 <button id="go-to-difficulty" class="btn-primary">選擇難度</button>
             </div>
         </div>
@@ -152,15 +157,14 @@
         <div class="game-header">
             <button id="back-to-difficulty" class="btn-small">← 返回選單</button>
             <h2 id="current-difficulty">簡單模式</h2>
-            <button id="show-hint-btn" class="btn-small">💡 提示</button>
         </div>
 
         <div id="controls">
             <div id="game-info">
                 <span id="step-count">步數: 0</span>
-                <span id="score">分數: 0</span>
                 <span id="boat-capacity">船容量: 1</span>
                 <span id="boat-position">船位置: 左岸</span>
+                <button id="show-hint-btn" class="btn-small">💡 提示</button>
             </div>
         </div>
 
@@ -183,6 +187,12 @@
 
         <p id="message"></p>
         <div id="weather-info"></div>
+        
+        <div class="game-instructions">
+            <div class="instruction-item">1.點選物品上船</div>
+            <div class="instruction-item">2.點選船隻移動</div>
+            <div class="instruction-item">3.可空船移動</div>
+        </div>
         
         <div class="game-controls">
             <button id="pauseBtn" class="game-control-btn">暫停遊戲</button>
@@ -209,7 +219,7 @@
     <!-- 遊戲成功彈出對話框 -->
     <div id="game-success-modal" class="modal-overlay">
         <div class="modal-dialog">
-            <h2 class="modal-title">恭喜破關</h2>
+            <h2 class="modal-title">🎉 恭喜破關</h2>
             <div class="modal-content">
                 <p class="modal-detail">難度: <span id="success-difficulty">簡單</span></p>
                 <p class="modal-detail">獲得分數: <span id="success-score">0</span></p>
@@ -222,22 +232,149 @@
     </div>
 
     <!-- 主題選擇視窗 -->
-    <div id="theme-modal" class="modal hidden">
+
+    <!-- 遊戲說明視窗 -->
+    <div id="help-modal" class="modal hidden">
         <div class="modal-content">
-            <div class="modal-header">
-                <button id="backToSetupBtn" class="back-button" onclick="backToInviteFriends()">
-                    <span class="back-arrow">⬅</span>
-                    <div class="back-label">返回</div>
-                </button>
-                <h2 class="modal-title">選擇主題</h2>
-                <button class="help-button" onclick="showHelp()">?
-                    <div class="help-label">說明</div>
-                </button>
+            <h2 style="text-align:center;">
+                <span style="font-size:2rem;vertical-align:middle;">🎮</span>
+                <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
+            </h2>
+            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+                <div id="video-container" style="text-align:center;margin-bottom:2.5rem;">
+                    <video id="current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                        <source src="gd/river1.mp4" type="video/mp4">
+                        您的瀏覽器不支援視頻播放。
+                    </video>
+                </div>
+                
+                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <div id="prev-step-btn">
+                        <button id="prev-step-button" onclick="goToPrevStep()" class="game-step-button prev-step" style="display: none; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; min-width: 120px; padding: 14px 28px; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #f5f5f5; color: #666; border: 2px solid #ddd;">
+                            上一步
+                        </button>
+                    </div>
+                    
+                    <div id="instruction-text" class="game-instruction-text" style="font-size:24px;text-align:center; min-width: 180px;">
+                        選主題、選難度
+                    </div>
+                    
+                    <div id="next-step-btn">
+                        <button id="next-step-button" onclick="goToNextStep()" class="game-step-button next-step" style="display: block; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; min-width: 120px; padding: 14px 28px; font-size: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #2196F3; color: white; border: 2px solid #1976D2;">
+                            下一步
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <span id="step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
+                </div>
             </div>
+            <span class="close-btn" onclick="closeHelpModal()" style="position: absolute; top: 1rem; right: 1rem; font-size: 4rem; font-weight: 700; color: black; cursor: pointer; line-height: 1; z-index: 10; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: transparent; user-select: none;">×</span>
         </div>
     </div>
 
     <script src="js/river.script.js"></script>
-    <script src="js/auto-save-time-fixed.js"></script>
+    
+    <!-- 確保函數可用的備用定義 -->
+    <script>
+        // 確保函數在全局作用域中可用
+        if (typeof showHelpModal === 'undefined') {
+            function showHelpModal() {
+                console.log("showHelpModal 函數被調用 (備用定義)");
+                const helpModal = document.getElementById("help-modal");
+                if (helpModal) {
+                    console.log("找到 help-modal 元素，正在顯示");
+                    helpModal.classList.remove("hidden");
+                    helpModal.style.display = "flex";
+                    
+                    // 初始化視頻
+                    const video = document.getElementById('current-video');
+                    if (video) {
+                        video.src = 'gd/river1.mp4';
+                        video.setAttribute('data-current-video', 'river1');
+                        video.load();
+                    }
+                    
+                    // 更新UI
+                    const instructionText = document.getElementById('instruction-text');
+                    const stepIndicator = document.getElementById('step-indicator');
+                    const prevStepButton = document.getElementById('prev-step-button');
+                    const nextStepButton = document.getElementById('next-step-button');
+                    
+                    if (instructionText) instructionText.textContent = '選主題、選難度';
+                    if (stepIndicator) stepIndicator.textContent = '步驟 1/2';
+                    if (prevStepButton) prevStepButton.style.display = 'none';
+                    if (nextStepButton) nextStepButton.style.display = 'block';
+                } else {
+                    console.error("找不到 help-modal 元素");
+                }
+            }
+        }
+        
+        if (typeof closeHelpModal === 'undefined') {
+            function closeHelpModal() {
+                const helpModal = document.getElementById("help-modal");
+                if (helpModal) {
+                    // 停止影片播放
+                    const video = document.getElementById('current-video');
+                    if (video) {
+                        video.pause();
+                        video.currentTime = 0; // 重置到開始位置
+                    }
+                    
+                    // 隱藏模態視窗
+                    helpModal.classList.add("hidden");
+                    helpModal.style.display = "none";
+                }
+            }
+        }
+        
+        if (typeof goToNextStep === 'undefined') {
+            function goToNextStep() {
+                const video = document.getElementById('current-video');
+                if (video) {
+                    video.src = 'gd/river2.mp4';
+                    video.setAttribute('data-current-video', 'river2');
+                    video.load();
+                    video.play();
+                    
+                    // 更新UI
+                    const instructionText = document.getElementById('instruction-text');
+                    const stepIndicator = document.getElementById('step-indicator');
+                    const prevStepButton = document.getElementById('prev-step-button');
+                    const nextStepButton = document.getElementById('next-step-button');
+                    
+                    if (instructionText) instructionText.textContent = '點擊岸上的物品運送，點擊船移動到對岸，將所有物品從左岸安全運送到右岸。';
+                    if (stepIndicator) stepIndicator.textContent = '步驟 2/2';
+                    if (prevStepButton) prevStepButton.style.display = 'block';
+                    if (nextStepButton) nextStepButton.style.display = 'none';
+                }
+            }
+        }
+        
+        if (typeof goToPrevStep === 'undefined') {
+            function goToPrevStep() {
+                const video = document.getElementById('current-video');
+                if (video) {
+                    video.src = 'gd/river1.mp4';
+                    video.setAttribute('data-current-video', 'river1');
+                    video.load();
+                    video.play();
+                    
+                    // 更新UI
+                    const instructionText = document.getElementById('instruction-text');
+                    const stepIndicator = document.getElementById('step-indicator');
+                    const prevStepButton = document.getElementById('prev-step-button');
+                    const nextStepButton = document.getElementById('next-step-button');
+                    
+                    if (instructionText) instructionText.textContent = '選主題、選難度';
+                    if (stepIndicator) stepIndicator.textContent = '步驟 1/2';
+                    if (prevStepButton) prevStepButton.style.display = 'none';
+                    if (nextStepButton) nextStepButton.style.display = 'block';
+                }
+            }
+        }
+    </script>
 </body>
 </html>

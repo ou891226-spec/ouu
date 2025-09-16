@@ -29,14 +29,28 @@ body {
     z-index: 100;
 }
 
+.help-button-top-left {
+    top: 20px;
+    left: 20px;
+    right: auto;
+}
+
+/* 難度選擇畫面的說明按鈕 */
+#difficulty-screen .help-button {
+    position: relative;
+    top: auto;
+    right: auto;
+    z-index: auto;
+}
+
 .help-btn {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     background: #1e3a8a;
     color: white;
     border: none;
-    font-size: 24px;
+    font-size: 32px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
     transition: all 0.3s ease;
@@ -56,122 +70,124 @@ body {
 
 .game-title {
     color: #2c3e50;
-    margin-bottom: 30px;
-    font-size: 3em;
+    margin-bottom: 40px;
+    font-size: 4em;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     animation: glow 2s ease-in-out infinite alternate;
 }
 
 .game-intro {
     background: white;
-    padding: 30px;
-    border-radius: 20px;
-    margin-bottom: 40px;
+    padding: 40px;
+    border-radius: 25px;
+    margin-bottom: 50px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
 }
 
 .game-intro p {
-    font-size: 18px;
-    margin: 10px 0;
+    font-size: 24px;
+    margin: 15px 0;
     color: #2c3e50;
 }
 
 .start-buttons {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     justify-content: center;
     flex-wrap: wrap;
 }
 
 /* 難度選擇畫面 */
-.difficulty-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.difficulty-dialog {
+.difficulty-container {
     background: white;
-    border-radius: 12px;
-    padding: 35px;
-    max-width: 450px;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
     width: 90%;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-    border: none;
-    animation: slideIn 0.3s ease-out;
+    margin: 50px auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
-.dialog-title {
-    text-align: center;
+.difficulty-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.help-button {
+    margin-top: -5px;
+}
+
+.difficulty-title {
     color: #333;
-    font-size: 1.8em;
-    margin-bottom: 25px;
+    font-size: 2.2em;
     font-weight: bold;
+    margin: 0;
+    text-align: center;
+    flex: 1;
 }
 
 .difficulty-options {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 25px;
+    gap: 20px;
+    flex: 1;
+    justify-content: center;
 }
 
 .difficulty-option {
-    padding: 20px;
-    border: 2px solid transparent;
-    border-radius: 8px;
+    padding: 25px;
+    border-radius: 15px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: all 0.3s ease;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 80px;
+    font-size: 1.8em;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.difficulty-option[data-difficulty="easy"] {
+.easy-option {
     background: #22c55e;
     color: white;
 }
 
-.difficulty-option[data-difficulty="normal"] {
+.normal-option {
     background: #eab308;
     color: black;
 }
 
-.difficulty-option[data-difficulty="hard"] {
+.hard-option {
     background: #ef4444;
     color: white;
 }
 
 .difficulty-option:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .difficulty-option.selected {
-    border-color: #000;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .option-name {
-    font-size: 1.4em;
-    font-weight: bold;
+    font-size: inherit;
+    font-weight: inherit;
     color: inherit;
-}
-
-.dialog-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
 }
 
 /* 遊戲規則畫面 */
@@ -344,10 +360,10 @@ body {
 
 /* 按鈕樣式 */
 .btn-primary, .btn-secondary, .btn-small {
-    padding: 12px 24px;
+    padding: 18px 36px;
     border: none;
-    border-radius: 25px;
-    font-size: 16px;
+    border-radius: 30px;
+    font-size: 22px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -394,6 +410,19 @@ body {
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
 }
 
+#show-hint-btn {
+    animation: pulse-hint 2s ease-in-out infinite;
+}
+
+@keyframes pulse-hint {
+    0%, 100% { 
+        box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3) !important;
+    }
+    50% { 
+        box-shadow: 0 6px 25px rgba(30, 58, 138, 0.6) !important;
+    }
+}
+
 /* 原有的遊戲樣式保持不變 */
 #controls {
     margin: 10px;
@@ -405,25 +434,56 @@ body {
 }
 
 #game-info {
-    margin-top: 15px;
+    margin-top: 20px;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 25px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 #game-info span {
-    padding: 8px 15px;
+    padding: 12px 20px;
     background: #1e3a8a;
     color: white;
-    border-radius: 25px;
+    border-radius: 30px;
     font-weight: bold;
+    font-size: 18px;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
     transition: transform 0.2s ease;
 }
 
 #game-info span:hover {
     transform: translateY(-2px);
+}
+
+#game-info button {
+    padding: 12px 20px !important;
+    background: #1e3a8a !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 30px !important;
+    font-weight: bold !important;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3) !important;
+    transition: transform 0.2s ease !important;
+    cursor: pointer !important;
+    font-size: 18px !important;
+    margin: 0 !important;
+    outline: none !important;
+    font-family: inherit !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    user-select: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
+#game-info button:hover {
+    transform: translateY(-2px) !important;
+    background: #1e40af !important;
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4) !important;
 }
 
 #boat-position {
@@ -497,12 +557,42 @@ body {
 
 .river {
     background: #1e3a8a;
-    width: 280px;
-    height: 200px;
+    width: 350px;
+    height: 250px;
     position: relative;
-    border-radius: 20px;
+    border-radius: 25px;
     box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
     overflow: hidden;
+}
+
+.game-instructions {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.instruction-item {
+    color: #1e3a8a;
+    font-size: 1rem;
+    font-weight: bold;
+    background: #f0f4ff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 5px 8px;
+    border: 2px solid #1e3a8a;
+    box-shadow: 0 3px 8px rgba(30, 58, 138, 0.2);
+    transition: all 0.3s ease;
+}
+
+.instruction-item:hover {
+    background: #e0e7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(30, 58, 138, 0.3);
 }
 
 .river::before {
@@ -523,18 +613,18 @@ body {
 
 #boat {
     position: absolute;
-    bottom: 30px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 50px;
+    font-size: 65px;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 10;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
-    padding: 10px;
-    border: 3px solid #dc2626;
+    padding: 15px;
+    border: 4px solid #dc2626;
 }
 
 #boat:hover {
@@ -547,14 +637,14 @@ body {
 #boat::after {
     content: "點擊移動";
     position: absolute;
-    top: -30px;
+    top: -40px;
     left: 50%;
     transform: translateX(-50%);
     background: #dc2626;
     color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
+    padding: 8px 15px;
+    border-radius: 18px;
+    font-size: 16px;
     font-weight: bold;
     white-space: nowrap;
     opacity: 0;
@@ -567,13 +657,13 @@ body {
 
 #boat-items {
     position: absolute;
-    top: 15px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-height: 80px;
+    gap: 12px;
+    min-height: 100px;
     width: 90%;
     justify-content: center;
     align-items: center;
@@ -582,15 +672,15 @@ body {
 
 .farmer {
     position: absolute;
-    bottom: 15px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 28px;
+    font-size: 36px;
     background: #dc2626;
-    padding: 8px;
+    padding: 12px;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 65px;
+    height: 65px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -946,27 +1036,36 @@ body {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-    .difficulty-dialog {
+    .difficulty-container {
         padding: 30px 20px;
         width: 95%;
+        margin: 20px auto;
+        min-height: 60vh;
     }
     
-    .dialog-title {
+    .difficulty-title {
+        font-size: 1.8em;
+    }
+    
+    .difficulty-option {
+        padding: 20px;
+        min-height: 60px;
         font-size: 1.5em;
     }
     
-    .option-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
+    .back-button, .help-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.8rem;
     }
     
-    .option-icon {
-        font-size: 1.5em;
+    .back-arrow, .help-icon {
+        font-size: 1rem;
     }
     
-    .option-name {
-        font-size: 1.1em;
+    .back-label, .help-label {
+        font-size: 0.9rem;
+        top: 60px;
     }
     
     .game-header {
@@ -982,6 +1081,17 @@ body {
     .river-side, .river {
         width: 90%;
         max-width: 300px;
+    }
+    
+    .instruction-item {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        margin: 3px 5px;
+    }
+    
+    .game-instructions {
+        margin: 15px 0;
+        padding: 12px;
     }
     
     .game-title {
@@ -1060,9 +1170,6 @@ body {
     z-index: 1000;
 }
 
-.modal.hidden {
-    display: none;
-}
 
 .modal-content {
     background: white;
@@ -1093,18 +1200,17 @@ body {
     height: 80px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 2rem;
+    font-size: 2.8rem;
     font-weight: bold;
-    position: absolute;
-    top: 0;
-    left: 0;
     transition: all 0.3s ease;
     box-shadow: none;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     margin: 0;
-    z-index: 2;
+    position: relative;
+    align-self: flex-start;
 }
 
 .back-button:hover {
@@ -1112,58 +1218,258 @@ body {
     transform: scale(1.05);
 }
 
+.back-arrow {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
 .back-label {
-    position: absolute !important;
-    top: 35px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    color: #333 !important;
-    font-size: 1rem !important;
-    white-space: nowrap !important;
-    text-align: center !important;
-    font-weight: normal !important;
-    pointer-events: none !important;
-    z-index: 1 !important;
-    font-family: inherit !important;
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #333;
+    font-size: 1.8rem;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 1;
+    font-family: inherit;
 }
 
 /* 幫助按鈕樣式 */
 .help-button {
-    position: relative;
-    display: inline-block;
-}
-
-.help-button button {
-    width: 50px;
-    height: 50px;
+    background: white;
+    color: black;
+    border: 3px solid black;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: #1e3a8a;
-    color: white;
-    border: none;
-    font-size: 24px;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
+    font-size: 2.8rem;
+    font-weight: bold;
     transition: all 0.3s ease;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
     position: relative;
+    align-self: flex-start;
 }
 
-.help-button button:hover {
-    background: #1e40af;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+.help-button:hover {
+    background: #f8f9fa;
+    transform: scale(1.05);
+}
+
+.help-icon {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
 }
 
 .help-label {
     position: absolute;
-    top: 35px;
+    top: 90px;
     left: 50%;
     transform: translateX(-50%);
     color: #333;
-    font-size: 1rem;
+    font-size: 1.8rem;
     white-space: nowrap;
     text-align: center;
-    font-weight: normal;
+    font-weight: bold;
     pointer-events: none;
     z-index: 1;
     font-family: inherit;
+}
+
+/* 觀看遊戲說明按鈕樣式 */
+.btn-watch-help {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-watch-help:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* 遊戲說明視窗樣式 */
+#help-modal .modal-content {
+    max-width: 800px;
+    width: 90%;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 0.7rem;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* 關閉按鈕樣式 */
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 4rem;
+    font-weight: 700;
+    color: black;
+    cursor: pointer;
+    transition: color 0.3s;
+    line-height: 1;
+    z-index: 10;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.close-btn:hover {
+    color: red;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+/* 遊戲步驟按鈕樣式 - 最高優先級 */
+#help-modal button.game-step-button {
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-weight: bold !important;
+    min-width: 120px !important;
+    padding: 14px 28px !important;
+    font-size: 20px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    text-decoration: none !important;
+    display: inline-block;
+    margin: 0 !important;
+    outline: none !important;
+    font-family: inherit !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
+#help-modal button.game-step-button.prev-step {
+    background: #f5f5f5 !important;
+    color: #666 !important;
+    border: 2px solid #ddd !important;
+}
+
+#help-modal button.game-step-button.prev-step:hover {
+    background: #e0e0e0 !important;
+    border-color: #bbb !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+#help-modal button.game-step-button.next-step {
+    background: #2196F3 !important;
+    color: white !important;
+    border: 2px solid #1976D2 !important;
+}
+
+#help-modal button.game-step-button.next-step:hover {
+    background: #1976D2 !important;
+    border-color: #1565C0 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* 額外的強制樣式 */
+#help-modal #prev-step-button,
+#help-modal #next-step-button {
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    font-weight: bold !important;
+    min-width: 120px !important;
+    padding: 14px 28px !important;
+    font-size: 20px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    outline: none !important;
+    font-family: inherit !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
+#help-modal #prev-step-button {
+    background: #f5f5f5 !important;
+    color: #666 !important;
+    border: 2px solid #ddd !important;
+}
+
+#help-modal #prev-step-button:hover {
+    background: #e0e0e0 !important;
+    border-color: #bbb !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+#help-modal #next-step-button {
+    background: #2196F3 !important;
+    color: white !important;
+    border: 2px solid #1976D2 !important;
+}
+
+#help-modal #next-step-button:hover {
+    background: #1976D2 !important;
+    border-color: #1565C0 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* 遊戲說明文字樣式 */
+.game-instruction-text {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 步驟指示器樣式 */
+.game-step-indicator {
+    color: #666;
+    font-weight: bold;
+}
+
+/* 視頻容器樣式 */
+#video-container video {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+}
+
+/* 隱藏遊戲說明視窗 */
+.modal.hidden {
+    display: none !important;
 }

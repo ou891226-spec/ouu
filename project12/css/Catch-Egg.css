@@ -10,7 +10,7 @@ body {
  
 .game-container {
   width: fit-content;
-  max-width: 100vw;
+  max-width: 1400px;
   min-width: 0;
   margin: 30px auto;
   background-color: var(--container-color);
@@ -39,7 +39,8 @@ h1 {
   padding: 10px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  max-width: 500px;
+  max-width: 700px;
+  flex-wrap: wrap;
 }
  
 .score-board span {
@@ -51,6 +52,61 @@ h1 {
   font-weight: bold;
   color: #4CAF50;
 }
+
+/* 分數說明樣式 */
+.score-guide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+  margin: 10px auto;
+  padding: 8px;
+  background-color: #f0f8ff;
+  border-radius: 8px;
+  max-width: 700px;
+  flex-wrap: wrap;
+}
+
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  padding: 2px 4px;
+  line-height: 1.2;
+}
+
+.guide-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin-right: 4px;
+}
+
+.guide-icon[src*="bomb.png"] {
+  width: 24px;
+  height: 24px;
+}
+
+.guide-icon.bomb {
+  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-right: 15px;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+  padding-right: 8px;
+  padding-left: 0px;
+}
+
+.guide-text {
+  font-weight: 500;
+}
  
 #timer {
   color: #f44336;
@@ -58,13 +114,17 @@ h1 {
 }
  
 #game {
-  width: 600px;
-  height: 400px;
+  width: 800px;
+  height: 500px;
   background-color: #d0e7e3;
   border: 2px solid #000;
   margin: 20px auto;
   position: relative;
   overflow: hidden;
+  min-height: 500px;
+  max-height: 500px;
+  box-sizing: border-box;
+  touch-action: none;
 }
  
 #basket {
@@ -75,9 +135,12 @@ h1 {
   background-position: center;
   position: absolute;
   bottom: 0.3px;
-  left: 235px;
+  left: auto;
   border-radius: 20px;
   cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+  user-select: none;
   z-index: 1000;
 }
  
@@ -86,6 +149,8 @@ h1 {
   justify-content: center;
   gap: 1rem;
   margin-top: 2rem;
+  position: relative;
+  z-index: 100;
 }
  
 button {
@@ -284,6 +349,8 @@ button {
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 .modal.hidden {
@@ -299,6 +366,7 @@ button {
   max-width: 320px;  /* 進一步縮小到 320px */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
+  margin: 0 auto;
 }
 
 .modal-content h2 {
@@ -587,7 +655,7 @@ button {
   .score-board {
     gap: 15px;
     padding: 8px;
-    max-width: 450px;
+    max-width: 650px;
   }
   
   .score-board span {
@@ -595,15 +663,19 @@ button {
   }
   
   #game {
-    width: 500px;
-    height: 350px;
+    width: 700px;
+    height: 450px;
     margin: 15px auto;
+    min-height: 450px;
+    max-height: 450px;
+    box-sizing: border-box;
   }
   
   #basket {
     width: 120px;
     height: 50px;
-    left: 190px;
+    left: auto;
+    transform: none;
   }
   
   .control-buttons {
@@ -678,12 +750,16 @@ button {
     width: 450px;
     height: 300px;
     margin: 12px auto;
+    min-height: 300px;
+    max-height: 300px;
+    box-sizing: border-box;
   }
   
   #basket {
     width: 100px;
     height: 40px;
-    left: 175px;
+    left: auto;
+    transform: none;
   }
   
   .control-buttons {
@@ -850,5 +926,169 @@ button {
     
     #egg-help-modal #egg-video-container {
         margin-bottom: 1rem !important;
+    }
+}
+
+/* 手機版響應式設計 */
+@media (max-width: 480px) {
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .game-container {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 1rem 0 !important;
+        border-radius: 0 !important;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+    
+    h1 {
+        font-size: 24px !important;
+        margin: 10px 0 !important;
+    }
+    
+    .score-board {
+        flex-direction: row !important;
+        gap: 6px !important;
+        margin: 10px auto !important;
+        padding: 8px !important;
+        max-width: 95vw !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+    
+    .score-board span {
+        font-size: 0.9rem !important;
+    }
+    
+    .score-guide {
+        gap: 8px !important;
+        margin: 8px auto !important;
+        padding: 6px !important;
+        max-width: 95vw !important;
+    }
+    
+    .guide-item {
+        font-size: 0.8rem !important;
+        gap: 6px !important;
+        padding: 1px 2px !important;
+    }
+    
+    .guide-icon {
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 3px !important;
+    }
+    
+    .guide-icon[src*="bomb.png"] {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    .guide-icon.bomb {
+        font-size: 14px !important;
+        width: 32px !important;
+        height: 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        margin-right: 12px !important;
+        justify-content: flex-start !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+        flex-shrink: 0 !important;
+        padding-right: 6px !important;
+        padding-left: 0px !important;
+    }
+    
+    #game {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        height: 60vh !important;
+        min-height: 300px !important;
+        max-height: 60vh !important;
+        margin: 10px auto !important;
+        border-radius: 8px !important;
+        box-sizing: border-box !important;
+        contain: layout !important;
+    }
+    
+    #basket {
+        width: 120px !important;
+        height: 50px !important;
+        left: auto !important;
+        transform: none !important;
+        bottom: 0.3px !important;
+    }
+    
+    .game-controls {
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin: 10px auto !important;
+        width: 90vw !important;
+    }
+    
+    .game-controls button {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 16px !important;
+    }
+    
+    /* 難度選擇模態框手機版 */
+    .modal {
+        padding: 10px !important;
+    }
+    
+    .modal-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 0 auto !important;
+        padding: 1rem !important;
+        border-radius: 8px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .difficulty-buttons {
+        gap: 10px !important;
+    }
+    
+    .difficulty-buttons button {
+        padding: 15px 10px !important;
+        font-size: 16px !important;
+        border-radius: 8px !important;
+    }
+    
+    /* 說明模態框手機版 */
+    #egg-help-modal .modal-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        padding: 0.8rem !important;
+        margin: 0 auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    #egg-instruction-text {
+        font-size: 16px !important;
+        min-width: auto !important;
+    }
+    
+    #egg-video-container {
+        margin: 1rem 0 !important;
+    }
+    
+    #egg-video-container video {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
     }
 }
