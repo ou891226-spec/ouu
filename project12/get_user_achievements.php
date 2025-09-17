@@ -21,18 +21,27 @@ if (!$member_id) {
 try {
     // 獲取用戶今天獲得的成就稱號（根據台灣時間）
     $today = date('Y-m-d'); // 使用台灣時間
-    $sql = "SELECT ma.achievement_name, ma.achievement_name as achievement_description, 
-                   '🏆' as icon, ma.earned_date
+    $sql = "SELECT a.achievement_name, 
+                   COALESCE(a.achievement_description, a.achievement_name) as achievement_description,
+                   COALESCE(a.icon, '🏆') as icon, 
+                   ma.earned_date
             FROM member_achievements ma
+            JOIN achievements a ON ma.achievement_id = a.achievement_id
             WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?
-            AND ma.achievement_name IS NOT NULL
-            AND ma.achievement_name != '每日登入'
+            AND a.achievement_name IS NOT NULL
+            AND a.achievement_name != '每日登入'
             ORDER BY ma.earned_date DESC
             LIMIT 3";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$member_id, $today]);
     $achievements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 調試：記錄查詢結果
+    error_log("成就查詢結果 - 用戶ID: $member_id, 日期: $today, 成就數量: " . count($achievements));
+    if (!empty($achievements)) {
+        error_log("成就詳情: " . json_encode($achievements));
+    }
     
     // 獲取用戶的遊戲統計資料
     $stats_sql = "SELECT 

@@ -1201,6 +1201,13 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
 
         // 關閉說明彈窗函數
         function closeHelpModal() {
+            // 停止視頻播放
+            const video = document.getElementById('textcolor-current-video');
+            if (video) {
+                video.pause();
+                video.currentTime = 0; // 重置到開始位置
+            }
+            
             const helpModal = document.getElementById('help-modal');
             if (helpModal) {
                 helpModal.classList.remove('show');

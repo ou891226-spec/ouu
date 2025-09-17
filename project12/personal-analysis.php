@@ -12,6 +12,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <title>各項能力分析</title>
   <link rel="stylesheet" href="css/main.css" />     <!-- 首頁樣式 -->
   <link rel="stylesheet" href="css/an.css" />        <!-- 能力分析專用樣式 -->
+  <link rel="stylesheet" href="css/game-category-tabs.css" />  <!-- 遊戲分類標籤樣式 -->
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,13 +21,13 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
+      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
         <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
@@ -72,54 +73,83 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <div class="analysis-section">
   <h2>各項能力分析</h2>
 
-  <div class="radar-chart-container">
-    <canvas id="abilityRadarChart"></canvas>
+  <!-- 分析功能標籤 -->
+  <div class="category-tabs" style="display: flex !important; justify-content: center !important; gap: 8px !important; margin: 30px 0 !important; flex-wrap: nowrap !important; padding: 0 10px !important;">
+    <button class="category-tab active" onclick="showAnalysisSection('radar')" id="radarTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
+      <span class="tab-icon" style="font-size: 24px;">🎯</span>
+      能力雷達圖
+    </button>
+    <button class="category-tab" onclick="showAnalysisSection('trend')" id="trendTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
+      <span class="tab-icon" style="font-size: 24px;">📈</span>
+      能力趨勢變化
+    </button>
+         <button class="category-tab" onclick="showAnalysisSection('stats')" id="statsTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
+           <span class="tab-icon" style="font-size: 24px;">📊</span>
+           詳細統計
+         </button>
+    <button class="category-tab" onclick="showAnalysisSection('report')" id="reportTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
+      <span class="tab-icon" style="font-size: 24px;">📋</span>
+      能力分析報告
+    </button>
   </div>
   
-  <!-- 能力趨勢圖 -->
-  <div class="trend-chart-container">
-    <h3>能力趨勢變化（最近12個月）</h3>
-    <canvas id="abilityTrendChart"></canvas>
+  <!-- 能力雷達圖內容 -->
+  <div id="radar-section" class="category-games active">
+    <div class="radar-chart-container">
+      <canvas id="abilityRadarChart"></canvas>
+    </div>
   </div>
   
-  <!-- 詳細統計 -->
-  <div class="detailed-stats" id="detailedStats" style="display: none;">
-    <h3>詳細統計</h3>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <span class="stat-label">反應力遊戲總次數：</span>
-        <span class="stat-value" id="reactionGames">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">記憶力遊戲總次數：</span>
-        <span class="stat-value" id="memoryGames">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">邏輯力遊戲總次數：</span>
-        <span class="stat-value" id="logicGames">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">反應力平均分數：</span>
-        <span class="stat-value" id="reactionAvg">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">記憶力平均分數：</span>
-        <span class="stat-value" id="memoryAvg">0</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">邏輯力平均分數：</span>
-        <span class="stat-value" id="logicAvg">0</span>
+  <!-- 能力趨勢圖內容 -->
+  <div id="trend-section" class="category-games" style="display: none;">
+    <div class="trend-chart-container">
+      <h3>能力趨勢變化（最近12個月）</h3>
+      <canvas id="abilityTrendChart"></canvas>
+    </div>
+  </div>
+  
+  <!-- 詳細統計內容 -->
+  <div id="stats-section" class="category-games" style="display: none;">
+    <div class="detailed-stats" style="text-align: center !important;">
+      <h3 style="text-align: center !important;">詳細統計</h3>
+      <div class="stats-grid" style="text-align: center !important;">
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力遊戲總次數：</span>
+          <span class="stat-value" id="reactionGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力遊戲總次數：</span>
+          <span class="stat-value" id="memoryGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力遊戲總次數：</span>
+          <span class="stat-value" id="logicGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力平均分數：</span>
+          <span class="stat-value" id="reactionAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力平均分數：</span>
+          <span class="stat-value" id="memoryAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力平均分數：</span>
+          <span class="stat-value" id="logicAvg">0</span>
+        </div>
       </div>
     </div>
   </div>
   
-  <!-- 分析報告 -->
-  <div class="analysis-report" id="analysisReport" style="display: none;">
-    <h3>能力分析報告</h3>
-    <div class="report-content">
-      <div class="player-type" id="playerType"></div>
-      <div class="description" id="description"></div>
-      <div class="suggestions" id="suggestions"></div>
+  <!-- 分析報告內容 -->
+  <div id="report-section" class="category-games" style="display: none;">
+    <div class="analysis-report">
+      <h3>能力分析報告</h3>
+      <div class="report-content">
+        <div class="player-type" id="playerType"></div>
+        <div class="description" id="description"></div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -380,8 +410,30 @@ function updateAnalysisReport(data) {
     document.getElementById('suggestions').innerHTML = 
       '<strong>改進建議：</strong>您的能力發展得很好！';
   }
+}
+
+// 顯示分析區塊（類似遊戲分類的切換功能）
+function showAnalysisSection(section) {
+  // 隱藏所有內容區塊
+  const sections = ['radar-section', 'trend-section', 'stats-section', 'report-section'];
+  sections.forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
   
-  document.getElementById('analysisReport').style.display = 'block';
+  // 移除所有按鈕的active類別
+  const tabs = ['radarTab', 'trendTab', 'statsTab', 'reportTab'];
+  tabs.forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  
+  // 顯示選中的區塊
+  document.getElementById(section + '-section').style.display = 'block';
+  document.getElementById(section + 'Tab').classList.add('active');
+  
+  // 如果是趨勢圖且還沒載入，載入它
+  if (section === 'trend' && !trendChart) {
+    loadAbilityTrend();
+  }
 }
 
 // 更新詳細統計
@@ -406,7 +458,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function togglePersonalHistoryMenu() {
     const menu = document.getElementById('personalHistoryMenu');
-    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    const arrowIcon = document.getElementById('arrowIcon');
+    const isVisible = menu.style.display === 'block';
+    
+    if (isVisible) {
+      menu.style.display = 'none';
+      arrowIcon.textContent = '▼';
+    } else {
+      menu.style.display = 'block';
+      arrowIcon.textContent = '▲';
+    }
   }
 
   function openMissionModal() {

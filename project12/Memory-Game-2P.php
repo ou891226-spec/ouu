@@ -183,6 +183,10 @@ $colors = $stmt->fetchAll();
             </div>
         </div>
         
+        <div id="pause-indicator" class="pause-indicator hidden">
+            <span>⏸️ 遊戲已暫停</span>
+        </div>
+        
         <div id="game-board" class="game-board">
         <!-- 卡片將由 JavaScript 動態生成 -->
         </div>

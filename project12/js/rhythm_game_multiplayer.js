@@ -322,6 +322,13 @@ function showHelp() {
 
 // 關閉說明視窗
 function closeInfoModal() {
+  // 停止視頻播放
+  const video = document.getElementById('rhythm-current-video');
+  if (video) {
+    video.pause();
+    video.currentTime = 0; // 重置到開始位置
+  }
+  
   if (infoModal) {
     infoModal.style.display = 'none';
     infoModal.classList.remove('show');

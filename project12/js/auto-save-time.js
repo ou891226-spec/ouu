@@ -88,12 +88,12 @@ function updateTimeDisplay() {
   }
 }
 
-// 每秒執行：更新會話時間並更新畫面（只在頁面活躍時）
+// 每秒執行：更新會話時間並更新畫面（只在頁面活躍時且不在遊戲頁面）
 setInterval(() => {
   // 檢查是否需要重置（新的一天）
   checkAndResetDaily();
   
-  if (isPageActive) {
+  if (isPageActive && !isGamePage()) {
     // 計算從會話開始的總時間
     const now = Date.now();
     sessionSeconds = Math.floor((now - sessionStartTime) / 1000);
@@ -125,12 +125,12 @@ function saveCurrentTime() {
 }
 
 // ===== 手動儲存時間到資料庫 =====
-// 保存時間到資料庫（只保存會話時間）
+// 保存時間到資料庫（只保存會話時間，且不在遊戲頁面）
 function saveSessionTime() {
   const currentTime = Date.now();
   const timeSinceLastSave = Math.floor((currentTime - lastSaveTime) / 1000);
   
-  if (timeSinceLastSave > 0 && isPageActive) {
+  if (timeSinceLastSave > 0 && isPageActive && !isGamePage()) {
     // 保存到遊戲記錄
     const gameData = new URLSearchParams({
       game_id: 0,
@@ -215,9 +215,9 @@ function isGamePage() {
   return gamePages.some(page => currentPath.includes(page));
 }
 
-// 只在非遊戲頁面啟用自動計時
+// 只在遊戲頁面停用自動計時，其他頁面（包括搜尋頁面）都計時
 if (!isGamePage()) {
-  console.log('啟用自動計時功能');
+  console.log('啟用自動計時功能（非遊戲頁面）');
 } else {
   console.log('遊戲頁面，停用自動計時');
 }

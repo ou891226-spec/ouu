@@ -2714,6 +2714,8 @@ function pauseGame() {
         }
         document.getElementById('pauseBtn').classList.add('hidden');
         document.getElementById('resumeBtn').classList.remove('hidden');
+        // 顯示暫停提示
+        document.getElementById('pause-indicator').classList.remove('hidden');
 }
 
 // 繼續遊戲
@@ -2725,12 +2727,18 @@ function resumeGame() {
         }
         document.getElementById('pauseBtn').classList.remove('hidden');
         document.getElementById('resumeBtn').classList.add('hidden');
+        // 隱藏暫停提示
+        document.getElementById('pause-indicator').classList.add('hidden');
 }
 
 // 結束遊戲
 function endGame() {
     // 停止回合計時器
     stopTurnTimer();
+    
+    // 隱藏暫停提示
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) pauseIndicator.classList.add('hidden');
     
     gameEndTimestamp = Date.now();
     const playTime = gameEndTimestamp - gameStartTimestamp;
@@ -2934,6 +2942,13 @@ function returnToMain() {
 
 // 關閉說明視窗
 function closeHelpModal() {
+    // 停止視頻播放
+    const video = document.getElementById('current-video');
+    if (video) {
+        video.pause();
+        video.currentTime = 0; // 重置到開始位置
+    }
+    
     document.getElementById('help-modal').classList.add('hidden');
 }
 

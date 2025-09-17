@@ -153,6 +153,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("endGameBtn").addEventListener("click", () => {
         // 結束遊戲功能
         if (confirm("確定要結束遊戲嗎？")) {
+            // 保存遊戲結果（即使沒有完成）
+            saveGameResultOnExit();
             showScreen("difficulty-screen");
         }
     });
@@ -566,14 +568,21 @@ function handleWin() {
         gameState.bestSteps[gameState.mode] = gameState.stepCount;
     }
     
-    // 計算分數
-    const scoreRewards = {
-        "easy": 10,
-        "normal": 30,
-        "hard": 50
-    };
+    // 計算分數 - 從資料庫設定讀取
+    let scoreReward = 0;
+    if (window.difficultySettings && window.difficultySettings[gameState.mode]) {
+        scoreReward = window.difficultySettings[gameState.mode].pass_score;
+    } else {
+        // 預設值
+        const defaultScores = {
+            "easy": 20,
+            "normal": 50,
+            "hard": 100
+        };
+        scoreReward = defaultScores[gameState.mode] || 0;
+    }
     
-    gameState.score = scoreRewards[gameState.mode];
+    gameState.score = scoreReward;
     
     // 更新成功對話框內容
     const difficultyNames = {
@@ -588,6 +597,91 @@ function handleWin() {
     // 顯示成功對話框
     showModal("game-success-modal");
     gameState.gameOver = true;
+    
+    // 保存遊戲結果
+    saveGameResult();
+}
+
+// 保存遊戲結果到資料庫
+async function saveGameResult() {
+    try {
+        if (!window.memberId) {
+            console.log('未登入，跳過保存遊戲結果');
+            alert('您尚未登入，遊戲結果不會被保存。請登入後再遊玩以保存記錄！');
+            return;
+        }
+        
+        const gameData = {
+            member_id: window.memberId,
+            difficulty: gameState.mode,
+            score: gameState.score,
+            play_time: gameState.stepCount, // 使用步數作為遊玩時間
+            game_type: '算術邏輯'
+        };
+        
+        console.log('保存過河遊戲結果:', gameData);
+        
+        const response = await fetch('save_river_game.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gameData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('過河遊戲結果保存成功');
+        } else {
+            console.error('過河遊戲結果保存失敗:', result.message);
+        }
+    } catch (error) {
+        console.error('保存過河遊戲結果時發生錯誤:', error);
+    }
+}
+
+// 結束遊戲時保存記錄（未完成遊戲）
+async function saveGameResultOnExit() {
+    try {
+        if (!window.memberId) {
+            console.log('未登入，跳過保存遊戲結果');
+            return;
+        }
+        
+        // 如果遊戲已經結束（勝利或失敗），不重複保存
+        if (gameState.gameOver) {
+            return;
+        }
+        
+        const gameData = {
+            member_id: window.memberId,
+            difficulty: gameState.mode,
+            score: 0, // 未完成遊戲，分數為0
+            play_time: gameState.stepCount, // 使用步數作為遊玩時間
+            game_type: '算術邏輯'
+        };
+        
+        console.log('保存過河遊戲中途退出結果:', gameData);
+        
+        const response = await fetch('save_river_game.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gameData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('過河遊戲中途退出結果保存成功');
+        } else {
+            console.error('過河遊戲中途退出結果保存失敗:', result.message);
+        }
+    } catch (error) {
+        console.error('保存過河遊戲中途退出結果時發生錯誤:', error);
+    }
 }
 
 // 檢查單岸規則

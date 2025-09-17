@@ -107,6 +107,44 @@ h2 {
     font-weight: 900;
 }
 
+/* 暫停狀態提示樣式 */
+.pause-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 15px auto;
+    padding: 15px 25px;
+    background-color: #fff3cd;
+    border: 3px solid #ffc107;
+    border-radius: 12px;
+    max-width: 300px;
+    font-size: 20px;
+    color: #856404;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.pause-indicator span {
+    font-weight: bold;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+}
+
 #current-score {
     color: #0a5116;
 }

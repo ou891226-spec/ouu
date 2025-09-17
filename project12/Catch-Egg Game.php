@@ -307,11 +307,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="egg-gameover-difficulty">簡單</span></div>
-                    <div class="gameover-row" id="egg-target-row">目標分數：<span id="egg-gameover-target">200</span></div>
-                    <div class="gameover-row" id="egg-score-row">獲得分數：<span id="egg-gameover-score">0</span></div>
-                    <div class="gameover-row" id="egg-earned-row">獲得分數：<span id="egg-gameover-earned-score">20</span></div>
-                    <div class="gameover-row" id="egg-time-row">遊戲時間：<span id="egg-gameover-time">60秒</span></div>
-                    <div class="gameover-row" id="egg-bonus-row">過關分數：<span id="egg-gameover-bonus">+20</span></div>
+                    <div class="gameover-row" id="egg-score-row">遊戲分數：<span id="egg-gameover-score">0</span></div>
+                    <div class="gameover-row" id="egg-time-row">遊戲時間：<span id="egg-gameover-time">0秒</span></div>
+                    <div class="gameover-row" id="egg-bonus-row">獲得分數：<span id="egg-gameover-bonus">+0</span></div>
                     <div class="gameover-row" id="egg-fail-message" style="display: none;">未達成目標分數！</div>
                 </div>
             </div>
@@ -327,8 +325,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         <source src="music/gett.mp4" type="audio/mp4">
     </audio>
     <audio id="bombSound" preload="auto">
-        <source src="music/boom.mp3" type="audio/mpeg">
         <source src="music/boom.m4a" type="audio/mp4">
+        <source src="music/boom.mp3" type="audio/mpeg">
     </audio>
     <audio id="gameOverSound">
         <source src="music/gett.mp4" type="audio/mp4">

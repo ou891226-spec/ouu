@@ -1,6 +1,28 @@
 <?php
 require_once 'db_connect.php';
 
+// 從資料庫讀取算菜錢遊戲的難度設定
+$difficultySettings = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 5 ORDER BY difficulty");
+    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    foreach ($settings as $setting) {
+        $difficultySettings[$setting['difficulty']] = [
+            'time_limit' => $setting['time_limit'],
+            'points_per_correct' => $setting['points_per_correct'],
+            'pass_score' => $setting['pass_score']
+        ];
+    }
+} catch (PDOException $e) {
+    // 如果查詢失敗，使用預設設定
+    $difficultySettings = [
+        'easy' => ['time_limit' => 60, 'points_per_correct' => 3, 'pass_score' => 15],
+        'normal' => ['time_limit' => 120, 'points_per_correct' => 3, 'pass_score' => 20],
+        'hard' => ['time_limit' => 180, 'points_per_correct' => 3, 'pass_score' => 30]
+    ];
+}
+
 // 處理取得食材資料的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
     header('Content-Type: application/json');
@@ -115,6 +137,9 @@ if (!isset($_SESSION['member_id'])) {
                 <span id="timer" class="score-red">60</span>
             </div>
         </div>
+        <div id="pause-indicator" class="pause-indicator hidden">
+            <span>⏸️ 遊戲已暫停</span>
+        </div>
         <div id="question-container" class="main-question-container">
             <div id="question"></div>
             <div id="options-container" class="main-options-container"></div>
@@ -128,20 +153,20 @@ if (!isset($_SESSION['member_id'])) {
 
     <!-- 遊戲結束視窗 -->
     <div id="game-over-modal" class="modal hidden">
-        <div class="modal-content gameover-modal-content">
-            <h2 class="gameover-title">遊戲結束</h2>
-            <div class="gameover-desc">
+        <div class="modal-content">
+            <h2 id="vegetable-game-over-title">遊戲結束</h2>
+            <div class="result-details">
                 <div class="gameover-info">
                     <div class="gameover-row">難度：<span id="vegetable-gameover-difficulty">簡單模式</span></div>
-                    <div class="gameover-row" id="vegetable-earned-row">獲得分數：<span id="vegetable-gameover-earned-score">20</span></div>
-                    <div class="gameover-row" id="vegetable-time-row">遊戲時間：<span id="vegetable-gameover-time">80秒</span></div>
-                    <div class="gameover-row" id="vegetable-bonus-row">過關分數：<span id="vegetable-gameover-bonus">+20</span></div>
-                    <div class="gameover-row" id="vegetable-fail-message" style="display: none;">未在時間內達成分數</div>
+                    <div class="gameover-row" id="vegetable-score-row">遊戲分數：<span id="vegetable-gameover-score">0</span></div>
+                    <div class="gameover-row" id="vegetable-time-row">遊戲時間：<span id="vegetable-gameover-time">0秒</span></div>
+                    <div class="gameover-row" id="vegetable-bonus-row">獲得分數：<span id="vegetable-gameover-bonus">+0</span></div>
+                    <div class="gameover-row" id="vegetable-fail-message" style="display: none;">未達成目標分數！</div>
                 </div>
             </div>
-            <div class="gameover-btn-group">
-                <button id="modal-restart-btn" class="gameover-btn retry-btn" onclick="restartGame()">再玩一次</button>
-                <button id="exit-btn" class="gameover-btn home-btn" onclick="exitGame()">返回主頁</button>
+            <div class="result-buttons">
+                <button onclick="restartGame()">再玩一次</button>
+                <button onclick="exitGame()">返回主頁</button>
             </div>
         </div>
     </div>
@@ -187,7 +212,7 @@ if (!isset($_SESSION['member_id'])) {
             <div class="help-content" style="margin-top:2.5rem;padding:0 1rem;">
                 <!-- 影片播放區域 -->
                 <div id="vegetable-video-container" style="text-align:center;margin-bottom:2.5rem;">
-                    <video id="vegetable-current-video" width="100%" height="auto" controls style="max-width:900px;width:95%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <video id="vegetable-current-video" width="100%" height="auto" controls preload="none" style="max-width:900px;width:95%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/vegetable1.mp4" type="video/mp4">
                         您的瀏覽器不支援視頻播放。
                     </video>
@@ -197,7 +222,7 @@ if (!isset($_SESSION['member_id'])) {
                 <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
                     <!-- 上一步按鈕 -->
                     <div id="vegetable-prev-step-btn" style="display:none;">
-                        <button id="vegetable-prev-step-button" onclick="goToVegetablePrevStep()" class="game-step-button prev-step" style="padding:16px 32px;font-size:22px;">
+                        <button id="vegetable-prev-step-button" onclick="goToVegetablePrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
@@ -208,8 +233,8 @@ if (!isset($_SESSION['member_id'])) {
                     </div>
                     
                     <!-- 下一步按鈕 -->
-                    <div id="vegetable-next-step-btn" style="margin-left:2rem;">
-                        <button id="vegetable-next-step-button" class="game-step-button next-step" style="padding:16px 32px;font-size:22px;">
+                    <div id="vegetable-next-step-btn" style="margin-left:1rem;">
+                        <button id="vegetable-next-step-button" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
@@ -227,6 +252,7 @@ if (!isset($_SESSION['member_id'])) {
     <script>
         // 將PHP變數傳遞給JavaScript
         window.phpMemberId = <?php echo $_SESSION['member_id']; ?>;
+        window.difficultySettings = <?php echo json_encode($difficultySettings); ?>;
 
         function smartReturn() {
             // 智能返回：回到上一頁，如果沒有上一頁則回到首頁

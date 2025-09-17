@@ -92,38 +92,8 @@ try {
         ];
     }
     
-    // 如果沒有遊戲記錄，返回預設遊戲
-    if (empty($formatted_games)) {
-        $formatted_games = [
-            [
-                'game_type' => '接金蛋遊戲',
-                'title' => '接金蛋',
-                'img' => 'img/egg1.png?v=2',
-                'link' => 'Catch-Egg Game.php',
-                'play_count' => 0,
-                'last_played' => null,
-                'avg_score' => 0
-            ],
-            [
-                'game_type' => '節奏遊戲',
-                'title' => '節奏遊戲',
-                'img' => 'img/rhythm1.png?v=2',
-                'link' => 'rhythm_game.php',
-                'play_count' => 0,
-                'last_played' => null,
-                'avg_score' => 0
-            ],
-            [
-                'game_type' => '看字選色遊戲',
-                'title' => '看字選色',
-                'img' => 'img/text_color111.png?v=2',
-                'link' => 'text-color.php',
-                'play_count' => 0,
-                'last_played' => null,
-                'avg_score' => 0
-            ]
-        ];
-    }
+    // 如果沒有遊戲記錄，返回空陣列（不顯示任何遊戲）
+    // 這樣新用戶就不會看到「最近常玩」有任何遊戲
     
     echo json_encode([
         'success' => true,

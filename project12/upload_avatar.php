@@ -53,7 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
     // 創建上傳目錄
     $upload_dir = 'img/avatars/';
     if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
+        if (!mkdir($upload_dir, 0755, true)) {
+            echo json_encode(['success' => false, 'message' => '無法創建上傳目錄']);
+            exit;
+        }
+    }
+    
+    // 檢查目錄是否可寫入
+    if (!is_writable($upload_dir)) {
+        echo json_encode(['success' => false, 'message' => '上傳目錄不可寫入']);
+        exit;
     }
     
     // 生成檔案名稱（統一使用 jpg 格式）
@@ -78,6 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
         case IMAGETYPE_GIF:
             $source_image = imagecreatefromgif($source_path);
             break;
+        case IMAGETYPE_WEBP:
+            $source_image = imagecreatefromwebp($source_path);
+            break;
         case IMAGETYPE_TIFF_II:
         case IMAGETYPE_TIFF_MM:
             // 檢查是否有 TIFF 支援
@@ -92,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
                     $imagick->destroy();
                     
                     // 直接更新資料庫，跳過 GD 處理
-                    $sql = "UPDATE member SET avatar_url = ? WHERE member_id = ?";
+                    $sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
                     $stmt = $pdo->prepare($sql);
                     
                     if ($stmt->execute([$file_path, $member_id])) {
@@ -163,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
         imagedestroy($new_image);
         
         // 更新資料庫中的頭像路徑
-        $sql = "UPDATE member SET avatar_url = ? WHERE member_id = ?";
+        $sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
         $stmt = $pdo->prepare($sql);
         
         if ($stmt->execute([$file_path, $member_id])) {

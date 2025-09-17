@@ -1,3 +1,29 @@
+<?php
+session_start();
+require_once 'db_connect.php';
+
+// 從資料庫讀取過河遊戲的難度設定
+$difficultySettings = [];
+try {
+    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 9 ORDER BY difficulty");
+    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    foreach ($settings as $setting) {
+        $difficultySettings[$setting['difficulty']] = [
+            'time_limit' => $setting['time_limit'],
+            'points_per_correct' => $setting['points_per_correct'],
+            'pass_score' => $setting['pass_bounce'] // 使用 pass_bounce 欄位
+        ];
+    }
+} catch (PDOException $e) {
+    // 如果查詢失敗，使用預設設定
+    $difficultySettings = [
+        'easy' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 20],
+        'normal' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 50],
+        'hard' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 100]
+    ];
+}
+?>
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -375,6 +401,10 @@
                 }
             }
         }
+        
+        // 將PHP變數傳遞給JavaScript
+        window.difficultySettings = <?php echo json_encode($difficultySettings); ?>;
+        window.memberId = <?php echo isset($_SESSION['member_id']) ? $_SESSION['member_id'] : 'null'; ?>;
     </script>
 </body>
 </html>

@@ -231,10 +231,31 @@ function generateAnalysisReport($reaction_level, $memory_level, $logic_level) {
     $min_level = min($levels);
     $avg_level = array_sum($levels) / 3;
     
+    // 計算有數據的能力數量（等級大於1的能力）
+    $active_abilities = 0;
+    if ($reaction_level > 1) $active_abilities++;
+    if ($memory_level > 1) $active_abilities++;
+    if ($logic_level > 1) $active_abilities++;
+    
     $report = [];
     
-    // 判斷玩家類型
-    if ($max_level - $min_level <= 2) {
+    // 判斷玩家類型（需要至少2個能力有數據才能判斷為平衡型）
+    if ($active_abilities < 2) {
+        // 新用戶或只玩過一種類型遊戲的用戶
+        if ($reaction_level > 1) {
+            $report['type'] = '反應型玩家';
+            $report['description'] = '您專精於反應力遊戲，建議嘗試其他類型的遊戲來拓展能力。';
+        } elseif ($memory_level > 1) {
+            $report['type'] = '記憶型玩家';
+            $report['description'] = '您專精於記憶力遊戲，建議嘗試其他類型的遊戲來拓展能力。';
+        } elseif ($logic_level > 1) {
+            $report['type'] = '邏輯型玩家';
+            $report['description'] = '您專精於邏輯力遊戲，建議嘗試其他類型的遊戲來拓展能力。';
+        } else {
+            $report['type'] = '新手玩家';
+            $report['description'] = '您剛開始遊戲之旅，建議多嘗試各種類型的遊戲來發現自己的潛力。';
+        }
+    } elseif ($max_level - $min_level <= 2 && $active_abilities >= 2) {
         $report['type'] = '平衡型玩家';
         $report['description'] = '您的三個能力發展均衡，是個全能型玩家！';
     } elseif ($max_level >= 8) {

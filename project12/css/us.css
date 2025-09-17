@@ -1,24 +1,116 @@
 .about-section {
-    padding: 40px 20px;
+    padding: 40px 30px;
     max-width: 800px;
-    margin: 40px auto 0 auto; /* 頂部距離加大，讓框下移 */
-    background-color: #ffffff; /* ✅ 改為純白底色 */
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin: 40px auto 0 auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     font-family: "Microsoft JhengHei", sans-serif;
-  }
-  
-  .about-section h2 {
-    font-size: 28px;
-    color: #000000;
-    margin-bottom: 20px;
-    text-align: center; /* ✅ 置中顯示標題 */
-  }
-  
-  .about-section p {
-    font-size: 18px;
     line-height: 1.8;
+}
+
+.about-section h2 {
+    font-size: 36px;
     color: #333;
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.about-section h3 {
+    font-size: 26px;
+    color: #555;
     margin-bottom: 15px;
-  }
+    margin-top: 25px;
+    font-weight: 600;
+    border-left: 4px solid #007bff;
+    padding-left: 15px;
+}
+
+.about-section p {
+    font-size: 20px;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: justify;
+    font-weight: 500;
+}
+
+.about-intro {
+    margin-bottom: 25px;
+}
+
+.about-features {
+    margin-bottom: 25px;
+}
+
+.about-usage {
+    margin-bottom: 25px;
+}
+
+.about-vision {
+    margin-bottom: 25px;
+}
+
+/* 團隊區域 */
+.about-team {
+    margin-bottom: 20px;
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.team-illustration {
+    font-size: 48px;
+    margin-bottom: 15px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.about-team h3 {
+    border-left: none;
+    text-align: center;
+    padding-left: 0;
+    margin-top: 0;
+}
+
+.about-team p {
+    text-align: center;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .about-section {
+        padding: 30px 20px;
+        margin: 20px auto 0 auto;
+    }
+    
+    .about-section h2 {
+        font-size: 30px;
+    }
+    
+    .about-section h3 {
+        font-size: 22px;
+    }
+    
+    .about-section p {
+        font-size: 18px;
+        text-align: left;
+    }
+    
+    .team-illustration {
+        font-size: 40px;
+    }
+}
   

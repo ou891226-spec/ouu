@@ -17,7 +17,7 @@ function previewAndUploadAvatar(event) {
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    const avatarImages = document.querySelectorAll('.profile-avatar, #profileAvatarImg');
+    const avatarImages = document.querySelectorAll('.profile-avatar, #profileAvatarImg, .profile');
     avatarImages.forEach(img => {
       img.src = e.target.result;
     });
@@ -37,7 +37,7 @@ function previewAndUploadAvatar(event) {
       if (data.success) {
         // 靜默更新所有頁面的頭像，不顯示成功訊息
         // 直接更新頭像，不重新載入頁面
-        const avatarImages = document.querySelectorAll('.profile-avatar, #profileAvatarImg');
+        const avatarImages = document.querySelectorAll('.profile-avatar, #profileAvatarImg, .profile');
         avatarImages.forEach(img => {
           // 使用新的頭像路徑
           img.src = data.avatar_url + '?t=' + new Date().getTime();

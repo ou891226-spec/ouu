@@ -39,7 +39,7 @@ function updateGameTimeDisplay() {
         }
         
         timeValue.textContent = formatTime(displayTime);
-        console.log('更新時間顯示:', formatTime(displayTime));
+        console.log('更新時間顯示:', formatTime(displayTime), 'totalGameTime:', totalGameTime, 'isInGame:', isInGame);
     } else {
         console.log('找不到 timeValue 元素');
     }
@@ -62,7 +62,10 @@ function isMiniGamePage() {
         '/river.index.php'
     ];
     
-    return miniGamePages.some(page => currentPath.includes(page));
+    const isGame = miniGamePages.some(page => currentPath.includes(page));
+    console.log('檢查遊戲頁面 - 當前路徑:', currentPath, '是否為遊戲頁面:', isGame);
+    
+    return isGame;
 }
 
 // 開始遊戲計時
@@ -194,4 +197,59 @@ window.testGameTime = function() {
     }
 };
 
+// 手動添加測試時間
+window.addTestTime = function(seconds) {
+    totalGameTime += seconds;
+    saveTotalGameTime();
+    updateGameTimeDisplay();
+    console.log(`已添加 ${seconds} 秒測試時間，總時間: ${totalGameTime} 秒`);
+};
+
+// 重置時間
+window.resetTime = function() {
+    totalGameTime = 0;
+    saveTotalGameTime();
+    updateGameTimeDisplay();
+    console.log('已重置時間為 0');
+};
+
+// 強制開始計時（用於測試）
+window.forceStartTimer = function() {
+    if (!isInGame) {
+        gameStartTime = Date.now();
+        isInGame = true;
+        console.log('強制開始計時');
+        updateGameTimeDisplay();
+    } else {
+        console.log('已經在計時中');
+    }
+};
+
+// 強制結束計時（用於測試）
+window.forceEndTimer = function() {
+    if (isInGame && gameStartTime) {
+        const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
+        totalGameTime += gameTime;
+        saveTotalGameTime();
+        console.log('強制結束計時，本次時間:', gameTime, '秒，總時間:', totalGameTime, '秒');
+        
+        gameStartTime = null;
+        isInGame = false;
+        updateGameTimeDisplay();
+    } else {
+        console.log('沒有在計時中');
+    }
+};
+
 console.log('小遊戲時間記錄系統已載入');
+console.log('可用測試函數: testGameTime(), addTestTime(seconds), resetTime(), forceStartTimer(), forceEndTimer()');
+
+// 立即測試一次
+setTimeout(() => {
+    console.log('=== 系統初始化檢查 ===');
+    console.log('當前頁面:', window.location.pathname);
+    console.log('是否為遊戲頁面:', isMiniGamePage());
+    console.log('已載入時間:', totalGameTime, '秒');
+    console.log('localStorage時間:', localStorage.getItem('totalGameTime'));
+    updateGameTimeDisplay();
+}, 1000);

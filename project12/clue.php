@@ -445,6 +445,13 @@ if (!$difficulty) {
                 initClueVideoPlayback();
             };
             document.getElementById('close-help').onclick = function() {
+                // 停止視頻播放
+                const video = document.getElementById('clue-current-video');
+                if (video) {
+                    video.pause();
+                    video.currentTime = 0; // 重置到開始位置
+                }
+                
                 helpModalBg.classList.remove('active');
             };
             helpModalBg.onclick = function(e) {

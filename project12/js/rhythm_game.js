@@ -445,13 +445,23 @@ window.goToRhythmNextStep = goToRhythmNextStep;
 window.goToRhythmPrevStep = goToRhythmPrevStep;
 
 function closeInfoModal() {
+  // 停止視頻播放
+  const video = document.getElementById('rhythm-current-video');
+  if (video) {
+    video.pause();
+    video.currentTime = 0; // 重置到開始位置
+  }
+  
   infoModal.style.display = "none";
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.querySelector('.close-btn');
   if (closeBtn) {
+    // 移除舊的事件監聽器，避免重複綁定
+    closeBtn.removeEventListener('click', closeInfoModal);
     closeBtn.addEventListener('click', closeInfoModal);
+    console.log('節拍遊戲關閉按鈕事件已綁定');
   }
 });
 

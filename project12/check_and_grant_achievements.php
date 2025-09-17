@@ -201,7 +201,10 @@ function getUserAchievements($member_id) {
     global $pdo;
     
     try {
-        $sql = "SELECT a.achievement_name, a.achievement_description, a.icon, ma.earned_date
+        $sql = "SELECT a.achievement_name, 
+                       COALESCE(a.achievement_description, a.achievement_name) as achievement_description,
+                       COALESCE(a.icon, '🏆') as icon, 
+                       ma.earned_date
                 FROM member_achievements ma
                 JOIN achievements a ON ma.achievement_id = a.achievement_id
                 WHERE ma.member_id = ?

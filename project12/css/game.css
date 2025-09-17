@@ -90,6 +90,8 @@ header {
     color: #333;
     cursor: pointer;
     margin-left: 10px;
+    text-decoration: none;
+    border-bottom: none;
 }
 
 /* ========== 狀態列 ========== */

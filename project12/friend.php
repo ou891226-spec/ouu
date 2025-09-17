@@ -23,6 +23,24 @@ try {
     // 如果查詢失敗，記錄錯誤但繼續執行
     error_log("好友列表查詢錯誤: " . $e->getMessage());
 }
+
+// 查詢我送出的交友邀請（外送邀請）
+$sent_invites = [];
+try {
+    $sql = "
+        SELECT fr.request_id, fr.receiver_id, fr.status, fr.created_at,
+               m.member_name, m.account, m.avatar
+        FROM friend_requests fr
+        JOIN member m ON fr.receiver_id = m.member_id
+        WHERE fr.sender_id = ?
+        ORDER BY fr.created_at DESC
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$my_id]);
+    $sent_invites = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("送出邀請查詢錯誤: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -45,13 +63,13 @@ try {
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
+      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
         <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
@@ -118,6 +136,42 @@ try {
   </div>
 </div>
 
+<!-- 我送出的交友邀請 -->
+<div class="friend-container" style="margin-top: 16px;">
+  <div class="friend-header">
+    <div class="friend-title">我送出的邀請</div>
+  </div>
+  <div class="friend-list">
+    <?php if (empty($sent_invites)): ?>
+      <div class="empty-state">目前沒有送出的邀請</div>
+    <?php else: ?>
+      <?php foreach ($sent_invites as $invite): ?>
+        <?php 
+          $status_map = [
+            'pending' => '待處理',
+            'accepted' => '已接受',
+            'rejected' => '已拒絕',
+            'cancelled' => '已取消'
+          ];
+          $status_label = $status_map[$invite['status']] ?? $invite['status'];
+        ?>
+        <div class="friend-row">
+          <div class="friend-avatar-block">
+            <img src="<?php echo htmlspecialchars($invite['avatar'] ?? 'default.png'); ?>" class="friend-avatar">
+          </div>
+          <div class="friend-info">
+            <span class="friend-name"><?php echo htmlspecialchars($invite['member_name']); ?></span>
+            <span class="friend-account">(<?php echo htmlspecialchars($invite['account']); ?>)</span>
+            <div style="font-size:12px;color:#888;margin-top:4px;">
+              狀態：<?php echo htmlspecialchars($status_label); ?>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
+</div>
+
 <!-- 每日任務彈窗 -->
 <div id="missionModal" class="mission-modal" style="display: none;">
   <div class="modal-content">
@@ -159,7 +213,16 @@ function validateSearch() {
 
 function togglePersonalHistoryMenu() {
   const menu = document.getElementById('personalHistoryMenu');
-  menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  const arrowIcon = document.getElementById('arrowIcon');
+  const isVisible = menu.style.display === 'block';
+  
+  if (isVisible) {
+    menu.style.display = 'none';
+    arrowIcon.textContent = '▼';
+  } else {
+    menu.style.display = 'block';
+    arrowIcon.textContent = '▲';
+  }
 }
 </script>
 
@@ -262,7 +325,7 @@ function loadUserAchievementsDirect() {
     `;
   }
   
-  fetch('get_user_achievements.php')
+  fetch('get_user_achievements.php?v=' + Date.now())
     .then(response => response.json())
     .then(data => {
       console.log('API返回數據:', data);
@@ -407,7 +470,9 @@ function openAccountModal() {
     document.getElementById('accountModal').style.display = 'flex';
     document.getElementById('modalOverlay').style.display = 'block';
   }
+  
 var originalAccount = document.getElementById('editAccount') ? document.getElementById('editAccount').value : '';
+
 function closeAccountModal() {
   document.getElementById('accountModal').style.display = 'none';
   // 如果帳號欄位是空的就還原

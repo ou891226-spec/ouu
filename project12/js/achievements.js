@@ -24,7 +24,7 @@ function loadUserAchievements() {
     `;
   }
   
-  fetch('get_user_achievements.php')
+  fetch('get_user_achievements.php?v=' + Date.now())
     .then(response => response.json())
     .then(data => {
       if (data.success) {
@@ -47,7 +47,31 @@ function loadUserAchievements() {
 function clearAchievementsCache() {
   achievementsCache = null;
   lastLoadTime = 0;
+  console.log('成就快取已清除');
 }
+
+// 強制重新載入成就（用於調試）
+window.forceReloadAchievements = function() {
+  clearAchievementsCache();
+  loadUserAchievements();
+  console.log('強制重新載入成就');
+};
+
+// 測試API直接調用
+window.testAchievementsAPI = function() {
+  console.log('測試成就API...');
+  fetch('get_user_achievements.php?v=' + Date.now())
+    .then(response => {
+      console.log('API回應狀態:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('API回應數據:', data);
+    })
+    .catch(error => {
+      console.error('API錯誤:', error);
+    });
+};
 
 // 顯示成就卡片
 function displayAchievements(achievements, todayStatus = null) {

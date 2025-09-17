@@ -25,13 +25,13 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
+      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
         <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
@@ -76,9 +76,31 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- 主要內容 -->
 <div class="about-section">
   <h2>關於我們</h2>
-  <p>我們是來自台中科技大學資訊管理系的大四學生，秉持著關懷長者與促進社會參與的初衷，開發了這個專為銀髮族設計的線上益智遊戲平台——樂齡智趣網。</p>
-  <p>本平台致力於透過簡單易操作的網頁遊戲，幫助長者訓練記憶力、邏輯思考與反應力，提升日常生活的活力與趣味。我們也特別設計了好友列表與互動功能，讓長輩們可以與朋友一同挑戰高分，增加社交連結。在設計上，特別適合養老院與社福機構內使用，營造溫馨而有陪伴感的互動空間。</p>
-  <p>我們希望透過這個平台，讓更多長者在玩樂中活化思緒、感受陪伴，並享受屬於自己的智慧時光。</p>
+  
+  <div class="about-intro">
+    <p>我們是來自台中科技大學資訊管理系的大四學生，秉持著關懷長者與促進社會參與的初衷，開發了這個專為銀髮族設計的線上益智遊戲平台——樂齡智趣網。</p>
+  </div>
+  
+  <div class="about-features">
+    <h3>平台特色</h3>
+    <p>本平台致力於透過簡單易操作的網頁遊戲，幫助長者訓練記憶力、邏輯思考與反應力，提升日常生活的活力與趣味。我們也特別設計了好友列表與互動功能，讓長輩們可以與朋友一同挑戰高分，增加社交連結。</p>
+  </div>
+  
+  <div class="about-usage">
+    <h3>適用場所</h3>
+    <p>在設計上，特別適合養老院與社福機構內使用，營造溫馨而有陪伴感的互動空間。</p>
+  </div>
+  
+  <div class="about-vision">
+    <h3>我們的願景</h3>
+    <p>我們希望透過這個平台，讓更多長者在玩樂中活化思緒、感受陪伴，並享受屬於自己的智慧時光。</p>
+  </div>
+  
+  <div class="about-team">
+    <h3>開發團隊</h3>
+    <div class="team-illustration">👨‍🎓👩‍🎓👨‍💻👩‍💻👨‍🔬👩‍🔬</div>
+    <p>台中科技大學 資訊管理系 大四學生</p>
+  </div>
 </div>
 
 <!-- 個人資訊彈窗 -->
@@ -277,7 +299,16 @@ function togglePassword() {
 
   function togglePersonalHistoryMenu() {
     const menu = document.getElementById('personalHistoryMenu');
-    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    const arrowIcon = document.getElementById('arrowIcon');
+    const isVisible = menu.style.display === 'block';
+    
+    if (isVisible) {
+      menu.style.display = 'none';
+      arrowIcon.textContent = '▼';
+    } else {
+      menu.style.display = 'block';
+      arrowIcon.textContent = '▲';
+    }
   }
 
   function openMissionModal() {

@@ -24,13 +24,13 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
+      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
         <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
@@ -149,14 +149,10 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     <!-- 個人成就牆 -->
     <div style="background: #f8f9fa; border-radius: 15px; padding: 25px;">
       <h3 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em;">🏆 個人成就</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
         <div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <div id="totalGames" style="font-size: 2em; font-weight: bold; color: #007bff; margin: 10px 0;">載入中...</div>
           <div style="color: #6c757d; font-size: 0.9em;">玩過的遊戲種類</div>
-        </div>
-        <div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <div id="bestScore" style="font-size: 2em; font-weight: bold; color: #28a745; margin: 10px 0;">載入中...</div>
-          <div style="color: #6c757d; font-size: 0.9em;">最高分記錄</div>
         </div>
         <div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <div id="loginStreak" style="font-size: 2em; font-weight: bold; color: #ffc107; margin: 10px 0;">載入中...</div>
@@ -203,33 +199,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       </div>
     </div>
     
-    <!-- 本月精彩回顧 -->
-    <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-      <h3 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em;">📅 本月精彩回顧</h3>
-      
-      <!-- 類別篩選 -->
-      <div style="text-align: center; margin-bottom: 20px;">
-        <label for="categoryFilter" style="font-weight: bold; color: #333; margin-right: 10px;">選擇類別：</label>
-        <select id="categoryFilter" style="padding: 8px 12px; border: 2px solid #007bff; border-radius: 5px; font-size: 14px; background: white; cursor: pointer;" onchange="loadMonthlyStats()">
-          <option value="all">全部類別</option>
-          <option value="reaction">反應力</option>
-          <option value="memory">記憶力</option>
-          <option value="logic">邏輯力</option>
-        </select>
-      </div>
-      
-      <div id="monthlyRecordsLoading" style="text-align: center; color: #666; padding: 20px;">
-        載入中...
-      </div>
-      <div id="monthlyRecordsTable" style="display: none;">
-        <div id="monthlyRecordsBody">
-          <!-- 動態載入資料 -->
-        </div>
-      </div>
-      <div id="monthlyRecordsEmpty" style="text-align:center; margin-top:15px; color:#888; font-size: 14px; display: none;">
-        本月尚無遊玩記錄
-      </div>
-    </div>
   </div>
 </div>
     
@@ -242,20 +211,22 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <script>
 function togglePersonalHistoryMenu() {
   const menu = document.getElementById('personalHistoryMenu');
-  menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  const arrowIcon = document.getElementById('arrowIcon');
+  const isVisible = menu.style.display === 'block';
+  
+  if (isVisible) {
+    menu.style.display = 'none';
+    arrowIcon.textContent = '▼';
+  } else {
+    menu.style.display = 'block';
+    arrowIcon.textContent = '▲';
+  }
 }
 
-
-
-// 載入玩家個人歷程數據
-function loadMonthlyStats() {
-  // 獲取選擇的類別
-  const categoryFilter = document.getElementById('categoryFilter');
-  const selectedCategory = categoryFilter ? categoryFilter.value : 'all';
-  
+// 載入玩家個人歷程數據（不包含本月精彩回顧）
+function loadPersonalStats() {
   // 顯示載入狀態
   document.getElementById('totalGames').textContent = '載入中...';
-  document.getElementById('bestScore').textContent = '載入中...';
   document.getElementById('loginStreak').textContent = '載入中...';
   document.getElementById('favoriteGame').textContent = '載入中...';
   document.getElementById('totalPlayTime').textContent = '載入中...';
@@ -263,12 +234,9 @@ function loadMonthlyStats() {
   document.getElementById('gameStyle').textContent = '載入中...';
   document.getElementById('achievementCount').textContent = '載入中...';
   document.getElementById('improvementRate').textContent = '載入中...';
-  document.getElementById('monthlyRecordsLoading').style.display = 'block';
-  document.getElementById('monthlyRecordsTable').style.display = 'none';
-  document.getElementById('monthlyRecordsEmpty').style.display = 'none';
   
-  // 構建請求URL，包含類別參數
-  const url = `get_monthly_stats.php?category=${selectedCategory}`;
+  // 構建請求URL
+  const url = `get_monthly_stats.php?category=all`;
   
   fetch(url)
     .then(response => response.json())
@@ -277,7 +245,6 @@ function loadMonthlyStats() {
       if (data.success) {
         // 更新個人成就數據
         document.getElementById('totalGames').textContent = data.game_types_count || '0';
-        document.getElementById('bestScore').textContent = data.best_score || '0';
         document.getElementById('loginStreak').textContent = data.login_streak || '0';
         
         // 更新遊戲偏好數據
@@ -289,101 +256,34 @@ function loadMonthlyStats() {
         document.getElementById('gameStyle').textContent = data.game_style || '無數據';
         document.getElementById('achievementCount').textContent = data.achievement_count || '0';
         document.getElementById('improvementRate').textContent = data.improvement_rate || '0%';
-        
-        // 更新每日記錄表格
-        const loadingDiv = document.getElementById('monthlyRecordsLoading');
-        const table = document.getElementById('monthlyRecordsTable');
-        const tbody = document.getElementById('monthlyRecordsBody');
-        const emptyDiv = document.getElementById('monthlyRecordsEmpty');
-        
-        loadingDiv.style.display = 'none';
-        
-        if (data.daily_records.length > 0) {
-          table.style.display = 'table';
-          tbody.innerHTML = '';
-          
-          data.daily_records.forEach(record => {
-            const row = document.createElement('tr');
-            
-            // 處理遊戲類型顯示
-            let gamesDisplay = '❌ 無遊玩';
-            if (record.seconds > 0) {
-              // 獲取選擇的類別
-              const categoryFilter = document.getElementById('categoryFilter');
-              const selectedCategory = categoryFilter ? categoryFilter.value : 'all';
-              
-              if (selectedCategory === 'all') {
-                // 全部類別：顯示遊戲類型（記憶力、反應力等）
-                if (record.game_types && record.game_types.length > 0) {
-                  gamesDisplay = record.game_types.map(gameType => {
-                    const gameIcons = {
-                      '記憶力': '🧠',
-                      '反應力': '⚡',
-                      '邏輯力': '🧩',
-                      '算術邏輯': '🧮'
-                    };
-                    const icon = gameIcons[gameType] || '🎮';
-                    return `${icon} ${gameType}`;
-                  }).join('<br>');
-                }
-              } else {
-                // 特定類別：顯示具體遊戲名稱
-                if (record.game_names && record.game_names.length > 0) {
-                  gamesDisplay = record.game_names.map(gameName => {
-                    const gameIcons = {
-                      '看字選色遊戲': '🎨',
-                      '接金蛋': '🥚',
-                      '算菜錢': '🧮',
-                      '2048': '🔢',
-                      '翻牌對對樂': '🃏',
-                      '記憶力': '🧠',
-                      '節奏遊戲': '🎵',
-                      '追蹤犯人遊戲': '🔍',
-                      '圖片線索問答': '❓',
-                      '算菜錢遊戲': '🥬',
-                      '邏輯力': '🧩'
-                    };
-                    const icon = gameIcons[gameName] || '🎮';
-                    return `${icon} ${gameName}`;
-                  }).join('<br>');
-                }
-              }
-            }
-            
-            row.innerHTML = `
-              <td style="padding: 12px; border: 1px solid #ccc;">${record.date}</td>
-              <td style="padding: 12px; border: 1px solid #ccc;">${record.playtime}</td>
-              <td style="padding: 12px; border: 1px solid #ccc;">${record.game_count || 0}</td>
-              <td style="padding: 12px; border: 1px solid #ccc;">${gamesDisplay}</td>
-            `;
-            tbody.appendChild(row);
-          });
-        } else {
-          emptyDiv.style.display = 'block';
-        }
       } else {
         // 顯示錯誤
-        document.getElementById('playCount').textContent = '載入失敗';
-        document.getElementById('totalTime').textContent = '載入失敗';
-        document.getElementById('playDays').textContent = '載入失敗';
-        document.getElementById('avgTime').textContent = '載入失敗';
-        document.getElementById('monthlyRecordsLoading').textContent = '載入失敗：' + (data.message || '未知錯誤');
+        document.getElementById('totalGames').textContent = '載入失敗';
+        document.getElementById('loginStreak').textContent = '載入失敗';
+        document.getElementById('favoriteGame').textContent = '載入失敗';
+        document.getElementById('totalPlayTime').textContent = '載入失敗';
+        document.getElementById('bestTime').textContent = '載入失敗';
+        document.getElementById('gameStyle').textContent = '載入失敗';
+        document.getElementById('achievementCount').textContent = '載入失敗';
+        document.getElementById('improvementRate').textContent = '載入失敗';
       }
     })
     .catch(error => {
       console.error('載入失敗:', error);
-      document.getElementById('playCount').textContent = '載入失敗';
-      document.getElementById('totalTime').textContent = '載入失敗';
-      document.getElementById('playDays').textContent = '載入失敗';
-      document.getElementById('avgTime').textContent = '載入失敗';
-      document.getElementById('monthlyRecordsLoading').textContent = '網路錯誤：' + error.message;
+      document.getElementById('totalGames').textContent = '載入失敗';
+      document.getElementById('loginStreak').textContent = '載入失敗';
+      document.getElementById('favoriteGame').textContent = '載入失敗';
+      document.getElementById('totalPlayTime').textContent = '載入失敗';
+      document.getElementById('bestTime').textContent = '載入失敗';
+      document.getElementById('gameStyle').textContent = '載入失敗';
+      document.getElementById('achievementCount').textContent = '載入失敗';
+      document.getElementById('improvementRate').textContent = '載入失敗';
     });
 }
 
-// 頁面載入時自動載入本月統計
-document.addEventListener('DOMContentLoaded', function() {
-  loadMonthlyStats();
-});
+
+
+
 let sidebarOpen = false;
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
@@ -460,7 +360,7 @@ function previewAndUploadAvatar(event) {
   reader.readAsDataURL(file);
   document.getElementById('avatarForm').submit();
 }
-// showTimeDetail 函數已在 auto-save-time.js 中定義
+// showTimeDetail 函數已在 auto-save-time-fixed.js 中定義
 
 function openAccountModal() {
     // 先關閉個人資訊彈窗
@@ -511,7 +411,7 @@ function togglePassword() {
 }
 </script>
 
-  <script src="js/auto-save-time.js"></script>
+  <script src="js/auto-save-time-fixed.js"></script>
   <script src="js/load-daily-tasks.js"></script>
   <script src="js/mission.js"></script>
   <script src="js/save-score.js"></script>
@@ -522,8 +422,8 @@ function togglePassword() {
   <script>
     // 頁面載入時初始化
     document.addEventListener('DOMContentLoaded', function() {
-      // 載入玩家個人歷程數據
-      loadMonthlyStats();
+      // 載入個人統計數據
+      loadPersonalStats();
       
       // 載入成就數據
       if (typeof loadUserAchievements === 'function') {

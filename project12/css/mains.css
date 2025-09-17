@@ -166,6 +166,8 @@ header {
     color: #333;
     cursor: pointer;
     margin-left: 10px;
+    text-decoration: none;
+    border-bottom: none;
 }
 
 .profile {
@@ -334,6 +336,7 @@ header {
     object-fit: cover;
     display: block;
     border-radius: 10px;
+    transition: transform 0.3s ease;
 }
 .game-title {
     margin-top: 10px;

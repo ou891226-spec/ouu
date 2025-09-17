@@ -770,6 +770,14 @@ function showEggHelp() {
 }
 
 function closeEggHelpModal() {
+    // 停止視頻播放
+    const video = document.getElementById('egg-current-video');
+    if (video) {
+        video.pause();
+        video.currentTime = 0; // 重置到開始位置
+    }
+    
+    // 隱藏說明彈窗
     document.getElementById('egg-help-modal').classList.add('hidden');
 }
 
@@ -917,12 +925,10 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
     // 獲取難度名稱
     const difficultyName = currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難';
     
-    title.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
+    title.textContent = isWin ? '🎉恭喜破關' : '⏰ 遊戲失敗';
     
     // 設置結果訊息
-    const targetRow = document.getElementById('egg-target-row');
     const scoreRow = document.getElementById('egg-score-row');
-    const earnedRow = document.getElementById('egg-earned-row');
     const timeRow = document.getElementById('egg-time-row');
     const bonusRow = document.getElementById('egg-bonus-row');
     const failMessage = document.getElementById('egg-fail-message');
@@ -930,25 +936,22 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
     document.getElementById('egg-gameover-difficulty').textContent = difficultyName;
     
     if (isWin) {
-        // 勝利時顯示所有資訊，隱藏失敗訊息
-        document.getElementById('egg-gameover-earned-score').textContent = score;
+        // 勝利時：顯示難度、遊戲分數、遊戲時間、過關分數
+        document.getElementById('egg-gameover-score').textContent = score;
         document.getElementById('egg-gameover-time').textContent = playTime + '秒';
         document.getElementById('egg-gameover-bonus').textContent = '+' + bonusScore;
-        if (targetRow) targetRow.style.display = 'none';
-        if (scoreRow) scoreRow.style.display = 'none';
-        if (earnedRow) earnedRow.style.display = 'block';
+        if (scoreRow) scoreRow.style.display = 'block';
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
-        // 失敗時按照指定格式顯示
-        document.getElementById('egg-gameover-target').textContent = targetScore;
-        document.getElementById('egg-gameover-score').textContent = '0';
-        if (targetRow) targetRow.style.display = 'block';
+        // 失敗時：顯示難度、遊戲分數、遊戲時間、過關分數+0、失敗訊息
+        document.getElementById('egg-gameover-score').textContent = score;
+        document.getElementById('egg-gameover-time').textContent = playTime + '秒';
+        document.getElementById('egg-gameover-bonus').textContent = '+0';
         if (scoreRow) scoreRow.style.display = 'block';
-        if (earnedRow) earnedRow.style.display = 'none';
-        if (timeRow) timeRow.style.display = 'none';
-        if (bonusRow) bonusRow.style.display = 'none';
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'block';
     }
     
@@ -985,6 +988,13 @@ window.onload = function() {
     if (resumeBtn) resumeBtn.onclick = resumeGame;
     if (endBtn) endBtn.onclick = endGame;
     if (resetBtn) resetBtn.onclick = resetGame;
+    
+    // 確保關閉按鈕事件綁定正確
+    const closeBtn = document.querySelector('#egg-help-modal .close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = closeEggHelpModal;
+        console.log('接金蛋關閉按鈕事件已綁定');
+    }
     
     // 初始化籃子位置 - 多次嘗試確保正確置中
     const initBasketPosition = () => {

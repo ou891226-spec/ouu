@@ -80,6 +80,8 @@ main {
   box-shadow: 0 2px 4px rgba(234,159,159,0.3) !important;
 }
 
+
+
 /* 響應式設計 */
 @media (max-width: 768px) {
   .news-item {

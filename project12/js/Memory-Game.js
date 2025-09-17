@@ -593,6 +593,8 @@ function pauseGame() {
         canFlip = false;
         document.getElementById('pauseBtn').classList.add('hidden');
         document.getElementById('resumeBtn').classList.remove('hidden');
+        // 顯示暫停提示
+        document.getElementById('pause-indicator').classList.remove('hidden');
     }
 }
  
@@ -604,6 +606,8 @@ function resumeGame() {
         startTimer();
         document.getElementById('pauseBtn').classList.remove('hidden');
         document.getElementById('resumeBtn').classList.add('hidden');
+        // 隱藏暫停提示
+        document.getElementById('pause-indicator').classList.add('hidden');
     }
 }
  
@@ -622,10 +626,14 @@ function endGame() {
     const endBtn = document.getElementById('endBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const pauseIndicator = document.getElementById('pause-indicator');
     
     if (endBtn) endBtn.classList.add('hidden');
     if (pauseBtn) pauseBtn.classList.add('hidden');
     if (resetBtn) resetBtn.classList.add('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
+    if (pauseIndicator) pauseIndicator.classList.add('hidden');
     
     showGameOver(false);
 }
@@ -785,30 +793,34 @@ function showGameOver(isWin) {
     };
 
     // 設置標題
-    gameOverTitle.textContent = isWin ? '🎉 恭喜破關！' : '⏰ 遊戲失敗';
+    gameOverTitle.textContent = isWin ? '🎉恭喜破關' : '⏰ 遊戲失敗';
    
     // 設置結果訊息
     let score = 0;
-    const targetRow = document.getElementById('memory-target-row');
-    const scoreRow = document.getElementById('memory-score-row');
+    const timeRow = document.getElementById('memory-time-row');
+    const bonusRow = document.getElementById('memory-bonus-row');
     const failMessage = document.getElementById('memory-fail-message');
+    const timeSpan = document.getElementById('memory-gameover-time');
+    const bonusSpan = document.getElementById('memory-gameover-bonus');
     
     if (isWin) {
+        // 勝利時：顯示難度、遊戲時間、過關分數
         score = calculateScore();
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
-        if (targetSpan) targetSpan.textContent = targetScores[currentDifficulty];
-        if (scoreSpan) scoreSpan.textContent = `+${score}`;
-        // 勝利時顯示目標分數和獲得分數，隱藏失敗訊息
-        if (targetRow) targetRow.style.display = 'block';
-        if (scoreRow) scoreRow.style.display = 'block';
+        if (timeSpan) timeSpan.textContent = `${playTime}秒`;
+        if (bonusSpan) bonusSpan.textContent = `+${score}`;
+        // 勝利時顯示遊戲時間和過關分數，隱藏失敗訊息
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
+        // 失敗時：顯示難度、遊戲時間、過關分數+0、失敗訊息
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
-        if (targetSpan) targetSpan.textContent = targetScores[currentDifficulty];
-        if (scoreSpan) scoreSpan.textContent = score;
-        // 失敗時顯示目標分數和獲得分數，顯示失敗訊息
-        if (targetRow) targetRow.style.display = 'block';
-        if (scoreRow) scoreRow.style.display = 'block';
+        if (timeSpan) timeSpan.textContent = `${playTime}秒`;
+        if (bonusSpan) bonusSpan.textContent = `+0`;
+        // 失敗時顯示遊戲時間和過關分數，顯示失敗訊息
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'block';
     }
  
@@ -942,6 +954,13 @@ window.returnToMain = returnToMain;
 window.resetGame = resetGame;
 
 function closeHelpModal() {
+    // 停止視頻播放
+    const video = document.getElementById('current-video');
+    if (video) {
+        video.pause();
+        video.currentTime = 0; // 重置到開始位置
+    }
+    
     document.getElementById('help-modal').classList.add('hidden');
 }
 window.closeHelpModal = closeHelpModal;

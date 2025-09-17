@@ -358,7 +358,7 @@ function generateNormalQuestion() {
             const totalCount2 = buyCount2 + freeCount2; // 第二種實際總共買到幾個
             const totalCount = totalCount1 + totalCount2; // 總共買到幾個
             
-            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}」</span>，實際總共買到多少個？`;
+            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}」</span>，<br><span style="color: #d32f2f; font-weight: bold;">請問阿嬤總共可以拿到多少個蔬果？（包含贈送的）</span>`;
             
             let options = [totalCount];
             let offsetTries = 0;
@@ -401,7 +401,7 @@ function generateNormalQuestion() {
             const totalCount3 = buyCount3 + freeCount3;
             const totalCount = totalCount1 + totalCount2 + totalCount3;
             
-            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><img src="img/${veg3.image}" alt="${veg3.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg3.name} $${veg3.price}/${veg3.unit}<span style="color: red; font-weight: bold;">（買${buyCount3}${veg3.unit}送${freeCount3}${veg3.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}＋${buyCount3}${veg3.unit}<img src="img/${veg3.image}" alt="${veg3.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg3.name}」</span>，實際總共買到多少個？`;
+            let questionText = `<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg1.name} $${veg1.price}/${veg1.unit}<span style="color: red; font-weight: bold;">（買${buyCount1}${veg1.unit}送${freeCount1}${veg1.unit}）</span>。<br><img src="img/${veg2.image}" alt="${veg2.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg2.name} $${veg2.price}/${veg2.unit}<span style="color: red; font-weight: bold;">（買${buyCount2}${veg2.unit}送${freeCount2}${veg2.unit}）</span>。<br><img src="img/${veg3.image}" alt="${veg3.name}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 5px;">${veg3.name} $${veg3.price}/${veg3.unit}<span style="color: red; font-weight: bold;">（買${buyCount3}${veg3.unit}送${freeCount3}${veg3.unit}）</span>。<br><br>阿嬤買<span style="color: #1976D2; font-weight: bold;">「${buyCount1}${veg1.unit}<img src="img/${veg1.image}" alt="${veg1.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg1.name}＋${buyCount2}${veg2.unit}<img src="img/${veg2.image}" alt="${veg2.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg2.name}＋${buyCount3}${veg3.unit}<img src="img/${veg3.image}" alt="${veg3.name}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 3px;">${veg3.name}」</span>，<br><span style="color: #d32f2f; font-weight: bold;">請問阿嬤總共可以拿到多少個蔬果？（包含贈送的）</span>`;
             
             let options = [totalCount];
         let offsetTries = 0;
@@ -791,6 +791,12 @@ function loadQuestion() {
     console.log('loadQuestion 被調用，gamePaused:', gamePaused);
     if (gamePaused) return;
     
+    // 確保暫停提示框在載入題目時被隱藏
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
+    }
+    
     // 重置回答狀態
     isAnswering = false;
     let question;
@@ -827,6 +833,10 @@ function loadQuestion() {
             button.textContent = option.text;
         }
         
+        // 確保按鈕是啟用狀態
+        button.disabled = false;
+        button.style.pointerEvents = 'auto';
+        
         button.onclick = () => {
             // 防止重複點擊
             if (button.disabled) return;
@@ -851,19 +861,25 @@ function loadQuestion() {
 function startGame() {
     debugLog('開始遊戲');
     score = 0;
-    // 根據難度設定時間
-    if (currentDifficulty === 'easy') {
-        timer = 80;
-        savedTimer = 80;
-    } else if (currentDifficulty === 'normal') {
-        timer = 150;
-        savedTimer = 150;
-    } else if (currentDifficulty === 'hard') {
-        timer = 200;
-        savedTimer = 200;
+    // 根據難度設定時間 - 從資料庫讀取
+    if (window.difficultySettings && window.difficultySettings[currentDifficulty]) {
+        timer = window.difficultySettings[currentDifficulty].time_limit;
+        savedTimer = window.difficultySettings[currentDifficulty].time_limit;
     } else {
-        timer = 60;
-        savedTimer = 60;
+        // 預設值
+        if (currentDifficulty === 'easy') {
+            timer = 60;
+            savedTimer = 60;
+        } else if (currentDifficulty === 'normal') {
+            timer = 120;
+            savedTimer = 120;
+        } else if (currentDifficulty === 'hard') {
+            timer = 180;
+            savedTimer = 180;
+        } else {
+            timer = 60;
+            savedTimer = 60;
+        }
     }
     gamePaused = false;
     gameStarted = true;
@@ -875,6 +891,13 @@ function startGame() {
     if (pauseBtn) pauseBtn.style.display = 'inline-block';
     const resumeBtn = document.getElementById('resume-btn');
     if (resumeBtn) resumeBtn.style.display = 'none';
+    
+    // 確保暫停提示框在遊戲開始時被隱藏
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
+    }
+    
     loadQuestion();
     startTimer();
 }
@@ -931,23 +954,28 @@ function checkAnswer(selectedAnswer, correctAnswer) {
     }
     
     if (isCorrect) {
-        score += 3;
+        // 從資料庫設定讀取每題分數
+        const pointsPerCorrect = window.difficultySettings && window.difficultySettings[currentDifficulty] 
+            ? window.difficultySettings[currentDifficulty].points_per_correct 
+            : 3; // 預設值
+        score += pointsPerCorrect;
         updateScore();
-        showAnswerFeedback(true);
+        showAnswerFeedback(true, null, null);
     } else {
-        showAnswerFeedback(false);
+        // 答錯不扣分，顯示+0
+        showAnswerFeedback(false, selectedAnswer, correctAnswer);
     }
     
     // 延遲載入下一題
-    console.log('準備載入下一題，延遲時間:', isCorrect ? 1500 : 1200);
+    console.log('準備載入下一題，延遲時間:', isCorrect ? 1500 : 2500);
     setTimeout(() => {
         console.log('開始載入下一題');
         loadQuestion();
-    }, isCorrect ? 1500 : 1200);
+    }, isCorrect ? 1500 : 2000);
 }
 
 // 顯示答案反饋
-function showAnswerFeedback(isCorrect) {
+function showAnswerFeedback(isCorrect, selectedAnswer, correctAnswer) {
     console.log('顯示答案反饋:', isCorrect ? '答對了' : '答錯了');
     
     // 移除舊的反饋元素
@@ -963,16 +991,33 @@ function showAnswerFeedback(isCorrect) {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: bold;
         color: ${isCorrect ? '#4caf50' : '#f44336'};
         background: white;
-        padding: 15px 25px;
-        border-radius: 8px;
+        padding: 20px 30px;
+        border-radius: 12px;
         z-index: 9999;
-        border: 2px solid ${isCorrect ? '#4caf50' : '#f44336'};
+        border: 3px solid ${isCorrect ? '#4caf50' : '#f44336'};
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        text-align: center;
+        max-width: 400px;
+        line-height: 1.4;
     `;
-    feedback.textContent = isCorrect ? '✓ 答對了！' : '✗ 答錯了！';
+    
+    if (isCorrect) {
+        feedback.innerHTML = `
+            <div style="color: #4caf50; margin-bottom: 10px;">✓ 答對了！</div>
+            <div style="font-size: 1.2rem; color: #2e7d32;">+3 分</div>
+        `;
+    } else {
+        feedback.innerHTML = `
+            <div style="color: #f44336; margin-bottom: 10px;">✗ 答錯了！</div>
+            <div style="font-size: 1.1rem; color: #666; margin-bottom: 8px;">你的答案：${selectedAnswer}</div>
+            <div style="font-size: 1.2rem; color: #2e7d32; margin-bottom: 8px; font-weight: bold; background-color: #e8f5e8; padding: 5px 10px; border-radius: 5px;">正確答案：${correctAnswer}</div>
+            <div style="font-size: 1.2rem; color: #666;">+0 分</div>
+        `;
+    }
     
     document.body.appendChild(feedback);
     
@@ -984,7 +1029,7 @@ function showAnswerFeedback(isCorrect) {
             feedback.remove();
             console.log('反饋元素已移除');
         }
-    }, 1000);
+    }, isCorrect ? 1500 : 2000);
 }
 
 function updateScore() {
@@ -992,6 +1037,8 @@ function updateScore() {
     if (score > highScore) {
         highScore = score;
         document.getElementById('high-score').textContent = highScore;
+        // 保存最高分數到localStorage
+        localStorage.setItem(`vegetable_highscore_${currentDifficulty}`, highScore.toString());
     }
 }
 
@@ -1033,6 +1080,12 @@ function pauseGame() {
     if (pauseBtn) {
         pauseBtn.classList.add('resume-btn');
     }
+    
+    // 顯示暫停提示
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.remove('hidden');
+    }
 }
 
 function resumeGame() {
@@ -1052,6 +1105,12 @@ function resumeGame() {
     const pauseBtn = document.getElementById('pause-btn');
     if (pauseBtn) {
         pauseBtn.classList.remove('resume-btn');
+    }
+    
+    // 隱藏暫停提示
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
     }
 }
 
@@ -1097,11 +1156,22 @@ function endGame() {
     }
     gameStarted = false;
     gamePaused = false;
-    // 過關分數設定
+    
+    // 隱藏暫停提示
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
+    }
+    // 過關分數設定 - 從資料庫讀取
     let passScore = 0;
-    if (currentDifficulty === 'easy') passScore = 20;
-    else if (currentDifficulty === 'normal') passScore = 30;
-    else if (currentDifficulty === 'hard') passScore = 50;
+    if (window.difficultySettings && window.difficultySettings[currentDifficulty]) {
+        passScore = window.difficultySettings[currentDifficulty].pass_score;
+    } else {
+        // 預設值
+        if (currentDifficulty === 'easy') passScore = 15;
+        else if (currentDifficulty === 'normal') passScore = 20;
+        else if (currentDifficulty === 'hard') passScore = 30;
+    }
     
     // 獎勵分數設定
     let rewardScore = 0;
@@ -1124,10 +1194,10 @@ function endGame() {
     }
     
     // 設置標題
-    modal.querySelector('.gameover-title').innerHTML = title;
+    document.getElementById('vegetable-game-over-title').textContent = title;
     
     // 設置結果訊息
-    const earnedRow = document.getElementById('vegetable-earned-row');
+    const scoreRow = document.getElementById('vegetable-score-row');
     const timeRow = document.getElementById('vegetable-time-row');
     const bonusRow = document.getElementById('vegetable-bonus-row');
     const failMessage = document.getElementById('vegetable-fail-message');
@@ -1135,19 +1205,22 @@ function endGame() {
     document.getElementById('vegetable-gameover-difficulty').textContent = difficultyName;
     
     if (score >= passScore) {
-        // 勝利時顯示所有資訊，隱藏失敗訊息
-        document.getElementById('vegetable-gameover-earned-score').textContent = score;
+        // 勝利時：顯示難度、遊戲分數、遊戲時間、過關分數
+        document.getElementById('vegetable-gameover-score').textContent = score;
         document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
         document.getElementById('vegetable-gameover-bonus').textContent = '+' + rewardScore;
-        if (earnedRow) earnedRow.style.display = 'block';
+        if (scoreRow) scoreRow.style.display = 'block';
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
-        // 失敗時隱藏詳細資訊，顯示失敗訊息
-        if (earnedRow) earnedRow.style.display = 'none';
-        if (timeRow) timeRow.style.display = 'none';
-        if (bonusRow) bonusRow.style.display = 'none';
+        // 失敗時：顯示難度、遊戲分數、遊戲時間、過關分數+0、失敗訊息
+        document.getElementById('vegetable-gameover-score').textContent = score;
+        document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
+        document.getElementById('vegetable-gameover-bonus').textContent = '+0';
+        if (scoreRow) scoreRow.style.display = 'block';
+        if (timeRow) timeRow.style.display = 'block';
+        if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'block';
     }
     
@@ -1178,12 +1251,12 @@ function restartGame() {
 }
 
 function exitGame() {
-    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-    console.log('exitGame被調用，執行智能返回');
+    // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
+    console.log('exitGame被調用，智能返回');
     if (document.referrer && document.referrer !== window.location.href) {
         history.back();
     } else {
-        window.location.href = 'index.php';
+        window.location.href = 'game-categories.php';
     }
 }
 
@@ -1227,6 +1300,28 @@ function bindNextStepButton() {
 }
 
 function closeHelpModal() {
+    // 停止視頻播放
+    const video = document.getElementById('vegetable-current-video');
+    if (video) {
+        // 先暫停視頻
+        video.pause();
+        
+        // 設置視頻為靜音，確保沒有聲音
+        video.muted = true;
+        video.volume = 0;
+        
+        // 移除所有事件監聽器，防止自動播放
+        video.removeEventListener('ended', handleVegetableVideoEnd);
+        
+        // 延遲重置視頻，避免與pause()衝突
+        setTimeout(() => {
+            video.currentTime = 0; // 重置到開始位置
+            video.load(); // 重新載入視頻，確保完全停止
+        }, 100);
+        
+        console.log('算菜錢視頻已停止播放');
+    }
+    
     document.getElementById('help-modal').classList.add('hidden');
 }
 
@@ -1368,8 +1463,26 @@ window.closeHelpModal = closeHelpModal;
 function selectDifficulty(difficulty) {
     debugLog('選擇難度: ' + difficulty);
     currentDifficulty = difficulty;
+    
+    // 載入該難度的最高分數
+    const savedHighScore = localStorage.getItem(`vegetable_highscore_${difficulty}`);
+    if (savedHighScore) {
+        highScore = parseInt(savedHighScore);
+        document.getElementById('high-score').textContent = highScore;
+    } else {
+        highScore = 0;
+        document.getElementById('high-score').textContent = '0';
+    }
+    
     document.getElementById('difficulty-modal').classList.add('hidden');
     document.querySelector('.game-container').style.display = 'block';
+    
+    // 確保暫停提示框在選擇難度時被隱藏
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
+    }
+    
     startGame();
 }
 
@@ -1387,6 +1500,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('game-over-modal').classList.add('hidden');
     document.querySelector('.game-container').style.display = 'none';
     document.getElementById('difficulty-modal').classList.remove('hidden');
+    
+    // 確保暫停提示框在初始化時被隱藏
+    const pauseIndicator = document.getElementById('pause-indicator');
+    if (pauseIndicator) {
+        pauseIndicator.classList.add('hidden');
+    }
 
     // 幫所有難度按鈕綁定事件
     document.querySelectorAll('.difficulty-btn').forEach(button => {
@@ -1403,7 +1522,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 幫所有關閉按鈕綁定事件
     document.querySelectorAll('.close-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            this.closest('.modal').classList.add('hidden');
+            // 檢查是否是說明彈窗的關閉按鈕
+            const modal = this.closest('.modal');
+            if (modal && modal.id === 'help-modal') {
+                closeHelpModal(); // 調用正確的關閉函數
+            } else {
+                modal.classList.add('hidden'); // 其他彈窗直接隱藏
+            }
         });
     });
 

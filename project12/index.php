@@ -58,7 +58,7 @@ try {
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程</button>
+      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
         <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
@@ -290,7 +290,16 @@ try {
 
   function togglePersonalHistoryMenu() {
     const menu = document.getElementById('personalHistoryMenu');
-    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    const arrowIcon = document.getElementById('arrowIcon');
+    const isVisible = menu.style.display === 'block';
+    
+    if (isVisible) {
+      menu.style.display = 'none';
+      arrowIcon.textContent = '▼';
+    } else {
+      menu.style.display = 'block';
+      arrowIcon.textContent = '▲';
+    }
   }
 
   function openAccountModal() {
@@ -406,6 +415,18 @@ function loadRecentGames() {
 function displayRecentGames(games) {
   const grid = document.getElementById('recentGamesGrid');
   grid.innerHTML = '';
+  
+  // 如果沒有遊戲記錄，顯示提示訊息
+  if (games.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #666; font-size: 1.1em;">
+        <div style="font-size: 3em; margin-bottom: 15px;">🎮</div>
+        <div style="margin-bottom: 10px;">還沒有遊玩記錄</div>
+        <div style="font-size: 0.9em; color: #888;">快去體驗遊戲吧！</div>
+      </div>
+    `;
+    return;
+  }
   
   games.forEach(game => {
     const gameBlock = document.createElement('div');

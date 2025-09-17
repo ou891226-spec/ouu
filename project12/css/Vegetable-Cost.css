@@ -54,6 +54,44 @@ h1 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* 暫停狀態提示樣式 */
+.pause-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 15px auto;
+  padding: 15px 25px;
+  background-color: #fff3cd;
+  border: 3px solid #ffc107;
+  border-radius: 12px;
+  max-width: 300px;
+  font-size: 20px;
+  color: #856404;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.pause-indicator span {
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+  }
+}
+
 .score-item {
   display: flex;
   flex-direction: row;
@@ -189,6 +227,10 @@ button:hover {
   justify-content: center;
   align-items: center;
   z-index: 999;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .modal.hidden {
@@ -534,61 +576,75 @@ button:hover {
   .main-btn { font-size: 1rem; padding: 12px 0; }
 }
 
-/* Game Over Modal 美化 */
-.gameover-modal-content {
-  padding: 2.5rem 2.5rem 2rem 2.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  background: #fff;
-  text-align: center;
-  min-width: 320px;
-  min-height: 220px;
-}
-.gameover-title {
-  font-size: 2.2rem;
-  font-weight: bold;
-  color: #111;
-  margin-bottom: 1.2rem;
-  letter-spacing: 2px;
-}
-.gameover-desc {
-  margin-bottom: 1.8rem;
-}
-.gameover-msg {
-  font-size: 1.15rem;
-  color: #222;
-  line-height: 2.1;
-  margin: 0;
-}
-.gameover-btn-group {
+/* 統一 modal 樣式 - 與接金蛋遊戲一致 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
-  gap: 18px;
-  margin-top: 0.5rem;
+  align-items: center;
+  z-index: 1000;
 }
-.gameover-btn {
-  min-width: 110px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 10px;
-  padding: 12px 0;
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2 {
+  color: #333;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 統一 result-buttons 樣式 */
+.result-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.result-buttons button {
+  padding: 0.8rem 1.5rem;
   border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  color: white;
 }
-.retry-btn {
-  background: #e53935;
-  color: #fff;
+
+.result-buttons button:first-child {
+  background: #F91519;
 }
-.retry-btn:hover {
-  background: #b71c1c;
+
+.result-buttons button:first-child:hover {
+  background: #B71C1C;
 }
-.home-btn {
-  background: #26324a;
-  color: #fff;
+
+.result-buttons button:last-child {
+  background: #1D3557;
 }
-.home-btn:hover {
-  background: #1a2233;
+
+.result-buttons button:last-child:hover {
+  background: #1976D2;
 }
 /* 新增的 CSS 樣式 */
 
@@ -720,11 +776,12 @@ button:hover {
 
 @media (max-width: 600px) {
     #help-modal .modal-content {
-        padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+        padding: 1rem 0.5rem 0.5rem 0.5rem;
         max-width: 98vw;
     }
     #help-modal h2 {
         font-size: 1.3rem;
+        margin-bottom: 1rem;
     }
     #help-modal .close-btn {
         width: 2rem;
@@ -738,6 +795,42 @@ button:hover {
     #help-modal .help-content ul li,
     #help-modal .help-content p {
         font-size: 0.95rem;
+    }
+    
+    /* 小屏幕按鈕進一步縮小 */
+    .game-step-button {
+        padding: 3px 6px;
+        font-size: 9px;
+        min-width: 35px;
+    }
+    
+    /* 小屏幕說明文字調整 */
+    #vegetable-instruction-text {
+        font-size: 14px;
+        min-width: 100px;
+        padding: 0 5px;
+    }
+    
+    /* 小屏幕視頻容器調整 */
+    #vegetable-video-container {
+        margin-bottom: 1rem;
+    }
+    
+    /* 小屏幕按鈕容器間距調整 */
+    #vegetable-prev-step-btn,
+    #vegetable-next-step-btn {
+        margin: 0 2px;
+    }
+    
+    /* 超小屏幕底部導航區域調整 */
+    .help-content > div:last-child {
+        gap: 6px;
+        margin: 0 0.2rem;
+    }
+    
+    /* 超小屏幕下一步按鈕往左調整 */
+    #vegetable-next-step-btn {
+        margin-left: 0.3rem !important;
     }
 }
 span highlight-text{
@@ -762,9 +855,45 @@ span highlight-text{
 /* 算菜錢遊戲說明文字容器響應式設計 */
 @media (max-width: 768px) {
     #vegetable-instruction-text {
-        min-width: 250px;
+        min-width: 150px;
         flex: 2;
-        font-size: 22px;
+        font-size: 16px;
+        padding: 0 10px;
+    }
+    
+    /* 手機版按鈕縮小 */
+    .game-step-button {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 40px;
+    }
+    
+    /* 手機版說明彈窗調整 */
+    #help-modal .modal-content {
+        padding: 1.2rem 0.8rem 0.8rem 0.8rem;
+        max-width: 96vw;
+    }
+    
+    /* 手機版視頻容器調整 */
+    #vegetable-video-container {
+        margin-bottom: 1.2rem;
+    }
+    
+    /* 手機版按鈕容器調整 */
+    #vegetable-prev-step-btn,
+    #vegetable-next-step-btn {
+        margin: 0 3px;
+    }
+    
+    /* 手機版底部導航區域調整 */
+    .help-content > div:last-child {
+        gap: 8px;
+        margin: 0 0.3rem;
+    }
+    
+    /* 手機版下一步按鈕往左調整 */
+    #vegetable-next-step-btn {
+        margin-left: 0.5rem !important;
     }
 }
 
@@ -775,6 +904,9 @@ span highlight-text{
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    padding: 12px 20px;
+    font-size: 16px;
+    min-width: 80px;
 }
 
 .game-step-button:hover {
