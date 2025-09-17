@@ -8,10 +8,16 @@
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
 }
 
 .mission-modal.active {
   display: flex;  /* 顯示彈窗 */
+}
+
+.mission-modal.show {
+  opacity: 1;
 }
 
 
@@ -23,6 +29,12 @@
   overflow: hidden;
   font-family: "Noto Sans TC", sans-serif;
   position: relative;
+  transform: scale(0.8);
+  transition: transform 0.15s ease-out;
+}
+
+.mission-modal.show .modal-content {
+  transform: scale(1);
 }
 
 
@@ -123,7 +135,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10001;
   opacity: 0;
   transition: opacity 0.3s ease;
 }

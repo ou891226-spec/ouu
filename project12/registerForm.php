@@ -34,32 +34,28 @@
                 <div class="form-group">
                     <div class="input-wrapper">
                         <i class="fas fa-user"></i>
-                        <input type="text" name="name" class="form-input" required>
-                        <label class="form-label">姓名</label>
+                        <input type="text" name="name" class="form-input" placeholder="姓名" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper">
                         <i class="fas fa-id-card"></i>
-                        <input type="text" name="id" class="form-input" required>
-                        <label class="form-label">帳號</label>
+                        <input type="text" name="id" class="form-input" placeholder="帳號" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="password" class="form-input" required>
-                        <label class="form-label">請輸入密碼</label>
+                        <input type="password" name="password" class="form-input" placeholder="密碼" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" name="confirm_password" class="form-input" required>
-                        <label class="form-label">再輸入一次密碼</label>
+                        <input type="password" name="confirm_password" class="form-input" placeholder="確認密碼" required>
                     </div>
                 </div>
 

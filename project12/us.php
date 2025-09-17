@@ -54,11 +54,14 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     <input type="text" name="keyword" id="searchInput" placeholder="搜尋遊戲" />
   </form>
 
-  <span class="notification-bell" onclick="openMissionModal()">🔔</span>
-
-  <a href="#" onclick="openProfileModal();return false;">
-    <img src="<?php echo $avatar_url; ?>" alt="使用者" class="profile">
-  </a>
+  <div class="user-icons">
+    <a href="#" onclick="openMissionModal(event); return false;">
+      <span class="notification-bell">🔔</span>
+    </a>
+    <a href="#" onclick="openProfileModal(event); return false;">
+      <img src="<?php echo $avatar_url; ?>" alt="使用者" class="profile">
+    </a>
+  </div>
 </header>
 
 <!-- 狀態列 -->
@@ -275,6 +278,36 @@ function togglePassword() {
   function togglePersonalHistoryMenu() {
     const menu = document.getElementById('personalHistoryMenu');
     menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  }
+
+  function openMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.style.display = 'flex';
+    if (overlay) overlay.style.display = 'block';
+    
+    // 立即顯示彈窗，然後觸發動畫
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // 立即載入任務，不等待動畫
+    console.log("打開每日任務彈窗，重新載入任務");
+    loadDailyTasks();
+  }
+  
+  function closeMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.classList.remove('show');
+    
+    // 等待動畫完成後隱藏
+    setTimeout(() => {
+      modal.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
+    }, 150);
   }
 </script>
 

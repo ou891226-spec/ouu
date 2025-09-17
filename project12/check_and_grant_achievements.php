@@ -311,14 +311,15 @@ function checkAndCompleteAllTasks($member_id, $game_type = null, $play_time = 0)
         if ($game_type) {
             // 根據遊戲類型映射到任務描述中的關鍵字
             $game_type_mapping = [
-                '記憶力' => ['記憶力遊戲', '記憶力'],
-                '算數邏輯力' => ['算數邏輯力', '算術邏輯', '算菜錢遊戲', '蔬菜遊戲'],
-                '邏輯力' => ['邏輯力', '2048遊戲'],
-                '反應力' => ['反應力', '反應力遊戲', '接金蛋遊戲', '接金蛋', '接蛋遊戲'],
-                '節奏遊戲' => ['節奏遊戲', '節奏'],
-                '接金蛋遊戲' => ['接金蛋遊戲', '接金蛋', '接蛋遊戲'],
-                '看字選色遊戲' => ['看字選色遊戲', '看字選色'],
-                '追蹤犯人遊戲' => ['追蹤犯人遊戲', '追蹤犯人', '犯人遊戲']
+                '記憶力' => ['記憶力遊戲', '記憶力', '記憶遊戲', '翻牌對對樂', '翻牌', '對對樂', '記憶', '技藝達人', '圖片線索問答'],
+                '算數邏輯力' => ['算數邏輯力', '算術邏輯', '算菜錢遊戲', '蔬菜遊戲', '算菜錢', '算術', '數學'],
+                '邏輯力' => ['邏輯力', '2048遊戲', '2048', '邏輯', '數字'],
+                '反應力' => ['反應力', '反應力遊戲', '接金蛋遊戲', '接金蛋', '接蛋遊戲', '接蛋', '反應', '接金蛋專家'],
+                '節奏遊戲' => ['節奏遊戲', '節奏', '音樂', '節拍', '節奏達人'],
+                '接金蛋遊戲' => ['接金蛋遊戲', '接金蛋', '接蛋遊戲', '接蛋', '接金蛋專家'],
+                '看字選色遊戲' => ['看字選色遊戲', '看字選色', '選色', '顏色', '看字選色專家'],
+                '追蹤犯人遊戲' => ['追蹤犯人遊戲', '追蹤犯人', '犯人遊戲', '犯人', '追蹤', '追蹤專家'],
+                '過河遊戲' => ['過河遊戲', '過河', '河', '過河專家']
             ];
             
             $search_terms = $game_type_mapping[$game_type] ?? [$game_type];
@@ -346,17 +347,22 @@ function checkAndCompleteAllTasks($member_id, $game_type = null, $play_time = 0)
             $task_stmt->execute([$member_id]);
             $completed_tasks = $task_stmt->fetchAll();
             
+            // 記錄調試信息
+            error_log("檢查用戶 $member_id 的任務，遊戲類型: $game_type");
+            error_log("搜索關鍵字: " . implode(', ', $search_terms));
+            error_log("找到 " . count($completed_tasks) . " 個可完成的任務");
+            
             foreach ($completed_tasks as $task) {
                 // 完成任務（但不自動授予成就）
                 $complete_task_sql = "UPDATE member_tasks SET completed_date = NOW() WHERE member_id = ? AND task_id = ?";
                 $complete_stmt = $pdo->prepare($complete_task_sql);
                 $complete_stmt->execute([$member_id, $task['task_id']]);
                 
-                error_log("用戶 $member_id 完成任務 {$task['task_id']}：{$task['task_description']}");
+                error_log("✓ 用戶 $member_id 完成任務 {$task['task_id']}：{$task['task_description']}");
                 
                 // 記錄可領取的成就（不自動授予）
                 if ($task['reward_achievement']) {
-                    error_log("用戶 $member_id 可領取成就：{$task['reward_achievement']}");
+                    error_log("✓ 用戶 $member_id 可領取成就：{$task['reward_achievement']}");
                 }
             }
         }

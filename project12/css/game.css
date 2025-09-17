@@ -237,9 +237,12 @@ header {
 }
 
 .game-title {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
+    text-align: center;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 5px;
 }
 
 /* 響應式調整 */

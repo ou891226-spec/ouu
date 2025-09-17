@@ -16,6 +16,12 @@ body {
     margin: 0 auto;
 }
 
+/* 暫停時禁止作答與視覺提示 */
+/* 暫停時僅禁用顏色按鈕點擊，保留控制按鈕可點擊 */
+.game-container.paused .color-btn {
+    pointer-events: none;
+}
+
 h1 {
     color: #333;
     margin-bottom: 20px;
@@ -238,6 +244,62 @@ button:hover {
     100% { transform: rotate(360deg); }
 }
 
+/* 答錯時的紅色震動外框動畫 */
+@keyframes wrongAnswerShake {
+    0% { 
+        transform: translateX(0); 
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.6);
+    }
+    10% { 
+        transform: translateX(-6px); 
+        box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.45);
+    }
+    20% { 
+        transform: translateX(6px); 
+        box-shadow: 0 0 0 5px rgba(244, 67, 54, 0.35);
+    }
+    30% { 
+        transform: translateX(-5px); 
+        box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.3);
+    }
+    40% { 
+        transform: translateX(5px); 
+        box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.25);
+    }
+    50% { 
+        transform: translateX(-4px); 
+        box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+    }
+    60% { 
+        transform: translateX(4px); 
+        box-shadow: 0 0 0 1px rgba(244, 67, 54, 0.15);
+    }
+    70% { 
+        transform: translateX(-3px); 
+        box-shadow: 0 0 0 1px rgba(244, 67, 54, 0.2);
+    }
+    80% { 
+        transform: translateX(3px); 
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.08);
+    }
+    90% { 
+        transform: translateX(-2px); 
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.05);
+    }
+    100% { 
+        transform: translateX(0); 
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+    }
+}
+
+/* 答錯時的按鈕樣式 */
+/* 移除單一按鈕的小紅框效果，改用整個畫面效果 */
+
+/* 整個遊戲容器的紅色震動外框效果 */
+.game-container.screen-wrong {
+    animation: wrongAnswerShake 0.75s ease-in-out;
+}
+
 .color-btn.pulse {
     animation: pulse 0.3s infinite;
 }
@@ -256,6 +318,7 @@ button:hover {
     z-index: 1000;
     left: 0; top: 0; width: 100vw; height: 100vh;
     background: rgba(0,0,0,0.5);
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     justify-content: center;
     align-items: center;
@@ -323,8 +386,8 @@ button:hover {
 
 .back-button {
     position: absolute;
-    top: 2.0rem;
-    left: 2.5rem;
+    top: 1.4rem;
+    left: 1.2rem;
     width: 2.1rem !important;
     height: 2.1rem !important;
     border-radius: 50%;
@@ -360,6 +423,7 @@ button:hover {
     color: #000;
     margin-top: 0.1rem;
     letter-spacing: 0.05em;
+    -webkit-user-select: none;
     user-select: none;
     white-space: nowrap;
     line-height: 1.1;
@@ -399,6 +463,7 @@ button:hover {
     color: #000;
     margin-top: 0.1rem;
     letter-spacing: 0.05em;
+    -webkit-user-select: none;
     user-select: none;
     white-space: nowrap;
     line-height: 1.1;

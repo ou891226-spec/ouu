@@ -253,14 +253,16 @@ function selectDifficulty(difficulty) {
 // 初始化音效
 function initSounds() {
     try {
-        flipSound = new Audio('music/card.mp3');
+        flipSound = new Audio('music/card.m4a');
         flipSound.volume = 0.6; // 提高音量
         flipSound.preload = 'auto';
+        flipSound.load(); // 強制載入音效
         
-        bingoSound = new Audio('music/Bingo.mp3');
+        bingoSound = new Audio('music/Bingo.m4a');
         bingoSound.volume = 0.4; // 提高音量
         bingoSound.playbackRate = 1.3; // 加快播放速度
         bingoSound.preload = 'auto';
+        bingoSound.load(); // 強制載入音效
         
         console.log('音效初始化成功');
     } catch (e) {
@@ -271,13 +273,15 @@ function initSounds() {
 // 播放翻牌音效
 function playFlipSound() {
     if (flipSound) {
-        flipSound.currentTime = 0; // 重置音效到開始位置
+        // 立即重置並播放，減少延遲
+        flipSound.currentTime = 0;
+        flipSound.pause(); // 先暫停確保重置
         flipSound.play().catch(e => {
             // 如果播放失敗（例如用戶還沒與頁面互動），靜默處理
-            console.log('音效播放失敗:', e);
+            console.log('翻牌音效播放失敗:', e);
         });
     } else {
-        console.log('音效對象不存在');
+        console.log('翻牌音效對象不存在');
     }
 }
 
@@ -727,9 +731,23 @@ async function saveGameResult(isWin, score, playTime) {
  
 // 獲取當前會員ID
 function getCurrentMemberId() {
-    // 這裡需要實作獲取當前登入會員ID的邏輯
-    // 可以從 session 或 localStorage 中獲取
-    return localStorage.getItem('member_id') || null;
+    // 嘗試從多個來源獲取會員ID
+    // 1. 從 URL 參數獲取
+    const urlParams = new URLSearchParams(window.location.search);
+    const memberIdFromUrl = urlParams.get('member_id');
+    if (memberIdFromUrl) return memberIdFromUrl;
+    
+    // 2. 從 localStorage 獲取
+    const memberIdFromStorage = localStorage.getItem('member_id');
+    if (memberIdFromStorage) return memberIdFromStorage;
+    
+    // 3. 從 sessionStorage 獲取
+    const memberIdFromSession = sessionStorage.getItem('member_id');
+    if (memberIdFromSession) return memberIdFromSession;
+    
+    // 4. 如果都找不到，返回預設值（用於測試）
+    console.warn('無法獲取會員ID，使用預設值');
+    return 23; // 預設測試會員ID
 }
  
 // 顯示遊戲結束彈窗
@@ -868,6 +886,48 @@ function returnToMain() {
 // 頁面載入時初始化
 window.onload = function() {
     initSounds(); // 初始化音效
+    
+    // 添加音效預熱機制
+    const prewarmAudio = () => {
+        if (flipSound) {
+            const originalVolume = flipSound.volume;
+            flipSound.volume = 0; // 靜音預熱
+            flipSound.currentTime = 0;
+            flipSound.play().then(() => {
+                flipSound.pause();
+                flipSound.currentTime = 0;
+                flipSound.volume = originalVolume; // 恢復音量
+                console.log('翻牌音效預熱完成');
+            }).catch(e => {
+                // 靜默處理預熱失敗，這是正常的瀏覽器行為
+                console.log('翻牌音效預熱跳過（需要用戶互動）');
+            });
+        }
+        
+        if (bingoSound) {
+            const originalVolume = bingoSound.volume;
+            bingoSound.volume = 0; // 靜音預熱
+            bingoSound.currentTime = 0;
+            bingoSound.play().then(() => {
+                bingoSound.pause();
+                bingoSound.currentTime = 0;
+                bingoSound.volume = originalVolume; // 恢復音量
+                console.log('配對音效預熱完成');
+            }).catch(e => {
+                // 靜默處理預熱失敗，這是正常的瀏覽器行為
+                console.log('配對音效預熱跳過（需要用戶互動）');
+            });
+        }
+        
+        // 移除事件監聽器，避免重複執行
+        document.removeEventListener('click', prewarmAudio);
+        document.removeEventListener('touchstart', prewarmAudio);
+    };
+    
+    // 在用戶第一次互動時預熱音效
+    document.addEventListener('click', prewarmAudio, { once: true });
+    document.addEventListener('touchstart', prewarmAudio, { once: true });
+    
     updateScoreDisplay();
     document.getElementById('theme-modal').classList.remove('hidden');
     document.getElementById('difficulty-modal').classList.add('hidden');

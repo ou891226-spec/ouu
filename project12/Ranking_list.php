@@ -133,6 +133,10 @@ try {
   <div id="ranking-list" class="ranking-list">
     <!-- JS 動態載入排行榜 -->
   </div>
+  <div id="loading-indicator" class="loading-indicator" style="display: none;">
+    <div class="loading-spinner"></div>
+    <span>載入中...</span>
+  </div>
   <div id="my-ranking-row" class="ranking-row me" >
     <!-- JS 動態載入自己的排名 -->
   </div>
@@ -172,11 +176,7 @@ function validateSearch() {
   return true;
 }
 
-// ====== 無限滾動排行榜 ======
-let offset = 0;
-const limit = 5;
-let loading = false;
-let end = false;
+// ====== 顯示所有用戶排行榜 ======
 const tab = '<?php echo $current_tab; ?>';
 
 function renderAvatar(username, avatar) {
@@ -206,38 +206,45 @@ function renderRow(row, includeWrapper = true) {
   }
 }
 
-function loadRankings() {
-  if (loading || end) return;
-  loading = true;
-  fetch(`ranking_api.php?offset=${offset}&limit=${limit}&tab=${tab}`)
+function loadAllRankings() {
+  // 顯示載入指示器
+  const loadingIndicator = document.getElementById('loading-indicator');
+  loadingIndicator.style.display = 'flex';
+  
+  // 載入所有用戶（設定一個很大的 limit）
+  fetch(`ranking_api.php?offset=0&limit=1000&tab=${tab}`)
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById('ranking-list');
-      if (data.rankings.length < limit) end = true;
+      
+      // 隱藏載入指示器
+      loadingIndicator.style.display = 'none';
+      
+      // 清空現有內容
+      list.innerHTML = '';
+      
+      // 顯示所有用戶
       data.rankings.forEach(row => {
         list.insertAdjacentHTML('beforeend', renderRow(row));
       });
-      offset += data.rankings.length;
-      loading = false;
-      // 首次載入時顯示自己的排名
-      if (offset === data.rankings.length && data.my_ranking) {
+      
+      // 顯示自己的排名
+      if (data.my_ranking) {
         document.getElementById('my-ranking-row').innerHTML = renderRow(data.my_ranking, false);
       }
+    })
+    .catch(error => {
+      console.error('載入排行榜失敗:', error);
+      loadingIndicator.style.display = 'none';
+      
+      // 顯示錯誤訊息
+      const list = document.getElementById('ranking-list');
+      list.innerHTML = '<div class="error-message">載入排行榜失敗，請重新整理頁面</div>';
     });
 }
 
-window.addEventListener('scroll', function() {
-  if (end || loading) return;
-  const scrollY = window.scrollY || window.pageYOffset;
-  const winH = window.innerHeight;
-  const docH = document.body.offsetHeight;
-  if (docH - (scrollY + winH) < 100) {
-    loadRankings();
-  }
-});
-
 document.addEventListener('DOMContentLoaded', function() {
-  loadRankings();
+  loadAllRankings();
 });
 </script>
 <script src="js/auto-save-time-fixed.js"></script>
@@ -325,10 +332,40 @@ function closeAllModals() {
     closeAccountModal();
   }
 
-function togglePersonalHistoryMenu() {
-  const menu = document.getElementById('personalHistoryMenu');
-  menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
-}
+  function togglePersonalHistoryMenu() {
+    const menu = document.getElementById('personalHistoryMenu');
+    menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  }
+
+  function openMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.style.display = 'flex';
+    if (overlay) overlay.style.display = 'block';
+    
+    // 立即顯示彈窗，然後觸發動畫
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // 立即載入任務，不等待動畫
+    console.log("打開每日任務彈窗，重新載入任務");
+    loadDailyTasks();
+  }
+  
+  function closeMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.classList.remove('show');
+    
+    // 等待動畫完成後隱藏
+    setTimeout(() => {
+      modal.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
+    }, 150);
+  }
 
 function previewAndUploadAvatar(event) {
   const file = event.target.files[0];

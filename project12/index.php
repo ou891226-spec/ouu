@@ -241,10 +241,18 @@ try {
   }
 
   function openMissionModal() {
-    document.getElementById('missionModal').style.display = 'flex';
-    document.getElementById('modalOverlay').style.display = 'block';
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
     
-    // 每次打開彈窗都重新載入任務，確保顯示最新狀態
+    modal.style.display = 'flex';
+    overlay.style.display = 'block';
+    
+    // 立即顯示彈窗，然後觸發動畫
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // 立即載入任務，不等待動畫
     console.log("打開每日任務彈窗，重新載入任務");
     loadDailyTasks();
     
@@ -258,8 +266,16 @@ try {
     alert('任務已固定，請等待凌晨12點重置！');
   }
   function closeMissionModal() {
-    document.getElementById('missionModal').style.display = 'none';
-    document.getElementById('modalOverlay').style.display = 'none';
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.classList.remove('show');
+    
+    // 等待動畫完成後隱藏
+    setTimeout(() => {
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+    }, 150);
   }
 
   function closeAllModals() {

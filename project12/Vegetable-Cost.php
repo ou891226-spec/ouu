@@ -61,6 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['score'], 
             $data['difficulty']
         );
+        
+        // 檢查並完成所有相關任務
+        require_once 'check_and_grant_achievements.php';
+        checkAndCompleteAllTasks($data['member_id'], '算數邏輯力');
        
         // 提交交易
         $pdo->commit();

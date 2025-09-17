@@ -50,11 +50,14 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <form class="search-bar" action="game.php" method="GET" onsubmit="return validateSearch()">
     <input type="text" name="keyword" id="searchInput" placeholder="搜尋遊戲" />
   </form>
-  <span class="notification-bell" onclick="openMissionModal()">🔔</span>
-
-  <a href="#" onclick="openProfileModal();return false;">
-    <img src="<?php echo $avatar_url; ?>" alt="使用者" class="profile">
-  </a>
+  <div class="user-icons">
+    <a href="#" onclick="openMissionModal(event); return false;">
+      <span class="notification-bell">🔔</span>
+    </a>
+    <a href="#" onclick="openProfileModal(event); return false;">
+      <img src="<?php echo $avatar_url; ?>" alt="使用者" class="profile">
+    </a>
+  </div>
 </header>
 
 <!-- 狀態列 -->
@@ -133,43 +136,43 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <div class="game-grid" id="gameGrid">
     <div class="game-block">
       <div class="game-item" data-title="看字選色">
-        <a href="text-color.php"><img src="img/color.jpg" alt="看字選色"></a>
+        <a href="text-color.php"><img src="img/text_color111.png" alt="看字選色"></a>
       </div>
       <div class="game-title">看字選色</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="接金蛋">
-        <a href="Catch-Egg Game.php"><img src="img/egg.jpg" alt="接金蛋"></a>
+        <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
       </div>
       <div class="game-title">接金蛋</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="2048">
-        <a href="2048ht.php"><img src="img/2048.png" alt="2048"></a>
+        <a href="2048ht.php"><img src="img/game_20481.png" alt="2048"></a>
       </div>
       <div class="game-title">2048</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="翻牌對對樂">
-        <a href="Memory-Game.php"><img src="img/card.jpg" alt="翻牌對對樂"></a>
+        <a href="Memory-Game.php"><img src="img/card1.png" alt="翻牌對對樂"></a>
       </div>
       <div class="game-title">翻牌對對樂</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="算菜錢">
-        <a href="Vegetable-Cost.php"><img src="img/vegetable.jpg" alt="算菜錢"></a>
+        <a href="Vegetable-Cost.php"><img src="img/vegetable1.png" alt="算菜錢"></a>
       </div>
       <div class="game-title">算菜錢</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="追蹤犯人">
-        <a href="prisoner.php"><img src="img/prisoner.jpg" alt="追蹤犯人"></a>
+        <a href="prisoner.php"><img src="img/prisoner1.png" alt="追蹤犯人"></a>
       </div>
       <div class="game-title">追蹤犯人</div>
     </div>
     <div class="game-block">
       <div class="game-item" data-title="節奏遊戲">
-        <a href="rhythm_game.php"><img src="img/rhythm.jpg" alt="節奏遊戲"></a>
+        <a href="rhythm_game.php"><img src="img/rhythm1.png" alt="節奏遊戲"></a>
       </div>
       <div class="game-title">節奏遊戲</div>
     </div>
@@ -246,6 +249,36 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       });
     });
   };
+
+  function openMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.style.display = 'flex';
+    overlay.style.display = 'block';
+    
+    // 立即顯示彈窗，然後觸發動畫
+    setTimeout(() => {
+      modal.classList.add('show');
+    }, 10);
+    
+    // 立即載入任務，不等待動畫
+    console.log("打開每日任務彈窗，重新載入任務");
+    loadDailyTasks();
+  }
+  
+  function closeMissionModal() {
+    const modal = document.getElementById('missionModal');
+    const overlay = document.getElementById('modalOverlay');
+    
+    modal.classList.remove('show');
+    
+    // 等待動畫完成後隱藏
+    setTimeout(() => {
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+    }, 150);
+  }
 
   function openProfileModal() {
     document.getElementById('profileModal').style.display = 'flex';

@@ -257,11 +257,6 @@ function recordGameResult($score, $playTime, $difficulty) {
                     'opponent_id' => null
                 ]);
                 $record_stmt->closeCursor();
-                
-                // 記錄遊戲行為軌跡
-                require_once 'log_game_behavior.php';
-                logGameBehavior($member_id, $game_type, $playTime, $record_score, $difficulty);
-                
                 return true;
             }
         }
@@ -375,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- 難度選擇視窗 -->
     <div id="difficultyModal" class="modal">
         <div class="modal-content">
-            <button class="back-button" onclick="history.back()">
+            <button class="back-button" onclick="handleBackButton()">
                 <span class="back-arrow">←</span>
                 <div class="back-label">返回</div>
             </button>
@@ -446,6 +441,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- 音效元素 -->
+    <audio id="correctSound" preload="auto">
+        <source src="voice/correct.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="incorrectSound" preload="auto">
+        <source src="voice/incorrect.mp3" type="audio/mpeg">
+    </audio>
+
     <div class="game-container">
         <h1>看字選色遊戲</h1>
         <div class="score-board">
@@ -505,6 +508,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const colorObj = colors.find(c => c.name === color);
             return colorObj ? colorObj.chinese : color;
         };
+
+        // 播放音效的函數
+        function playSound(soundType) {
+            try {
+                const audio = document.getElementById(soundType + 'Sound');
+                if (audio) {
+                    // 重置音效到開始位置
+                    audio.currentTime = 0;
+                    // 播放音效
+                    audio.play().catch(error => {
+                        console.log('音效播放失敗:', error);
+                    });
+                }
+            } catch (error) {
+                console.log('音效播放錯誤:', error);
+            }
+        }
 
         function shuffleColors(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
@@ -636,7 +656,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     btn.style.backgroundColor = color.code;
-                    btn.onclick = () => checkAnswer(color.name);
+                    btn.onclick = (e) => checkAnswer(color.name, e.currentTarget);
                     
                     // 前3個放在上面，後2個放在下面
                     if (index < 3) {
@@ -664,7 +684,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     let btn = document.createElement('button');
                     btn.className = 'color-btn';
                     btn.style.backgroundColor = color.code;
-                    btn.onclick = () => checkAnswer(color.name);
+                    btn.onclick = (e) => checkAnswer(color.name, e.currentTarget);
                     
                     // 前2個放在上面，後2個放在下面
                     if (index < 2) {
@@ -682,7 +702,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     let btn = document.createElement('button');
                     btn.className = 'color-btn';
                     btn.style.backgroundColor = color.code;
-                    btn.onclick = () => checkAnswer(color.name);
+                    btn.onclick = (e) => checkAnswer(color.name, e.currentTarget);
                     container.appendChild(btn);
                 });
             }
@@ -707,14 +727,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        function checkAnswer(selectedColor) {
+        function checkAnswer(selectedColor, clickedBtn) {
             if (!gameStarted) return;
+            if (gamePaused) return; // 暫停期間禁止作答
 
             if (difficulty !== 'easy' && questionTimer) {
                 clearInterval(questionTimer);
             }
 
             if (selectedColor === correctColor.name) {
+                // 答對了，播放正確音效
+                playSound('correct');
                 score += parseInt(difficultySettings[difficulty].points_per_correct);
                 scoreEl.textContent = score.toString();
                 if (score > highScore) {
@@ -729,8 +752,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         body: 'action=update_high_score&high_score=' + highScore + '&difficulty=' + difficulty
                     });
                 }
+            } else {
+                // 答錯了，播放錯誤音效並顯示整個畫面震動效果
+                playSound('incorrect');
+                showScreenWrongEffect();
+                // 延遲切換題目，讓動畫能播放
+                setTimeout(() => {
+                    generateQuestion();
+                }, 700);
+                return;
             }
             generateQuestion();
+        }
+
+        // 移除單一按鈕答錯效果（改用整個畫面效果）
+
+        // 整個畫面的答錯震動外框
+        function showScreenWrongEffect() {
+            const container = document.querySelector('.game-container');
+            if (!container) return;
+            container.classList.add('screen-wrong');
+            setTimeout(() => {
+                container.classList.remove('screen-wrong');
+            }, 850);
         }
 
         function setDifficulty(level) {
@@ -839,6 +883,9 @@ function togglePauseGame() {
                 }
             }, 1000);
         }
+        // 解除按鈕禁用樣式
+        const container = document.querySelector('.game-container');
+        if (container) container.classList.remove('paused');
     } else {
         // 暫停遊戲
         gamePaused = true;
@@ -849,6 +896,10 @@ function togglePauseGame() {
         clearInterval(timer);
         clearInterval(distractionInterval);
         clearInterval(questionTimer);
+
+        // 禁用按鈕點擊
+        const container = document.querySelector('.game-container');
+        if (container) container.classList.add('paused');
     }
 }
 
@@ -873,12 +924,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             timeEl.textContent = '0';
             
             endTime = new Date();
-            // 確保 startTime 存在，如果沒有則設為當前時間減去預設時間
-            if (!startTime) {
-                startTime = new Date(endTime.getTime() - (difficultySettings[difficulty].time_limit * 1000));
-            }
             const playTime = Math.floor((endTime - startTime) / 1000); // 計算遊玩時間（秒）
-            console.log('Game end - Start time:', startTime, 'End time:', endTime, 'Play time:', playTime);
             
             if (score > highScore) {
                 highScore = score;
@@ -954,18 +1000,23 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 modalHtml = `
                     <h2>恭喜破關</h2>
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
-                    <p>獲得分數：${passBonus}</p>
+                    <p>獲得分數：${score}</p>
+                    <p>遊戲時間：${playTime} 秒</p>
+                    <p>過關分數：+${passBonus}</p>
+                   
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="smartReturn()">返回主頁</button>
+                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
                 `;
             } else {
                 // 失敗
                 modalHtml = `
                     <h2>遊戲失敗</h2>
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
-                    <p>未在時間內達成分數</p>
+                    <p>目標分數：${passScore}</p>
+                    <p>獲得分數：${score}</p>
+                    <p>未在時間內達成分數！</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="smartReturn()">返回主頁</button>
+                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
                 `;
             }
             document.getElementById('endGameContent').innerHTML = modalHtml;
@@ -996,7 +1047,6 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 timeLeft = difficultySettings[difficulty].time_limit;
                 timeEl.textContent = timeLeft.toString();
                 gameStarted = false;
-                startTime = null; // 重置開始時間
                 clearInterval(timer);
                 clearInterval(distractionInterval);
                 clearInterval(questionTimer);
@@ -1046,16 +1096,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         }
 
         function handleBackButton() {
-            smartReturn();
-        }
-
-        function smartReturn() {
-            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
-            if (document.referrer && document.referrer !== window.location.href) {
-                history.back();
-            } else {
-                window.location.href = 'index.php';
-            }
+            window.location.href = 'index.php';
         }
 
         function showHelp() {
@@ -1087,7 +1128,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             
             // 設置第一個影片
             video.src = 'gd/textcolor1.mp4';
-            instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
+            instructionText.textContent = '選擇難度後即可進入遊戲畫面';
             stepIndicator.textContent = '步驟 1/2';
             
             // 設置當前影片標記
@@ -1119,7 +1160,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             // 切換到第二個視頻
             video.src = 'gd/textcolor2.mp4';
             video.setAttribute('data-current-video', 'textcolor2');
-            instructionText.innerHTML = '注意：我們看的是字的「意思」<br>不是字的顏色，並且在時間內選擇正確的顏色獲得分數！';
+            instructionText.innerHTML = '注意：我們看的是字的「意思」<br>不是字的顏色，在時間內選擇正確的顏色獲得分數！';
             stepIndicator.textContent = '步驟 2/2';
             
             // 隱藏下一步按鈕，顯示上一步按鈕
@@ -1142,7 +1183,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             // 切換到第一個視頻
             video.src = 'gd/textcolor1.mp4';
             video.setAttribute('data-current-video', 'textcolor1');
-            instructionText.textContent = '選擇難度後即可進入到遊戲畫面';
+            instructionText.textContent = '選擇難度後即可進入遊戲畫面';
             stepIndicator.textContent = '步驟 1/2';
             
             // 顯示下一步按鈕，隱藏上一步按鈕
@@ -1209,6 +1250,5 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         });
     </script>
     <script src="js/achievements.js"></script>
-    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>

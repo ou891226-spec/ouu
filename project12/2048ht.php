@@ -60,6 +60,14 @@ if (
                 'member_id' => $data['member_id']
             ]);
             error_log('遊戲勝利，記錄獎勵分數: ' . $record_score);
+            
+            // 記錄遊戲行為軌跡
+            require_once 'log_game_behavior.php';
+            logGameBehavior($data['member_id'], '邏輯力', 0, $record_score, $difficulty);
+            
+            // 檢查並完成所有相關任務
+            require_once 'check_and_grant_achievements.php';
+            checkAndCompleteAllTasks($data['member_id'], '邏輯力');
         } else {
             error_log('遊戲失敗，記錄0分');
         }

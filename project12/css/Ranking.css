@@ -264,3 +264,50 @@ header {
 .ranking-title, .tab-bar button, .tab-bar .active, .ranking-row, .ranking-row.me, .ranking-rank, .ranking-info, .ranking-username, .ranking-account, .ranking-score {
   font-weight: normal !important;
 }
+
+/* 載入指示器樣式 */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
+  gap: 10px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #ffd54f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 提示訊息樣式 */
+.no-more-data {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-size: 14px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  margin: 10px 20px;
+}
+
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: #d32f2f;
+  font-size: 14px;
+  background: #ffebee;
+  border-radius: 8px;
+  margin: 10px 20px;
+  border: 1px solid #ffcdd2;
+}

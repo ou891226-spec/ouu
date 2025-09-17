@@ -1,28 +1,27 @@
 // 開啟每日任務視窗
 function openMissionModal() {
-  document.getElementById("missionModal").style.display = "flex";
+  const modal = document.getElementById("missionModal");
+  modal.style.display = "flex";
   
-  // 檢查今天是否已經載入過任務
-  const today = new Date().toDateString();
-  const lastLoadDate = localStorage.getItem('missionLoadDate');
-  const hasLoadedToday = localStorage.getItem('missionLoadedToday') === 'true';
+  // 立即顯示彈窗，然後觸發動畫
+  setTimeout(() => {
+    modal.classList.add('show');
+  }, 10); // 很短的延遲讓 DOM 更新
   
-  // 如果是新的一天，重置狀態
-  if (lastLoadDate !== today) {
-    localStorage.setItem('missionLoadDate', today);
-    localStorage.setItem('missionLoadedToday', 'false');
-  }
-  
-  // 如果今天還沒載入過任務，才載入
-  if (!hasLoadedToday) {
-    loadDailyTasks();
-    localStorage.setItem('missionLoadedToday', 'true');
-  }
+  // 立即載入任務，不等待動畫
+  console.log("打開每日任務彈窗，重新載入任務");
+  loadDailyTasks();
 }
 
 // 關閉視窗
 function closeMissionModal() {
-  document.getElementById("missionModal").style.display = "none";
+  const modal = document.getElementById("missionModal");
+  modal.classList.remove('show');
+  
+  // 等待動畫完成後隱藏
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 150); // 與 CSS transition 時間一致
 }
 
 // 顯示獎勵領取成功彈窗

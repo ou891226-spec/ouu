@@ -17,6 +17,29 @@ const catchSound = document.getElementById('catchSound');
 const bombSound = document.getElementById('bombSound');
 const gameOverSound = document.getElementById('gameOverSound');
 
+// 音效播放函數 - 優化版本
+function playCatchSound() {
+    if (catchSound) {
+        // 立即重置並播放，減少延遲
+        catchSound.currentTime = 0;
+        catchSound.pause(); // 先暫停確保重置
+        catchSound.playbackRate = 1.0;
+        catchSound.volume = 0.8;
+        catchSound.play().catch(e => console.log('接蛋音效播放失敗:', e));
+    }
+}
+
+function playBombSound() {
+    if (bombSound) {
+        // 立即重置並播放，減少延遲
+        bombSound.currentTime = 0;
+        bombSound.pause(); // 先暫停確保重置
+        bombSound.playbackRate = 1.0;
+        bombSound.volume = 0.3;
+        bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
+    }
+}
+
 let score = 0;
 let highScore = 0;
 let difficultyHighScores = {
@@ -114,6 +137,10 @@ function updateScore() {
 // 顯示開始倒數
 function showCountdown(callback) {
     countdownOverlay.style.display = 'block';
+    // 倒數期間禁用籃子滑動
+    basket.style.pointerEvents = 'none';
+    basket.style.cursor = 'default';
+    
     let countdownTime = 5;
     const countdownElement = document.createElement('div');
     countdownElement.style.position = 'absolute';
@@ -133,6 +160,9 @@ function showCountdown(callback) {
             if (countdownElement.parentNode) {
                 game.removeChild(countdownElement);
             }
+            // 倒數結束後啟用籃子滑動
+            basket.style.pointerEvents = 'auto';
+            basket.style.cursor = 'grab';
             callback();
         }
     }, 1000);
@@ -149,6 +179,27 @@ function startGameTimer() {
     resumeBtn.classList.add('hidden');
     endBtn.classList.remove('hidden');
     resetBtn.classList.remove('hidden');
+    
+    // 遊戲開始時再次預熱音效，確保即時播放
+    if (catchSound) {
+        catchSound.currentTime = 0;
+        catchSound.volume = 0;
+        catchSound.play().then(() => {
+            catchSound.pause();
+            catchSound.currentTime = 0;
+            catchSound.volume = 0.8;
+        }).catch(e => console.log('遊戲開始音效預熱失敗:', e));
+    }
+    
+    if (bombSound) {
+        bombSound.currentTime = 0;
+        bombSound.volume = 0;
+        bombSound.play().then(() => {
+            bombSound.pause();
+            bombSound.currentTime = 0;
+            bombSound.volume = 0.3;
+        }).catch(e => console.log('遊戲開始音效預熱失敗:', e));
+    }
 
     // 確保籃子置中
     const centerBasketForGame = () => {
@@ -405,34 +456,15 @@ function dropItem() {
                 const type = item.getAttribute('data-type');
                 
                 // 播放音效 - 只有物品碰到籃子時才播放
-                try {
-                    if (type === 'gold') {
-                        score += 10;
-                        if (catchSound) {
-                            catchSound.currentTime = 0;
-                            catchSound.playbackRate = 1.0; // 正常播放速度
-                            catchSound.volume = 0.8; // 提高音量
-                            catchSound.play().catch(e => console.log('金蛋音效播放失敗:', e));
-                        }
-                    } else if (type === 'white') {
-                        score += 3;
-                        if (catchSound) {
-                            catchSound.currentTime = 0;
-                            catchSound.playbackRate = 1.0; // 正常播放速度
-                            catchSound.volume = 0.8; // 提高音量
-                            catchSound.play().catch(e => console.log('白蛋音效播放失敗:', e));
-                        }
-                    } else if (type === 'bomb') {
-                        score -= 20;
-                        if (bombSound) {
-                            bombSound.currentTime = 0;
-                            bombSound.volume = 0.3; // 提高音量
-                            bombSound.playbackRate = 1.0; // 正常播放速度
-                            bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
-                        }
-                    }
-                } catch (e) {
-                    console.log('音效播放錯誤:', e);
+                if (type === 'gold') {
+                    score += 10;
+                    playCatchSound();
+                } else if (type === 'white') {
+                    score += 3;
+                    playCatchSound();
+                } else if (type === 'bomb') {
+                    score -= 20;
+                    playBombSound();
                 }
                 
                 updateScore();
@@ -570,34 +602,15 @@ function resumeGame() {
                                 const type = item.getAttribute('data-type');
                                 
                                 // 播放音效 - 只有物品碰到籃子時才播放
-                                try {
-                                    if (type === 'gold') {
-                                        score += 10;
-                                        if (catchSound) {
-                                            catchSound.currentTime = 0;
-                                            catchSound.playbackRate = 1.0; // 正常播放速度
-                                            catchSound.volume = 0.8; // 提高音量
-                                            catchSound.play().catch(e => console.log('金蛋音效播放失敗:', e));
-                                        }
-                                    } else if (type === 'white') {
-                                        score += 3;
-                                        if (catchSound) {
-                                            catchSound.currentTime = 0;
-                                            catchSound.playbackRate = 1.0; // 正常播放速度
-                                            catchSound.volume = 0.8; // 提高音量
-                                            catchSound.play().catch(e => console.log('白蛋音效播放失敗:', e));
-                                        }
-                                    } else if (type === 'bomb') {
-                                        score -= 20;
-                                        if (bombSound) {
-                                            bombSound.currentTime = 0;
-                                            bombSound.volume = 0.3; // 提高音量
-                                            bombSound.playbackRate = 1.0; // 正常播放速度
-                                            bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
-                                        }
-                                    }
-                                } catch (e) {
-                                    console.log('音效播放錯誤:', e);
+                                if (type === 'gold') {
+                                    score += 10;
+                                    playCatchSound();
+                                } else if (type === 'white') {
+                                    score += 3;
+                                    playCatchSound();
+                                } else if (type === 'bomb') {
+                                    score -= 20;
+                                    playBombSound();
                                 }
                                 
                                 updateScore();
