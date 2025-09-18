@@ -1,4 +1,8 @@
 <?php
+// 設定 PHP 執行時間和記憶體限制，避免 502 錯誤
+ini_set('max_execution_time', 30); // 30 秒執行時間限制
+ini_set('memory_limit', '128M'); // 128MB 記憶體限制
+
 require_once 'check_login.php';
 require_once 'avatar_helper.php';
 $account = isset($_SESSION['account']) ? $_SESSION['account'] : '訪客';

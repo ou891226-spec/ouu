@@ -1,10 +1,13 @@
 <?php
-require_once "DB_open.php";
-require_once "avatar_helper.php";
-
+// 設定 PHP 執行時間和記憶體限制，避免 502 錯誤
+ini_set('max_execution_time', 30); // 30 秒執行時間限制
+ini_set('memory_limit', '128M'); // 128MB 記憶體限制
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+require_once "DB_open.php";
+require_once "avatar_helper.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST["name"];
@@ -19,34 +22,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: registerForm.php?error=密碼輸入不相同");
         exit();
     }
-    $check_query = "SELECT * FROM `member` WHERE account = ?";
-    $check_stmt = $pdo->prepare($check_query);
-    $check_stmt->execute([$id]);
-    if ($check_stmt->fetch(PDO::FETCH_ASSOC)) {
-        header("Location: registerForm.php?error=此帳號已存在，請重新選擇帳號");
+    // 檢查帳號是否已存在
+    try {
+        $check_query = "SELECT * FROM `member` WHERE account = ?";
+        $check_stmt = $pdo->prepare($check_query);
+        $check_stmt->execute([$id]);
+        if ($check_stmt->fetch(PDO::FETCH_ASSOC)) {
+            header("Location: registerForm.php?error=此帳號已註冊過，請重新選擇帳號");
+            exit();
+        }
+    } catch (Exception $e) {
+        error_log("檢查帳號重複時發生錯誤: " . $e->getMessage());
+        header("Location: registerForm.php?error=系統錯誤，請稍後再試");
         exit();
     }
     // 使用 password_hash() 進行安全的密碼加鹽處理
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
-    $query = "INSERT INTO `member` (member_name, account, password) VALUES (?, ?, ?)";
-    $stmt = $pdo->prepare($query);
-    if ($stmt->execute([$name, $id, $hashed_password])) {
+    // 插入新用戶資料
+    try {
+        $query = "INSERT INTO `member` (member_name, account, password) VALUES (?, ?, ?)";
+        $stmt = $pdo->prepare($query);
+        if ($stmt->execute([$name, $id, $hashed_password])) {
         $new_member_id = $pdo->lastInsertId();
         
-        // 產生預設頭像
-        $avatar_path = generateDefaultAvatar($new_member_id, $name);
-        if ($avatar_path) {
-            // 強制更新資料庫的 avatar 欄位
-            $update_sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
-            $update_stmt = $pdo->prepare($update_sql);
-            if ($update_stmt->execute([$avatar_path, $new_member_id])) {
-                error_log("[register.php] 頭像已成功更新到資料庫: $avatar_path");
+        // 產生預設頭像（非阻塞操作）
+        try {
+            $avatar_path = generateDefaultAvatar($new_member_id, $name);
+            if ($avatar_path) {
+                // 強制更新資料庫的 avatar 欄位
+                $update_sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
+                $update_stmt = $pdo->prepare($update_sql);
+                if ($update_stmt->execute([$avatar_path, $new_member_id])) {
+                    error_log("[register.php] 頭像已成功更新到資料庫: $avatar_path");
+                } else {
+                    error_log("[register.php] 頭像資料庫更新失敗");
+                }
             } else {
-                error_log("[register.php] 頭像資料庫更新失敗");
+                error_log("[register.php] 頭像產生失敗");
             }
-        } else {
-            error_log("[register.php] 頭像產生失敗");
+        } catch (Exception $e) {
+            error_log("[register.php] 頭像產生過程發生錯誤: " . $e->getMessage());
+            // 頭像產生失敗不影響註冊流程
         }
         
         // 為新用戶分配每日任務
@@ -72,12 +89,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } catch (Exception $e) {
             error_log("[register.php] 分配任務失敗: " . $e->getMessage());
         }
-        // 重定向到美觀的註冊成功頁面
-        $success_url = "register_success.php?name=" . urlencode($name) . "&account=" . urlencode($id);
-        header("Location: $success_url");
+            // 重定向到美觀的註冊成功頁面
+            $success_url = "register_success.php?name=" . urlencode($name) . "&account=" . urlencode($id);
+            header("Location: $success_url");
+            exit();
+        } else {
+            header("Location: registerForm.php?error=註冊失敗，請稍後再試");
+            exit();
+        }
+    } catch (Exception $e) {
+        error_log("註冊用戶時發生錯誤: " . $e->getMessage());
+        header("Location: registerForm.php?error=系統錯誤，請稍後再試");
         exit();
-    } else {
-        header("Location: registerForm.php?error=註冊失敗，請稍後再試");
     }
 } else {
     header("Location: registerForm.php"); 

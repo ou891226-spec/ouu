@@ -1,12 +1,14 @@
 <?php
-session_start();
-include("DB_open.php");
-require_once "avatar_helper.php";
-
-
+// 設定 PHP 執行時間和記憶體限制，避免 502 錯誤
+ini_set('max_execution_time', 30); // 30 秒執行時間限制
+ini_set('memory_limit', '128M'); // 128MB 記憶體限制
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+session_start();
+include("DB_open.php");
+require_once "avatar_helper.php";
 
 // 如果已經登入，直接跳轉到主頁
 if (isset($_SESSION['member_id']) && !empty($_SESSION['member_id'])) {

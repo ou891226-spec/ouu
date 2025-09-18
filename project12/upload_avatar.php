@@ -1,204 +1,128 @@
 <?php
-session_start();
-require_once 'db.php';
+// 設定 PHP 上傳限制
+ini_set('upload_max_filesize', '20M');
+ini_set('post_max_size', '20M');
+ini_set('max_execution_time', 120);
+ini_set('memory_limit', '512M');
+ini_set('max_input_time', 120);
+ini_set('display_errors', 1);
 
+// 設定 JSON 回應標頭
+header('Content-Type: application/json');
+
+session_start();
+
+// 檢查是否登入
 if (!isset($_SESSION['member_id'])) {
     echo json_encode(['success' => false, 'message' => '未登入']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['avatar'])) {
-    $member_id = $_SESSION['member_id'];
-    $file = $_FILES['avatar'];
+// 檢查是否為 POST 請求
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => '只接受 POST 請求']);
+    exit;
+}
+
+// 檢查是否有檔案上傳
+if (!isset($_FILES['avatar'])) {
+    echo json_encode(['success' => false, 'message' => '沒有檔案上傳']);
+    exit;
+}
+
+$member_id = $_SESSION['member_id'];
+$file = $_FILES['avatar'];
+
+// 檢查檔案上傳錯誤
+if ($file['error'] !== UPLOAD_ERR_OK) {
+    $error_messages = [
+        UPLOAD_ERR_INI_SIZE => '檔案大小超過伺服器限制',
+        UPLOAD_ERR_FORM_SIZE => '檔案大小超過表單限制',
+        UPLOAD_ERR_PARTIAL => '檔案只上傳了一部分',
+        UPLOAD_ERR_NO_FILE => '沒有選擇檔案',
+        UPLOAD_ERR_NO_TMP_DIR => '缺少臨時資料夾',
+        UPLOAD_ERR_CANT_WRITE => '檔案寫入失敗',
+        UPLOAD_ERR_EXTENSION => '檔案上傳被擴展功能阻止'
+    ];
     
-    // 檢查檔案類型
-    $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/tiff', 'image/tif', 'image/webp'];
-    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'tiff', 'tif', 'webp'];
-    
-    // 檢查檔案是否上傳成功
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        echo json_encode(['success' => false, 'message' => '檔案上傳錯誤: ' . $file['error']]);
-        exit;
-    }
-    
-    // 檢查 MIME 類型和副檔名（更寬鬆的驗證）
-    $is_valid_type = in_array($file['type'], $allowed_types) || in_array($file_extension, $allowed_extensions);
-    
-    // 額外檢查：使用 getimagesize 驗證是否為有效圖片
-    $image_info = @getimagesize($file['tmp_name']);
-    $is_valid_image = $image_info !== false;
-    
-    if (!$is_valid_type || !$is_valid_image) {
-        echo json_encode([
-            'success' => false, 
-            'message' => '只允許上傳 JPG、PNG 或 GIF 格式的圖片',
-            'debug' => [
-                'file_type' => $file['type'],
-                'file_extension' => $file_extension,
-                'is_valid_type' => $is_valid_type,
-                'is_valid_image' => $is_valid_image,
-                'image_info' => $image_info
-            ]
-        ]);
-        exit;
-    }
-    
-    // 檢查檔案大小（限制為 5MB）
-    if ($file['size'] > 5 * 1024 * 1024) {
-        echo json_encode(['success' => false, 'message' => '檔案大小不能超過 5MB']);
-        exit;
-    }
-    
-    // 創建上傳目錄
-    $upload_dir = 'img/avatars/';
-    if (!is_dir($upload_dir)) {
-        if (!mkdir($upload_dir, 0755, true)) {
-            echo json_encode(['success' => false, 'message' => '無法創建上傳目錄']);
-            exit;
-        }
-    }
-    
-    // 檢查目錄是否可寫入
-    if (!is_writable($upload_dir)) {
-        echo json_encode(['success' => false, 'message' => '上傳目錄不可寫入']);
-        exit;
-    }
-    
-    // 生成檔案名稱（統一使用 jpg 格式）
-    $file_name = 'avatar_' . $member_id . '_' . time() . '.jpg';
-    $file_path = $upload_dir . $file_name;
-    
-    // 處理圖片格式轉換
-    $source_path = $file['tmp_name'];
-    $target_path = $file_path;
-    
-    // 根據原始格式進行轉換
-    $image_type = $image_info[2]; // IMAGETYPE_XXX 常數
-    
-    // 創建圖片資源
-    switch ($image_type) {
-        case IMAGETYPE_JPEG:
-            $source_image = imagecreatefromjpeg($source_path);
-            break;
-        case IMAGETYPE_PNG:
-            $source_image = imagecreatefrompng($source_path);
-            break;
-        case IMAGETYPE_GIF:
-            $source_image = imagecreatefromgif($source_path);
-            break;
-        case IMAGETYPE_WEBP:
-            $source_image = imagecreatefromwebp($source_path);
-            break;
-        case IMAGETYPE_TIFF_II:
-        case IMAGETYPE_TIFF_MM:
-            // 檢查是否有 TIFF 支援
-            if (function_exists('imagecreatefromtiff')) {
-                $source_image = imagecreatefromtiff($source_path);
-            } elseif (extension_loaded('imagick')) {
-                // 使用 ImageMagick 處理 TIFF
-                try {
-                    $imagick = new Imagick($source_path);
-                    $imagick->setImageFormat('jpeg');
-                    $imagick->writeImage($target_path);
-                    $imagick->destroy();
-                    
-                    // 直接更新資料庫，跳過 GD 處理
-                    $sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
-                    $stmt = $pdo->prepare($sql);
-                    
-                    if ($stmt->execute([$file_path, $member_id])) {
-                        $_SESSION['avatar_url'] = $file_path;
-                        echo json_encode(['success' => true, 'avatar_url' => $file_path]);
-                    } else {
-                        echo json_encode(['success' => false, 'message' => '更新資料庫失敗']);
-                    }
-                    exit;
-                } catch (Exception $e) {
-                    echo json_encode(['success' => false, 'message' => 'TIFF 檔案處理失敗，請轉換為 JPG、PNG 或 GIF 後再上傳']);
-                    exit;
-                }
-            } else {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => '不支援 TIFF 格式。請將圖片轉換為 JPG、PNG 或 GIF 格式後再上傳。',
-                    'suggestion' => '您可以使用線上工具如 convertio.co 或 iloveimg.com 來轉換圖片格式。'
-                ]);
-                exit;
-            }
-            break;
-        default:
-            echo json_encode(['success' => false, 'message' => '不支援的圖片格式']);
-            exit;
-    }
-    
-    if (!$source_image) {
-        echo json_encode(['success' => false, 'message' => '無法讀取圖片檔案']);
-        exit;
-    }
-    
-    // 獲取原始尺寸
-    $width = imagesx($source_image);
-    $height = imagesy($source_image);
-    
-    // 設定最大尺寸（例如 300x300）
-    $max_size = 300;
-    
-    // 計算新尺寸
-    if ($width > $height) {
-        $new_width = $max_size;
-        $new_height = floor($height * $max_size / $width);
-    } else {
-        $new_height = $max_size;
-        $new_width = floor($width * $max_size / $height);
-    }
-    
-    // 創建新圖片
-    $new_image = imagecreatetruecolor($new_width, $new_height);
-    
-    // 保持透明度（如果是 PNG 或 GIF）
-    if ($image_type == IMAGETYPE_PNG || $image_type == IMAGETYPE_GIF) {
-        imagealphablending($new_image, false);
-        imagesavealpha($new_image, true);
-        $transparent = imagecolorallocatealpha($new_image, 255, 255, 255, 127);
-        imagefilledrectangle($new_image, 0, 0, $new_width, $new_height, $transparent);
-    }
-    
-    // 調整圖片大小
-    imagecopyresampled($new_image, $source_image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
-    
-    // 儲存為 JPEG
-    $quality = 90;
-    if (imagejpeg($new_image, $target_path, $quality)) {
-        // 清理記憶體
-        imagedestroy($source_image);
-        imagedestroy($new_image);
+    $error_message = isset($error_messages[$file['error']]) ? 
+        $error_messages[$file['error']] : '檔案上傳錯誤: ' . $file['error'];
         
-        // 更新資料庫中的頭像路徑
+    echo json_encode(['success' => false, 'message' => $error_message]);
+    exit;
+}
+
+// 檢查檔案大小
+if ($file['size'] > 20 * 1024 * 1024) {
+    $file_size_mb = round($file['size'] / (1024 * 1024), 2);
+    echo json_encode([
+        'success' => false, 
+        'message' => '⚠️ 檔案太大！',
+        'suggestion' => "您的檔案大小為 {$file_size_mb}MB，請選擇小於 20MB 的圖片。",
+        'max_size' => '20MB',
+        'current_size' => $file_size_mb . 'MB'
+    ]);
+    exit;
+}
+
+if ($file['size'] == 0) {
+    echo json_encode([
+        'success' => false, 
+        'message' => '⚠️ 檔案讀取失敗！',
+        'suggestion' => '請重新選擇圖片檔案，或嘗試使用其他圖片。',
+        'tip' => '如果問題持續發生，請嘗試重新拍照或選擇其他圖片。'
+    ]);
+    exit;
+}
+
+// 檢查檔案類型
+$allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+$file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+$allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+$is_valid_type = in_array($file['type'], $allowed_types) || in_array($file_extension, $allowed_extensions);
+
+if (!$is_valid_type) {
+    echo json_encode([
+        'success' => false, 
+        'message' => '⚠️ 檔案格式不支援！',
+        'suggestion' => '請選擇 JPG、PNG 或 GIF 格式的圖片檔案。',
+        'allowed_formats' => 'JPG、PNG、GIF'
+    ]);
+    exit;
+}
+
+// 創建上傳目錄
+$upload_dir = 'img/avatars/';
+if (!is_dir($upload_dir)) {
+    if (!mkdir($upload_dir, 0755, true)) {
+        echo json_encode(['success' => false, 'message' => '無法創建上傳目錄']);
+        exit;
+    }
+}
+
+// 生成檔案名稱
+$file_name = 'avatar_' . $member_id . '_' . time() . '.jpg';
+$file_path = $upload_dir . $file_name;
+
+// 移動檔案
+if (move_uploaded_file($file['tmp_name'], $file_path)) {
+    // 更新資料庫
+    try {
+        require_once 'db.php';
         $sql = "UPDATE member SET avatar = ? WHERE member_id = ?";
         $stmt = $pdo->prepare($sql);
         
         if ($stmt->execute([$file_path, $member_id])) {
-            // 更新 session 中的頭像路徑
             $_SESSION['avatar_url'] = $file_path;
-            
-            // 回傳成功狀態和新的頭像路徑
             echo json_encode(['success' => true, 'avatar_url' => $file_path]);
         } else {
             echo json_encode(['success' => false, 'message' => '更新資料庫失敗']);
         }
-    } else {
-        // 清理記憶體
-        imagedestroy($source_image);
-        imagedestroy($new_image);
-        echo json_encode(['success' => false, 'message' => '檔案上傳失敗']);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => '資料庫錯誤: ' . $e->getMessage()]);
     }
 } else {
-    echo json_encode(['success' => false, 'message' => '無效的請求']);
+    echo json_encode(['success' => false, 'message' => '檔案移動失敗']);
 }
 ?>
-
-
-
-
-
