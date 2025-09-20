@@ -66,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // 觸發任務和成就檢查
         require_once 'check_and_grant_achievements.php';
+        checkAndGrantAchievements($data['member_id'], 'memory_game', $data['score'], isset($data['play_time']) ? $data['play_time'] : null);
         checkAndCompleteAllTasks($data['member_id'], '記憶力');
         
         // 確保沒有其他輸出

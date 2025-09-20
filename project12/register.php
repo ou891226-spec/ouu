@@ -68,8 +68,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // 為新用戶分配每日任務
         try {
-            // 獲取3個隨機的活躍任務
-            $tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 ORDER BY RAND() LIMIT 3";
+            // 新用戶優先分配新手任務，然後隨機分配其他任務
+            $tasks_sql = "
+                (SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name = '遊戲新手' LIMIT 1)
+                UNION
+                (SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name != '遊戲新手' ORDER BY RAND() LIMIT 2)
+            ";
             $tasks_stmt = $pdo->query($tasks_sql);
             $available_tasks = $tasks_stmt->fetchAll(PDO::FETCH_COLUMN);
             

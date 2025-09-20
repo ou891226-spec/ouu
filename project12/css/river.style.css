@@ -44,13 +44,13 @@ body {
 }
 
 .help-btn {
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     background: #1e3a8a;
     color: white;
     border: none;
-    font-size: 32px;
+    font-size: 40px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
     transition: all 0.3s ease;
@@ -71,7 +71,7 @@ body {
 .game-title {
     color: #2c3e50;
     margin-bottom: 40px;
-    font-size: 4em;
+    font-size: 5em;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     animation: glow 2s ease-in-out infinite alternate;
 }
@@ -86,7 +86,7 @@ body {
 }
 
 .game-intro p {
-    font-size: 24px;
+    font-size: 28px;
     margin: 15px 0;
     color: #2c3e50;
 }
@@ -129,7 +129,7 @@ body {
 
 .difficulty-title {
     color: #333;
-    font-size: 2.2em;
+    font-size: 2.8em;
     font-weight: bold;
     margin: 0;
     text-align: center;
@@ -145,23 +145,23 @@ body {
 }
 
 .difficulty-option {
-    padding: 25px;
-    border-radius: 15px;
+    padding: 35px;
+    border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 80px;
-    font-size: 1.8em;
+    min-height: 100px;
+    font-size: 2.2em;
     font-weight: bold;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .easy-option {
     background: #22c55e;
-    color: white;
+    color: black;
 }
 
 .normal-option {
@@ -171,7 +171,7 @@ body {
 
 .hard-option {
     background: #ef4444;
-    color: white;
+    color: black;
 }
 
 .difficulty-option:hover {
@@ -355,15 +355,15 @@ body {
 .game-header h2 {
     margin: 0;
     color: #2c3e50;
-    font-size: 1.5em;
+    font-size: 1.8em;
 }
 
 /* 按鈕樣式 */
 .btn-primary, .btn-secondary, .btn-small {
-    padding: 18px 36px;
+    padding: 22px 44px;
     border: none;
-    border-radius: 30px;
-    font-size: 22px;
+    border-radius: 35px;
+    font-size: 26px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -397,8 +397,8 @@ body {
 }
 
 .btn-small {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 12px 24px;
+    font-size: 18px;
     background: #1e3a8a;
     color: white;
     box-shadow: 0 2px 10px rgba(30, 58, 138, 0.3);
@@ -443,12 +443,12 @@ body {
 }
 
 #game-info span {
-    padding: 12px 20px;
+    padding: 16px 28px;
     background: #1e3a8a;
     color: white;
-    border-radius: 30px;
+    border-radius: 35px;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 22px;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3);
     transition: transform 0.2s ease;
 }
@@ -458,16 +458,16 @@ body {
 }
 
 #game-info button {
-    padding: 12px 20px !important;
+    padding: 16px 28px !important;
     background: #1e3a8a !important;
     color: white !important;
     border: none !important;
-    border-radius: 30px !important;
+    border-radius: 35px !important;
     font-weight: bold !important;
     box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3) !important;
     transition: transform 0.2s ease !important;
     cursor: pointer !important;
-    font-size: 18px !important;
+    font-size: 22px !important;
     margin: 0 !important;
     outline: none !important;
     font-family: inherit !important;
@@ -510,9 +510,9 @@ body {
 
 .river-side {
     background: white;
-    width: 280px;
-    padding: 20px;
-    border-radius: 20px;
+    width: 350px;
+    padding: 25px;
+    border-radius: 25px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
     position: relative;
@@ -531,14 +531,14 @@ body {
 .river-side.active::before {
     content: "🚢 船在此岸";
     position: absolute;
-    top: -15px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
     background: #dc2626;
     color: white;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 14px;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 18px;
     font-weight: bold;
     white-space: nowrap;
     z-index: 20;
@@ -557,10 +557,10 @@ body {
 
 .river {
     background: #1e3a8a;
-    width: 350px;
-    height: 250px;
+    width: 420px;
+    height: 300px;
     position: relative;
-    border-radius: 25px;
+    border-radius: 30px;
     box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
     overflow: hidden;
 }
@@ -577,13 +577,13 @@ body {
 
 .instruction-item {
     color: #1e3a8a;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: bold;
     background: #f0f4ff;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 12px 20px;
+    border-radius: 25px;
     display: inline-block;
-    margin: 5px 8px;
+    margin: 8px 12px;
     border: 2px solid #1e3a8a;
     box-shadow: 0 3px 8px rgba(30, 58, 138, 0.2);
     transition: all 0.3s ease;
@@ -613,18 +613,18 @@ body {
 
 #boat {
     position: absolute;
-    bottom: 40px;
+    bottom: 50px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 65px;
+    font-size: 80px;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 10;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
-    padding: 15px;
-    border: 4px solid #dc2626;
+    padding: 20px;
+    border: 5px solid #dc2626;
 }
 
 #boat:hover {
@@ -672,15 +672,15 @@ body {
 
 .farmer {
     position: absolute;
-    bottom: 20px;
+    bottom: 25px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 36px;
+    font-size: 45px;
     background: #dc2626;
-    padding: 12px;
+    padding: 15px;
     border-radius: 50%;
-    width: 65px;
-    height: 65px;
+    width: 80px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -700,20 +700,20 @@ body {
 }
 
 .item {
-    margin: 8px;
-    padding: 15px 20px;
+    margin: 10px;
+    padding: 20px 25px;
     background: white;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
     display: inline-block;
-    min-width: 80px;
+    min-width: 100px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
-    font-size: 16px;
+    font-size: 20px;
     text-align: center;
     animation: float 3s ease-in-out infinite;
 }
@@ -759,8 +759,8 @@ body {
 
 /* 表情符號樣式 */
 .item .emoji {
-    font-size: 32px;
-    margin-right: 10px;
+    font-size: 40px;
+    margin-right: 12px;
     display: inline-block;
     vertical-align: middle;
     line-height: 1;
@@ -773,7 +773,7 @@ body {
 }
 
 .item .name {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     vertical-align: middle;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
@@ -845,12 +845,12 @@ body {
 
 #message {
     margin-top: 25px;
-    padding: 15px 25px;
+    padding: 20px 30px;
     font-weight: bold;
-    font-size: 20px;
-    min-height: 40px;
+    font-size: 24px;
+    min-height: 50px;
     background: white;
-    border-radius: 15px;
+    border-radius: 18px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     border: 1px solid #e0e0e0;
     transition: all 0.3s ease;
@@ -858,12 +858,13 @@ body {
 
 #weather-info {
     margin-top: 15px;
-    padding: 15px 25px;
+    padding: 20px 30px;
     background: #fef2f2;
     border: 2px solid #dc2626;
-    border-radius: 15px;
+    border-radius: 18px;
     display: none;
     font-weight: bold;
+    font-size: 20px;
     box-shadow: 0 5px 20px rgba(220, 38, 38, 0.3);
     animation: slideIn 0.5s ease-out;
 }
@@ -893,14 +894,14 @@ body {
 }
 
 .game-control-btn {
-    padding: 12px 24px;
+    padding: 16px 32px;
     border: none;
-    border-radius: 25px;
-    font-size: 16px;
+    border-radius: 30px;
+    font-size: 20px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 120px;
+    min-width: 150px;
 }
 
 #pauseBtn {
@@ -958,14 +959,84 @@ body {
 }
 
 .modal-dialog {
-    background: white;
-    border-radius: 12px;
-    padding: 40px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    max-width: none;
+    width: auto;
+    box-shadow: none;
     border: none;
     animation: slideIn 0.3s ease-out;
+}
+
+/* 遊戲失敗對話框特殊樣式 */
+.game-fail-dialog {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 35px;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid #e0e0e0;
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.game-fail-dialog .modal-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #333;
+    font-size: 2.2em;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.alarm-icon {
+    font-size: 1.4em;
+    color: #ff6b6b;
+    filter: drop-shadow(0 2px 4px rgba(255, 107, 107, 0.3));
+}
+
+.game-fail-dialog .modal-content {
+    margin-bottom: 30px;
+    text-align: center;
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.game-fail-dialog .modal-detail {
+    text-align: center;
+    color: #666;
+    font-size: 1.3em;
+    margin: 15px 0;
+    line-height: 1.5;
+    padding-left: 0;
+}
+
+.game-fail-dialog .modal-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.game-fail-dialog .modal-btn {
+    padding: 16px 32px;
+    border: none;
+    border-radius: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 130px;
 }
 
 .modal-title {
@@ -1196,11 +1267,11 @@ body {
     background: white;
     color: black;
     border: 3px solid black;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 2.8rem;
+    font-size: 3.2rem;
     font-weight: bold;
     transition: all 0.3s ease;
     box-shadow: none;
@@ -1225,11 +1296,11 @@ body {
 
 .back-label {
     position: absolute;
-    top: 90px;
+    top: 110px;
     left: 50%;
     transform: translateX(-50%);
     color: #333;
-    font-size: 1.8rem;
+    font-size: 2.0rem;
     white-space: nowrap;
     text-align: center;
     font-weight: bold;
@@ -1243,11 +1314,11 @@ body {
     background: white;
     color: black;
     border: 3px solid black;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 2.8rem;
+    font-size: 3.2rem;
     font-weight: bold;
     transition: all 0.3s ease;
     box-shadow: none;
@@ -1272,11 +1343,11 @@ body {
 
 .help-label {
     position: absolute;
-    top: 90px;
+    top: 110px;
     left: 50%;
     transform: translateX(-50%);
     color: #333;
-    font-size: 1.8rem;
+    font-size: 2.0rem;
     white-space: nowrap;
     text-align: center;
     font-weight: bold;

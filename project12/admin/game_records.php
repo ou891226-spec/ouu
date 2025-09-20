@@ -228,7 +228,6 @@ $stats = $stats_stmt->fetch();
                         <option value="記憶力" <?php echo $game_type_filter === '記憶力' ? 'selected' : ''; ?>>記憶力</option>
                         <option value="反應力" <?php echo $game_type_filter === '反應力' ? 'selected' : ''; ?>>反應力</option>
                         <option value="邏輯力" <?php echo $game_type_filter === '邏輯力' ? 'selected' : ''; ?>>邏輯力</option>
-                        <option value="算數邏輯力" <?php echo $game_type_filter === '算數邏輯力' ? 'selected' : ''; ?>>算術邏輯</option>
                     </select>
                 </div>
                 <div>

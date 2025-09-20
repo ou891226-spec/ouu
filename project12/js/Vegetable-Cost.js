@@ -1,4 +1,26 @@
 function debugLog() {}
+
+// 音效播放函數
+function playBingoSound() {
+    try {
+        const audio = new Audio('music/Bingo.m4a');
+        audio.volume = 0.6; // 設置音量，調小一點
+        audio.play().catch(e => console.log('Bingo音效播放失敗:', e));
+    } catch (error) {
+        console.log('Bingo音效載入失敗:', error);
+    }
+}
+
+function playErrorSound() {
+    try {
+        const audio = new Audio('music/invalid.mp3');
+        audio.volume = 0.6; // 設置音量，稍微小一點
+        audio.play().catch(e => console.log('Invalid音效播放失敗:', e));
+    } catch (error) {
+        console.log('Invalid音效載入失敗:', error);
+    }
+}
+
 // 遊戲核心邏輯
 let score = 0;
 let highScore = 0;
@@ -1006,11 +1028,17 @@ function showAnswerFeedback(isCorrect, selectedAnswer, correctAnswer) {
     `;
     
     if (isCorrect) {
+        // 播放答對音效
+        playBingoSound();
+        
         feedback.innerHTML = `
             <div style="color: #4caf50; margin-bottom: 10px;">✓ 答對了！</div>
             <div style="font-size: 1.2rem; color: #2e7d32;">+3 分</div>
         `;
     } else {
+        // 播放答錯音效
+        playErrorSound();
+        
         feedback.innerHTML = `
             <div style="color: #f44336; margin-bottom: 10px;">✗ 答錯了！</div>
             <div style="font-size: 1.1rem; color: #666; margin-bottom: 8px;">你的答案：${selectedAnswer}</div>

@@ -758,9 +758,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOver = true;
             this.won = true;
             
-            const difficultyLabel = document.getElementById('win-difficulty');
-            difficultyLabel.textContent = this.getDifficultyText();
-            difficultyLabel.className = 'difficulty-label ' + this.difficulty;
+            // 計算實際遊玩時間
+            const playTime = this.gameStartTime ? Math.floor((Date.now() - this.gameStartTime) / 1000) : 0;
+            console.log('遊戲勝利，實際遊玩時間:', playTime, '秒');
             
             // 根據難度計算獎勵分數
             let rewardScore = 0;
@@ -779,20 +779,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     rewardScore = 20;
             }
             
-            // 顯示遊戲分數和獎勵分數
-            document.getElementById('win-game-score').textContent = this.score;
-            document.getElementById('win-reward-score').textContent = '+' + rewardScore;
-            
-            // 計算實際遊玩時間
-            const playTime = this.gameStartTime ? Math.floor((Date.now() - this.gameStartTime) / 1000) : 0;
-            console.log('遊戲勝利，實際遊玩時間:', playTime, '秒');
-            
             // 自動呼叫 saveGameRecord，使用獎勵分數而不是遊戲分數
-            if (typeof saveGameRecord === 'function') {
+            const memberId = document.getElementById('member-id')?.value;
+            if (typeof saveGameRecord === 'function' && memberId) {
                 console.log('遊戲勝利，呼叫 saveGameRecord，獎勵分數：', rewardScore);
                 saveGameRecord(memberId, rewardScore, this.difficulty, playTime);
             }
-            this.winModal.style.display = 'block';
+            
+            // 使用統一的 handleGameEnd 函數來顯示彈窗
+            if (typeof handleGameEnd === 'function') {
+                handleGameEnd(this.score, this.difficulty, true, playTime);
+            } else {
+                // 備用方案：直接顯示彈窗
+                const rewardElement = document.getElementById('win-reward-score');
+                if (rewardElement) {
+                    rewardElement.textContent = rewardScore.toString();
+                }
+                this.winModal.style.display = 'block';
+            }
         }
 
         showGameOverModal() {
@@ -808,16 +812,6 @@ document.addEventListener('DOMContentLoaded', () => {
             //     modalTitle.textContent = '遊戲失敗';
             // }
 
-            // 更新彈窗內的難度、分數等資訊
-            const difficultyLabel = document.getElementById('game-over-difficulty');
-            console.log('當前難度:', this.difficulty);
-            console.log('難度文字:', this.getDifficultyText());
-            difficultyLabel.textContent = this.getDifficultyText();
-            difficultyLabel.className = 'difficulty-label ' + this.difficulty;
-            
-            // 不再需要設置分數，因為已改為固定文字「未在時間內達成分數」
-            // document.getElementById('game-over-score').textContent = this.score;            
-            
             // 計算實際遊玩時間
             const currentTime = Date.now();
             const playTime = this.gameStartTime ? Math.floor((currentTime - this.gameStartTime) / 1000) : 0;
@@ -827,13 +821,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 遊戲失敗時記錄0分
             console.log('遊戲失敗，記錄0分');
-            if (typeof saveGameRecord === 'function') {
+            const memberId = document.getElementById('member-id')?.value;
+            if (typeof saveGameRecord === 'function' && memberId) {
                 console.log('遊戲失敗，呼叫 saveGameRecord，分數：0');
                 saveGameRecord(memberId, 0, this.difficulty, playTime);
             }
 
-            // 顯示彈窗
-            this.gameOverModal.style.display = 'block';
+            // 使用統一的 handleGameEnd 函數來顯示彈窗
+            if (typeof handleGameEnd === 'function') {
+                handleGameEnd(this.score, this.difficulty, false, playTime);
+            } else {
+                // 備用方案：直接顯示彈窗
+                this.gameOverModal.style.display = 'block';
+            }
         }
     
 

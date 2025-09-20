@@ -147,10 +147,15 @@ function loadDailyTasks() {
         const item = document.createElement("div");
         item.className = "mission-item";
         item.setAttribute("data-task-id", task.task_id);
-        // 判斷是否已完成
-        const isCompleted = task.status === 'completed' || task.status === 'claimed';
+        
+        // 支援累積型任務的進度計算
+        const current = parseInt(task.progress) || 0;
+        const required = parseInt(task.required) || 1;
+        const progressText = `${current}/${required}`;
+        
+        // 判斷是否已完成（支援累積型任務）
+        const isCompleted = current >= required || task.status === 'completed' || task.status === 'claimed';
         const isClaimed = task.status === 'claimed';
-        const progressText = isCompleted ? '1/1' : '0/1';
 
         item.setAttribute("data-completed", isCompleted.toString());
         item.setAttribute("data-progress", progressText);
@@ -165,6 +170,27 @@ function loadDailyTasks() {
         }
 
         const iconFile = getTaskIcon(task.task_type);
+        
+        // 進度顏色和樣式
+        let progressColor = '#ddd';
+        let progressStyle = '';
+        
+        if (isCompleted) {
+          progressColor = '#4caf50'; // 綠色 - 已完成
+          progressStyle = 'font-weight: bold;';
+        } else if (current > 0) {
+          progressColor = '#f44336'; // 紅色 - 有進度
+          progressStyle = 'font-weight: bold;';
+        } else {
+          progressColor = '#999'; // 灰色 - 未開始
+        }
+
+        // 如果是累積型任務，添加進度條
+        const progressBarHtml = required > 1 ? `
+          <div style="width: 60px; height: 4px; background: #eee; border-radius: 2px; margin-top: 4px;">
+            <div style="width: ${Math.min((current / required) * 100, 100)}%; height: 100%; background: ${progressColor}; border-radius: 2px; transition: width 0.3s ease;"></div>
+          </div>
+        ` : '';
 
         item.innerHTML = `
           <div class="icon-text">
@@ -174,7 +200,10 @@ function loadDailyTasks() {
               <div class="desc">${task.task_description}</div>
             </div>
           </div>
-          <div class="progress">${progressText}</div>
+          <div class="progress" style="color: ${progressColor}; ${progressStyle}">
+            ${progressText}
+            ${progressBarHtml}
+          </div>
           ${btnHtml}
         `;
         container.appendChild(item);

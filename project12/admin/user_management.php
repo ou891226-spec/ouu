@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'update_status':
                 $user_id = $_POST['user_id'];
                 $new_status = $_POST['status'];
-                $stmt = $pdo->prepare("UPDATE member SET status = ? WHERE member_id = ?");
+                $stmt = $pdo->prepare("UPDATE member SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $user_id]);
                 break;
         }
@@ -206,7 +206,6 @@ $stats = $stats_stmt->fetch();
                 <p>總會話數</p>
             </div>
         </div>
-        
         
         <div class="filters">
             <form method="GET" class="filter-form">

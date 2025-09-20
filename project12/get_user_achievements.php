@@ -22,7 +22,7 @@ try {
     // 獲取用戶今天獲得的成就稱號（根據台灣時間）
     $today = date('Y-m-d'); // 使用台灣時間
     $sql = "SELECT a.achievement_name, 
-                   COALESCE(a.achievement_description, a.achievement_name) as achievement_description,
+                   a.achievement_name as achievement_description,
                    COALESCE(a.icon, '🏆') as icon, 
                    ma.earned_date
             FROM member_achievements ma

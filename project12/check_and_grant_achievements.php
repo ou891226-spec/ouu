@@ -20,8 +20,50 @@ function checkAndGrantAchievements($member_id, $game_type = null, $score = 0, $p
     global $pdo;
     
     try {
-        // 現在成就只能通過完成每日任務獲得，不再自動授予
-        // 只檢查並完成相關的每日任務（必須有明確的遊戲類型）
+        // 檢查特殊成就（如完美主義者、持久戰士等）
+        if ($game_type && $score > 0) {
+            // 將遊戲類型映射到中文遊戲類型
+            $chinese_game_type = null;
+            switch ($game_type) {
+                case 'memory_game':
+                    $chinese_game_type = '記憶力';
+                    break;
+                case 'game_2048':
+                    $chinese_game_type = '算術邏輯力';
+                    break;
+                case 'catch_egg':
+                    $chinese_game_type = '反應力';
+                    break;
+                case 'text_color':
+                    $chinese_game_type = '反應力';
+                    break;
+                case 'vegetable_cost':
+                    $chinese_game_type = '算術邏輯力';
+                    break;
+                case 'rhythm_game':
+                    $chinese_game_type = '反應力';
+                    break;
+                case 'prisoner_game':
+                    $chinese_game_type = '記憶力';
+                    break;
+                case 'river_game':
+                    $chinese_game_type = '算術邏輯力';
+                    break;
+                case 'memory_2p':
+                    $chinese_game_type = '記憶力';
+                    break;
+                case 'vegetable_2p':
+                    $chinese_game_type = '算術邏輯力';
+                    break;
+                default:
+                    $chinese_game_type = $game_type;
+                    break;
+            }
+            
+            checkSpecialAchievements($member_id, $score, $play_time, $chinese_game_type);
+        }
+        
+        // 檢查並完成相關的每日任務（必須有明確的遊戲類型）
         if ($game_type) {
             checkAndCompleteAllTasks($member_id, $game_type);
         }
@@ -73,14 +115,50 @@ function grantAchievement($member_id, $achievement_id, $achievement_name, $icon)
 /**
  * 檢查特殊成就
  */
-function checkSpecialAchievements($member_id, $score, $play_time) {
+function checkSpecialAchievements($member_id, $score, $play_time, $game_type = null) {
     global $pdo;
     
     try {
-        // 檢查完美主義者（假設滿分是1000）
-        if ($score >= 1000) {
+        // 檢查完美主義者 - 根據不同遊戲類型判斷滿分
+        $isPerfectScore = false;
+        
+        if ($game_type) {
+            switch ($game_type) {
+                case '記憶力':
+                    // 記憶力遊戲：完成就是滿分（翻牌對對樂、圖片線索、追蹤犯人）
+                    $isPerfectScore = ($score > 0);
+                    break;
+                case '反應力':
+                    // 反應力遊戲：需要達到一定分數（接金蛋、看字選色、節奏遊戲）
+                    // 不同遊戲有不同標準，但統一設為300分以上
+                    $isPerfectScore = ($score >= 300);
+                    break;
+                case '算術邏輯力':
+                    // 算術邏輯力遊戲：需要更細緻的判斷
+                    // 2048遊戲需要達到2048分，算菜錢和過河遊戲完成即可
+                    if ($score >= 2048) {
+                        // 如果分數很高，肯定是完美
+                        $isPerfectScore = true;
+                    } else if ($score > 0 && $score < 2048) {
+                        // 分數較低但大於0，可能是算菜錢或過河遊戲
+                        $isPerfectScore = true;
+                    } else {
+                        $isPerfectScore = false;
+                    }
+                    break;
+                default:
+                    // 其他遊戲：使用舊的通用標準
+                    $isPerfectScore = ($score >= 1000);
+                    break;
+            }
+        } else {
+            // 沒有遊戲類型資訊時，使用舊的通用標準
+            $isPerfectScore = ($score >= 1000);
+        }
+        
+        if ($isPerfectScore) {
             $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
-                    WHERE achievement_type = 'special' AND requirement_type = 'perfect_score'";
+                    WHERE achievement_name = '完美主義者'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $achievement = $stmt->fetch();
@@ -93,7 +171,7 @@ function checkSpecialAchievements($member_id, $score, $play_time) {
         // 檢查持久戰士（遊玩時間超過5分鐘）
         if ($play_time >= 300) {
             $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
-                    WHERE achievement_type = 'special' AND requirement_type = 'long_playtime'";
+                    WHERE achievement_name = '持久戰士'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $achievement = $stmt->fetch();
@@ -111,7 +189,126 @@ function checkSpecialAchievements($member_id, $score, $play_time) {
         
         if ($game_types >= 7) {
             $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
-                    WHERE achievement_type = 'special' AND requirement_type = 'game_types'";
+                    WHERE achievement_name = '全能玩家'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $achievement = $stmt->fetch();
+            
+            if ($achievement) {
+                grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon']);
+            }
+        }
+        
+        // 檢查遊戲達人（累計遊玩100局遊戲）
+        $total_games_sql = "SELECT COUNT(*) as total_games FROM game_records WHERE member_id = ?";
+        $total_games_stmt = $pdo->prepare($total_games_sql);
+        $total_games_stmt->execute([$member_id]);
+        $total_games = $total_games_stmt->fetch()['total_games'];
+        
+        if ($total_games >= 100) {
+            $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
+                    WHERE achievement_name = '遊戲達人'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $achievement = $stmt->fetch();
+            
+            if ($achievement) {
+                grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon']);
+            }
+        }
+        
+        // 檢查連勝王者（連續獲得5次高分）
+        // 這裡定義高分為分數 >= 500
+        if ($score >= 500) {
+            $recent_high_scores_sql = "SELECT COUNT(*) as high_score_count 
+                                     FROM game_records 
+                                     WHERE member_id = ? 
+                                     AND score >= 500 
+                                     AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+                                     ORDER BY created_at DESC 
+                                     LIMIT 10";
+            $high_scores_stmt = $pdo->prepare($recent_high_scores_sql);
+            $high_scores_stmt->execute([$member_id]);
+            $high_score_count = $high_scores_stmt->fetch()['high_score_count'];
+            
+            if ($high_score_count >= 5) {
+                $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
+                        WHERE achievement_name = '連勝王者'";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $achievement = $stmt->fetch();
+                
+                if ($achievement) {
+                    grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon']);
+                }
+            }
+        }
+        
+        // 檢查連續登入成就（需要額外的登入記錄表來追蹤）
+        checkLoginStreakAchievements($member_id);
+        
+    } catch (Exception $e) {
+        error_log("特殊成就檢查錯誤: " . $e->getMessage());
+    }
+}
+
+/**
+ * 檢查連續登入相關成就
+ */
+function checkLoginStreakAchievements($member_id) {
+    global $pdo;
+    
+    try {
+        // 檢查連續登入天數
+        $login_streak_sql = "
+            SELECT COUNT(DISTINCT DATE(created_at)) as consecutive_days
+            FROM user_behavior_log 
+            WHERE member_id = ? 
+            AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            AND DATE(created_at) IN (
+                SELECT DATE(created_at) 
+                FROM user_behavior_log 
+                WHERE member_id = ? 
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at) DESC
+                LIMIT 30
+            )
+        ";
+        
+        $streak_stmt = $pdo->prepare($login_streak_sql);
+        $streak_stmt->execute([$member_id, $member_id]);
+        $streak_days = $streak_stmt->fetch()['consecutive_days'];
+        
+        // 檢查連續登入3天成就
+        if ($streak_days >= 3) {
+            $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
+                    WHERE achievement_name = '忠實玩家'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $achievement = $stmt->fetch();
+            
+            if ($achievement) {
+                grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon']);
+            }
+        }
+        
+        // 檢查連續登入7天成就
+        if ($streak_days >= 7) {
+            $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
+                    WHERE achievement_name = '超級粉絲'";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $achievement = $stmt->fetch();
+            
+            if ($achievement) {
+                grantAchievement($member_id, $achievement['achievement_id'], $achievement['achievement_name'], $achievement['icon']);
+            }
+        }
+        
+        // 檢查連續登入30天成就
+        if ($streak_days >= 30) {
+            $sql = "SELECT achievement_id, achievement_name, icon FROM achievements 
+                    WHERE achievement_name = '資深玩家'";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
             $achievement = $stmt->fetch();
@@ -122,7 +319,7 @@ function checkSpecialAchievements($member_id, $score, $play_time) {
         }
         
     } catch (Exception $e) {
-        error_log("特殊成就檢查錯誤: " . $e->getMessage());
+        error_log("檢查連續登入成就錯誤: " . $e->getMessage());
     }
 }
 
@@ -202,7 +399,7 @@ function getUserAchievements($member_id) {
     
     try {
         $sql = "SELECT a.achievement_name, 
-                       COALESCE(a.achievement_description, a.achievement_name) as achievement_description,
+                       a.achievement_name as achievement_description,
                        COALESCE(a.icon, '🏆') as icon, 
                        ma.earned_date
                 FROM member_achievements ma

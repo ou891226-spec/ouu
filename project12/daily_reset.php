@@ -55,8 +55,21 @@ try {
         $delete_stmt = $pdo->prepare($delete_tasks_sql);
         $delete_stmt->execute([$user_id]);
         
-        // 為用戶分配新的每日任務（隨機選擇3個）
-        $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 ORDER BY RAND() LIMIT 3";
+        // 檢查用戶是否為新手（沒有遊戲記錄）
+        $game_count_sql = "SELECT COUNT(*) as game_count FROM game_records WHERE member_id = ?";
+        $game_count_stmt = $pdo->prepare($game_count_sql);
+        $game_count_stmt->execute([$user_id]);
+        $game_count = $game_count_stmt->fetch()['game_count'];
+        
+        // 為用戶分配新的每日任務
+        if ($game_count == 0) {
+            // 新手用戶：包含新手任務
+            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 ORDER BY RAND() LIMIT 3";
+        } else {
+            // 非新手用戶：排除新手任務
+            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name != '遊戲新手' ORDER BY RAND() LIMIT 3";
+        }
+        
         $available_stmt = $pdo->query($available_tasks_sql);
         $available_tasks = $available_stmt->fetchAll(PDO::FETCH_COLUMN);
         

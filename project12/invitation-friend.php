@@ -19,7 +19,7 @@ $invites = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="invitation-modal">
         <!-- 返回按鈕 -->
         <button class="back-button" onclick="window.location.href='friend.php'" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
-            <span class="back-arrow">⬅</span>
+            <span class="back-arrow">←</span>
             <div class="back-label">返回</div>
         </button>
         <div class="invitation-title">邀請通知：</div>

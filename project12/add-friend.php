@@ -37,7 +37,7 @@ if ($q !== '') {
     $like_q = "%$q%";
     $stmt->execute([$like_q, $like_q, $my_id]);
 } else {
-    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE member_id != ? LIMIT 10";
+    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE member_id != ? ORDER BY member_id DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$my_id]);
 }
@@ -54,7 +54,7 @@ $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="add-friend-modal">
         <!-- 返回按鈕 -->
         <button class="back-button" onclick="window.location.href='friend.php'" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
-            <span class="back-arrow">⬅</span>
+            <span class="back-arrow">←</span>
             <div class="back-label">返回</div>
         </button>
         <div class="add-friend-title">請輸入好友姓名或帳號：</div>

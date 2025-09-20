@@ -17,26 +17,22 @@ const catchSound = document.getElementById('catchSound');
 const bombSound = document.getElementById('bombSound');
 const gameOverSound = document.getElementById('gameOverSound');
 
-// 音效播放函數 - 優化版本
+// 音效播放函數 - 高效能版本
 function playCatchSound() {
-    if (catchSound) {
-        // 立即重置並播放，減少延遲
-        catchSound.currentTime = 0;
-        catchSound.pause(); // 先暫停確保重置
-        catchSound.playbackRate = 1.0;
-        catchSound.volume = 0.8;
-        catchSound.play().catch(e => console.log('接蛋音效播放失敗:', e));
+    if (catchSound && catchSound.readyState >= 2) {
+        // 使用 cloneNode 避免重置當前播放
+        const soundClone = catchSound.cloneNode();
+        soundClone.volume = 0.8;
+        soundClone.play().catch(e => console.log('接蛋音效播放失敗:', e));
     }
 }
 
 function playBombSound() {
-    if (bombSound) {
-        // 立即重置並播放，減少延遲
-        bombSound.currentTime = 0;
-        bombSound.pause(); // 先暫停確保重置
-        bombSound.playbackRate = 1.0;
-        bombSound.volume = 0.3;
-        bombSound.play().catch(e => console.log('炸彈音效播放失敗:', e));
+    if (bombSound && bombSound.readyState >= 2) {
+        // 使用 cloneNode 避免重置當前播放
+        const soundClone = bombSound.cloneNode();
+        soundClone.volume = 0.3;
+        soundClone.play().catch(e => console.log('炸彈音效播放失敗:', e));
     }
 }
 
@@ -286,8 +282,8 @@ function resetGame() {
     const gameWidth = game.offsetWidth;
     if (basketWidth > 0 && gameWidth > 0) {
       const centerLeft = (gameWidth - basketWidth) / 2;
-      basket.style.transform = 'none';
-      basket.style.left = centerLeft + 'px';
+      basket.style.transform = `translateX(${centerLeft}px)`;
+      basket.style.left = '0px';
       console.log('重置時籃子置中:', centerLeft);
     } else {
       setTimeout(centerBasket, 50);
@@ -323,9 +319,9 @@ document.addEventListener('mousemove', (e) => {
         let newLeft = mouseX - (basketWidth / 2);
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
         
-        // 清除 transform 並直接設定 left 位置
-        basket.style.setProperty('transform', 'none', 'important');
-        basket.style.setProperty('left', newLeft + 'px', 'important');
+        // 使用 transform 提升效能
+        basket.style.transform = `translateX(${newLeft}px)`;
+        basket.style.left = '0px';
     }
 });
 
@@ -353,12 +349,9 @@ document.addEventListener('touchmove', (e) => {
         let newLeft = touchX - (basketWidth / 2);
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
         
-        // 清除 transform 並直接設定 left 位置
-        basket.style.setProperty('transform', 'none', 'important');
-        basket.style.setProperty('left', newLeft + 'px', 'important');
-        
-        // 強制重新計算樣式
-        basket.offsetHeight;
+        // 使用 transform 提升效能
+        basket.style.transform = `translateX(${newLeft}px)`;
+        basket.style.left = '0px';
         
         console.log('觸控移動:', {
             touchX: touchX,
@@ -387,15 +380,36 @@ document.addEventListener('keydown', (e) => {
         
         if (e.key === 'ArrowLeft') {
             const newLeft = Math.max(0, currentLeft - moveDistance);
-            basket.style.setProperty('transform', 'none', 'important');
-            basket.style.setProperty('left', newLeft + 'px', 'important');
+            basket.style.transform = `translateX(${newLeft}px)`;
+            basket.style.left = '0px';
         } else if (e.key === 'ArrowRight') {
             const newLeft = Math.min(maxLeft, currentLeft + moveDistance);
-            basket.style.setProperty('transform', 'none', 'important');
-            basket.style.setProperty('left', newLeft + 'px', 'important');
+            basket.style.transform = `translateX(${newLeft}px)`;
+            basket.style.left = '0px';
         }
     }
 });
+
+// 優化的碰撞檢測函數
+function checkItemCollision(item, itemLeft, itemWidth, itemTop) {
+    const itemCenter = itemLeft + (itemWidth / 2);
+    const itemBottom = itemTop + itemWidth;
+    
+    // 獲取籃子的實際位置和大小 - 優化版本
+    const basketRect = basket.getBoundingClientRect();
+    const gameRect = game.getBoundingClientRect();
+    const basketX = basketRect.left - gameRect.left;
+    const basketWidth = basketRect.width;
+    const basketHeight = basketRect.height;
+    
+    // 計算碰撞範圍 - 擴大檢測範圍
+    const basketLeft = basketX - 10; // 左邊擴大10px
+    const basketRight = basketX + basketWidth + 10; // 右邊擴大10px
+    const basketTop = game.offsetHeight - basketHeight - 20; // 上邊擴大20px
+    
+    // 更寬鬆的碰撞檢測
+    return itemCenter >= basketLeft && itemCenter <= basketRight && itemBottom >= basketTop;
+}
 
 // 掉落物品
 function dropItem() {
@@ -433,25 +447,9 @@ function dropItem() {
         if (top >= game.offsetHeight - 120) {
             const itemLeft = parseInt(item.style.left);
             const itemWidth = 50;
-            const itemCenter = itemLeft + (itemWidth / 2);
             
-            // 獲取籃子的實際位置和大小
-            const basketRect = basket.getBoundingClientRect();
-            const gameRect = game.getBoundingClientRect();
-            const basketX = basketRect.left - gameRect.left;
-            const basketWidth = basketRect.width;
-            const basketHeight = basketRect.height;
-            
-            // 計算碰撞範圍 - 擴大檢測範圍
-            const basketLeft = basketX - 10; // 左邊擴大10px
-            const basketRight = basketX + basketWidth + 10; // 右邊擴大10px
-            const basketTop = game.offsetHeight - basketHeight - 20; // 上邊擴大20px
-            
-            // 物品底部位置
-            const itemBottom = top + itemWidth;
-            
-            // 更寬鬆的碰撞檢測
-            if (itemCenter >= basketLeft && itemCenter <= basketRight && itemBottom >= basketTop && !isScored && !gamePaused && gameStarted) {
+            // 使用優化的碰撞檢測函數
+            if (checkItemCollision(item, itemLeft, itemWidth, top) && !isScored && !gamePaused && gameStarted) {
                 isScored = true;
                 const type = item.getAttribute('data-type');
                 
@@ -500,7 +498,7 @@ function dropItem() {
             else if (currentDifficulty === 'hard') speed = 5;
             item.style.top = (top + speed) + 'px';
         }
-    }, 20); // 使用50fps的更新頻率，更穩定
+    }, 16); // 使用60fps的更新頻率，更流暢
 }
 
 // 暫停遊戲
@@ -646,7 +644,7 @@ function resumeGame() {
                             else if (currentDifficulty === 'hard') speed = 5;
                             item.style.top = (top + speed) + 'px';
                         }
-                    }, 20); // 使用50fps的更新頻率，更穩定
+                    }, 16); // 使用60fps的更新頻率，更流暢
                 }
             });
             
@@ -1002,8 +1000,8 @@ window.onload = function() {
         const gameWidth = game.offsetWidth;
         if (basketWidth > 0 && gameWidth > 0) {
             const centerLeft = (gameWidth - basketWidth) / 2;
-            basket.style.setProperty('transform', 'none', 'important');
-            basket.style.setProperty('left', centerLeft + 'px', 'important');
+            basket.style.transform = `translateX(${centerLeft}px)`;
+            basket.style.left = '0px';
             console.log('籃子初始化位置:', {
                 basketWidth: basketWidth,
                 gameWidth: gameWidth,

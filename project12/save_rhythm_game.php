@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // 檢查並完成所有相關任務
         require_once 'check_and_grant_achievements.php';
+        checkAndGrantAchievements($data['member_id'], 'rhythm_game', $data['score'], isset($data['play_time']) ? $data['play_time'] : 0);
         checkAndCompleteAllTasks($data['member_id'], '節奏遊戲');
        
         // 提交交易

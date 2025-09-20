@@ -229,11 +229,16 @@ try {
 
     <!-- 遊戲失敗彈出對話框 -->
     <div id="game-fail-modal" class="modal-overlay">
-        <div class="modal-dialog">
-            <h2 class="modal-title">遊戲失敗</h2>
+        <div class="modal-dialog game-fail-dialog">
+            <h2 class="modal-title">
+                <span class="alarm-icon">⏰</span>
+                遊戲失敗
+            </h2>
             <div class="modal-content">
                 <p class="modal-detail">難度: <span id="fail-difficulty">簡單</span></p>
-                <p class="modal-detail">未在時間內達成分數</p>
+                <p class="modal-detail">遊戲時間: <span id="fail-game-time">60秒</span></p>
+                <p class="modal-detail">獲得分數: <span id="fail-score">+0</span></p>
+                <p class="modal-detail">未達成目標分數!</p>
             </div>
             <div class="modal-buttons">
                 <button id="play-again-btn" class="modal-btn modal-btn-red">再玩一次</button>

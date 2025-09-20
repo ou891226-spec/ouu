@@ -88,6 +88,19 @@ try {
     $update_player2_stmt = $pdo->prepare($update_player2_sql);
     $update_player2_stmt->execute([$data['player2_score'], $data['player2_id']]);
     
+    // 檢查並授予成就（雙人遊戲）
+    require_once 'check_and_grant_achievements.php';
+    
+    // 為玩家1檢查成就
+    if ($data['player1_score'] > 0) {
+        checkAndGrantAchievements($data['player1_id'], 'memory_game', $data['player1_score'], isset($data['play_time']) ? $data['play_time'] : 0);
+    }
+    
+    // 為玩家2檢查成就
+    if ($data['player2_score'] > 0) {
+        checkAndGrantAchievements($data['player2_id'], 'memory_game', $data['player2_score'], isset($data['play_time']) ? $data['play_time'] : 0);
+    }
+    
     // 返回成功響應
     echo json_encode([
         'success' => true,

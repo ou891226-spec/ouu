@@ -127,6 +127,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
                 $data['difficulty']
             );
         }
+        
+        // 檢查並授予成就（雙人算菜錢遊戲）
+        require_once 'check_and_grant_achievements.php';
+        
+        // 為玩家1檢查成就
+        if ($data['player1_score'] > 0) {
+            checkAndGrantAchievements($data['player1_id'], 'vegetable_cost', $data['player1_score'], isset($data['play_time']) ? $data['play_time'] : 0);
+        }
+        
+        // 為玩家2檢查成就（如果不是本地玩家）
+        if ($data['player2_id'] !== 'local_player' && $data['player2_score'] > 0) {
+            checkAndGrantAchievements($data['player2_id'], 'vegetable_cost', $data['player2_score'], isset($data['play_time']) ? $data['play_time'] : 0);
+        }
        
         // 提交交易
         $pdo->commit();

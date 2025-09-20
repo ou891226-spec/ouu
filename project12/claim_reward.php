@@ -18,8 +18,43 @@ if (!$task_id) {
 }
 
 try {
-  // 檢查任務是否已完成但未領取
-  $check_stmt = $pdo->prepare("SELECT completed_date, claimed_date FROM member_tasks WHERE member_id = ? AND task_id = ?");
+  // 檢查任務是否已完成但未領取（支援動態完成狀態判斷）
+  $check_stmt = $pdo->prepare("
+    SELECT 
+      mt.completed_date, 
+      mt.claimed_date,
+      d.task_name,
+      d.task_description,
+      CASE 
+        WHEN mt.claimed_date IS NOT NULL THEN 'claimed'
+        WHEN mt.completed_date IS NOT NULL THEN 'completed'
+        -- 動態判斷累積型任務是否已達成
+        WHEN (
+            -- 遊戲達人：完成10局遊戲
+            (d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 10
+        ) THEN 'completed'
+        WHEN (
+            -- 持久戰士：累積遊戲時間達到目標
+            (d.task_description LIKE '%分鐘%' OR d.task_description LIKE '%遊玩時間%') AND
+            (SELECT COALESCE(SUM(play_time), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time IS NOT NULL) >= 300
+        ) THEN 'completed'
+        WHEN (
+            -- 分數收集者：獲得指定分數
+            (d.task_description LIKE '%獲得1000分%') AND
+            (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 1000
+        ) THEN 'completed'
+        WHEN (
+            -- 全能玩家：完成3種不同類型遊戲
+            (d.task_description LIKE '%三種不同類型%' OR d.task_description LIKE '%不同類型%') AND
+            (SELECT COUNT(DISTINCT game_type) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
+        ) THEN 'completed'
+        ELSE 'pending'
+      END as dynamic_status
+    FROM member_tasks mt
+    JOIN daily_tasks d ON mt.task_id = d.task_id
+    WHERE mt.member_id = ? AND mt.task_id = ?
+  ");
   $check_stmt->execute([$member_id, $task_id]);
   $task_record = $check_stmt->fetch();
   
@@ -30,7 +65,9 @@ try {
     exit;
   }
   
-  if (!$task_record['completed_date']) {
+  // 檢查是否已完成（支援動態狀態）
+  $is_completed = $task_record['completed_date'] || $task_record['dynamic_status'] === 'completed';
+  if (!$is_completed) {
     echo json_encode(['success' => false, 'message' => '任務尚未完成']);
     exit;
   }

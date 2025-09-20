@@ -91,6 +91,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
                 
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
+                checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
                 checkAndCompleteAllTasks($member_id, '記憶力');
             }
             
@@ -174,6 +175,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
                 
                 // 檢查並完成所有相關任務
                 require_once 'check_and_grant_achievements.php';
+                checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
                 checkAndCompleteAllTasks($member_id, '記憶力');
             }
             

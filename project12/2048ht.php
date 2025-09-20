@@ -9,13 +9,11 @@ if (
 ) {
     require_once 'db_connect.php';
     $data = json_decode(file_get_contents('php://input'), true);
-    error_log('收到資料: ' . print_r($data, true));
     try {
         // 檢查是否為遊戲勝利（分數大於0表示勝利）
         $score = isset($data['score']) ? intval($data['score']) : 0;
         $difficulty = isset($data['difficulty']) ? $data['difficulty'] : 'easy';
         
-        error_log('收到分數: ' . $score . ', 難度: ' . $difficulty);
         
         // 根據是否過關決定記錄的分數
         $is_passed = ($score > 0);
@@ -46,36 +44,32 @@ if (
             'game_id' => 4,
             'difficulty' => $difficulty,
             'score' => $record_score,
-            'play_time' => null, // 設為null避免在行為軌跡分析中產生誤導
-            'game_type' => '邏輯力',
+            'play_time' => null, // 2048遊戲不記錄遊戲時間
+            'game_type' => '算術邏輯力',
             'is_single_player' => 1,
             'opponent_id' => null
         ]);
         
-        // 只有過關時才更新會員總分數和邏輯分數
+        // 只有過關時才更新會員總分數和算術邏輯分數
         if ($is_passed) {
             $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
             $update_stmt->execute([
                 'score' => $record_score,
                 'member_id' => $data['member_id']
             ]);
-            error_log('遊戲勝利，記錄獎勵分數: ' . $record_score);
             
             // 記錄遊戲行為軌跡
             require_once 'log_game_behavior.php';
-            logGameBehavior($data['member_id'], '邏輯力', 0, $record_score, $difficulty);
+            logGameBehavior($data['member_id'], '算術邏輯力', 0, $record_score, $difficulty);
             
             // 檢查並完成所有相關任務
             require_once 'check_and_grant_achievements.php';
-            checkAndCompleteAllTasks($data['member_id'], '邏輯力');
-        } else {
-            error_log('遊戲失敗，記錄0分');
+            checkAndGrantAchievements($data['member_id'], 'game_2048', $record_score, 0);
+            checkAndCompleteAllTasks($data['member_id'], '算術邏輯力');
         }
         
-        error_log('寫入成功');
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
-        error_log('寫入失敗: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
@@ -198,10 +192,13 @@ if (
     <div id="win-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <h2>🎉 恭喜破關</h2>
+            <br>
             <p>難度：<span id="win-difficulty"></span></p>
-            <p>獲得分數：<span id="win-game-score"></span></p>
-            <p>最高分數：<span id="win-best-score"></span></p>
-            <p>過關分數：<span id="win-reward-score"></span></p>
+            <br>
+            <p>遊戲分數：<span id="win-game-score"></span></p>
+            <br>
+            <p>獲得分數：+<span id="win-reward-score"></span></p>
+            
             <div class="modal-buttons">
                 <button id="continue-game" class="btn red-button">再玩一次</button>
                 <button id="new-game" class="btn dark-blue-button">返回主頁</button>
@@ -213,8 +210,15 @@ if (
     <div id="game-over-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <h2>⏰ 遊戲失敗</h2>
+            <br>
             <p>難度：<span id="game-over-difficulty"></span></p>
-            <p>未在時間內達成分數</p>
+            <br>
+            <p>目標分數：<span id="game-over-target-score"></span></p>
+            <br>
+            <p>獲得分數：<span id="game-over-reward-score">0</span></p>
+            <br>
+            <p>未達成目標分數！</p>
+            
             <div class="modal-buttons">
                 <button id="try-again" class="btn red-button">再玩一次</button>
                 <button id="back-to-menu" class="btn dark-blue-button">返回主頁</button>
@@ -291,12 +295,24 @@ if (
                 };
                 
                 closeInstructionsBtn.onclick = () => {
+                    // 停止視頻播放
+                    const video = document.getElementById('2048-current-video');
+                    if (video) {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
                     instructionsModal.style.display = 'none';
                     instructionsModal.classList.remove('show');
                 };
                 
                 window.onclick = (event) => {
                     if (event.target === instructionsModal) {
+                        // 停止視頻播放
+                        const video = document.getElementById('2048-current-video');
+                        if (video) {
+                            video.pause();
+                            video.currentTime = 0;
+                        }
                         instructionsModal.style.display = 'none';
                         instructionsModal.classList.remove('show');
                     }
@@ -392,11 +408,22 @@ if (
             debugLog('遊戲界面初始化完成');
         }
 
+        // 初始化最高分數顯示
+        function initBestScore() {
+            const bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+            const bestScoreElement = document.getElementById('best-score');
+            if (bestScoreElement) {
+                bestScoreElement.textContent = bestScore;
+            }
+            debugLog('初始化最高分數: ' + bestScore);
+        }
+
         // 當 DOM 加載完成時初始化遊戲界面
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 debugLog('DOM 加載完成，開始初始化遊戲界面');
                 initGameUI();
+                initBestScore(); // 初始化最高分數
                 // 顯示難度選擇彈窗
                 const difficultyModal = document.getElementById('difficultyModal');
                 const modalContent = difficultyModal.querySelector('.modal-content');
@@ -409,6 +436,7 @@ if (
         } else {
             debugLog('DOM 已加載，立即初始化遊戲界面');
             initGameUI();
+            initBestScore(); // 初始化最高分數
             // 顯示難度選擇彈窗
             const difficultyModal = document.getElementById('difficultyModal');
             const modalContent = difficultyModal.querySelector('.modal-content');
@@ -420,18 +448,86 @@ if (
         }
 
         // 修改遊戲結束時的處理
-        function handleGameEnd(score, difficulty, isWin) {
+        function handleGameEnd(score, difficulty, isWin, gameTime) {
             // 更新本地存儲的最高分
             const currentBest = parseInt(localStorage.getItem('bestScore')) || 0;
+            const newBest = Math.max(score, currentBest);
             if (score > currentBest) {
                 localStorage.setItem('bestScore', score);
+                // 更新頁面上的最高分顯示
+                const bestScoreElement = document.getElementById('best-score');
+                if (bestScoreElement) {
+                    bestScoreElement.textContent = score;
+                }
+                debugLog('更新最高分數: ' + score);
             }
             
-            // 顯示相應的彈窗
+            // 格式化遊戲時間
+            const formattedTime = formatGameTime(gameTime);
+            
+            // 顯示相應的彈窗並填入數據
             if (isWin) {
-                document.getElementById('win-modal').style.display = 'block';
+                // 填入勝利彈窗的數據
+                const rewardScore = getRewardScore(difficulty);
+                
+                const winDifficulty = document.getElementById('win-difficulty');
+                const winGameScore = document.getElementById('win-game-score');
+                const winGameTime = document.getElementById('win-game-time');
+                const winRewardScore = document.getElementById('win-reward-score');
+                const winModal = document.getElementById('win-modal');
+                
+                if (winDifficulty) winDifficulty.textContent = getDifficultyName(difficulty);
+                if (winGameScore) winGameScore.textContent = score;
+                if (winGameTime) winGameTime.textContent = formattedTime;
+                if (winRewardScore) winRewardScore.textContent = rewardScore;
+                if (winModal) winModal.style.display = 'block';
             } else {
-                document.getElementById('game-over-modal').style.display = 'block';
+                // 填入失敗彈窗的數據
+                const gameOverDifficulty = document.getElementById('game-over-difficulty');
+                const gameOverTargetScore = document.getElementById('game-over-target-score');
+                const gameOverModal = document.getElementById('game-over-modal');
+                
+                if (gameOverDifficulty) gameOverDifficulty.textContent = getDifficultyName(difficulty);
+                if (gameOverTargetScore) gameOverTargetScore.textContent = getTargetScore(difficulty);
+                if (gameOverModal) gameOverModal.style.display = 'block';
+            }
+        }
+        
+        // 格式化遊戲時間
+        function formatGameTime(seconds) {
+            if (!seconds || seconds < 0) return '00:00';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 獲取目標分數
+        function getTargetScore(difficulty) {
+            switch(difficulty) {
+                case 'easy': return '1500';
+                case 'normal': return '5000';
+                case 'hard': return '10000';
+                default: return '1500';
+            }
+        }
+        
+        // 獲取難度名稱
+        function getDifficultyName(difficulty) {
+            switch(difficulty) {
+                case 'easy': return '簡單';
+                case 'normal': return '普通';
+                case 'hard': return '困難';
+                default: return difficulty;
+            }
+        }
+        
+        // 獲取獎勵分數
+        function getRewardScore(difficulty) {
+            switch(difficulty) {
+                case 'easy': return '20';
+                case 'normal': return '50';
+                case 'hard': return '100';
+                default: return '0';
             }
         }
 

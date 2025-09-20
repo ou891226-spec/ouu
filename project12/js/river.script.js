@@ -18,7 +18,10 @@ let gameState = {
         easy: Infinity,
         normal: Infinity,
         hard: Infinity
-    }
+    },
+    startTime: null,
+    gameTime: 0,
+    gameTimer: null
 };
 
 // DOM 元素
@@ -143,6 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
             gameState.paused = false;
             document.getElementById("pauseBtn").textContent = "暫停遊戲";
             showMessage("遊戲繼續");
+            // 重新開始計時
+            if (gameState.startTime) {
+                gameState.startTime = Date.now() - (gameState.gameTime * 1000);
+            }
         } else {
             gameState.paused = true;
             document.getElementById("pauseBtn").textContent = "繼續遊戲";
@@ -153,6 +160,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("endGameBtn").addEventListener("click", () => {
         // 結束遊戲功能
         if (confirm("確定要結束遊戲嗎？")) {
+            // 停止計時器
+            stopGameTimer();
             // 保存遊戲結果（即使沒有完成）
             saveGameResultOnExit();
             showScreen("difficulty-screen");
@@ -164,21 +173,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // 彈出對話框按鈕事件
     document.getElementById("play-again-btn").addEventListener("click", () => {
         hideModal("game-fail-modal");
+        stopGameTimer();
         initGame();
     });
     
     document.getElementById("return-home-btn").addEventListener("click", () => {
         hideModal("game-fail-modal");
+        stopGameTimer();
         showScreen("difficulty-screen");
     });
     
     document.getElementById("play-again-success-btn").addEventListener("click", () => {
         hideModal("game-success-modal");
+        stopGameTimer();
         initGame();
     });
     
     document.getElementById("return-home-success-btn").addEventListener("click", () => {
         hideModal("game-success-modal");
+        stopGameTimer();
         showScreen("difficulty-screen");
     });
 });
@@ -231,11 +244,17 @@ function initGame() {
         weather: null,
         weatherInfo: "",
         gameHistory: [],
-        bestSteps: gameState.bestSteps
+        bestSteps: gameState.bestSteps,
+        startTime: null,
+        gameTime: 0,
+        gameTimer: null
     };
     
     // 重置暫停按鈕文字
     document.getElementById("pauseBtn").textContent = "暫停遊戲";
+    
+    // 開始遊戲計時
+    startGameTimer();
 
     // 設定模式
     switch (gameState.mode) {
@@ -563,6 +582,10 @@ function checkRules() {
 // 處理勝利
 function handleWin() {
     playSound('win');
+    
+    // 停止計時器
+    stopGameTimer();
+    
     const currentBest = gameState.bestSteps[gameState.mode];
     if (gameState.stepCount < currentBest) {
         gameState.bestSteps[gameState.mode] = gameState.stepCount;
@@ -684,6 +707,45 @@ async function saveGameResultOnExit() {
     }
 }
 
+// 遊戲失敗時保存記錄
+async function saveGameResultOnFailure() {
+    try {
+        if (!window.memberId) {
+            console.log('未登入，跳過保存遊戲結果');
+            alert('您尚未登入，遊戲結果不會被保存。請登入後再遊玩以保存記錄！');
+            return;
+        }
+        
+        const gameData = {
+            member_id: window.memberId,
+            difficulty: gameState.mode,
+            score: 0, // 遊戲失敗，分數為0
+            play_time: null, // 遊戲失敗時不計入遊戲時間
+            game_type: '算術邏輯'
+        };
+        
+        console.log('保存過河遊戲失敗結果:', gameData);
+        
+        const response = await fetch('save_river_game.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gameData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('過河遊戲失敗結果保存成功');
+        } else {
+            console.error('過河遊戲失敗結果保存失敗:', result.message);
+        }
+    } catch (error) {
+        console.error('保存過河遊戲失敗結果時發生錯誤:', error);
+    }
+}
+
 // 檢查單岸規則
 function checkSideRules(sideItems, sideName) {
     const rules = getRulesForMode();
@@ -691,6 +753,9 @@ function checkSideRules(sideItems, sideName) {
     for (const rule of rules) {
         if (rule.check(sideItems)) {
             playSound('lose');
+            
+            // 停止計時器
+            stopGameTimer();
             
             // 更新失敗對話框內容
             const difficultyNames = {
@@ -700,10 +765,15 @@ function checkSideRules(sideItems, sideName) {
             };
             
             document.getElementById("fail-difficulty").textContent = difficultyNames[gameState.mode];
+            document.getElementById("fail-game-time").textContent = formatGameTime(gameState.gameTime);
+            document.getElementById("fail-score").textContent = `+${gameState.score}`;
             
             // 顯示失敗對話框
             showModal("game-fail-modal");
             gameState.gameOver = true;
+            
+            // 保存遊戲失敗結果
+            saveGameResultOnFailure();
             return;
         }
     }
@@ -827,6 +897,37 @@ function showMessage(text) {
 // 清除訊息
 function clearMessage() {
     messageEl.textContent = "";
+}
+
+// 開始遊戲計時器
+function startGameTimer() {
+    gameState.startTime = Date.now();
+    gameState.gameTime = 0;
+    
+    gameState.gameTimer = setInterval(() => {
+        if (!gameState.paused && !gameState.gameOver) {
+            gameState.gameTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+        }
+    }, 1000);
+}
+
+// 停止遊戲計時器
+function stopGameTimer() {
+    if (gameState.gameTimer) {
+        clearInterval(gameState.gameTimer);
+        gameState.gameTimer = null;
+    }
+}
+
+// 格式化遊戲時間
+function formatGameTime(seconds) {
+    if (seconds < 60) {
+        return `${seconds}秒`;
+    } else {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}分${remainingSeconds}秒`;
+    }
 }
 
 // 顯示彈出對話框

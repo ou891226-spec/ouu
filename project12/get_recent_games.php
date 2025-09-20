@@ -28,7 +28,7 @@ try {
         SELECT 
             CASE 
                 WHEN gr.game_type IN ('記憶力', '翻牌對對樂') THEN '記憶力'
-                WHEN gr.game_type IN ('邏輯力', '2048') THEN '2048'
+                WHEN gr.game_type IN ('算術邏輯力', '邏輯力', '2048') THEN '2048'
                 WHEN gr.game_type IN ('反應力', '節奏遊戲', '看字選色遊戲', '接金蛋遊戲') THEN gr.game_type
                 WHEN gr.game_type IN ('算數邏輯力', '算術邏輯', '算菜錢遊戲') THEN '算數邏輯力'
                 ELSE gr.game_type
