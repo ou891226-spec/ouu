@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'difficulty' => $data['difficulty'],
             'score' => $final_score, // 使用前端計算好的分數
             'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '算數邏輯力',
+            'game_type' => '算術邏輯力',
             'is_single_player' => 1,
             'opponent_id' => null
         ]);

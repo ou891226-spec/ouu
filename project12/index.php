@@ -50,14 +50,14 @@ try {
 <body>
 
 <!-- 黑色半透明背景 (彈窗遮罩) -->
-<div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="overlay" style="display:none;"></div>
 <!-- 側邊欄遮罩 -->
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -65,7 +65,6 @@ try {
       <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-        <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
       </div>
     </div>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
@@ -106,6 +105,14 @@ try {
   </div>
 </div>
 
+<!-- 浮動全部遊戲按鈕 -->
+<div class="floating-all-games-btn">
+  <a href="game-category.php" class="floating-btn" title="查看全部遊戲">
+    <span class="floating-btn-icon">🎮</span>
+    <span class="floating-btn-text">全部遊戲</span>
+  </a>
+</div>
+
 <!-- 熱門遊戲 -->
 <div class="section">
   <h2>熱門遊戲</h2>
@@ -113,7 +120,7 @@ try {
     <!-- 載入中... -->
     <div class="game-block">
       <div class="game-item">
-        <div style="display: flex; align-items: center; justify-content: center; height: 120px; background: #f0f0f0; border-radius: 10px;">
+        <div style="display: flex; align-items: center; justify-content: center; height: 250px; background: #f0f0f0; border-radius: 10px;">
           <span style="color: #666;">載入中...</span>
         </div>
       </div>
@@ -129,7 +136,7 @@ try {
     <!-- 載入中... -->
     <div class="game-block">
       <div class="game-item">
-        <div style="display: flex; align-items: center; justify-content: center; height: 120px; background: #f0f0f0; border-radius: 10px;">
+        <div style="display: flex; align-items: center; justify-content: center; height: 250px; background: #f0f0f0; border-radius: 10px;">
           <span style="color: #666;">載入中...</span>
         </div>
       </div>
@@ -546,6 +553,14 @@ function displayDefaultPopularGames() {
 document.addEventListener('DOMContentLoaded', function() {
   loadRecentGames();
   loadPopularGames();
+  
+  // 檢查任務狀態並更新鈴鐺
+  setTimeout(() => {
+    checkPendingTasks();
+  }, 1000); // 延遲1秒載入，確保頁面完全載入
+  
+  // 每30秒檢查一次任務狀態
+  setInterval(checkPendingTasks, 30000);
 });
 
 // 手動檢查任務狀態（只在需要時調用）
@@ -553,6 +568,44 @@ function checkAndUpdateTasks() {
   // 這個函數現在被禁用了，因為任務已經固定
   // 如果需要檢查任務狀態，請使用手動刷新按鈕
   console.log('任務狀態檢查已禁用，任務已固定');
+}
+
+// 檢查是否有未完成任務並更新鈴鐺狀態
+function checkPendingTasks() {
+  fetch('get_daily_tasks_fixed.php')
+    .then(response => response.json())
+    .then(tasks => {
+      const bell = document.querySelector('.notification-bell');
+      if (!bell) return;
+      
+      // 檢查是否有未完成的任務
+      const hasPendingTasks = tasks.some(task => {
+        const current = parseInt(task.progress) || 0;
+        const required = parseInt(task.required) || 1;
+        return current < required && task.status !== 'claimed';
+      });
+      
+      // 檢查是否有已完成但未領取的任務
+      const hasCompletedTasks = tasks.some(task => {
+        const current = parseInt(task.progress) || 0;
+        const required = parseInt(task.required) || 1;
+        return current >= required && task.status !== 'claimed';
+      });
+      
+      // 移除舊的狀態類別
+      bell.classList.remove('has-pending', 'has-completed');
+      
+      if (hasCompletedTasks) {
+        // 有可領取的任務 - 金色閃爍
+        bell.classList.add('has-completed');
+      } else if (hasPendingTasks) {
+        // 有進行中的任務 - 普通動畫
+        bell.classList.add('has-pending');
+      }
+    })
+    .catch(error => {
+      console.log('檢查任務狀態失敗:', error);
+    });
 }
 </script>
 

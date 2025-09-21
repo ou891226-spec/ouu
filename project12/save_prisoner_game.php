@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'member_id' => $data['member_id'],
             'game_id' => $gameId,
             'difficulty' => $data['difficulty'],
-            'score' => $actual_score, 
+            'score' => $bonus_score,  // 修正：記錄標準獎勵分數而不是實際遊戲分數
             'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
             'game_type' => $gameType,
             'is_single_player' => 1,
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        
         $pdo->commit();
         
-        error_log('追蹤犯人遊戲數據保存成功，分數: ' . $actual_score . '，過關獎勵: ' . $bonus_score);
+        error_log('追蹤犯人遊戲數據保存成功，實際遊戲分數: ' . $actual_score . '，記錄的獎勵分數: ' . $bonus_score);
        
         echo json_encode(['success' => true, 'message' => '遊戲結果已儲存', 'task_completed' => !empty($completed_tasks)]);
     } catch (Exception $e) {

@@ -146,13 +146,13 @@
 }
 
 .reward-success-content {
-  background: linear-gradient(145deg, #fff5e6 0%, #ffe4b3 50%, #ffd700 100%);
-  border: 3px solid #ffcc00;
+  background: linear-gradient(145deg, #fffef7 0%, #fef9e7 30%, #fde68a 70%, #fbbf24 100%);
+  border: 3px solid #f59e0b;
   border-radius: 25px;
   padding: 45px 35px;
   text-align: center;
   box-shadow: 
-    0 20px 40px rgba(255, 193, 7, 0.4),
+    0 20px 40px rgba(245, 158, 11, 0.3),
     0 10px 25px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: scale(0.7) rotate(-5deg);
@@ -186,14 +186,14 @@
   font-size: 80px;
   margin-bottom: 25px;
   animation: celebrate 1s ease-in-out infinite alternate;
-  text-shadow: 0 4px 8px rgba(255, 193, 7, 0.5);
-  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+  text-shadow: 0 4px 8px rgba(245, 158, 11, 0.5);
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
 }
 
 .reward-success-title {
   font-size: 28px;
   font-weight: 900;
-  color: #b8860b;
+  color: #92400e;
   margin-bottom: 18px;
   font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
@@ -202,7 +202,7 @@
 
 .reward-success-message {
   font-size: 18px;
-  color: #8b4513;
+  color: #78350f;
   margin-bottom: 35px;
   line-height: 1.6;
   font-weight: 500;

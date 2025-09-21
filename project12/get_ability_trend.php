@@ -67,8 +67,7 @@ try {
             case '邏輯力':
             case '2048':
             case '算菜錢遊戲':
-            case '算術邏輯':
-            case '算數邏輯力':
+            case '算術邏輯力':
                 $monthly_data[$month]['logic']['scores'][] = $record['avg_score'];
                 $monthly_data[$month]['logic']['count'] += $record['play_count'];
                 break;

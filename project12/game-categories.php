@@ -75,14 +75,14 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <body>
 
 <!-- 黑色半透明背景 (彈窗遮罩) -->
-<div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="overlay" style="display:none;"></div>
 <!-- 側邊欄遮罩 -->
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">

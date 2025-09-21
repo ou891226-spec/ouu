@@ -18,7 +18,7 @@ require_once 'check_login.php';
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -101,7 +101,7 @@ require_once 'check_login.php';
 
 <!-- 遮罩 -->
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-<div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="overlay" style="display:none;"></div>
 <!-- 側邊欄遮罩 -->
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 

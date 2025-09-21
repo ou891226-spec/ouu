@@ -324,6 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <!-- 音頻元素 -->
     <audio id="catchSound" preload="auto">
         <source src="music/gett.mp4" type="audio/mp4">
+        <source src="music/gett.mp4" type="video/mp4">
     </audio>
     <audio id="bombSound" preload="auto">
         <source src="music/boom.m4a" type="audio/mp4">
@@ -331,6 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     </audio>
     <audio id="gameOverSound">
         <source src="music/gett.mp4" type="audio/mp4">
+        <source src="music/gett.mp4" type="video/mp4">
     </audio> 
 
     <script>

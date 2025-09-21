@@ -26,6 +26,15 @@ function closeMissionModal() {
 
 // 顯示獎勵領取成功彈窗
 function showRewardSuccessModal() {
+  // 播放音效
+  try {
+    const audio = new Audio('music/tada-fanfare.mp3');
+    audio.volume = 0.7; // 設定音量為70%
+    audio.play().catch(e => console.log('音效播放失敗:', e));
+  } catch (e) {
+    console.log('音效載入失敗:', e);
+  }
+  
   // 創建彈窗元素
   const modal = document.createElement('div');
   modal.className = 'reward-success-modal';

@@ -73,7 +73,7 @@ body {
 /* 單一遊戲卡片樣式 */
 .game-card {
   width: 200px;
-  height: 250px;
+  height: 350px;
   background-color: #fff;
   border-radius: 20px;
   overflow: hidden;
@@ -89,7 +89,7 @@ body {
 
 .game-card img {
   width: 100%;
-  height: 160px;
+  height: 250px;
   object-fit: cover;
   border-bottom: 1px solid #eee;
 }

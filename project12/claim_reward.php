@@ -40,6 +40,16 @@ try {
             (SELECT COALESCE(SUM(play_time), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time IS NOT NULL) >= 300
         ) THEN 'completed'
         WHEN (
+            -- 績分高手：總分達到50分
+            (d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%') AND
+            (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
+        ) THEN 'completed'
+        WHEN (
+            -- 進階者：總分達到500分
+            (d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%') AND
+            (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 500
+        ) THEN 'completed'
+        WHEN (
             -- 分數收集者：獲得指定分數
             (d.task_description LIKE '%獲得1000分%') AND
             (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 1000
@@ -48,6 +58,18 @@ try {
             -- 全能玩家：完成3種不同類型遊戲
             (d.task_description LIKE '%三種不同類型%' OR d.task_description LIKE '%不同類型%') AND
             (SELECT COUNT(DISTINCT game_type) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
+        ) THEN 'completed'
+        WHEN (
+            -- 社交任務：添加好友
+            d.task_description LIKE '%好友%' AND
+            (SELECT COUNT(*) FROM friends WHERE member_id = mt.member_id) >= CASE 
+                WHEN d.task_description LIKE '%10位好友%' OR d.task_description LIKE '%10個好友%' THEN 10
+                WHEN d.task_description LIKE '%5位好友%' OR d.task_description LIKE '%5個好友%' THEN 5
+                WHEN d.task_description LIKE '%3位好友%' OR d.task_description LIKE '%3個好友%' THEN 3
+                WHEN d.task_name = '社交大師' OR d.task_description LIKE '%添加3%' THEN 3
+                WHEN d.task_description LIKE '%添加10%' THEN 10
+                ELSE 3
+            END
         ) THEN 'completed'
         ELSE 'pending'
       END as dynamic_status

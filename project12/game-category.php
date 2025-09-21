@@ -23,7 +23,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -31,7 +31,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-        <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
       </div>
     </div>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
@@ -74,7 +73,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 </div>
 
 <!-- 個人資訊彈窗 -->
-<div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="overlay" style="display:none;"></div>
 <div id="profileModal" class="profile-modal" style="display:none;">
   <span class="close" onclick="closeProfileModal()">✕</span>
   <div class="profile-header">
@@ -496,8 +495,54 @@ function togglePassword() {
     }
   });
 
+  // 檢查是否有未完成任務並更新鈴鐺狀態
+  function checkPendingTasks() {
+    fetch('get_daily_tasks_fixed.php')
+      .then(response => response.json())
+      .then(tasks => {
+        const bell = document.querySelector('.notification-bell');
+        if (!bell) return;
+        
+        // 檢查是否有未完成的任務
+        const hasPendingTasks = tasks.some(task => {
+          const current = parseInt(task.progress) || 0;
+          const required = parseInt(task.required) || 1;
+          return current < required && task.status !== 'claimed';
+        });
+        
+        // 檢查是否有已完成但未領取的任務
+        const hasCompletedTasks = tasks.some(task => {
+          const current = parseInt(task.progress) || 0;
+          const required = parseInt(task.required) || 1;
+          return current >= required && task.status !== 'claimed';
+        });
+        
+        // 移除舊的狀態類別
+        bell.classList.remove('has-pending', 'has-completed');
+        
+        if (hasCompletedTasks) {
+          // 有可領取的任務 - 金色閃爍
+          bell.classList.add('has-completed');
+        } else if (hasPendingTasks) {
+          // 有進行中的任務 - 普通動畫
+          bell.classList.add('has-pending');
+        }
+      })
+      .catch(error => {
+        console.log('檢查任務狀態失敗:', error);
+      });
+  }
+
   // 等待 DOM 載入完成後再執行
   document.addEventListener('DOMContentLoaded', function() {
+    // 檢查任務狀態並更新鈴鐺
+    setTimeout(() => {
+      checkPendingTasks();
+    }, 1000); // 延遲1秒載入，確保頁面完全載入
+    
+    // 每30秒檢查一次任務狀態
+    setInterval(checkPendingTasks, 30000);
+    
     const singleBtn = document.getElementById("singleBtn");
     // const doubleBtn = document.getElementById("doubleBtn");
     const singleSection = document.getElementById("single-player-section");

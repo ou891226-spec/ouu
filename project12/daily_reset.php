@@ -61,13 +61,13 @@ try {
         $game_count_stmt->execute([$user_id]);
         $game_count = $game_count_stmt->fetch()['game_count'];
         
-        // 為用戶分配新的每日任務
+        // 為用戶分配新的每日任務（排除跨天任務）
         if ($game_count == 0) {
-            // 新手用戶：包含新手任務
-            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 ORDER BY RAND() LIMIT 3";
+            // 新手用戶：包含新手任務，但排除跨天任務
+            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name NOT LIKE '%忠實玩家%' AND task_description NOT LIKE '%連續登入%' ORDER BY RAND() LIMIT 3";
         } else {
-            // 非新手用戶：排除新手任務
-            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name != '遊戲新手' ORDER BY RAND() LIMIT 3";
+            // 非新手用戶：排除新手任務和跨天任務
+            $available_tasks_sql = "SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name != '遊戲新手' AND task_name NOT LIKE '%忠實玩家%' AND task_description NOT LIKE '%連續登入%' ORDER BY RAND() LIMIT 3";
         }
         
         $available_stmt = $pdo->query($available_tasks_sql);

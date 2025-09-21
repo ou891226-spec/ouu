@@ -244,12 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     modal.style.display = 'none';
                 });
 
-                // 點擊 modal 外部關閉
-                window.addEventListener('click', (event) => {
-                    if (event.target === modal) {
-                        modal.style.display = 'none';
-                    }
-                });
+                // 點擊 modal 外部關閉功能已禁用
+                // window.addEventListener('click', (event) => {
+                //     if (event.target === modal) {
+                //         modal.style.display = 'none';
+                //     }
+                // });
             }
 
             // 鍵盤事件監聽

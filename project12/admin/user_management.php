@@ -20,6 +20,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("UPDATE member SET status = ? WHERE id = ?");
                 $stmt->execute([$new_status, $user_id]);
                 break;
+            case 'delete_user':
+                $user_id = $_POST['user_id'];
+                try {
+                    $pdo->beginTransaction();
+                    
+                    // 刪除相關的用戶數據
+                    $tables_to_clean = [
+                        'user_behavior_log',
+                        'user_online_status', 
+                        'game_records',
+                        'member_tasks',
+                        'member_achievements',
+                        'daily_playtime',
+                        'friend_requests',
+                        'friend_relationships'
+                    ];
+                    
+                    foreach ($tables_to_clean as $table) {
+                        $stmt = $pdo->prepare("DELETE FROM $table WHERE member_id = ?");
+                        $stmt->execute([$user_id]);
+                    }
+                    
+                    // 最後刪除用戶本身
+                    $stmt = $pdo->prepare("DELETE FROM member WHERE member_id = ?");
+                    $stmt->execute([$user_id]);
+                    
+                    $pdo->commit();
+                    $delete_message = "用戶 ID $user_id 已成功刪除";
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $delete_message = "刪除用戶失敗: " . $e->getMessage();
+                }
+                break;
         }
     }
 }
@@ -223,6 +256,17 @@ $stats = $stats_stmt->fetch();
         
         <div class="user-list">
             <h2>用戶列表</h2>
+            
+            <?php if (isset($delete_message)): ?>
+            <div style="background: <?php echo strpos($delete_message, '成功') !== false ? '#d4edda' : '#f8d7da'; ?>; 
+                        color: <?php echo strpos($delete_message, '成功') !== false ? '#155724' : '#721c24'; ?>; 
+                        padding: 10px; 
+                        border: 1px solid <?php echo strpos($delete_message, '成功') !== false ? '#c3e6cb' : '#f5c6cb'; ?>; 
+                        border-radius: 4px; 
+                        margin-bottom: 20px;">
+                <?php echo htmlspecialchars($delete_message); ?>
+            </div>
+            <?php endif; ?>
             <table>
                 <thead>
                     <tr>
@@ -230,7 +274,6 @@ $stats = $stats_stmt->fetch();
                         <th>帳號</th>
                         <th>姓名</th>
                         <th>狀態</th>
-                        <th>註冊時間</th>
                         <th>最後活動</th>
                         <th>會話ID</th>
                     </tr>
@@ -248,7 +291,6 @@ $stats = $stats_stmt->fetch();
                                 <span class="status-inactive">非活躍</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo '-'; ?></td>
                         <td><?php echo isset($user['last_activity_time']) && $user['last_activity_time'] ? date('m月d日 H:i', strtotime($user['last_activity_time'])) : '-'; ?></td>
                         <td>
                             <?php if (isset($user['latest_session_id']) && $user['latest_session_id']): ?>

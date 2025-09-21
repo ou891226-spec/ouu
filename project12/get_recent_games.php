@@ -27,10 +27,9 @@ try {
     $recent_games_sql = "
         SELECT 
             CASE 
-                WHEN gr.game_type IN ('記憶力', '翻牌對對樂') THEN '記憶力'
-                WHEN gr.game_type IN ('算術邏輯力', '邏輯力', '2048') THEN '2048'
+                WHEN gr.game_type IN ('記憶力', '翻牌對對樂', '追蹤犯人遊戲', '圖片線索問答') THEN gr.game_type
+                WHEN gr.game_type IN ('邏輯力', '2048', '算術邏輯力', '算術邏輯', '算菜錢遊戲', '過河遊戲') THEN '2048'
                 WHEN gr.game_type IN ('反應力', '節奏遊戲', '看字選色遊戲', '接金蛋遊戲') THEN gr.game_type
-                WHEN gr.game_type IN ('算數邏輯力', '算術邏輯', '算菜錢遊戲') THEN '算數邏輯力'
                 ELSE gr.game_type
             END as normalized_game_type,
             SUM(gr.score) as total_score,
@@ -56,9 +55,9 @@ try {
         '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
         '反應力' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
-        '算數邏輯力' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲']
+        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
+        '接金蛋遊戲' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋']
     ];
     
     $formatted_games = [];

@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'difficulty' => $data['difficulty'],
             'score' => $data['score'],
             'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '算數邏輯力',
+            'game_type' => '算術邏輯力',
             'is_single_player' => 1,
             'opponent_id' => null
         ]);
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once 'log_game_behavior.php';
         logGameBehavior(
             $data['member_id'], 
-            '算數邏輯力', 
+            '算術邏輯力', 
             isset($data['play_time']) ? $data['play_time'] : 0, 
             $data['score'], 
             $data['difficulty']
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 檢查並完成所有相關任務
         require_once 'check_and_grant_achievements.php';
         checkAndGrantAchievements($data['member_id'], 'vegetable_cost', $data['score'], isset($data['play_time']) ? $data['play_time'] : 0);
-        checkAndCompleteAllTasks($data['member_id'], '算數邏輯力');
+        checkAndCompleteAllTasks($data['member_id'], '算術邏輯力');
        
         // 提交交易
         $pdo->commit();

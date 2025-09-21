@@ -166,8 +166,84 @@ header {
     color: #333;
     cursor: pointer;
     margin-left: 10px;
-    text-decoration: none;
-    border-bottom: none;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    text-decoration-line: none !important;
+    text-decoration-style: none !important;
+    text-decoration-color: transparent !important;
+    transition: all 0.3s ease;
+    display: inline-block;
+    animation: bellRing 2s ease-in-out infinite;
+    transform-origin: top center;
+}
+
+.notification-bell:hover {
+    transform: scale(1.2);
+    animation: bellShake 0.5s ease-in-out;
+}
+
+/* 鈴鐺搖擺動畫 */
+@keyframes bellRing {
+    0%, 50%, 100% {
+        transform: rotate(0deg);
+    }
+    10%, 30% {
+        transform: rotate(10deg);
+    }
+    20%, 40% {
+        transform: rotate(-10deg);
+    }
+}
+
+/* 鈴鐺點擊震動動畫 */
+@keyframes bellShake {
+    0%, 100% {
+        transform: scale(1.2) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.2) rotate(-15deg);
+    }
+    75% {
+        transform: scale(1.2) rotate(15deg);
+    }
+}
+
+/* 有待完成任務時的鈴鐺樣式 */
+.notification-bell.has-pending {
+    color: #ff6b35;
+    animation: bellRingUrgent 1.5s ease-in-out infinite;
+}
+
+/* 有可領取任務時的鈴鐺樣式 */
+.notification-bell.has-completed {
+    color: #ffd700;
+    animation: bellGlow 1s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+}
+
+/* 緊急鈴鐺動畫 */
+@keyframes bellRingUrgent {
+    0%, 70%, 100% {
+        transform: rotate(0deg);
+    }
+    10%, 50% {
+        transform: rotate(15deg);
+    }
+    30% {
+        transform: rotate(-15deg);
+    }
+}
+
+/* 金色發光動畫 */
+@keyframes bellGlow {
+    0% {
+        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        transform: scale(1);
+    }
+    100% {
+        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
+        transform: scale(1.1);
+    }
 }
 
 .profile {
@@ -303,7 +379,9 @@ header {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    margin-top: 20px;
+    margin: 20px auto;
+    padding: 0 40px;
+    max-width: 1400px;
 }
 .game-block {
     display: flex;
@@ -332,7 +410,7 @@ header {
 }
 .game-item img {
     width: 100%;
-    height: 200px;
+    height: 250px;
     object-fit: cover;
     display: block;
     border-radius: 10px;
@@ -417,9 +495,11 @@ header {
     
     /* 遊戲網格調整 */
     .game-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 15px;
-        padding: 15px;
+        padding: 15px 30px;
+        margin: 15px auto;
+        max-width: 1200px;
     }
     
     .game-block {
@@ -427,8 +507,8 @@ header {
     }
     
     .game-item img {
-        width: 80px;
-        height: 80px;
+        width: 100%;
+        height: 200px;
     }
     
     .game-title {
@@ -500,9 +580,11 @@ header {
     
     /* 遊戲網格手機版 */
     .game-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 10px;
-        padding: 10px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 10px 20px;
+        margin: 10px auto;
+        max-width: 1000px;
     }
     
     .game-block {
@@ -510,8 +592,8 @@ header {
     }
     
     .game-item img {
-        width: 60px;
-        height: 60px;
+        width: 100%;
+        height: 160px;
     }
     
     .game-title {

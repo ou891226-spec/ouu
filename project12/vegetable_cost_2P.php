@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
             'difficulty' => $data['difficulty'],
             'score' => $data['player1_score'],
             'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '算數邏輯力',
+            'game_type' => '算術邏輯力',
             'is_single_player' => 0,
             'opponent_id' => $data['player2_id']
         ]);
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
                 'difficulty' => $data['difficulty'],
                 'score' => $data['player2_score'],
                 'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-                'game_type' => '算數邏輯力',
+                'game_type' => '算術邏輯力',
                 'is_single_player' => 0,
                 'opponent_id' => $data['player1_id']
             ]);
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         require_once 'log_game_behavior.php';
         logGameBehavior(
             $data['player1_id'], 
-            '算數邏輯力', 
+            '算術邏輯力', 
             isset($data['play_time']) ? $data['play_time'] : 0, 
             $data['player1_score'], 
             $data['difficulty']
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
         if ($data['player2_id'] !== 'local_player') {
             logGameBehavior(
                 $data['player2_id'], 
-                '算數邏輯力', 
+                '算術邏輯力', 
                 isset($data['play_time']) ? $data['play_time'] : 0, 
                 $data['player2_score'], 
                 $data['difficulty']

@@ -19,7 +19,7 @@ $tabs = [
     'total' => '總排行榜',
     'reaction' => '反應力',
     'memory' => '記憶力',
-    'logic' => '算數邏輯',
+    'logic' => '算術邏輯',
 ];
 
 switch ($current_tab) {
@@ -78,7 +78,7 @@ try {
 <div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -86,7 +86,6 @@ try {
       <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-        <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
       </div>
     </div>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>

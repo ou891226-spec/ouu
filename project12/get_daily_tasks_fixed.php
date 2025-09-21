@@ -27,6 +27,16 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 10
            ) THEN 'completed'
            WHEN (
+               -- 績分高手：總分達到50分
+               (d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%') AND
+               (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
+           ) THEN 'completed'
+           WHEN (
+               -- 進階者：總分達到500分
+               (d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%') AND
+               (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 500
+           ) THEN 'completed'
+           WHEN (
                -- 分數收集者：獲得指定分數
                (d.task_description LIKE '%獲得1000分%') AND
                (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 1000
@@ -46,12 +56,46 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    ELSE 300
                END
            ) THEN 'completed'
+           WHEN (
+               -- 線索專家：完成圖片線索問答遊戲
+               (d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力') >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 過河大師：完成過河遊戲
+               (d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '過河遊戲') >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 社交任務：添加好友
+               d.task_description LIKE '%好友%' AND
+               (SELECT COUNT(*) FROM friends WHERE member_id = mt.member_id) >= CASE 
+                   WHEN d.task_description LIKE '%10位好友%' OR d.task_description LIKE '%10個好友%' THEN 10
+                   WHEN d.task_description LIKE '%5位好友%' OR d.task_description LIKE '%5個好友%' THEN 5
+                   WHEN d.task_description LIKE '%3位好友%' OR d.task_description LIKE '%3個好友%' THEN 3
+                   WHEN d.task_name = '社交大師' OR d.task_description LIKE '%添加3%' THEN 3
+                   WHEN d.task_description LIKE '%添加10%' THEN 10
+                   ELSE 3
+               END
+           ) THEN 'completed'
            ELSE 'pending'
        END as status,
        CASE 
            -- 遊戲達人：完成10局遊戲（更寬鬆的匹配條件）
            WHEN d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%' THEN (
                SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 績分高手：總分達到50分（只計算今天的）
+           WHEN d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%' THEN (
+               SELECT COALESCE(SUM(score), 0) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 進階者：總分達到500分（只計算今天的）
+           WHEN d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%' THEN (
+               SELECT COALESCE(SUM(score), 0) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
            )
@@ -83,8 +127,21 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            )
            -- 社交達人：添加好友
            WHEN d.task_description LIKE '%好友%' THEN (
-               -- 暫時返回0，等待friends表實現
-               0
+               SELECT COUNT(*) FROM friends WHERE member_id = mt.member_id
+           )
+           -- 線索專家：完成圖片線索問答遊戲
+           WHEN d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND game_type = '記憶力'
+           )
+           -- 過河大師：完成過河遊戲
+           WHEN d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND game_type = '過河遊戲'
            )
            -- 其他任務：完成狀態
            WHEN mt.claimed_date IS NOT NULL OR mt.completed_date IS NOT NULL THEN 1
@@ -93,6 +150,10 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
        CASE 
            -- 遊戲達人：10局遊戲
            WHEN d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%' THEN 10
+           -- 績分高手：總分達到50分
+           WHEN d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%' THEN 50
+           -- 進階者：總分達到500分
+           WHEN d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%' THEN 500
            -- 分數收集者：根據描述提取目標分數
            WHEN d.task_description LIKE '%獲得1000分%' THEN 1000
            WHEN d.task_description LIKE '%獲得500分%' THEN 500
@@ -107,9 +168,16 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_description LIKE '%30分鐘%' THEN 1800
            WHEN d.task_description LIKE '%60分鐘%' THEN 3600
            WHEN d.task_description LIKE '%分鐘%' OR d.task_description LIKE '%遊玩時間%' THEN 300  -- 預設5分鐘
-           -- 社交達人：5個好友
-           WHEN d.task_description LIKE '%5個好友%' THEN 5
-           WHEN d.task_description LIKE '%好友%' THEN 5  -- 預設5個
+           -- 社交任務：根據描述提取好友數量
+           WHEN d.task_description LIKE '%10位好友%' OR d.task_description LIKE '%10個好友%' THEN 10
+           WHEN d.task_description LIKE '%5位好友%' OR d.task_description LIKE '%5個好友%' THEN 5
+           WHEN d.task_description LIKE '%3位好友%' OR d.task_description LIKE '%3個好友%' THEN 3
+           WHEN d.task_name = '社交大師' OR d.task_description LIKE '%添加3%' THEN 3
+           WHEN d.task_description LIKE '%添加10%' THEN 10
+           WHEN d.task_description LIKE '%好友%' THEN 3  -- 預設改為3個
+           -- 線索專家和過河大師：完成1次
+           WHEN d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%' THEN 1
+           WHEN d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%' THEN 1
            -- 其他任務：1次完成
            ELSE 1
        END as required

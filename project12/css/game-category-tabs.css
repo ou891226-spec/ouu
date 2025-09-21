@@ -3,9 +3,10 @@
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin: 30px 0;
+  margin: 30px auto;
   flex-wrap: wrap;
-  padding: 0 20px;
+  padding: 0 40px;
+  max-width: 1200px;
 }
 
 .category-tab {
@@ -70,12 +71,30 @@
 @media (max-width: 768px) {
   .category-tabs {
     gap: 10px;
-    padding: 0 10px;
+    padding: 0 20px;
+    margin: 20px auto;
   }
   
   .category-tab {
-    padding: 12px 20px;
+    padding: 10px 16px;
     font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-tabs {
+    gap: 8px;
+    padding: 0 15px;
+    margin: 15px auto;
+  }
+  
+  .category-tab {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  
+  .category-tab .tab-icon {
+    font-size: 18px;
   }
 }
 

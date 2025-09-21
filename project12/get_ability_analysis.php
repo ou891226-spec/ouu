@@ -108,7 +108,7 @@ try {
             case '邏輯力':
             case '2048':
             case '算菜錢遊戲':
-            case '算術邏輯':
+            case '算術邏輯力':
                 $logic_games[] = $record;
                 break;
         }

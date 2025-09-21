@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $check_stmt = $pdo->prepare($check_query);
         $check_stmt->execute([$id]);
         if ($check_stmt->fetch(PDO::FETCH_ASSOC)) {
-            header("Location: registerForm.php?error=此帳號已註冊過，請重新選擇帳號");
+            header("Location: registerForm.php?error=" . urlencode("此帳號已註冊過，請重新選擇帳號"));
             exit();
         }
     } catch (Exception $e) {

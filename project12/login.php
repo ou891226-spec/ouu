@@ -73,6 +73,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                 }
 
+                // 記錄登入行為到 user_behavior_log
+                try {
+                    $login_log_sql = "
+                        INSERT INTO user_behavior_log 
+                        (member_id, action_type, page_url, session_id, ip_address, user_agent, created_at)
+                        VALUES (?, 'login', ?, ?, ?, ?, NOW())
+                    ";
+                    $session_id = 'login_' . time() . '_' . rand(1000, 9999);
+                    $login_stmt = $pdo->prepare($login_log_sql);
+                    $login_stmt->execute([
+                        $row['member_id'],
+                        $_SERVER['REQUEST_URI'] ?? '/login.php',
+                        $session_id,
+                        $_SERVER['REMOTE_ADDR'] ?? '',
+                        $_SERVER['HTTP_USER_AGENT'] ?? ''
+                    ]);
+                    error_log("用戶 " . $row['member_id'] . " 登入行為已記錄");
+                } catch (Exception $e) {
+                    error_log("記錄登入行為失敗: " . $e->getMessage());
+                }
+
                 // 登入任務不再自動完成，需要用戶手動完成
                 // 移除自動完成登入任務的邏輯
 
@@ -107,6 +128,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     } else {
                         $_SESSION["avatar_url"] = null;
                     }
+                }
+
+                // 記錄登入行為到 user_behavior_log
+                try {
+                    $login_log_sql = "
+                        INSERT INTO user_behavior_log 
+                        (member_id, action_type, page_url, session_id, ip_address, user_agent, created_at)
+                        VALUES (?, 'login', ?, ?, ?, ?, NOW())
+                    ";
+                    $session_id = 'login_' . time() . '_' . rand(1000, 9999);
+                    $login_stmt = $pdo->prepare($login_log_sql);
+                    $login_stmt->execute([
+                        $row['member_id'],
+                        $_SERVER['REQUEST_URI'] ?? '/login.php',
+                        $session_id,
+                        $_SERVER['REMOTE_ADDR'] ?? '',
+                        $_SERVER['HTTP_USER_AGENT'] ?? ''
+                    ]);
+                    error_log("用戶 " . $row['member_id'] . " 登入行為已記錄");
+                } catch (Exception $e) {
+                    error_log("記錄登入行為失敗: " . $e->getMessage());
                 }
 
                 // 直接跳轉到主頁，不顯示alert

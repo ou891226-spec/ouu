@@ -41,7 +41,7 @@ try {
         UNION
         SELECT '看字選色遊戲' as game_type
         UNION
-        SELECT '算數邏輯力' as game_type
+        SELECT '算術邏輯力' as game_type
         UNION
         SELECT '追蹤犯人遊戲' as game_type
         UNION
@@ -60,7 +60,7 @@ try {
     $game_mappings = [
         '2048' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
         '邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
-        '算數邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
+        '算術邏輯力' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
         '算菜錢遊戲' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
         '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
         '記憶力' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],

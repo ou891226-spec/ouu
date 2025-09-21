@@ -426,13 +426,10 @@ function getTodayAchievementStatus($member_id) {
     try {
         $today = date('Y-m-d');
         
-        // 計算今天通過完成每日任務獲得的成就數量
+        // 計算今天獲得的所有成就數量（排除每日登入）
         $sql = "SELECT COUNT(*) as count FROM member_achievements ma 
                 JOIN achievements a ON ma.achievement_id = a.achievement_id 
-                JOIN daily_tasks d ON a.achievement_name = d.reward_achievement
-                JOIN member_tasks mt ON d.task_id = mt.task_id
                 WHERE ma.member_id = ? AND DATE(ma.earned_date) = ?
-                AND mt.claimed_date IS NOT NULL
                 AND a.achievement_name != '每日登入'";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$member_id, $today]);
@@ -512,7 +509,7 @@ function checkAndCompleteAllTasks($member_id, $game_type = null, $play_time = 0)
             // 根據遊戲類型映射到任務描述中的關鍵字
             $game_type_mapping = [
                 '記憶力' => ['記憶力遊戲', '記憶力', '記憶遊戲', '翻牌對對樂', '翻牌', '對對樂', '記憶', '技藝達人', '圖片線索問答'],
-                '算數邏輯力' => ['算數邏輯力', '算術邏輯', '算菜錢遊戲', '蔬菜遊戲', '算菜錢', '算術', '數學'],
+                '算術邏輯力' => ['算術邏輯力', '算菜錢遊戲', '蔬菜遊戲', '算菜錢', '算術', '數學'],
                 '邏輯力' => ['邏輯力', '2048遊戲', '2048', '邏輯', '數字'],
                 '反應力' => ['反應力', '反應力遊戲', '接金蛋遊戲', '接金蛋', '接蛋遊戲', '接蛋', '反應', '接金蛋專家'],
                 '節奏遊戲' => ['節奏遊戲', '節奏', '音樂', '節拍', '節奏達人'],

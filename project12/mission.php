@@ -14,7 +14,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     <link rel="stylesheet" href="css/profile-modal.css">
 </head>
 <body>
-    <div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+    <div id="modalOverlay" class="overlay" style="display:none;"></div>
     
     <!-- 頁首 -->
     <header>

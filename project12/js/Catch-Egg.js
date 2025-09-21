@@ -19,20 +19,59 @@ const gameOverSound = document.getElementById('gameOverSound');
 
 // 音效播放函數 - 高效能版本
 function playCatchSound() {
-    if (catchSound && catchSound.readyState >= 2) {
-        // 使用 cloneNode 避免重置當前播放
-        const soundClone = catchSound.cloneNode();
-        soundClone.volume = 0.8;
-        soundClone.play().catch(e => console.log('接蛋音效播放失敗:', e));
+    console.log('嘗試播放接蛋音效...');
+    console.log('catchSound元素:', catchSound);
+    console.log('catchSound readyState:', catchSound ? catchSound.readyState : 'undefined');
+    
+    if (catchSound) {
+        // 直接播放，不使用 cloneNode
+        catchSound.currentTime = 0; // 重置播放位置
+        catchSound.volume = 0.8;
+        catchSound.play().then(() => {
+            console.log('接蛋音效播放成功');
+        }).catch(e => {
+            console.log('接蛋音效播放失敗:', e);
+        });
+    } else {
+        console.log('接蛋音效元素不存在');
     }
 }
 
 function playBombSound() {
-    if (bombSound && bombSound.readyState >= 2) {
-        // 使用 cloneNode 避免重置當前播放
-        const soundClone = bombSound.cloneNode();
-        soundClone.volume = 0.3;
-        soundClone.play().catch(e => console.log('炸彈音效播放失敗:', e));
+    console.log('嘗試播放炸彈音效...');
+    console.log('bombSound元素:', bombSound);
+    console.log('bombSound readyState:', bombSound ? bombSound.readyState : 'undefined');
+    
+    if (bombSound) {
+        // 直接播放，不使用 cloneNode
+        bombSound.currentTime = 0; // 重置播放位置
+        bombSound.volume = 0.3;
+        bombSound.play().then(() => {
+            console.log('炸彈音效播放成功');
+        }).catch(e => {
+            console.log('炸彈音效播放失敗:', e);
+        });
+    } else {
+        console.log('炸彈音效元素不存在');
+    }
+}
+
+function playGameOverSound() {
+    console.log('嘗試播放遊戲結束音效...');
+    console.log('gameOverSound元素:', gameOverSound);
+    console.log('gameOverSound readyState:', gameOverSound ? gameOverSound.readyState : 'undefined');
+    
+    if (gameOverSound) {
+        // 直接播放，不使用 cloneNode
+        gameOverSound.currentTime = 0; // 重置播放位置
+        gameOverSound.volume = 0.5;
+        gameOverSound.play().then(() => {
+            console.log('遊戲結束音效播放成功');
+        }).catch(e => {
+            console.log('遊戲結束音效播放失敗:', e);
+        });
+    } else {
+        console.log('遊戲結束音效元素不存在');
     }
 }
 
@@ -1034,6 +1073,15 @@ window.onload = function() {
         catchSound.volume = 0.8; // 設定音量
         catchSound.preload = 'auto';
         catchSound.load(); // 強制載入音效
+        
+        // 監聽音效載入事件
+        catchSound.addEventListener('canplaythrough', () => {
+            console.log('接蛋音效載入完成，readyState:', catchSound.readyState);
+        });
+        catchSound.addEventListener('error', (e) => {
+            console.error('接蛋音效載入失敗:', e);
+        });
+        
         console.log('接蛋音效已預載入');
     }
     
@@ -1041,7 +1089,32 @@ window.onload = function() {
         bombSound.volume = 0.3; // 設定音量
         bombSound.preload = 'auto';
         bombSound.load(); // 強制載入音效
+        
+        // 監聽音效載入事件
+        bombSound.addEventListener('canplaythrough', () => {
+            console.log('炸彈音效載入完成，readyState:', bombSound.readyState);
+        });
+        bombSound.addEventListener('error', (e) => {
+            console.error('炸彈音效載入失敗:', e);
+        });
+        
         console.log('炸彈音效已預載入');
+    }
+    
+    if (gameOverSound) {
+        gameOverSound.volume = 0.5; // 設定音量
+        gameOverSound.preload = 'auto';
+        gameOverSound.load(); // 強制載入音效
+        
+        // 監聽音效載入事件
+        gameOverSound.addEventListener('canplaythrough', () => {
+            console.log('遊戲結束音效載入完成，readyState:', gameOverSound.readyState);
+        });
+        gameOverSound.addEventListener('error', (e) => {
+            console.error('遊戲結束音效載入失敗:', e);
+        });
+        
+        console.log('遊戲結束音效已預載入');
     }
     
     // 添加音效預熱機制
@@ -1067,6 +1140,18 @@ window.onload = function() {
                 bombSound.currentTime = 0;
                 bombSound.volume = originalVolume; // 恢復音量
                 console.log('炸彈音效預熱完成');
+            }).catch(e => console.log('音效預熱失敗:', e));
+        }
+        
+        if (gameOverSound) {
+            const originalVolume = gameOverSound.volume;
+            gameOverSound.volume = 0; // 靜音預熱
+            gameOverSound.currentTime = 0;
+            gameOverSound.play().then(() => {
+                gameOverSound.pause();
+                gameOverSound.currentTime = 0;
+                gameOverSound.volume = originalVolume; // 恢復音量
+                console.log('遊戲結束音效預熱完成');
             }).catch(e => console.log('音效預熱失敗:', e));
         }
         

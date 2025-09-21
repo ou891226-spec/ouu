@@ -32,7 +32,7 @@ try {
                m.member_name, m.account, m.avatar
         FROM friend_requests fr
         JOIN member m ON fr.receiver_id = m.member_id
-        WHERE fr.sender_id = ?
+        WHERE fr.sender_id = ? AND fr.status != 'accepted'
         ORDER BY fr.created_at DESC
     ";
     $stmt = $pdo->prepare($sql);
@@ -54,17 +54,235 @@ try {
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
   <link rel="stylesheet" href="css/global-invitation.css" />
+  <style>
+    /* 交友邀請通知徽章樣式 */
+    .invite-btn {
+      position: relative;
+    }
+    
+    .invitation-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff4444;
+      color: white;
+      border-radius: 50%;
+      min-width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    
+    /* 有邀請時的樣式 */
+    .invitation-badge.has-invitations {
+      background: #ff4444;
+      animation: pulse 2s infinite;
+    }
+    
+    /* 無邀請時的樣式 */
+    .invitation-badge.no-invitations {
+      background: #cccccc;
+      animation: none;
+      min-width: 16px;
+      height: 16px;
+      font-size: 10px;
+      border: 1px solid #999999;
+    }
+    
+    /* 錯誤狀態的樣式 */
+    .invitation-badge.error-state {
+      background: #ffa500;
+      animation: none;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    /* 通知樣式 */
+    .notification-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      pointer-events: none;
+    }
+    
+    .notification {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-left: 4px solid;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 300px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+      position: relative;
+    }
+    
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      border-left-color: #4CAF50;
+      color: #2E7D32;
+      background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+    }
+    
+    .notification.error {
+      border-left-color: #f44336;
+      color: #C62828;
+      background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+    }
+    
+    .notification::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    
+    .notification-text {
+      margin-left: 16px;
+    }
+    
+    @media (max-width: 768px) {
+      .notification-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+      }
+      
+      .notification {
+        max-width: none;
+      }
+    }
+    
+    /* 刪除好友彈窗樣式 */
+    .delete-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .delete-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      animation: modalFadeIn 0.3s ease;
+    }
+    
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .delete-modal-content h3 {
+      margin: 0 0 20px 0;
+      color: #333;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    
+    .delete-modal-content p {
+      margin: 0 0 30px 0;
+      color: #666;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    .delete-modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .delete-modal-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+    }
+    
+    .cancel-btn {
+      background: #f5f5f5;
+      color: #666;
+    }
+    
+    .cancel-btn:hover {
+      background: #e8e8e8;
+      color: #333;
+    }
+    
+    .confirm-btn {
+      background: #ff4757;
+      color: white;
+    }
+    
+    .confirm-btn:hover {
+      background: #ff3838;
+    }
+    
+    .delete-modal-content .confirm-btn {
+      background: #4CAF50;
+    }
+    
+    .delete-modal-content .confirm-btn:hover {
+      background: #45a049;
+    }
+  </style>
 </head>
 <body>
 
 <!-- 黑色半透明背景 -->
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
-<div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
+<div id="modalOverlay" class="overlay" style="display:none;"></div>
 
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -72,7 +290,6 @@ try {
       <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
       <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
         <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-        <a href="history.php" class="jelly-btn jelly-yellow sub-btn">歷史紀錄</a>
       </div>
     </div>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
@@ -117,7 +334,10 @@ try {
   </div>
   <div class="friend-actions">
     <button class="add-friend-btn" onclick="window.location.href='add-friend.php'">+ 加入好友</button>
-    <button class="invite-btn" onclick="window.location.href='invitation-friend.php'">&#128276; 交友邀請</button>
+    <button class="invite-btn" onclick="window.location.href='invitation-friend.php'" id="invitationBtn">
+      &#128276; 交友邀請
+      <span class="invitation-badge" id="invitationBadge" style="display: none;"></span>
+    </button>
   </div>
   <div class="friend-list">
     <?php foreach ($friends as $friend): ?>
@@ -172,6 +392,32 @@ try {
   </div>
 </div>
 
+<!-- 通知容器 -->
+<div id="notification-container" class="notification-container"></div>
+
+<!-- 刪除好友確認彈窗 -->
+<div id="deleteConfirmModal" class="delete-modal" style="display: none;">
+  <div class="delete-modal-content">
+    <h3>確認刪除好友</h3>
+    <p id="deleteConfirmMessage">確定要移除好友「」嗎？</p>
+    <div class="delete-modal-buttons">
+      <button class="delete-modal-btn cancel-btn" onclick="closeDeleteConfirmModal()">取消</button>
+      <button class="delete-modal-btn confirm-btn" onclick="confirmDeleteFriend()">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 刪除結果彈窗 -->
+<div id="deleteResultModal" class="delete-modal" style="display: none;">
+  <div class="delete-modal-content">
+    <h3 id="deleteResultTitle">操作結果</h3>
+    <p id="deleteResultMessage"></p>
+    <div class="delete-modal-buttons">
+      <button class="delete-modal-btn confirm-btn" onclick="closeDeleteResultModal()">確定</button>
+    </div>
+  </div>
+</div>
+
 <!-- 每日任務彈窗 -->
 <div id="missionModal" class="mission-modal" style="display: none;">
   <div class="modal-content">
@@ -183,6 +429,28 @@ try {
 
 <!-- Script 區 -->
 <script>
+// 強制刷新緩存版本 v4.0
+console.log('Friend.php script loaded at:', new Date().toISOString());
+console.log('Script version: 4.0 - Fixed deleteInfo null issue in confirmDeleteFriend');
+
+// 測試函數是否正確定義
+setTimeout(() => {
+  console.log('函數定義檢查:');
+  console.log('window.confirmDeleteFriend:', typeof window.confirmDeleteFriend);
+  console.log('window.showDeleteConfirmModal:', typeof window.showDeleteConfirmModal);
+  console.log('window.closeDeleteConfirmModal:', typeof window.closeDeleteConfirmModal);
+  console.log('window.deleteInfo:', window.deleteInfo);
+}, 1000);
+
+// 頁面載入時立即檢查邀請數量
+window.addEventListener('load', function() {
+  checkInvitationCount();
+});
+
+// 腳本載入完成後立即檢查一次
+setTimeout(() => {
+  checkInvitationCount();
+}, 100);
 let sidebarOpen = false;
 
 function toggleSidebar() {
@@ -223,6 +491,314 @@ function togglePersonalHistoryMenu() {
     menu.style.display = 'block';
     arrowIcon.textContent = '▲';
   }
+}
+
+// 檢查交友邀請數量並更新徽章
+function checkInvitationCount() {
+  fetch('get_invitation_count.php')
+    .then(response => response.json())
+    .then(data => {
+      const badge = document.getElementById('invitationBadge');
+      if (!badge) return;
+      
+      // 移除所有狀態類別
+      badge.classList.remove('has-invitations', 'no-invitations', 'error-state');
+      
+      if (data.success) {
+        badge.style.display = 'flex';
+        
+        // 根據數量添加對應的樣式類別
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.classList.add('has-invitations'); // 紅色 + 脈衝動畫
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none'; // 無邀請時隱藏徽章
+        }
+      } else {
+        // 即使獲取失敗也顯示徽章
+        badge.textContent = '?';
+        badge.style.display = 'flex';
+        badge.classList.add('error-state'); // 橙色 + 無動畫
+      }
+    })
+    .catch(error => {
+      console.log('檢查邀請數量失敗:', error);
+      const badge = document.getElementById('invitationBadge');
+      if (badge) {
+        badge.classList.remove('has-invitations', 'no-invitations', 'error-state');
+        badge.textContent = '?';
+        badge.style.display = 'flex';
+        badge.classList.add('error-state'); // 橙色 + 無動畫
+      }
+    });
+}
+
+// 檢查是否有未完成任務並更新鈴鐺狀態
+function checkPendingTasks() {
+  fetch('get_daily_tasks_fixed.php')
+    .then(response => response.json())
+    .then(tasks => {
+      const bell = document.querySelector('.notification-bell');
+      if (!bell) return;
+      
+      // 檢查是否有未完成的任務
+      const hasPendingTasks = tasks.some(task => {
+        const current = parseInt(task.progress) || 0;
+        const required = parseInt(task.required) || 1;
+        return current < required && task.status !== 'claimed';
+      });
+      
+      // 檢查是否有已完成但未領取的任務
+      const hasCompletedTasks = tasks.some(task => {
+        const current = parseInt(task.progress) || 0;
+        const required = parseInt(task.required) || 1;
+        return current >= required && task.status !== 'claimed';
+      });
+      
+      // 移除舊的狀態類別
+      bell.classList.remove('has-pending', 'has-completed');
+      
+      if (hasCompletedTasks) {
+        // 有可領取的任務 - 金色閃爍
+        bell.classList.add('has-completed');
+      } else if (hasPendingTasks) {
+        // 有進行中的任務 - 普通動畫
+        bell.classList.add('has-pending');
+      }
+    })
+    .catch(error => {
+      console.log('檢查任務狀態失敗:', error);
+    });
+}
+
+// 刪除好友功能
+document.addEventListener('DOMContentLoaded', function() {
+  // 立即檢查任務狀態和邀請數量
+  checkPendingTasks();
+  checkInvitationCount();
+  
+  // 每30秒檢查一次任務狀態和邀請數量
+  setInterval(checkPendingTasks, 30000);
+  setInterval(checkInvitationCount, 30000);
+  
+  // 為所有刪除按鈕添加事件監聽器
+  const deleteButtons = document.querySelectorAll('.delete-friend-btn');
+  
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const friendId = this.getAttribute('data-id');
+      const friendRow = this.closest('.friend-row');
+      const friendNameElement = friendRow.querySelector('.friend-name');
+      
+      console.log('刪除按鈕被點擊:', { friendId, friendRow, friendNameElement });
+      
+      if (!friendId) {
+        console.error('無法獲取 friendId');
+        showDeleteErrorModal('無法獲取好友ID，請重新載入頁面');
+        return;
+      }
+      
+      if (!friendNameElement) {
+        console.error('無法獲取好友名稱元素');
+        showDeleteErrorModal('無法獲取好友信息，請重新載入頁面');
+        return;
+      }
+      
+      const friendName = friendNameElement.textContent;
+      
+      // 確認刪除
+      showDeleteConfirmModal(friendName, friendId, friendRow);
+    });
+  });
+});
+
+function deleteFriend(friendId, friendRow) {
+  console.log('=== deleteFriend 開始 ===');
+  console.log('friendId:', friendId);
+  console.log('friendRow:', friendRow);
+  console.log('typeof friendRow:', typeof friendRow);
+  
+  if (!friendRow) {
+    console.error('friendRow 參數為 null 或 undefined！');
+    showDeleteErrorModal('好友行信息錯誤，請重新操作');
+    return;
+  }
+  
+  // 顯示刪除中狀態
+  const deleteBtn = friendRow.querySelector('.delete-friend-btn');
+  const originalText = deleteBtn.innerHTML;
+  deleteBtn.innerHTML = '⏳';
+  deleteBtn.disabled = true;
+  
+  // 發送刪除請求
+  fetch('delete-friend.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `friend_id=${friendId}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // 成功刪除，移除該行
+      friendRow.style.opacity = '0.5';
+      friendRow.style.transition = 'opacity 0.3s ease';
+      
+      setTimeout(() => {
+        friendRow.remove();
+        
+        // 檢查是否還有好友
+        const friendList = document.querySelector('.friend-list');
+        const remainingFriends = friendList.querySelectorAll('.friend-row');
+        
+        if (remainingFriends.length === 0) {
+          friendList.innerHTML = '<div class="empty-state" style="text-align: center; padding: 20px; color: #666;">目前沒有好友</div>';
+        }
+      }, 300);
+      
+      showDeleteSuccessModal('已成功移除好友');
+    } else {
+      // 刪除失敗，恢復按鈕
+      deleteBtn.innerHTML = originalText;
+      deleteBtn.disabled = false;
+      showDeleteErrorModal('刪除好友失敗：' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('刪除好友時發生錯誤：', error);
+    // 恢復按鈕
+    deleteBtn.innerHTML = originalText;
+    deleteBtn.disabled = false;
+    showDeleteErrorModal('刪除好友時發生錯誤，請稍後再試');
+  });
+}
+
+// 全域變數儲存刪除資訊
+window.deleteInfo = null;
+
+// 顯示刪除確認彈窗
+window.showDeleteConfirmModal = function(friendName, friendId, friendRow) {
+  // 添加調試信息
+  console.log('showDeleteConfirmModal 參數:', { friendName, friendId, friendRow });
+  
+  if (!friendId) {
+    console.error('friendId 是空的！');
+    showDeleteErrorModal('無法獲取好友ID，請重新載入頁面');
+    return;
+  }
+  
+  window.deleteInfo = { friendId: friendId, friendRow: friendRow };
+  
+  const modal = document.getElementById('deleteConfirmModal');
+  const message = document.getElementById('deleteConfirmMessage');
+  message.textContent = `確定要移除好友「${friendName}」嗎？`;
+  
+  modal.style.display = 'flex';
+};
+
+// 關閉刪除確認彈窗
+window.closeDeleteConfirmModal = function() {
+  document.getElementById('deleteConfirmModal').style.display = 'none';
+  window.deleteInfo = null;
+};
+
+// 確認刪除好友
+window.confirmDeleteFriend = function() {
+  console.log('=== confirmDeleteFriend 開始 ===');
+  console.log('window.deleteInfo:', window.deleteInfo);
+  console.log('typeof window.deleteInfo:', typeof window.deleteInfo);
+  
+  if (!window.deleteInfo) {
+    console.error('deleteInfo 是空的！');
+    showDeleteErrorModal('刪除信息丟失，請重新操作');
+    return;
+  }
+  
+  console.log('window.deleteInfo.friendId:', window.deleteInfo.friendId);
+  console.log('window.deleteInfo.friendRow:', window.deleteInfo.friendRow);
+  
+  if (!window.deleteInfo.friendId) {
+    console.error('deleteInfo.friendId 是空的！');
+    showDeleteErrorModal('好友ID丟失，請重新操作');
+    return;
+  }
+  
+  if (!window.deleteInfo.friendRow) {
+    console.error('deleteInfo.friendRow 是空的！');
+    showDeleteErrorModal('好友行信息丟失，請重新操作');
+    return;
+  }
+  
+  console.log('準備調用 deleteFriend 函數');
+  
+  // 先保存 deleteInfo 的值，因為 closeDeleteConfirmModal 會將其設為 null
+  const friendId = window.deleteInfo.friendId;
+  const friendRow = window.deleteInfo.friendRow;
+  
+  closeDeleteConfirmModal();
+  deleteFriend(friendId, friendRow);
+  console.log('=== confirmDeleteFriend 結束 ===');
+};
+
+// 顯示刪除成功彈窗
+function showDeleteSuccessModal(message) {
+  const modal = document.getElementById('deleteResultModal');
+  const title = document.getElementById('deleteResultTitle');
+  const messageEl = document.getElementById('deleteResultMessage');
+  
+  title.textContent = '刪除成功';
+  title.style.color = '#4CAF50';
+  messageEl.textContent = message;
+  
+  modal.style.display = 'flex';
+}
+
+// 顯示刪除錯誤彈窗
+function showDeleteErrorModal(message) {
+  const modal = document.getElementById('deleteResultModal');
+  const title = document.getElementById('deleteResultTitle');
+  const messageEl = document.getElementById('deleteResultMessage');
+  
+  title.textContent = '刪除失敗';
+  title.style.color = '#ff4757';
+  messageEl.textContent = message;
+  
+  modal.style.display = 'flex';
+}
+
+// 關閉結果彈窗
+function closeDeleteResultModal() {
+  document.getElementById('deleteResultModal').style.display = 'none';
+}
+
+// 顯示通知函數
+function showNotification(message, type = 'success') {
+  const container = document.getElementById('notification-container');
+  
+  // 創建通知元素
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `<div class="notification-text">${message}</div>`;
+  
+  // 添加到容器
+  container.appendChild(notification);
+  
+  // 觸發顯示動畫
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  // 3秒後自動移除
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
 }
 </script>
 
