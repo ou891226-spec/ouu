@@ -235,6 +235,24 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                AND DATE(play_date) = CURDATE() 
                AND game_type = '記憶力'
            )
+           -- 速度之王：30秒內完成遊戲的次數
+           WHEN d.task_description LIKE '%30秒%' OR d.task_name = '速度之王' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND play_time <= 30
+           )
+           -- 刷新最高分數：檢查是否有新的最高分數記錄
+           WHEN d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND score > (
+                   SELECT COALESCE(MAX(score), 0) FROM game_records 
+                   WHERE member_id = mt.member_id 
+                   AND DATE(play_date) < CURDATE()
+               )
+           )
            -- 其他任務：完成狀態
            WHEN mt.claimed_date IS NOT NULL OR mt.completed_date IS NOT NULL THEN 1
            ELSE 0
@@ -284,6 +302,10 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            -- 線索專家和過河大師：完成1次
            WHEN d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%' THEN 1
            WHEN d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%' THEN 1
+           -- 速度之王：30秒內完成1場遊戲
+           WHEN d.task_description LIKE '%30秒%' OR d.task_name = '速度之王' THEN 1
+           -- 刷新最高分數：完成1次
+           WHEN d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%' THEN 1
            -- 其他任務：1次完成
            ELSE 1
        END as required

@@ -352,6 +352,25 @@ function togglePassword() {
 </script>
 
 <script src="js/auto-save-time-fixed.js"></script>
+<script>
+// 檢查是否有快取清除參數
+if (window.location.search.includes('cache_cleared')) {
+  console.log("檢測到快取清除參數，強制重新載入任務");
+  // 清除所有任務相關快取
+  localStorage.removeItem('missionLoadDate');
+  localStorage.removeItem('missionLoadedToday');
+  localStorage.removeItem('missionShownToday');
+  localStorage.removeItem('daily_tasks_cache');
+  sessionStorage.clear();
+  
+  // 強制重新載入任務
+  setTimeout(() => {
+    if (typeof loadDailyTasks === 'function') {
+      loadDailyTasks();
+    }
+  }, 1000);
+}
+</script>
 <script src="js/load-daily-tasks.js"></script>
 <script src="js/mission.js"></script>
 <script src="js/save-score.js"></script>

@@ -10,6 +10,28 @@ const highScoreDisplay = document.getElementById("high-score");
 const successSfx = document.getElementById("success-sfx");
 const failSfx = document.getElementById("fail-sfx");
 const tapSfx = document.getElementById("tap-sfx");
+
+// 音訊播放函數，包含錯誤處理
+function playAudio(audioElement) {
+  if (!audioElement) return;
+  
+  try {
+    // 重置音訊到開始位置
+    audioElement.currentTime = 0;
+    // 播放音訊
+    const playPromise = audioElement.play();
+    
+    // 處理 Promise 返回的播放結果
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.log("音訊播放被阻止或失敗:", error);
+        // 不顯示錯誤，因為這通常是用戶互動政策導致的
+      });
+    }
+  } catch (error) {
+    console.log("音訊播放錯誤:", error);
+  }
+}
 const statusText = document.createElement("div"); // 顯示狀態訊息
 const finalResult = document.createElement("div"); // 顯示結束結果
 
@@ -115,7 +137,7 @@ function moveNotes() {
     note.style.left = `${x}px`;
     if (x < -50) {
       showHitResult('Miss', 0);
-      failSfx.play(); // 播放失敗音效
+      playAudio(failSfx); // 播放失敗音效
       note.remove();
       notes.splice(index, 1);
       missCount++;
@@ -125,7 +147,7 @@ function moveNotes() {
 
 function handleHit() {
   if (!gameRunning || paused) return;
-  tapSfx.play();
+  playAudio(tapSfx);
   const zoneLeft = hitZone.getBoundingClientRect().left;
   const zoneRight = zoneLeft + hitZone.offsetWidth;
   let hitResult = '';
@@ -142,17 +164,17 @@ function handleHit() {
         scoreToAdd = 20;
         perfectCount++;
         hitResult = 'Perfect';
-        successSfx.play(); // 播放成功音效
+        playAudio(successSfx); // 播放成功音效
       } else if (diff < 50) {
         scoreToAdd = 10;
         goodCount++;
         hitResult = 'Good';
-        successSfx.play(); // 播放成功音效
+        playAudio(successSfx); // 播放成功音效
       } else {
         missCount++;
         hitResult = 'Miss';
         scoreToAdd = 0;
-        failSfx.play(); // 播放失敗音效
+        playAudio(failSfx); // 播放失敗音效
       }
       score += scoreToAdd;
       currentScoreDisplay.textContent = score;

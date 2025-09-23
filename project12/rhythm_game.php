@@ -157,9 +157,9 @@ $highScore = 0;
             <button class="control-btn" id="restart-btn">重新開始</button>
         </div>
 
-        <audio id="success-sfx" src="audio/success.mp3" preload="auto"></audio>
-        <audio id="fail-sfx" src="audio/fail.mp3" preload="auto"></audio>
-        <audio id="tap-sfx" src="audio/tap.mp3" preload="auto"></audio>
+        <audio id="success-sfx" src="audio/success.m4a" preload="auto"></audio>
+        <audio id="fail-sfx" src="audio/fail.m4a" preload="auto"></audio>
+        <audio id="tap-sfx" src="audio/tap.m4a" preload="auto"></audio>
     </div>    
     <script src="js/rhythm_game.js"></script>
 </body>

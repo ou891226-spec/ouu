@@ -111,6 +111,23 @@ try {
                 ELSE 3
             END
         ) THEN 'completed'
+        WHEN (
+            -- 速度之王：30秒內完成遊戲
+            (d.task_description LIKE '%30秒%' OR d.task_name = '速度之王') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 30) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 刷新最高分數：檢查是否有新的最高分數記錄
+            (d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%') AND
+            (SELECT COUNT(*) FROM game_records 
+             WHERE member_id = mt.member_id 
+             AND DATE(play_date) = CURDATE() 
+             AND score > (
+                 SELECT COALESCE(MAX(score), 0) FROM game_records 
+                 WHERE member_id = mt.member_id 
+                 AND DATE(play_date) < CURDATE()
+             )) >= 1
+        ) THEN 'completed'
         ELSE 'pending'
       END as dynamic_status
     FROM member_tasks mt
