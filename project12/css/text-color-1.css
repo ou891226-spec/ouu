@@ -369,7 +369,7 @@ button:hover {
 /* 難度選擇彈窗專屬樣式 */
 #difficultyModal .modal-content {
     background: white;
-    padding: 40px;
+    padding: 20px;
     border-radius: 20px;
     width: 90%;
     max-width: 500px;
@@ -379,23 +379,23 @@ button:hover {
 }
 
 #difficultyModal h2 {
-    font-size: 28px;
-    margin-bottom: 30px;
+    font-size: 40px;
+    margin-bottom: 20px;
     color: #333;
 }
 
 .back-button {
     position: absolute;
-    top: 1.4rem;
-    left: 1.2rem;
-    width: 2.1rem !important;
-    height: 2.1rem !important;
+    top: 25px;
+    left: 30px;
+    width: 50px !important;
+    height: 50px !important;
     border-radius: 50%;
     border: 2px solid #000 !important;
     background: #fff;
     color: #000;
-    font-size: 1.6rem;
-    font-weight: 900;
+    font-size: 50px;
+    font-weight: bold;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     transition: background 0.2s, color 0.2s, border 0.2s;
@@ -408,18 +408,18 @@ button:hover {
 }
 
 .back-button .back-arrow {
-    font-size: 1.6rem;
-    font-weight: 900;
+    font-size: 50px;
+    font-weight: bold   ;
     line-height: 1;
     color: #000;
 }
 
-.back-button .back-label {
+.back-label {
     position: absolute;
     left: 50%;
     top: 100%;
     transform: translateX(-50%);
-    font-size: 0.95rem;
+    font-size: 20px;
     color: #000;
     margin-top: 0.1rem;
     letter-spacing: 0.05em;
@@ -437,15 +437,15 @@ button:hover {
 
 .help-button {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 2.1rem !important;
-    height: 2.1rem !important;
+    top: 10px;
+    right: 10px;
+    width: 50px !important;
+    height: 50px !important;
     border-radius: 50%;
     border: 2px solid #000 !important;
     background: #fff;
     color: #000;
-    font-size: 1.6rem;
+    font-size: 50px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
@@ -459,7 +459,7 @@ button:hover {
     left: 50%;
     top: 100%;
     transform: translateX(-50%);
-    font-size: 0.95rem;
+    font-size: 20px;
     color: #000;
     margin-top: 0.1rem;
     letter-spacing: 0.05em;
@@ -483,7 +483,7 @@ button:hover {
 }
 
 .difficulty-btn {
-    padding: 25px;
+    padding: 10 px;
     border: none;
     border-radius: 15px;
     font-size: 18px;
@@ -497,12 +497,12 @@ button:hover {
 }
 
 .difficulty-btn .difficulty-name {
-    font-size: 22px;
+    font-size: 30px;
     font-weight: bold;
 }
 
 .difficulty-btn .difficulty-desc {
-    font-size: 16px;
+    font-size: 25px;
     opacity: 0.9;
 }
 

@@ -31,7 +31,7 @@ if ($game_type === '反應力' || $game_type === '節奏遊戲' || $game_type ==
     $memory_sql = "UPDATE member SET memory_score = memory_score + ? WHERE member_id = ?";
     $memory_stmt = $pdo->prepare($memory_sql);
     $memory_stmt->execute([$score, $member_id]);
-} elseif ($game_type === '算術邏輯' || $game_type === '2048' || $game_type === '算菜錢遊戲') {
+} elseif ($game_type === '算術邏輯力' || $game_type === '2048' || $game_type === '算菜錢遊戲' || $game_type === '過河遊戲') {
     $logic_sql = "UPDATE member SET logic_score = logic_score + ? WHERE member_id = ?";
     $logic_stmt = $pdo->prepare($logic_sql);
     $logic_stmt->execute([$score, $member_id]);

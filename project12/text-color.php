@@ -1005,7 +1005,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>過關分數：+${passBonus}</p>
                    
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="returnToMain()">返回主頁</button>
                 `;
             } else {
                 // 失敗
@@ -1016,7 +1016,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     <p>獲得分數：${score}</p>
                     <p>未在時間內達成分數！</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
-                    <button class="blue-btn" onclick="location.href='index.php'">返回主頁</button>
+                    <button class="blue-btn" onclick="returnToMain()">返回主頁</button>
                 `;
             }
             document.getElementById('endGameContent').innerHTML = modalHtml;
@@ -1096,7 +1096,19 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         }
 
         function handleBackButton() {
-            window.location.href = 'index.php';
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'game-category.php';
+            }
+        }
+
+        function returnToMain() {
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'game-category.php';
+            }
         }
 
         function showHelp() {

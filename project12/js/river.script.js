@@ -638,7 +638,7 @@ async function saveGameResult() {
             member_id: window.memberId,
             difficulty: gameState.mode,
             score: gameState.score,
-            play_time: gameState.stepCount, // 使用步數作為遊玩時間
+            play_time: gameState.gameTime, // 使用實際遊戲時間
             game_type: '算術邏輯'
         };
         
@@ -681,7 +681,7 @@ async function saveGameResultOnExit() {
             member_id: window.memberId,
             difficulty: gameState.mode,
             score: 0, // 未完成遊戲，分數為0
-            play_time: gameState.stepCount, // 使用步數作為遊玩時間
+            play_time: gameState.gameTime, // 使用實際遊戲時間
             game_type: '算術邏輯'
         };
         
@@ -720,7 +720,7 @@ async function saveGameResultOnFailure() {
             member_id: window.memberId,
             difficulty: gameState.mode,
             score: 0, // 遊戲失敗，分數為0
-            play_time: null, // 遊戲失敗時不計入遊戲時間
+            play_time: gameState.gameTime, // 使用實際遊戲時間
             game_type: '算術邏輯'
         };
         

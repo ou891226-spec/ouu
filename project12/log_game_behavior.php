@@ -44,7 +44,7 @@ function logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty
             $additional_data['completion_status'] = 'success';
         } else {
             // 其他情況（失敗但玩了較長時間）
-            $action_type = 'game_complete';
+            $action_type = 'game_failed';
             $additional_data['completion_status'] = 'failed';
         }
         

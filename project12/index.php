@@ -61,12 +61,7 @@ try {
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
-    <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
-      <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
-        <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-      </div>
-    </div>
+    <a href="personal-analysis.php" class="jelly-btn jelly-yellow">個人分析</a>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>
   </div>
@@ -299,19 +294,6 @@ try {
 
   // showTimeDetail 函數已在 auto-save-time-fixed.js 中定義
 
-  function togglePersonalHistoryMenu() {
-    const menu = document.getElementById('personalHistoryMenu');
-    const arrowIcon = document.getElementById('arrowIcon');
-    const isVisible = menu.style.display === 'block';
-    
-    if (isVisible) {
-      menu.style.display = 'none';
-      arrowIcon.textContent = '▼';
-    } else {
-      menu.style.display = 'block';
-      arrowIcon.textContent = '▲';
-    }
-  }
 
   function openAccountModal() {
     // 先關閉個人資訊彈窗
@@ -405,7 +387,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // 載入最近遊戲
 function loadRecentGames() {
-  fetch('get_recent_games.php')
+  // 添加時間戳防止緩存
+  const timestamp = new Date().getTime();
+  fetch(`get_recent_games.php?t=${timestamp}`)
     .then(response => response.json())
     .then(data => {
       console.log('API 響應:', data);

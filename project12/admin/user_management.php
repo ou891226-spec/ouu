@@ -215,10 +215,10 @@ $stats = $stats_stmt->fetch();
         </div>
         
         <div class="nav">
-            <a href="game_records.php">遊戲紀錄</a>
-            <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">遊戲管理</a>
-            <a href="user_management.php">用戶管理</a>
+            <a href="game_records.php">📊 遊戲紀錄</a>
+            <a href="user_behavior.php">👤 行為軌跡</a>
+            <a href="question_management.php">🎯 遊戲管理</a>
+            <a href="user_management.php" class="active">👥 用戶管理</a>
         </div>
         
         <div class="stats">

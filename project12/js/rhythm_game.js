@@ -7,7 +7,9 @@ const hitZone = document.getElementById("hitZone");
 const timerDisplay = document.getElementById("timer");
 const currentScoreDisplay = document.getElementById("score");
 const highScoreDisplay = document.getElementById("high-score");
-const bgm = document.getElementById("bgm");
+const successSfx = document.getElementById("success-sfx");
+const failSfx = document.getElementById("fail-sfx");
+const tapSfx = document.getElementById("tap-sfx");
 const statusText = document.createElement("div"); // 顯示狀態訊息
 const finalResult = document.createElement("div"); // 顯示結束結果
 
@@ -58,14 +60,11 @@ function setDifficulty(levelStr) {
   rhythmPattern = rhythmPatterns[levelStr];
   rhythmIndex = 0;
   passScore = levelStr === 'easy' ? 300 : levelStr === 'normal' ? 800 : 1200;
-  bgm.src = levelStr === 'easy' ? "audio/music2.mp3" : levelStr === 'normal' ? "audio/music3.mp3" : "audio/hard.mp3";
 }
 
 function startGame() {
   resetGame();
   setDifficulty(currentDifficulty);
-  bgm.currentTime = 0;
-  bgm.play();
   gameRunning = true;
   spawnNoteWithRhythm();
   moveInterval = setInterval(moveNotes, 16);
@@ -98,6 +97,8 @@ function spawnNote() {
   const img = document.createElement("img");
   img.src = "img/note.png";
   note.appendChild(img);
+      // ★★★ 在這裡新增這行，確保棒球在最上層 ★★★
+    note.style.zIndex = "20"; 
   noteTrack.appendChild(note);
   notes.push(note);
 }
@@ -113,6 +114,8 @@ function moveNotes() {
     const x = 600 - progress * 560;
     note.style.left = `${x}px`;
     if (x < -50) {
+      showHitResult('Miss', 0);
+      failSfx.play(); // 播放失敗音效
       note.remove();
       notes.splice(index, 1);
       missCount++;
@@ -122,10 +125,7 @@ function moveNotes() {
 
 function handleHit() {
   if (!gameRunning || paused) return;
-
-  // 在這裡呼叫揮棒函式，確保只要點擊打擊區就一定會揮棒
-  swingBat();
-
+  tapSfx.play();
   const zoneLeft = hitZone.getBoundingClientRect().left;
   const zoneRight = zoneLeft + hitZone.offsetWidth;
   let hitResult = '';
@@ -142,14 +142,17 @@ function handleHit() {
         scoreToAdd = 20;
         perfectCount++;
         hitResult = 'Perfect';
+        successSfx.play(); // 播放成功音效
       } else if (diff < 50) {
         scoreToAdd = 10;
         goodCount++;
         hitResult = 'Good';
+        successSfx.play(); // 播放成功音效
       } else {
         missCount++;
         hitResult = 'Miss';
         scoreToAdd = 0;
+        failSfx.play(); // 播放失敗音效
       }
       score += scoreToAdd;
       currentScoreDisplay.textContent = score;
@@ -202,13 +205,12 @@ function showHitResult(result, score) {
 
 function flashHitZone() {
   hitZone.style.backgroundColor = '#FFD700'; // 例如，改成金黃色
-  setTimeout(() => hitZone.style.backgroundColor = '#B9835C', 100); // 100 毫秒後恢復為打擊區的顏色
+  setTimeout(() => hitZone.style.backgroundColor = '#B9835C', 100); // 100 毫秒後恢復為點擊區的顏色
 }
 
 function togglePause() {
   paused = !paused;
   if (paused) {
-    bgm.pause();
     pauseButton.textContent = "繼續遊戲";
     pauseButton.style.background = '#4CAF50'; // 綠色
     clearTimeout(noteTimeoutId);
@@ -229,7 +231,6 @@ function togglePause() {
     // 將暫停時間加到遊戲開始時間，確保計時器正確
     startTime += pauseDuration;
 
-    bgm.play();
     pauseButton.textContent = "暫停遊戲";
     pauseButton.style.background = '#FF8C00'; // 橘色
     spawnNoteWithRhythm();
@@ -243,28 +244,26 @@ function togglePause() {
   }
 }
 
-function endGame(forceEnd = false) {
+// 在 rhythm_game.js 檔案中，找到 endGame 函式並替換成以下內容
+
+function endGame() {
   console.log("endGame() called.");
   console.log("Current Score:", score);
   console.log("Pass Score:", passScore);
-  console.log("Force End:", forceEnd);
   console.log("Is game passed?", score >= passScore);
+
+  const gameDuration = 60 - gameTime;
+  const isPassed = score >= passScore;
 
   gameRunning = false;
   clearInterval(moveInterval);
   clearInterval(timerInterval);
-  bgm.pause();
-  bgm.currentTime = 0;
-  
   clearTimeout(noteTimeoutId);
 
   let sendMemberId = (typeof memberId !== "undefined" && memberId) ? memberId : 1;
   let recordScore = 0;
 
-  if (forceEnd) {
-    recordScore = 0;
-    console.log("Force end. Record score set to 0.");
-  } else if (score >= passScore) {
+  if (isPassed) {
     if (currentDifficulty === 'easy') recordScore = 20;
     else if (currentDifficulty === 'normal') recordScore = 50;
     else if (currentDifficulty === 'hard') recordScore = 100;
@@ -282,8 +281,8 @@ function endGame(forceEnd = false) {
       member_id: sendMemberId,
       difficulty: currentDifficulty,
       score: recordScore,
-      play_time: 60 - gameTime,
-      is_passed: score >= passScore
+      play_time: gameDuration,
+      is_passed: isPassed
     })
   })
   .then(res => res.json())
@@ -298,7 +297,7 @@ function endGame(forceEnd = false) {
     console.error('Fetch error:', error);
   });
 
-  if (score >= passScore && currentDifficulty === 'normal') {
+  if (isPassed && currentDifficulty === 'normal') {
     fetch("update_task_status.php", {
       method: "POST",
       headers: {
@@ -323,7 +322,7 @@ function endGame(forceEnd = false) {
     });
   }
 
-  showEndModal(forceEnd ? false : score >= passScore, recordScore, currentDifficulty);
+  showEndModal(isPassed, score, recordScore, currentDifficulty, gameDuration);
 }
 
 function resetGame() {
@@ -354,11 +353,11 @@ difficultyOptions.forEach(option => {
 pauseButton.addEventListener("click", togglePause);
 infoBtn.addEventListener("click", () => {
   infoModal.style.display = "flex";
-  // 初始化節奏視頻播放邏輯
+  // 初始化節奏影片播放邏輯
   initRhythmVideoPlayback();
 });
 
-// 初始化節奏視頻播放邏輯
+// 初始化節奏影片播放邏輯
 function initRhythmVideoPlayback() {
   const video = document.getElementById('rhythm-current-video');
   const instructionText = document.getElementById('rhythm-instruction-text');
@@ -371,19 +370,19 @@ function initRhythmVideoPlayback() {
     return;
   }
   
-  // 設置第一個視頻
+  // 設置第一個影片
   video.src = 'gd/rhythm1.mp4';
-  instructionText.textContent = '跟著音符的節奏點擊打擊區';
+  instructionText.textContent = '一進去先選擇遊戲難度，遊戲開始後玩家跟隨音符出現頻率點擊螢幕上的音符。成功點擊音符（Perfect+20分 / Good+10分 / Miss+0分）';
   stepIndicator.textContent = '步驟 1/2';
   
-  // 設置當前視頻標記
+  // 設置當前影片標記
   video.setAttribute('data-current-video', 'rhythm1');
   
   // 顯示下一步按鈕，隱藏上一步按鈕
   nextStepBtn.style.display = 'block';
   prevStepBtn.style.display = 'none';
   
-  // 強制加載視頻
+  // 強制加載影片
   video.load();
   
   // 添加下一步按鈕點擊事件
@@ -402,17 +401,17 @@ function goToRhythmNextStep() {
   const nextStepBtn = document.getElementById('rhythm-next-step-btn');
   const prevStepBtn = document.getElementById('rhythm-prev-step-btn');
   
-  // 切換到第二個視頻
+  // 切換到第二個影片
   video.src = 'gd/rhythm2.mp4';
   video.setAttribute('data-current-video', 'rhythm2');
-  instructionText.innerHTML = 'Miss不給分、Good+10分、Perfect+20分<br>時間內累積足夠分數過關！';
+  instructionText.innerHTML = '隨著難度選擇的不同，音符出現的速度與數量會增加，使挑戰更具挑戰性，時間內達到遊戲指定過關分數即可過關 。';
   stepIndicator.textContent = '步驟 2/2';
   
   // 隱藏下一步按鈕，顯示上一步按鈕
   nextStepBtn.style.display = 'none';
   prevStepBtn.style.display = 'block';
   
-  // 加載並播放視頻
+  // 加載並播放影片
   video.load();
   video.play();
 }
@@ -425,17 +424,17 @@ function goToRhythmPrevStep() {
   const nextStepBtn = document.getElementById('rhythm-next-step-btn');
   const prevStepBtn = document.getElementById('rhythm-prev-step-btn');
   
-  // 切換到第一個視頻
+  // 切換到第一個影片
   video.src = 'gd/rhythm1.mp4';
   video.setAttribute('data-current-video', 'rhythm1');
-  instructionText.textContent = '跟著音符的節奏點擊打擊區';
+  instructionText.textContent = '一進去先選擇遊戲難度，遊戲開始後玩家跟隨音符出現頻率點擊螢幕上的音符。成功點擊音符（Perfect+20分 / Good+10分 / Miss+0分）';
   stepIndicator.textContent = '步驟 1/2';
   
   // 顯示下一步按鈕，隱藏上一步按鈕
   nextStepBtn.style.display = 'block';
   prevStepBtn.style.display = 'none';
   
-  // 加載並播放視頻
+  // 加載並播放影片
   video.load();
   video.play();
 }
@@ -445,7 +444,7 @@ window.goToRhythmNextStep = goToRhythmNextStep;
 window.goToRhythmPrevStep = goToRhythmPrevStep;
 
 function closeInfoModal() {
-  // 停止視頻播放
+  // 停止影片播放
   const video = document.getElementById('rhythm-current-video');
   if (video) {
     video.pause();
@@ -466,33 +465,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 restartButton.addEventListener("click", () => location.reload());
-endButton.addEventListener("click", () => endGame(true));
+endButton.addEventListener("click", () => endGame());
 document.getElementById("gameArea").addEventListener("click", handleHit);
 
-function showEndModal(success, score, levelStr) {
-  const modal = document.getElementById('result-modal');
-  const title = document.getElementById('result-title');
-  const difficulty = document.getElementById('result-difficulty');
-  const message = document.getElementById('result-score');
+function showEndModal(success, finalGameScore, recordScore, levelStr, gameDuration) {
+    const modal = document.getElementById('result-modal');
+    const title = document.getElementById('result-title');
+    const difficulty = document.getElementById('result-difficulty');
+    const scoreDisplay = document.getElementById('result-score');
+    const timeDisplay = document.getElementById('result-time');
+    const finalScoreDisplay = document.getElementById('result-final-score');
 
-  title.textContent = success ? '恭喜破關' : '遊戲失敗';
-  const levelName = levelStr === 'easy' ? '簡單' : levelStr === 'normal' ? '普通' : '困難';
-  difficulty.textContent = '難度：' + levelName;
-  
-  let fixedScore = 0;
-  if (levelStr === 'easy') fixedScore = 20;
-  else if (levelStr === 'normal') fixedScore = 50;
-  else if (levelStr === 'hard') fixedScore = 100;
-  
-  message.innerHTML = success ? '得分：' + fixedScore + '<br>過關分數：+' + fixedScore : '未在時間內達成分數';
-
-  modal.style.display = 'flex';
-}
-
-function swingBat() {
-  bat.classList.add('swing');
-
-  setTimeout(() => {
-    bat.classList.remove('swing');
-  }, 300);
+    title.textContent = success ? '🎉恭喜破關' : '⏰遊戲失敗';
+    const levelName = levelStr === 'easy' ? '簡單' : levelStr === 'normal' ? '普通' : '困難';
+    difficulty.textContent = '難度：' + levelName;
+    scoreDisplay.textContent = '遊戲分數：' + finalGameScore;
+    timeDisplay.textContent = '遊戲時間：' + gameDuration + ' 秒';
+    finalScoreDisplay.textContent = '獲得分數：+' + recordScore;
+    
+    modal.style.display = 'flex';
 }

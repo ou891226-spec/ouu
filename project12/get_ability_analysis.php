@@ -52,15 +52,16 @@ try {
     $logic_strength = 0;
     
     if ($avg_result['avg_reaction'] > 0) {
-        $reaction_strength = min(100, ($score_result['reaction_score'] / $avg_result['avg_reaction']) * 50);
+        // 更合理的計算：基於百分位數而不是簡單的比例
+        $reaction_strength = min(100, max(0, ($score_result['reaction_score'] / $avg_result['max_reaction']) * 100));
     }
     
     if ($avg_result['avg_memory'] > 0) {
-        $memory_strength = min(100, ($score_result['memory_score'] / $avg_result['avg_memory']) * 50);
+        $memory_strength = min(100, max(0, ($score_result['memory_score'] / $avg_result['max_memory']) * 100));
     }
     
     if ($avg_result['avg_logic'] > 0) {
-        $logic_strength = min(100, ($score_result['logic_score'] / $avg_result['avg_logic']) * 50);
+        $logic_strength = min(100, max(0, ($score_result['logic_score'] / $avg_result['max_logic']) * 100));
     }
     
     // 獲取詳細的遊戲記錄來計算綜合分析
@@ -105,10 +106,10 @@ try {
             case '圖片線索問答':
                 $memory_games[] = $record;
                 break;
-            case '邏輯力':
+            case '算術邏輯力':
             case '2048':
             case '算菜錢遊戲':
-            case '算術邏輯力':
+            case '過河遊戲':
                 $logic_games[] = $record;
                 break;
         }

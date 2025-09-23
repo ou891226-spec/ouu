@@ -15,6 +15,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <link rel="stylesheet" href="css/mission.css" />
   <link rel="stylesheet" href="css/profile-modal.css" />
   <link rel="stylesheet" href="css/global-invitation.css" />
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
 
@@ -28,12 +29,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
-    <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
-      <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
-        <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-      </div>
-    </div>
+    <a href="personal-analysis.php" class="jelly-btn jelly-yellow">個人分析</a>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>
   </div>
@@ -69,42 +65,63 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 </div>
 
 <!-- 主內容 -->
-<main>
-  <h2 class="section-title">相關報導</h2>
+<div class="news-section">
+  <h2 class="section-title">📰 相關報導</h2>
 
-  <section class="news-item">
+  <section class="news-item" data-aos="fade-up" data-aos-delay="100">
     <div class="news-img">
-      <img src="img/news1.png" alt="新聞1">
+      <img src="img/news1.png" alt="預防老化從遊戲著手">
+      <div class="news-badge">🏆 熱門推薦</div>
     </div>
     <div class="news-content">
+      <div class="news-meta">
+        <span class="news-category">健康生活</span>
+        <span class="news-date">2024年最新研究</span>
+      </div>
       <h3>預防老化從遊戲著手</h3>
-      <p>研究指出，體感遊戲與麻將遊戲對於預防老化具有顯著效果，讓我們一起來看看如何透過遊戲維持健康。</p>
-      <a href="https://news.owlting.com/articles/223052?utm_source=chatgpt.com" target="_blank" class="more-link">查看更多</a>
+      <p>研究指出，體感遊戲與麻將遊戲對於預防老化具有顯著效果，讓我們一起來看看如何透過遊戲維持健康。科學證實，適度的遊戲活動能夠刺激大腦神經元，提升認知功能。</p>
+      <a href="https://news.owlting.com/articles/223052?utm_source=chatgpt.com" target="_blank" class="more-link">
+        <span>閱讀全文</span>
+      </a>
     </div>
   </section>
 
-  <section class="news-item">
+  <section class="news-item" data-aos="fade-up" data-aos-delay="200">
     <div class="news-img">
-      <img src="img/news2.png" alt="新聞2">
+      <img src="img/news2.png" alt="失智預防的科學方法">
+      <div class="news-badge">🧠 專業研究</div>
     </div>
     <div class="news-content">
+      <div class="news-meta">
+        <span class="news-category">認知訓練</span>
+        <span class="news-date">醫學期刊發表</span>
+      </div>
       <h3>失智預防的科學方法</h3>
-      <p>居家認知訓練不僅能提高老年人的認知能力，還能有效預防失智症，讓你輕鬆在家進行。</p>
-      <a href="https://www.ltpasolution.com/home-training.html" target="_blank" class="more-link">查看更多</a>
+      <p>居家認知訓練不僅能提高老年人的認知能力，還能有效預防失智症，讓你輕鬆在家進行。透過系統性的腦力訓練，可以顯著延緩認知衰退的進程。</p>
+      <a href="https://www.ltpasolution.com/home-training.html" target="_blank" class="more-link">
+        <span>了解更多</span>
+      </a>
     </div>
   </section>
 
-  <section class="news-item">
+  <section class="news-item" data-aos="fade-up" data-aos-delay="300">
     <div class="news-img">
-      <img src="img/news3.png" alt="新聞3">
+      <img src="img/news3.png" alt="電腦遊戲助長者練腦">
+      <div class="news-badge">💻 科技新知</div>
     </div>
     <div class="news-content">
+      <div class="news-meta">
+        <span class="news-category">數位健康</span>
+        <span class="news-date">專家建議</span>
+      </div>
       <h3>電腦遊戲助長者練腦</h3>
-      <p>每天15分鐘的電腦遊戲可以幫助長者保持大腦活力，對抗記憶衰退。</p>
-      <a href="https://news.owlting.com/articles/223052?utm_source=chatgpt.com" target="_blank" class="more-link">查看更多</a>
+      <p>每天15分鐘的電腦遊戲可以幫助長者保持大腦活力，對抗記憶衰退。現代科技為健康管理提供了全新的解決方案，讓遊戲成為健康生活的一部分。</p>
+      <a href="https://news.owlting.com/articles/223052?utm_source=chatgpt.com" target="_blank" class="more-link">
+        <span>查看詳情</span>
+      </a>
     </div>
   </section>
-</main>
+</div>
 
 <!-- 黑色半透明背景 (彈窗遮罩) -->
 <div id="modalOverlay" class="overlay" style="display:none;"></div>
@@ -217,19 +234,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     return true;
   }
 
-  function togglePersonalHistoryMenu() {
-    const menu = document.getElementById('personalHistoryMenu');
-    const arrowIcon = document.getElementById('arrowIcon');
-    const isVisible = menu.style.display === 'block';
-    
-    if (isVisible) {
-      menu.style.display = 'none';
-      arrowIcon.textContent = '▼';
-    } else {
-      menu.style.display = 'block';
-      arrowIcon.textContent = '▲';
-    }
-  }
 
   function openProfileModal() {
     document.getElementById('profileModal').style.display = 'flex';
@@ -350,6 +354,16 @@ function togglePassword() {
 <script src="js/achievements.js"></script>
 <script src="js/avatar-upload.js"></script>
 <script src="js/global-invitation-checker.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  // 初始化AOS動畫
+  AOS.init({
+    duration: 800,
+    easing: 'ease-in-out',
+    once: true,
+    offset: 100
+  });
+</script>
 
 </body>
 </html>

@@ -44,7 +44,7 @@ if (
             'game_id' => 4,
             'difficulty' => $difficulty,
             'score' => $record_score,
-            'play_time' => null, // 2048遊戲不記錄遊戲時間
+            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
             'game_type' => '算術邏輯力',
             'is_single_player' => 1,
             'opponent_id' => null
@@ -462,9 +462,6 @@ if (
                 debugLog('更新最高分數: ' + score);
             }
             
-            // 格式化遊戲時間
-            const formattedTime = formatGameTime(gameTime);
-            
             // 顯示相應的彈窗並填入數據
             if (isWin) {
                 // 填入勝利彈窗的數據
@@ -472,13 +469,11 @@ if (
                 
                 const winDifficulty = document.getElementById('win-difficulty');
                 const winGameScore = document.getElementById('win-game-score');
-                const winGameTime = document.getElementById('win-game-time');
                 const winRewardScore = document.getElementById('win-reward-score');
                 const winModal = document.getElementById('win-modal');
                 
                 if (winDifficulty) winDifficulty.textContent = getDifficultyName(difficulty);
                 if (winGameScore) winGameScore.textContent = score;
-                if (winGameTime) winGameTime.textContent = formattedTime;
                 if (winRewardScore) winRewardScore.textContent = rewardScore;
                 if (winModal) winModal.style.display = 'block';
             } else {

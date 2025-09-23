@@ -364,22 +364,27 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
-// 籃子觸控拖曳
+// 籃子觸控拖曳 - 修正版本
 let touchStartX = 0;
+let isTouching = false;
+
+// 觸控開始
 basket.addEventListener('touchstart', (e) => {
-    if (basket.style.pointerEvents !== 'none') {
+    if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+        isTouching = true;
         touchStartX = e.touches[0].clientX;
         e.preventDefault();
-        console.log('觸控開始:', {
-            touchStartX: touchStartX,
-            basketRect: basket.getBoundingClientRect(),
-            gameRect: game.getBoundingClientRect()
-        });
+        e.stopPropagation();
+        console.log('觸控開始:', touchStartX);
     }
 }, { passive: false });
+
+// 觸控移動
 document.addEventListener('touchmove', (e) => {
-    if (touchStartX !== 0 && basket.style.pointerEvents !== 'none') {
+    if (isTouching && touchStartX !== 0 && gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
         e.preventDefault();
+        e.stopPropagation();
+        
         const gameRect = game.getBoundingClientRect();
         const touchX = e.touches[0].clientX - gameRect.left;
         const basketWidth = basket.offsetWidth;
@@ -394,21 +399,34 @@ document.addEventListener('touchmove', (e) => {
         
         console.log('觸控移動:', {
             touchX: touchX,
-            basketWidth: basketWidth,
-            maxLeft: maxLeft,
             newLeft: newLeft,
-            currentLeft: basket.style.left,
-            computedLeft: window.getComputedStyle(basket).left,
-            basketRect: basket.getBoundingClientRect()
+            basketWidth: basketWidth,
+            maxLeft: maxLeft
         });
     }
 }, { passive: false });
-document.addEventListener('touchend', () => {
-    if (touchStartX !== 0) {
+
+// 觸控結束
+document.addEventListener('touchend', (e) => {
+    if (isTouching) {
+        e.preventDefault();
+        e.stopPropagation();
         console.log('觸控結束');
+        isTouching = false;
+        touchStartX = 0;
     }
-    touchStartX = 0;
-}, { passive: true });
+}, { passive: false });
+
+// 觸控取消
+document.addEventListener('touchcancel', (e) => {
+    if (isTouching) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('觸控取消');
+        isTouching = false;
+        touchStartX = 0;
+    }
+}, { passive: false });
 
 // 鍵盤左右鍵移動
 document.addEventListener('keydown', (e) => {

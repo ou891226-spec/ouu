@@ -11,7 +11,7 @@ date_default_timezone_set('Asia/Taipei');
 
 header('Content-Type: application/json');
 
-$member_id = $_SESSION['member_id'] ?? 23;
+$member_id = $_SESSION['member_id'] ?? null;
 
 if (!$member_id) {
     echo json_encode(['success' => false, 'message' => '未登入']);
@@ -41,6 +41,14 @@ try {
     error_log("成就查詢結果 - 用戶ID: $member_id, 日期: $today, 成就數量: " . count($achievements));
     if (!empty($achievements)) {
         error_log("成就詳情: " . json_encode($achievements));
+    }
+    
+    // 添加調試輸出
+    if (php_sapi_name() === 'cli') {
+        echo "調試信息 - 用戶ID: $member_id, 日期: $today, 成就數量: " . count($achievements) . "\n";
+        if (!empty($achievements)) {
+            echo "成就詳情: " . json_encode($achievements, JSON_UNESCAPED_UNICODE) . "\n";
+        }
     }
     
     // 獲取用戶的遊戲統計資料

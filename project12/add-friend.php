@@ -32,12 +32,12 @@ $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 
 // 查詢會員（排除自己）
 if ($q !== '') {
-    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE (account LIKE ? OR member_name LIKE ?) AND member_id != ?";
+    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE (account LIKE ? OR member_name LIKE ?) AND member_id != ? LIMIT 20";
     $stmt = $pdo->prepare($sql);
     $like_q = "%$q%";
     $stmt->execute([$like_q, $like_q, $my_id]);
 } else {
-    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE member_id != ? ORDER BY member_id DESC";
+    $sql = "SELECT member_id, member_name, account, avatar FROM member WHERE member_id != ? ORDER BY member_id DESC LIMIT 20";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$my_id]);
 }

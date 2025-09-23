@@ -73,12 +73,33 @@ $count_stmt->execute($params);
 $total_records = $count_stmt->fetchColumn();
 $total_pages = ceil($total_records / $per_page);
 
-// 獲取遊戲記錄
+// 獲取遊戲記錄，並關聯行為軌跡數據
 $sql = "
-    SELECT gr.*, m.member_name, g.game_name 
+    SELECT 
+        gr.*, 
+        m.member_name, 
+        g.game_name,
+        ubl.action_type as behavior_type,
+        ubl.created_at as behavior_time
     FROM game_records gr 
     JOIN member m ON gr.member_id = m.member_id 
     LEFT JOIN games g ON gr.game_id = g.game_id 
+    LEFT JOIN (
+        SELECT 
+            ubl.member_id,
+            ubl.game_type,
+            ubl.action_type,
+            ubl.created_at,
+            ROW_NUMBER() OVER (
+                PARTITION BY ubl.member_id, ubl.game_type, DATE(ubl.created_at) 
+                ORDER BY ubl.created_at DESC
+            ) as rn
+        FROM user_behavior_log ubl 
+        WHERE ubl.action_type IN ('game_complete', 'game_exit')
+    ) ubl ON gr.member_id = ubl.member_id 
+        AND ubl.game_type = gr.game_type 
+        AND DATE(gr.play_date) = DATE(ubl.created_at)
+        AND ubl.rn = 1
     $where_clause
     ORDER BY gr.play_date DESC 
     LIMIT $per_page OFFSET $offset
@@ -103,6 +124,37 @@ $stats_sql = "
 $stats_stmt = $pdo->prepare($stats_sql);
 $stats_stmt->execute($params);
 $stats = $stats_stmt->fetch();
+
+// 定義遊戲類型到中文名稱的對應
+$game_type_to_name = [
+    // 反應力相關
+    '反應力' => '接金蛋',
+    '接金蛋遊戲' => '接金蛋',
+    '接金蛋' => '接金蛋',
+    '節奏遊戲' => '節奏遊戲',
+    '節奏感' => '節奏遊戲',
+    '看字選色遊戲' => '看字選色',
+    '注意力' => '看字選色',
+    
+    // 記憶力相關
+    '記憶力' => '翻牌對對樂',
+    '翻牌對對樂' => '翻牌對對樂',
+    '圖片線索問答' => '圖片線索問答',
+    '邏輯推理' => '圖片線索問答',
+    '追蹤犯人遊戲' => '追蹤犯人',
+    '追蹤能力' => '追蹤犯人',
+    
+    // 算術邏輯力相關
+    '算術邏輯力' => '算菜錢',
+    '算菜錢遊戲' => '算菜錢',
+    '過河遊戲' => '過河遊戲',
+    '邏輯力' => '2048',
+    '2048' => '2048',
+    
+    // 雙人遊戲
+    '算菜錢(雙人)' => '算菜錢(雙人)',
+    '翻牌對對樂(雙人)' => '翻牌對對樂(雙人)'
+];
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -174,6 +226,10 @@ $stats = $stats_stmt->fetch();
             background: #5a6268; 
             text-decoration: none;
         }
+        .action-type { padding: 4px 8px; border-radius: 3px; color: white; font-size: 12px; }
+        .action-game_complete { background: #28a745; }
+        .action-game_exit { background: #dc3545; }
+        .action-game_failed { background: #ffc107; color: #000; }
         #month_year_select {
             margin-top: 10px;
         }
@@ -208,10 +264,10 @@ $stats = $stats_stmt->fetch();
         </div>
         
         <div class="nav">
-            <a href="game_records.php">遊戲紀錄</a>
-            <a href="user_behavior.php">行為軌跡</a>
-            <a href="question_management.php">遊戲管理</a>
-            <a href="user_management.php">用戶管理</a>
+            <a href="game_records.php" class="active">📊 遊戲紀錄</a>
+            <a href="user_behavior.php">👤 行為軌跡</a>
+            <a href="question_management.php">🎯 遊戲管理</a>
+            <a href="user_management.php">👥 用戶管理</a>
             <a href="delete_test_records.php" style="color: #dc3545;">🗑️ 刪除測試記錄</a>
         </div>
         
@@ -225,9 +281,21 @@ $stats = $stats_stmt->fetch();
                     <label>遊戲類型：</label>
                     <select name="game_type">
                         <option value="">全部</option>
-                        <option value="記憶力" <?php echo $game_type_filter === '記憶力' ? 'selected' : ''; ?>>記憶力</option>
-                        <option value="反應力" <?php echo $game_type_filter === '反應力' ? 'selected' : ''; ?>>反應力</option>
-                        <option value="邏輯力" <?php echo $game_type_filter === '邏輯力' ? 'selected' : ''; ?>>邏輯力</option>
+                        <optgroup label="反應力">
+                            <option value="反應力" <?php echo $game_type_filter === '反應力' ? 'selected' : ''; ?>>接金蛋</option>
+                            <option value="節奏遊戲" <?php echo $game_type_filter === '節奏遊戲' ? 'selected' : ''; ?>>節奏遊戲</option>
+                            <option value="看字選色遊戲" <?php echo $game_type_filter === '看字選色遊戲' ? 'selected' : ''; ?>>看字選色</option>
+                        </optgroup>
+                        <optgroup label="記憶力">
+                            <option value="記憶力" <?php echo $game_type_filter === '記憶力' ? 'selected' : ''; ?>>翻牌對對樂</option>
+                            <option value="圖片線索問答" <?php echo $game_type_filter === '圖片線索問答' ? 'selected' : ''; ?>>圖片線索問答</option>
+                            <option value="追蹤犯人遊戲" <?php echo $game_type_filter === '追蹤犯人遊戲' ? 'selected' : ''; ?>>追蹤犯人</option>
+                        </optgroup>
+                        <optgroup label="算術邏輯力">
+                            <option value="算術邏輯力" <?php echo $game_type_filter === '算術邏輯力' ? 'selected' : ''; ?>>算菜錢</option>
+                            <option value="過河遊戲" <?php echo $game_type_filter === '過河遊戲' ? 'selected' : ''; ?>>過河遊戲</option>
+                            <option value="邏輯力" <?php echo $game_type_filter === '邏輯力' ? 'selected' : ''; ?>>2048</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div>
@@ -301,6 +369,7 @@ $stats = $stats_stmt->fetch();
                         <th>用戶</th>
                         <th>遊戲類型</th>
                         <th>遊戲名稱</th>
+                            <th>行為類型</th>
                         <th>分數</th>
                         <th>難度</th>
                         <th>遊玩時間</th>
@@ -312,11 +381,128 @@ $stats = $stats_stmt->fetch();
                     <tr>
                         <td><?php echo $record['record_id'] ?? $record['id'] ?? '-'; ?></td>
                         <td><?php echo htmlspecialchars($record['member_name']); ?></td>
-                        <td><?php echo htmlspecialchars($record['game_type']); ?></td>
-                        <td><?php echo htmlspecialchars($record['game_name'] ?? '-'); ?></td>
+                        <td><?php 
+                            // 統一算術邏輯相關的命名
+                            $display_game_type = $record['game_type'];
+                            if (in_array($record['game_type'], ['算術邏輯', '算術邏輯力', '算數邏輯力'])) {
+                                $display_game_type = '算術邏輯力';
+                            }
+                            echo htmlspecialchars($display_game_type);
+                        ?></td>
+                        <td><?php 
+                            // 特殊處理：根據game_id來判斷具體遊戲名稱
+                            $game_name = '';
+                            switch ($record['game_id']) {
+                                case 1:
+                                    $game_name = '看字選色';
+                                    break;
+                                case 2:
+                                    $game_name = '接金蛋';
+                                    break;
+                                case 3:
+                                    $game_name = '算菜錢';
+                                    break;
+                                case 4:
+                                    $game_name = '2048';
+                                    break;
+                                case 5:
+                                    $game_name = '翻牌對對樂';
+                                    break;
+                                case 6:
+                                    $game_name = '追蹤犯人';
+                                    break;
+                                case 7:
+                                    $game_name = '節奏遊戲';
+                                    break;
+                                case 8:
+                                    $game_name = '圖片線索問答';
+                                    break;
+                                case 9:
+                                    $game_name = '過河遊戲';
+                                    break;
+                                default:
+                                    $game_name = $game_type_to_name[$record['game_type']] ?? $record['game_name'] ?? '-';
+                                    break;
+                            }
+                            echo htmlspecialchars($game_name);
+                        ?></td>
+                        <td>
+                            <?php 
+                            // 根據遊戲記錄推斷行為類型
+                            $behavior_type = '';
+                            
+                            // 強制檢查：確保分數和行為類型的一致性
+                            if ($record['score'] > 0) {
+                                // 分數大於0絕對是遊戲完成
+                                $behavior_type = 'game_complete';
+                            } elseif ($record['score'] == 0) {
+                                // 分數為0，根據時間判斷是退出還是失敗
+                                if ($record['play_time'] <= 15 && $record['play_time'] >= 0) {
+                                    $behavior_type = 'game_exit'; // 短時間退出（包含0秒）
+                                } else {
+                                    $behavior_type = 'game_failed'; // 長時間但沒成功
+                                }
+                            } elseif ($record['behavior_type']) {
+                                $behavior_type = $record['behavior_type'];
+                            } else {
+                                // 根據分數和遊玩時間推斷行為類型
+                                if ($record['game_id'] == 4) {
+                                    // 2048遊戲：分數0表示退出，分數>0表示完成
+                                    if ($record['score'] > 0) {
+                                        $behavior_type = 'game_complete';
+                                    } else {
+                                        $behavior_type = 'game_exit';
+                                    }
+                                } elseif (in_array($record['game_id'], [3, 9])) {
+                                    // 算菜錢、過河遊戲：根據分數判斷（這些遊戲可能沒有準確的遊玩時間）
+                                    if ($record['score'] > 0) {
+                                        $behavior_type = 'game_complete';
+                                    } else {
+                                        $behavior_type = 'game_exit';
+                                    }
+                                } else {
+                                    // 其他遊戲：根據分數和遊玩時間判斷
+                                    if ($record['score'] > 0) {
+                                        // 有分數表示過關，無論時間長短都是完成
+                                        $behavior_type = 'game_complete';
+                                    } elseif ($record['play_time'] <= 15 && $record['play_time'] > 0) {
+                                        // 短時間退出
+                                        $behavior_type = 'game_exit';
+                                    } elseif ($record['play_time'] > 15) {
+                                        // 玩了很久但沒得分，表示沒過關
+                                        $behavior_type = 'game_exit';
+                                    } elseif (!$record['play_time'] || $record['play_time'] == 0) {
+                                        // 沒時間記錄，根據分數判斷
+                                        $behavior_type = ($record['score'] > 0) ? 'game_complete' : 'game_exit';
+                                    }
+                                }
+                            }
+                            
+                            if ($behavior_type): ?>
+                                <span class="action-type action-<?php echo htmlspecialchars($behavior_type); ?>">
+                                    <?php 
+                                    $behavior_labels = [
+                                        'game_complete' => '遊戲完成',
+                                        'game_exit' => '遊戲退出',
+                                        'game_failed' => '遊戲失敗'
+                                    ];
+                                    echo $behavior_labels[$behavior_type] ?? $behavior_type;
+                                    ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color: #999;">-</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo $record['score']; ?></td>
                         <td><?php echo htmlspecialchars($record['difficulty'] ?? '一般'); ?></td>
-                        <td><?php echo $record['play_time'] ? $record['play_time'] . '秒' : '-'; ?></td>
+                        <td><?php 
+                            // 調試：檢查play_time的值
+                            if (isset($record['play_time']) && $record['play_time'] !== null && $record['play_time'] !== '') {
+                                echo $record['play_time'] . '秒';
+                            } else {
+                                echo '-';
+                            }
+                        ?></td>
                         <td><?php echo date('m月d日 H:i', strtotime($record['play_date'])); ?></td>
                     </tr>
                     <?php endforeach; ?>

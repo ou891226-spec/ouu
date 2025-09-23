@@ -26,12 +26,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
-    <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
-      <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
-        <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-      </div>
-    </div>
+    <a href="personal-analysis.php" class="jelly-btn jelly-yellow">個人分析</a>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>
   </div>
@@ -227,7 +222,7 @@ function createRadarChart(analysisData) {
   radarChart = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['反應力', '記憶力', '算術邏輯'],
+      labels: ['反應力', '記憶力', '算術邏輯力'],
       datasets: [{
         label: '能力強度',
         data: [
@@ -344,11 +339,17 @@ function createTrendChart(trendData) {
           min: 0,
           ticks: {
             stepSize: 20
+          },
+          grid: {
+            drawBorder: false
           }
         },
         x: {
           ticks: {
             maxTicksLimit: 12
+          },
+          grid: {
+            drawBorder: false
           }
         }
       },
@@ -371,8 +372,8 @@ function createTrendChart(trendData) {
       },
       elements: {
         point: {
-          radius: 5,
-          hoverRadius: 8
+          radius: 4,
+          hoverRadius: 6
         },
         line: {
           tension: 0.2
@@ -380,12 +381,13 @@ function createTrendChart(trendData) {
       },
       layout: {
         padding: {
-          top: 10,
-          bottom: 10,
-          left: 10,
-          right: 10
+          top: 30,
+          bottom: 40,
+          left: 30,
+          right: 30
         }
-      }
+      },
+      clip: false
     }
   });
 }
@@ -437,14 +439,22 @@ function showAnalysisSection(section) {
 
 // 更新詳細統計
 function updateDetailedStats(data) {
-  document.getElementById('reactionGames').textContent = data.stats.reaction_games;
-  document.getElementById('memoryGames').textContent = data.stats.memory_games;
-  document.getElementById('logicGames').textContent = data.stats.logic_games;
-  document.getElementById('reactionAvg').textContent = data.stats.reaction_avg;
-  document.getElementById('memoryAvg').textContent = data.stats.memory_avg;
-  document.getElementById('logicAvg').textContent = data.stats.logic_avg;
+  const reactionGames = document.getElementById('reactionGames');
+  const memoryGames = document.getElementById('memoryGames');
+  const logicGames = document.getElementById('logicGames');
+  const reactionAvg = document.getElementById('reactionAvg');
+  const memoryAvg = document.getElementById('memoryAvg');
+  const logicAvg = document.getElementById('logicAvg');
+  const detailedStats = document.getElementById('detailedStats');
   
-  document.getElementById('detailedStats').style.display = 'block';
+  if (reactionGames) reactionGames.textContent = data.stats.reaction_games;
+  if (memoryGames) memoryGames.textContent = data.stats.memory_games;
+  if (logicGames) logicGames.textContent = data.stats.logic_games;
+  if (reactionAvg) reactionAvg.textContent = data.stats.reaction_avg;
+  if (memoryAvg) memoryAvg.textContent = data.stats.memory_avg;
+  if (logicAvg) logicAvg.textContent = data.stats.logic_avg;
+  
+  if (detailedStats) detailedStats.style.display = 'block';
 }
 
 // 頁面載入時執行
@@ -455,19 +465,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-  function togglePersonalHistoryMenu() {
-    const menu = document.getElementById('personalHistoryMenu');
-    const arrowIcon = document.getElementById('arrowIcon');
-    const isVisible = menu.style.display === 'block';
-    
-    if (isVisible) {
-      menu.style.display = 'none';
-      arrowIcon.textContent = '▼';
-    } else {
-      menu.style.display = 'block';
-      arrowIcon.textContent = '▲';
-    }
-  }
 
   function openMissionModal() {
     const modal = document.getElementById('missionModal');

@@ -4,7 +4,6 @@ require_once 'db_connect.php';
  
 // 獲取難度設定
 $difficulties = [];
-
 try {
     // 使用統一的 difficulty_settings 表查詢節奏遊戲設定 (game_id = 7)
     $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 7 ORDER BY difficulty");
@@ -30,7 +29,7 @@ try {
             'note_count' => 3,
             'time_limit' => 60,
             'speed' => 1.0,
-            'pass_score' => 1200,
+            'pass_score' => 120,
             'is_active' => true
         ],
         [
@@ -38,7 +37,7 @@ try {
             'note_count' => 5,
             'time_limit' => 60,
             'speed' => 1.5,
-            'pass_score' => 800,
+            'pass_score' => 200,
             'is_active' => true
         ],
         [
@@ -52,15 +51,15 @@ try {
     ];
 }
 
+$highScore = 0;
 ?>
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>節奏遊戲</title>
-  <link rel="stylesheet" href="css/rhythm_game.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>節奏遊戲</title>
+    <link rel="stylesheet" href="css/rhythm_game.css">
 </head>
 <body>
     <div class="game-container">
@@ -68,34 +67,28 @@ try {
         <h1>節奏遊戲</h1>
 
         <div class="score-board">
-            <h2>目前分數: <span id="score">0</span></h2>
-            <h2>最高分數: <span id="high-score">0</span></h2>
-            <h2>剩餘時間: <span id="timer">60</span> 秒</h2>
+            <h2>分數: <span id="score">0</span></h2>
+            <h2>最高分數: <span id="high-score"><?php echo $highScore; ?></span></h2>
+            <h2>時間: <span id="timer">60</span> 秒</h2>
         </div>
 
-        <!-- 難度選擇 Modal -->
         <div id="difficulty-modal" class="modal">
             <div class="modal-content" style="position:relative;">
-                <!-- 🔙 返回鍵：左上角 -->
-                <button class="back-button" id="back-btn" onclick="window.history.back(); return false;" style="position:absolute;top:1.0rem;left:2.2rem;z-index:10;">
-                    <span class="back-arrow">←</span>
-                    <div class="back-label">返回</div>
+                <button class="back-button" id="back-btn" style="position:absolute;top:1.0rem;left:2.2rem;z-index:10;">
+                  <span class="back-arrow">←</span>
+                  <div class="back-label">返回</div>
                 </button>
-
-                <!-- ❓ 說明鍵：右上角 -->
                 <div style="position:absolute; top:1.2rem; right:1.2rem; text-align:center; z-index:10;">
                     <button class="help-btn" id="info-btn" title="說明">?</button>
                     <div class="help-label">說明</div>
                 </div>
-
                 <h2>選擇難度</h2>
-                <div class="difficulty-option easy" data-difficulty="easy">簡單 (3個)</div>
-                <div class="difficulty-option medium" data-difficulty="normal">普通 (5個)</div>
-                <div class="difficulty-option hard" data-difficulty="hard">困難 (7個)</div>
+                <div class="difficulty-option easy" data-level="easy">簡單(300分過關)</div>
+                <div class="difficulty-option medium" data-level="normal">普通(800分過關)</div>
+                <div class="difficulty-option hard" data-level="hard">困難(1200分過關)</div>
             </div>
         </div>
 
-        <!-- 🟡 新增：遊戲說明彈窗 -->
         <div id="info-modal" class="modal" style="display:none;">
             <div class="modal-content">
                 <span class="close-btn" onclick="closeInfoModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size: 30px;">×</span>
@@ -104,7 +97,6 @@ try {
                     <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
                 </h2>
                 <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-                    <!-- 影片播放區域 -->
                     <div id="rhythm-video-container" style="text-align:center;margin-bottom:2.5rem;">
                         <video id="rhythm-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                             <source src="gd/rhythm1.mp4" type="video/mp4">
@@ -112,30 +104,25 @@ try {
                         </video>
                     </div>
                     
-                    <!-- 說明文字和按鈕區域 (並排顯示) -->
                     <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
-                        <!-- 上一步按鈕 -->
                         <div id="rhythm-prev-step-btn" style="display:none;">
                             <button id="rhythm-prev-step-button" onclick="goToRhythmPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
                                 上一步
                             </button>
                         </div>
                         
-                        <!-- 說明文字 -->
                         <div id="rhythm-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
-                            跟著音符的節奏點擊打擊區
+                            一進去先選擇遊戲難度
                         </div>
                         
-                        <!-- 下一步按鈕 -->
-                        <div id="rhythm-next-step-btn" style="margin-left:2rem;">
+                        <div id="rhythm-next-step-btn" style="margin-left:10px;">
                             <button id="rhythm-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
                                 下一步
                             </button>
                         </div>
                     </div>
                     
-                    <!-- 進度指示器 -->
-                    <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
+                    <div style="text-align:center;margin-bottom:10px;">
                         <span id="rhythm-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                     </div>
                 </div>
@@ -147,6 +134,8 @@ try {
                 <h2 id="result-title"></h2>
                 <p id="result-difficulty"></p>
                 <p id="result-score"></p>
+                <p id="result-time"></p>
+                <p id="result-final-score"></p>
                 <div>
                     <button onclick="location.reload()">再玩一次</button>
                     <button onclick="history.back()">返回主頁</button>
@@ -157,11 +146,9 @@ try {
         <div id="gameArea">
             <div id="noteTrack"></div>
             <div id="hitZone">
-                <span class="hit-label">打擊區</span>
+                <span class="hit-label">點擊區</span>
+                <div id="glove"></div>
             </div>    
-            <div id="bat">
-                <img src="img/bat.png" alt="球棒" />
-            </div> <!-- ← 球棒圖案 -->
         </div>
 
         <div class="button-group">
@@ -170,9 +157,10 @@ try {
             <button class="control-btn" id="restart-btn">重新開始</button>
         </div>
 
-        <audio id="bgm" preload="auto"></audio>
+        <audio id="success-sfx" src="audio/success.mp3" preload="auto"></audio>
+        <audio id="fail-sfx" src="audio/fail.mp3" preload="auto"></audio>
+        <audio id="tap-sfx" src="audio/tap.mp3" preload="auto"></audio>
     </div>    
     <script src="js/rhythm_game.js"></script>
-    <script src="js/auto-save-time-fixed.js"></script>
 </body>
 </html>

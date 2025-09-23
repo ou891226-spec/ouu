@@ -6,6 +6,9 @@ session_start();
 require_once 'db.php';
 
 header('Content-Type: application/json');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // 抑制錯誤輸出
 ini_set('display_errors', 0);
@@ -27,9 +30,15 @@ try {
     $recent_games_sql = "
         SELECT 
             CASE 
-                WHEN gr.game_type IN ('記憶力', '翻牌對對樂', '追蹤犯人遊戲', '圖片線索問答') THEN gr.game_type
-                WHEN gr.game_type IN ('邏輯力', '2048', '算術邏輯力', '算術邏輯', '算菜錢遊戲', '過河遊戲') THEN '2048'
-                WHEN gr.game_type IN ('反應力', '節奏遊戲', '看字選色遊戲', '接金蛋遊戲') THEN gr.game_type
+                WHEN gr.game_type = '記憶力' THEN '翻牌對對樂'
+                WHEN gr.game_type = '追蹤犯人遊戲' THEN '追蹤犯人遊戲'
+                WHEN gr.game_type = '圖片線索問答' THEN '圖片線索問答'
+                WHEN (gr.game_type = '算術邏輯力' OR gr.game_type = '算數邏輯力') AND gr.game_id = 4 THEN '2048'
+                WHEN (gr.game_type = '算術邏輯力' OR gr.game_type = '算數邏輯力') AND gr.game_id = 3 THEN '算菜錢遊戲'
+                WHEN (gr.game_type = '算術邏輯力' OR gr.game_type = '算數邏輯力') AND gr.game_id = 9 THEN '過河遊戲'
+                WHEN gr.game_type = '反應力' THEN '接金蛋遊戲'
+                WHEN gr.game_type = '節奏遊戲' THEN '節奏遊戲'
+                WHEN gr.game_type = '看字選色遊戲' THEN '看字選色遊戲'
                 ELSE gr.game_type
             END as normalized_game_type,
             SUM(gr.score) as total_score,
@@ -50,14 +59,14 @@ try {
     // 遊戲對應的圖片和連結
     $game_mappings = [
         '2048' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
-        '記憶力' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
+        '翻牌對對樂' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '追蹤犯人遊戲' => ['img' => 'img/prisoner1.png?v=2', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
         '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
-        '反應力' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
+        '接金蛋遊戲' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
         '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
-        '接金蛋遊戲' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋']
+        '算菜錢遊戲' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢遊戲']
     ];
     
     $formatted_games = [];
