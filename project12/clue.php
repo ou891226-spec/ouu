@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
 
 // 新增：AJAX 處理區塊（必須放最前面）
 if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
@@ -20,6 +21,14 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         $_SESSION['game_start_time'] = time();
         // 重置防重复保存标志（只在新的游戏会话开始时）
         unset($_SESSION['game_record_saved']);
+        
+        // 記錄遊戲進入
+        if (isset($_SESSION['member_id'])) {
+            $record_id = recordGameEntry($_SESSION['member_id'], '圖片線索', $difficulty, 8);
+            if ($record_id) {
+                $_SESSION['clue_record_id'] = $record_id;
+            }
+        }
     }
 
     // 檢查上一題答案
@@ -49,54 +58,38 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $stmt3->execute([$pass_bounce, $member_id]);
         }
         
-        // 儲存遊戲紀錄到 game_records 表（防重复保存）
-        if (isset($_SESSION['member_id']) && !isset($_SESSION['game_record_saved'])) {
+        // 更新遊戲記錄（新追蹤邏輯）
+        if (isset($_SESSION['member_id']) && isset($_SESSION['clue_record_id'])) {
             $member_id = $_SESSION['member_id'];
-            $play_date = date('Y-m-d H:i:s');
-            $game_type = '記憶力';
-            $is_single_player = 1;
+            $record_id = $_SESSION['clue_record_id'];
             
             // 使用前端傳送的遊戲時間，如果沒有則使用後端計算的時間
             $play_time = $_POST['game_time'] ?? (isset($_SESSION['game_start_time']) ? 
-                time() - $_SESSION['game_start_time'] : null);
+                time() - $_SESSION['game_start_time'] : 0);
             
-            // 修正：根據是否過關決定保存的分數
+            // 根據是否過關決定保存的分數和狀態
             $score_to_save = $pass ? $pass_bounce : 0;
             
-            // 檢查是否已經有相同的記錄（防止重複）
-            $check_sql = "SELECT COUNT(*) as count FROM game_records 
-                         WHERE member_id = ? AND game_id = ? AND difficulty = ? 
-                         AND score = ? AND play_date = ? AND play_time = ?";
-            $check_stmt = $pdo->prepare($check_sql);
-            $check_stmt->execute([$member_id, $game_id, $difficulty, $score_to_save, $play_date, $play_time]);
-            $existing_count = $check_stmt->fetch()['count'];
-            
-            if ($existing_count == 0) {
-                $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
-                $stmt4->execute([
-                    'member_id' => $member_id,
-                    'game_id' => $game_id,
-                    'difficulty' => $difficulty,
-                    'score' => $score_to_save, // 修正：使用正確的分數
-                    'play_date' => $play_date,
-                    'play_time' => $play_time,
-                    'game_type' => $game_type,
-                    'is_single_player' => $is_single_player,
-                    'opponent_id' => null
-                ]);
-                
-                // 記錄遊戲行為軌跡
-                require_once 'log_game_behavior.php';
-                logGameBehavior($member_id, '記憶力', $play_time, $score_to_save, $difficulty);
-                
-                // 檢查並完成所有相關任務
-                require_once 'check_and_grant_achievements.php';
-                checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
-                checkAndCompleteAllTasks($member_id, '記憶力');
+            // 區分手動退出和遊戲失敗
+            $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
+            if ($isManualExit) {
+                // 手動退出遊戲
+                $status = $pass ? 'completed' : 'exited';
+            } else {
+                // 正常遊戲結束（時間到或達到目標）
+                $status = $pass ? 'completed' : 'failed';
             }
             
-            // 標記已保存，防止重複保存
-            $_SESSION['game_record_saved'] = true;
+            // 更新遊戲記錄
+            updateGameRecord($record_id, $score_to_save, $play_time, $status);
+            
+            // 檢查並完成所有相關任務
+            require_once 'check_and_grant_achievements.php';
+            checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
+            checkAndCompleteAllTasks($member_id, '記憶力');
+            
+            // 清除記錄ID，防止重複更新
+            unset($_SESSION['clue_record_id']);
         }
         
         // 清空 session（保留防重复标志）
@@ -134,53 +127,37 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $stmt3->execute([$pass_bounce, $member_id]);
         }
         
-        // 儲存遊戲紀錄到 game_records 表（防重复保存）
-        if (isset($_SESSION['member_id']) && !isset($_SESSION['game_record_saved'])) {
+        // 更新遊戲記錄（新追蹤邏輯）
+        if (isset($_SESSION['member_id']) && isset($_SESSION['clue_record_id'])) {
             $member_id = $_SESSION['member_id'];
-            $play_date = date('Y-m-d H:i:s');
-            $game_type = '記憶力';
-            $is_single_player = 1;
+            $record_id = $_SESSION['clue_record_id'];
             
             // 使用前端傳送的遊戲時間
-            $play_time = $_POST['game_time'] ?? null;
+            $play_time = $_POST['game_time'] ?? 0;
             
-            // 修正：根據是否過關決定保存的分數
+            // 根據是否過關決定保存的分數和狀態
             $score_to_save = $pass ? $pass_bounce : 0;
             
-            // 檢查是否已經有相同的記錄（防止重複）
-            $check_sql = "SELECT COUNT(*) as count FROM game_records 
-                         WHERE member_id = ? AND game_id = ? AND difficulty = ? 
-                         AND score = ? AND play_date = ? AND play_time = ?";
-            $check_stmt = $pdo->prepare($check_sql);
-            $check_stmt->execute([$member_id, $game_id, $difficulty, $score_to_save, $play_date, $play_time]);
-            $existing_count = $check_stmt->fetch()['count'];
-            
-            if ($existing_count == 0) {
-                $stmt4 = $pdo->prepare('INSERT INTO game_records (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) VALUES (:member_id, :game_id, :difficulty, :score, :play_date, :play_time, :game_type, :is_single_player, :opponent_id)');
-                $stmt4->execute([
-                    'member_id' => $member_id,
-                    'game_id' => $game_id,
-                    'difficulty' => $difficulty,
-                    'score' => $score_to_save, // 修正：使用正確的分數
-                    'play_date' => $play_date,
-                    'play_time' => $play_time,
-                    'game_type' => $game_type,
-                    'is_single_player' => $is_single_player,
-                    'opponent_id' => null
-                ]);
-                
-                // 記錄遊戲行為軌跡
-                require_once 'log_game_behavior.php';
-                logGameBehavior($member_id, '記憶力', $play_time, $score_to_save, $difficulty);
-                
-                // 檢查並完成所有相關任務
-                require_once 'check_and_grant_achievements.php';
-                checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
-                checkAndCompleteAllTasks($member_id, '記憶力');
+            // 區分手動退出和遊戲失敗
+            $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
+            if ($isManualExit) {
+                // 手動退出遊戲
+                $status = $pass ? 'completed' : 'exited';
+            } else {
+                // 正常遊戲結束（時間到或達到目標）
+                $status = $pass ? 'completed' : 'failed';
             }
             
-            // 標記已保存，防止重複保存
-            $_SESSION['game_record_saved'] = true;
+            // 更新遊戲記錄
+            updateGameRecord($record_id, $score_to_save, $play_time, $status);
+            
+            // 檢查並完成所有相關任務
+            require_once 'check_and_grant_achievements.php';
+            checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
+            checkAndCompleteAllTasks($member_id, '記憶力');
+            
+            // 清除記錄ID，防止重複更新
+            unset($_SESSION['clue_record_id']);
         }
         
         // 清空 session（保留防重复标志）
@@ -360,7 +337,14 @@ if (!$difficulty) {
                 border-color: #000 !important;
             }
         </style>
-    </head>
+        <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("記憶力", 6);
+        });
+    </script>
+</head>
     <body>
         <div id="difficulty-modal">
             <div class="modal-content">
@@ -607,12 +591,36 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
             font-weight: bold;
         }
     </style>
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("記憶力", 6);
+        });
+    </script>
 </head>
 <body>
     <div class="main-container"
          data-display-time="<?= (int)$question['display_time'] ?>"
          data-correct-answer="<?= htmlspecialchars($question['correct_answer_text']) ?>">
         <h2>請仔細觀察下方圖片，<?= (int)$question['display_time'] ?>秒後將進行提問！</h2>
+        
+        <!-- 答題狀況狀態欄 - 放在標題下方 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">答對題數 :</span>
+                <span class="status-value correct-count" id="correct-count">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">過關題數 :</span>
+                <span class="status-value pass-count" id="pass-count">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">剩餘題數 :</span>
+                <span class="status-value remaining-count" id="remaining-count">5</span>
+            </div>
+        </div>
+        
         <div id="timer-block">
             <div id="countdown">剩餘時間：<span id="time-left"><?= (int)$question['display_time'] ?></span> 秒</div>
         </div>
@@ -621,7 +629,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
         </div>
         <div id="question-block">
             <h3><?= htmlspecialchars($question['question_text']) ?></h3>
-            <form id="answer-form" class="options-flex">
+            <form id="answer-form" class="options-grid">
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_1']) ?>"> <?= htmlspecialchars($question['option_1']) ?> </button>
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_2']) ?>"> <?= htmlspecialchars($question['option_2']) ?> </button>
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_3']) ?>"> <?= htmlspecialchars($question['option_3']) ?> </button>
@@ -640,5 +648,20 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
     </div>
     <script src="js/clue.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
+    <script>
+        // 頁面離開時標記遊戲退出
+        window.addEventListener('beforeunload', function() {
+            if (typeof gameTracker !== 'undefined' && gameTracker.currentRecordId) {
+                gameTracker.exitGame();
+            }
+        });
+        
+        // 頁面隱藏時也標記退出
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && typeof gameTracker !== 'undefined' && gameTracker.currentRecordId) {
+                gameTracker.exitGame();
+            }
+        });
+    </script>
 </body>
 </html> 

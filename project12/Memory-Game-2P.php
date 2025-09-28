@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once 'check_login.php';
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
 
 // 處理遊戲結果保存的 API 請求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -28,34 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        
         $gameId = 5;
        
-        // 保存玩家1的記錄
-        $stmt = $pdo->prepare("
-            INSERT INTO game_records
-            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)
-        ");
-        $stmt->execute([
-            'member_id' => $data['player1_id'],
-            'game_id' => $gameId,
-            'difficulty' => $data['difficulty'],
-            'score' => $data['player1_score'],
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '記憶力',
-            'is_single_player' => 0,
-            'opponent_id' => $data['player2_id']
-        ]);
+        // 使用新追蹤邏輯 - 玩家1
+        $record_id1 = recordGameEntry($data['player1_id'], '記憶力', $data['difficulty'], $gameId);
+        if ($record_id1) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            $status = ($data['player1_score'] > 0) ? 'completed' : 'failed';
+            updateGameRecord($record_id1, $data['player1_score'], $play_time, $status);
+        }
 
-        // 保存玩家2的記錄
-        $stmt->execute([
-            'member_id' => $data['player2_id'],
-            'game_id' => $gameId,
-            'difficulty' => $data['difficulty'],
-            'score' => $data['player2_score'],
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '記憶力',
-            'is_single_player' => 0,
-            'opponent_id' => $data['player1_id']
-        ]);
+        // 使用新追蹤邏輯 - 玩家2
+        $record_id2 = recordGameEntry($data['player2_id'], '記憶力', $data['difficulty'], $gameId);
+        if ($record_id2) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            $status = ($data['player2_score'] > 0) ? 'completed' : 'failed';
+            updateGameRecord($record_id2, $data['player2_score'], $play_time, $status);
+        }
 
         // 更新玩家1的總分數和記憶力分數
         $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
@@ -143,6 +131,13 @@ $colors = $stmt->fetchAll();
     <input type="hidden" name="member_id" value="<?php echo $_SESSION['member_id']; ?>">
     <meta name="member_id" content="<?php echo $_SESSION['member_id']; ?>">
 
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("記憶力", 3);
+        });
+    </script>
 </head>
 <body>
     <!-- 遊戲主畫面 -->

@@ -4,7 +4,7 @@
  * 自動判斷短時間遊戲記錄並記錄為遊戲退出行為
  */
 
-function logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty = null) {
+function logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty = null, $action_type = null) {
     global $pdo;
     
     try {
@@ -12,11 +12,23 @@ function logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        // 判斷是否為短時間退出（≤15秒）
-        $is_quick_exit = ($play_time <= 15 && $play_time > 0);
-        
-        // 判斷是否為正常完成（有分數且時間合理）
-        $is_complete = ($score > 0 && $play_time > 15);
+        // 如果沒有指定行為類型，則使用新的邏輯判斷
+        if ($action_type === null) {
+            // 新的判斷邏輯：基於實際遊戲行為而非時間
+            if ($play_time == 0 && $score == 0) {
+                // 遊戲進入但沒有實際遊戲行為
+                $action_type = 'game_entered';
+            } elseif ($play_time > 0 && $score > 0) {
+                // 有實際遊戲行為且獲得分數
+                $action_type = 'game_complete';
+            } elseif ($play_time > 0 && $score == 0) {
+                // 有實際遊戲行為但沒有獲得分數（失敗）
+                $action_type = 'game_failed';
+            } else {
+                // 其他情況
+                $action_type = 'game_exit';
+            }
+        }
         
         // 生成session_id（如果不存在）
         if (!isset($_SESSION['behavior_session_id'])) {
@@ -25,27 +37,33 @@ function logGameBehavior($member_id, $game_type, $play_time, $score, $difficulty
         $session_id = $_SESSION['behavior_session_id'];
         
         // 準備行為記錄數據
-        $action_type = '';
         $additional_data = [
             'game_type' => $game_type,
             'play_time' => $play_time,
             'score' => $score,
             'difficulty' => $difficulty,
-            'timestamp' => date('Y-m-d H:i:s')
+            'timestamp' => date('Y-m-d H:i:s'),
+            'action_type' => $action_type
         ];
         
-        // 根據遊戲情況決定行為類型
-        if ($is_quick_exit) {
-            $action_type = 'game_exit';
-            $additional_data['exit_reason'] = 'quick_exit';
-            $additional_data['exit_point'] = 'early_game';
-        } elseif ($is_complete) {
-            $action_type = 'game_complete';
-            $additional_data['completion_status'] = 'success';
-        } else {
-            // 其他情況（失敗但玩了較長時間）
-            $action_type = 'game_failed';
-            $additional_data['completion_status'] = 'failed';
+        // 根據行為類型添加額外信息
+        switch ($action_type) {
+            case 'game_entered':
+                $additional_data['entry_reason'] = 'user_entered_game';
+                $additional_data['status'] = 'waiting_for_action';
+                break;
+            case 'game_exit':
+                $additional_data['exit_reason'] = 'no_further_action';
+                $additional_data['exit_point'] = 'after_entry';
+                break;
+            case 'game_complete':
+                $additional_data['completion_status'] = 'success';
+                $additional_data['has_actual_play'] = true;
+                break;
+            case 'game_failed':
+                $additional_data['completion_status'] = 'failed';
+                $additional_data['has_actual_play'] = true;
+                break;
         }
         
         // 插入行為記錄

@@ -612,8 +612,8 @@ function resumeGame() {
 }
  
 // 結束遊戲
-function endGame() {
-    console.log('endGame 函數被調用');
+function endGame(isManualExit = false) {
+    console.log('endGame 函數被調用，isManualExit:', isManualExit);
     
     if (gameTimer) {
         clearInterval(gameTimer);
@@ -635,7 +635,12 @@ function endGame() {
     if (resumeBtn) resumeBtn.classList.add('hidden');
     if (pauseIndicator) pauseIndicator.classList.add('hidden');
     
-    showGameOver(false);
+    // 如果是手動退出，不顯示失敗狀態
+    if (isManualExit) {
+        showGameOver('manual'); // 傳遞特殊標識
+    } else {
+        showGameOver(false);
+    }
 }
  
 // 綁定按鈕事件 - 添加DOM檢查
@@ -677,7 +682,7 @@ function bindGameButtons() {
         endBtn.onclick = function(e) {
             console.log('結束按鈕被點擊');
             e.preventDefault();
-            endGame();
+            endGame(true); // 直接結束遊戲，不顯示確認視窗
         };
         console.log('結束按鈕已綁定');
     }
@@ -713,7 +718,7 @@ function calculateScore() {
 }
  
 // 儲存遊戲結果
-async function saveGameResult(isWin, score, playTime) {
+async function saveGameResult(isWin, score, playTime, isManualExit = false) {
     try {
         const response = await fetch('Memory-Game.php', {
             method: 'POST',
@@ -725,7 +730,8 @@ async function saveGameResult(isWin, score, playTime) {
                 difficulty: currentDifficulty,
                 status: isWin ? 'completed' : 'failed',
                 score: score,
-                play_time: playTime
+                play_time: playTime,
+                is_manual_exit: isManualExit
             })
         });
         const result = await response.json();
@@ -793,7 +799,17 @@ function showGameOver(isWin) {
     };
 
     // 設置標題
-    gameOverTitle.textContent = isWin ? '🎉恭喜破關' : '⏰ 遊戲失敗';
+    if (isWin === 'manual') {
+        // 手動退出時，根據是否達到目標分數決定標題
+        score = calculateScore(); // 先計算分數
+        if (score > 0) {
+            gameOverTitle.textContent = '🎉恭喜破關';
+        } else {
+            gameOverTitle.textContent = '⏰ 遊戲失敗';
+        }
+    } else {
+        gameOverTitle.textContent = isWin ? '🎉恭喜破關' : '⏰ 遊戲失敗';
+    }
    
     // 設置結果訊息
     let score = 0;
@@ -805,7 +821,7 @@ function showGameOver(isWin) {
     
     if (isWin) {
         // 勝利時：顯示難度、遊戲時間、過關分數
-        score = calculateScore();
+        if (score === 0) score = calculateScore(); // 如果還沒計算過分數，才計算
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
         if (timeSpan) timeSpan.textContent = `${playTime}秒`;
         if (bonusSpan) bonusSpan.textContent = `+${score}`;
@@ -814,18 +830,24 @@ function showGameOver(isWin) {
         if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
-        // 失敗時：顯示難度、遊戲時間、過關分數+0、失敗訊息
+        // 失敗時：顯示難度、遊戲時間、過關分數+0
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
         if (timeSpan) timeSpan.textContent = `${playTime}秒`;
         if (bonusSpan) bonusSpan.textContent = `+0`;
-        // 失敗時顯示遊戲時間和過關分數，顯示失敗訊息
+        // 失敗時顯示遊戲時間和過關分數
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
-        if (failMessage) failMessage.style.display = 'block';
+        
+        // 只有真正失敗時才顯示失敗訊息，手動退出不顯示
+        if (isWin === 'manual') {
+            if (failMessage) failMessage.style.display = 'none';
+        } else {
+            if (failMessage) failMessage.style.display = 'block';
+        }
     }
  
     // 儲存遊戲結果（帶分數與 play_time）
-    saveGameResult(isWin, score, playTime);
+    saveGameResult(isWin, score, playTime, isWin === 'manual');
     
     // 立即更新主頁面分數
     if (window.forceRefreshScore) {

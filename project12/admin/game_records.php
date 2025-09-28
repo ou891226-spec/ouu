@@ -431,17 +431,13 @@ $game_type_to_name = [
                             // 根據遊戲記錄推斷行為類型
                             $behavior_type = '';
                             
-                            // 強制檢查：確保分數和行為類型的一致性
-                            if ($record['score'] > 0) {
-                                // 分數大於0絕對是遊戲完成
+                            // 根據遊戲記錄的狀態判斷行為類型
+                            if ($record['status'] === 'completed') {
                                 $behavior_type = 'game_complete';
-                            } elseif ($record['score'] == 0) {
-                                // 分數為0，根據時間判斷是退出還是失敗
-                                if ($record['play_time'] <= 15 && $record['play_time'] >= 0) {
-                                    $behavior_type = 'game_exit'; // 短時間退出（包含0秒）
-                                } else {
-                                    $behavior_type = 'game_failed'; // 長時間但沒成功
-                                }
+                            } elseif ($record['status'] === 'exited') {
+                                $behavior_type = 'game_exit';
+                            } elseif ($record['status'] === 'failed') {
+                                $behavior_type = 'game_failed';
                             } elseif ($record['behavior_type']) {
                                 $behavior_type = $record['behavior_type'];
                             } else {

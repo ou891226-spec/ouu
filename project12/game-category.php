@@ -290,7 +290,7 @@ function togglePassword() {
       </div>
       <div class="game-block">
         <div class="game-item">
-          <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
+          <a href="Catch-Egg-Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
         </div>
         <div class="game-title">接金蛋</div>
       </div>
@@ -376,7 +376,7 @@ function togglePassword() {
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
+        <a href="Catch-Egg-Game.php"><img src="img/egg1.png" alt="接金蛋"></a>
       </div>
       <div class="game-title">接金蛋</div>
     </div>

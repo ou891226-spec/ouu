@@ -1,6 +1,7 @@
 <?php
 require_once 'check_login.php';
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
  
 // 獲取難度設定
 $difficulties = [];
@@ -60,6 +61,13 @@ $highScore = 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>節奏遊戲</title>
     <link rel="stylesheet" href="css/rhythm_game.css">
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("反應力", 8);
+        });
+    </script>
 </head>
 <body>
     <div class="game-container">

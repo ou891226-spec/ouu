@@ -1,6 +1,7 @@
 <?php
 // 啟動輸出緩衝
 ob_start();
+require_once 'game_entry_tracker.php';
 
 // 只在會話未啟動時啟動會話
 if (session_status() === PHP_SESSION_NONE) {
@@ -28,21 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        
         $gameId = 5;
        
-        $stmt = $pdo->prepare("
-            INSERT INTO game_records
-            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)
-        ");
-        $stmt->execute([
-            'member_id' => $data['member_id'],
-            'game_id' => $gameId,
-            'difficulty' => $data['difficulty'],
-            'score' => $data['score'],
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '記憶力',
-            'is_single_player' => 1,
-            'opponent_id' => null
-        ]);
+        // 使用新追蹤邏輯
+        $record_id = recordGameEntry($data['member_id'], '記憶力', $data['difficulty'], $gameId);
+        if ($record_id) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            
+            // 區分手動退出和遊戲失敗
+            if (isset($data['is_manual_exit']) && $data['is_manual_exit'] === true) {
+                // 手動退出遊戲
+                $status = ($data['score'] > 0) ? 'completed' : 'exited';
+            } else {
+                // 正常遊戲結束（時間到或達到目標）
+                $status = ($data['score'] > 0) ? 'completed' : 'failed';
+            }
+            updateGameRecord($record_id, $data['score'], $play_time, $status);
+        }
        
         // 更新會員總分數和記憶力分數
         $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
@@ -101,6 +102,13 @@ $colors = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>翻牌對對樂</title>
     <link rel="stylesheet" href="css/Memory-Game.css">
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("記憶力", 3);
+        });
+    </script>
 </head>
 <body>
     <!-- 遊戲主畫面 -->

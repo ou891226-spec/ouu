@@ -48,8 +48,13 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            ) THEN 'completed'
            WHEN (
                -- 分數收集者：獲得指定分數
-               (d.task_description LIKE '%獲得1000分%') AND
+               (d.task_description LIKE '%獲得1000分%' OR d.task_description LIKE '%總分達到1000分%') AND
                (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 1000
+           ) THEN 'completed'
+           WHEN (
+               -- 分數王者：總分達到5000分
+               (d.task_name = '分數王者' OR d.task_description LIKE '%總分達到5000分%') AND
+               (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 5000
            ) THEN 'completed'
            WHEN (
                -- 全能玩家：完成3種不同類型遊戲（記憶力、反應力、算術邏輯力）
@@ -88,8 +93,8 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            ) THEN 'completed'
            WHEN (
                -- 反應大師：完成反應力遊戲
-               (d.task_name = '反應大師' OR d.task_description LIKE '%反應力遊戲%' OR d.task_description LIKE '%反應遊戲%') AND
-               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力') >= 3
+               (d.task_name = '反應大師' OR d.task_description LIKE '%反應力遊戲%' OR d.task_description LIKE '%反應遊戲%' OR d.task_description LIKE '%節奏遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力') >= 1
            ) THEN 'completed'
            WHEN (
                -- 邏輯專家：完成邏輯遊戲
@@ -99,7 +104,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN (
                -- 手眼協調大師：完成手眼協調遊戲
                (d.task_name = '手眼協調大師' OR d.task_description LIKE '%手眼協調%' OR d.task_description LIKE '%接金蛋%') AND
-               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力') >= 3
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力') >= 1
            ) THEN 'completed'
            WHEN (
                -- 追蹤專家：完成追蹤犯人遊戲
@@ -147,6 +152,18 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            )
            -- 進階者：總分達到500分（只計算今天的）
            WHEN d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%' THEN (
+               SELECT COALESCE(SUM(score), 0) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 千分大師：總分達到1000分（只計算今天的）
+           WHEN d.task_name = '千分大師' OR d.task_description LIKE '%總分達到1000分%' THEN (
+               SELECT COALESCE(SUM(score), 0) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 分數王者：總分達到5000分（只計算今天的）
+           WHEN d.task_name = '分數王者' OR d.task_description LIKE '%總分達到5000分%' THEN (
                SELECT COALESCE(SUM(score), 0) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
@@ -269,9 +286,11 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            -- 進階者：總分達到500分
            WHEN d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%' THEN 500
            -- 分數收集者：根據描述提取目標分數
-           WHEN d.task_description LIKE '%獲得1000分%' THEN 1000
-           WHEN d.task_description LIKE '%獲得500分%' THEN 500
-           WHEN d.task_description LIKE '%獲得2000分%' THEN 2000
+           WHEN d.task_description LIKE '%獲得1000分%' OR d.task_description LIKE '%總分達到1000分%' THEN 1000
+           WHEN d.task_description LIKE '%獲得500分%' OR d.task_description LIKE '%總分達到500分%' THEN 500
+           WHEN d.task_description LIKE '%獲得2000分%' OR d.task_description LIKE '%總分達到2000分%' THEN 2000
+           WHEN d.task_description LIKE '%獲得5000分%' OR d.task_description LIKE '%總分達到5000分%' THEN 5000
+           WHEN d.task_description LIKE '%獲得10000分%' OR d.task_description LIKE '%總分達到10000分%' THEN 10000
            WHEN d.task_description LIKE '%分數%' THEN 1000  -- 預設1000分
            -- 全能玩家：3種不同類型
            WHEN d.task_name = '全能玩家' OR d.task_description LIKE '%三種不同類型%' OR d.task_description LIKE '%不同類型%' OR d.task_description LIKE '%所有類型%' THEN 3
@@ -292,11 +311,11 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            -- 技藝達人：完成記憶力遊戲（根據關卡數設定）
            WHEN d.task_name = '技藝達人' OR d.task_description LIKE '%記憶力遊戲%' OR d.task_description LIKE '%記憶遊戲%' THEN 3
            -- 反應大師：完成反應力遊戲（根據關卡數設定）
-           WHEN d.task_name = '反應大師' OR d.task_description LIKE '%反應力遊戲%' OR d.task_description LIKE '%反應遊戲%' THEN 3
+           WHEN d.task_name = '反應大師' OR d.task_description LIKE '%反應力遊戲%' OR d.task_description LIKE '%反應遊戲%' OR d.task_description LIKE '%節奏遊戲%' THEN 1
            -- 邏輯專家：完成邏輯遊戲（根據關卡數設定）
            WHEN d.task_name = '邏輯專家' OR d.task_description LIKE '%邏輯遊戲%' OR d.task_description LIKE '%2048%' THEN 3
            -- 手眼協調大師：完成手眼協調遊戲（根據關卡數設定）
-           WHEN d.task_name = '手眼協調大師' OR d.task_description LIKE '%手眼協調%' OR d.task_description LIKE '%接金蛋%' THEN 3
+           WHEN d.task_name = '手眼協調大師' OR d.task_description LIKE '%手眼協調%' OR d.task_description LIKE '%接金蛋%' THEN 1
            -- 追蹤專家：完成追蹤犯人遊戲（根據關卡數設定）
            WHEN d.task_name = '追蹤專家' OR d.task_description LIKE '%追蹤犯人%' OR d.task_description LIKE '%犯人遊戲%' THEN 3
            -- 線索專家和過河大師：完成1次

@@ -6,6 +6,7 @@ header('Expires: 0');
 
 session_start();
 require_once "db_connect.php";
+require_once 'game_entry_tracker.php';
 
 // 從資料庫讀取顏色
 $colors_query = "SELECT * FROM text_color_colors";
@@ -178,7 +179,7 @@ function updateHighScore($newScore) {
 }
 
 // 記錄遊戲結果的函數
-function recordGameResult($score, $playTime, $difficulty) {
+function recordGameResult($score, $playTime, $difficulty, $isManualExit = false) {
     global $pdo;
     if (isset($_SESSION['account'])) {
         $account = $_SESSION['account'];
@@ -241,22 +242,19 @@ function recordGameResult($score, $playTime, $difficulty) {
                 // 根據是否過關決定記錄的分數
                 $record_score = ($score >= $pass_score) ? $pass_bounce : 0;
                 
-                // 插入遊戲記錄
-                $record_query = "INSERT INTO game_records 
-                               (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id) 
-                               VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)";
-                $record_stmt = $pdo->prepare($record_query);
-                $record_stmt->execute([
-                    'member_id' => $member_id,
-                    'game_id' => $game_id,
-                    'difficulty' => $difficulty,
-                    'score' => $record_score, // 根據是否過關決定分數
-                    'play_time' => $playTime,
-                    'game_type' => $game_type,
-                    'is_single_player' => 1,
-                    'opponent_id' => null
-                ]);
-                $record_stmt->closeCursor();
+                // 使用新追蹤邏輯
+                $record_id = recordGameEntry($member_id, $game_type, $difficulty, $game_id);
+                if ($record_id) {
+                    // 區分手動退出和遊戲失敗
+                    if ($isManualExit) {
+                        // 手動退出遊戲
+                        $status = ($score >= $pass_score) ? 'completed' : 'exited';
+                    } else {
+                        // 正常遊戲結束（時間到或達到目標）
+                        $status = ($score >= $pass_score) ? 'completed' : 'failed';
+                    }
+                    updateGameRecord($record_id, $record_score, $playTime, $status);
+                }
                 return true;
             }
         }
@@ -283,7 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'record_game' && isset($_POST['score']) && isset($_POST['play_time'])) {
             $score = intval($_POST['score']);
             $playTime = intval($_POST['play_time']);
-            if (recordGameResult($score, $playTime, $difficulty)) {
+            $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
+            if (recordGameResult($score, $playTime, $difficulty, $isManualExit)) {
                 echo "Game recorded successfully";
             } else {
                 echo "Failed to record game";
@@ -364,6 +363,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>看字選色遊戲</title>
     <link rel="stylesheet" href="css/text-color-1.css?v=<?php echo time(); ?>">
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("反應力", 9);
+        });
+    </script>
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
@@ -453,7 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h1>看字選色遊戲</h1>
         <div class="score-board">
             <div class="score-item">目前分數：<span id="score" style="color: #2ecc71; font-weight: bold;"><?php echo $_SESSION['score']; ?></span></div>
-            <div class="score-item">最高分數：<span id="highScore" style="color: #2ecc71; font-weight: bold;"><?php echo $high_score; ?></span></div>
+            <div class="score-item">過關分數：<span id="passScore" style="color: #2ecc71; font-weight: bold;"><?php echo isset($difficulty_settings[$difficulty]['pass_score']) ? $difficulty_settings[$difficulty]['pass_score'] : 0; ?></span></div>
             <div class="score-item">剩餘時間：<span id="time" style="color: #e74c3c; font-weight: bold;">0</span></div>
         </div>
 
@@ -493,7 +499,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         console.log(difficultySettings);
 
         const scoreEl = document.getElementById('score');
-        const highScoreEl = document.getElementById('highScore');
+        const passScoreEl = document.getElementById('passScore');
         const timeEl = document.getElementById('time');
         const startBtn = document.getElementById('startBtn');
         const endBtn = document.getElementById('endBtn');
@@ -502,7 +508,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 初始化分數顯示
         scoreEl.textContent = '0';
-        highScoreEl.textContent = highScore;
+        if (passScoreEl) {
+            passScoreEl.textContent = difficultySettings[difficulty].pass_score;
+        }
 
         const colorToChinese = (color) => {
             const colorObj = colors.find(c => c.name === color);
@@ -740,10 +748,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 playSound('correct');
                 score += parseInt(difficultySettings[difficulty].points_per_correct);
                 scoreEl.textContent = score.toString();
+                // 達成過關分數即結束遊戲並顯示過關
+                const passScoreNow = parseInt(difficultySettings[difficulty].pass_score);
+                if (!isNaN(passScoreNow) && score >= passScoreNow) {
+                    endGame();
+                    return;
+                }
                 if (score > highScore) {
                     highScore = score;
-                    highScoreEl.textContent = highScore.toString();
-                    // 更新最高分數到伺服器，帶上正確的難度
+                    // 更新最高分數到伺服器（保留後端統計用途）
                     fetch('text-color.php', {
                         method: 'POST',
                         headers: {
@@ -782,28 +795,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             distractionContainer.innerHTML = '';
             timeLeft = difficultySettings[level].time_limit;
             
-            // 從後端獲取新難度的最高分數
-            fetch('text-color.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=get_high_score&difficulty=' + level
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(score => {
-                console.log('Received high score for difficulty ' + level + ': ' + score); // 除錯用
-                highScore = parseInt(score) || 0;
-                highScoreEl.textContent = highScore.toString();
-            })
-            .catch(error => {
-                console.error('Error fetching high score:', error);
-            });
+            // 顯示對應難度的過關分數
+            if (passScoreEl) {
+                passScoreEl.textContent = difficultySettings[level].pass_score;
+            }
         }
 
         function startGame() {
@@ -817,21 +812,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             timeEl.textContent = timeLeft.toString();
             startTime = new Date();
             
-            // 確保顯示正確難度的最高分數
-            fetch('text-color.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=get_high_score&difficulty=' + difficulty
-            })
-            .then(response => response.text())
-            .then(score => {
-                console.log('Starting game with high score: ' + score); // 除錯用
-                highScore = parseInt(score) || 0;
-                highScoreEl.textContent = highScore.toString();
-            })
-            .catch(error => console.error('Error fetching high score:', error));
+            // 顯示目前難度的過關分數
+            if (passScoreEl) {
+                passScoreEl.textContent = difficultySettings[difficulty].pass_score;
+            }
 
             generateQuestion();
 
@@ -907,7 +891,7 @@ function togglePauseGame() {
 document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
 
 
-        function endGame() {
+        function endGame(isManualExit = false) {
             gameStarted = false;
             clearInterval(timer);
             if (distractionInterval) {
@@ -928,8 +912,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             
             if (score > highScore) {
                 highScore = score;
-                highScoreEl.textContent = highScore.toString();
-                // 更新最高分數到伺服器
+                // 更新最高分數到伺服器（保留後端統計用途）
                 fetch('text-color.php', {
                     method: 'POST',
                     headers: {
@@ -945,7 +928,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'action=record_game&score=' + score + '&play_time=' + playTime + '&difficulty=' + difficulty
+                body: 'action=record_game&score=' + score + '&play_time=' + playTime + '&difficulty=' + difficulty + '&is_manual_exit=' + (isManualExit ? '1' : '0')
             })
             .then(response => response.text())
             .then(result => {
@@ -1027,7 +1010,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             scoreEl.textContent = '0';
         }
 
-        endBtn.addEventListener('click', endGame);
+        endBtn.addEventListener('click', () => endGame(true)); // 手動退出
 
         // 預設選擇普通難度
         setDifficulty('normal');

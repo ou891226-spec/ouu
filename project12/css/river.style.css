@@ -959,19 +959,39 @@ body {
 }
 
 .modal-dialog {
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
-    max-width: none;
-    width: auto;
-    box-shadow: none;
-    border: none;
+    background: white;
+    border-radius: 15px;
+    padding: 35px;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid #e0e0e0;
     animation: slideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 /* 遊戲失敗對話框特殊樣式 */
 .game-fail-dialog {
     background: #f8f9fa;
+    border-radius: 15px;
+    padding: 35px;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    border: 1px solid #e0e0e0;
+    animation: slideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* 遊戲成功對話框特殊樣式 */
+.game-success-dialog {
+    background: white;
     border-radius: 15px;
     padding: 35px;
     max-width: 450px;
@@ -1028,6 +1048,43 @@ body {
     margin-top: 20px;
 }
 
+.game-success-dialog .modal-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #333;
+    font-size: 2.2em;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.game-success-dialog .modal-content {
+    margin-bottom: 30px;
+    text-align: center;
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.game-success-dialog .modal-detail {
+    text-align: center;
+    color: #666;
+    font-size: 1.3em;
+    margin: 15px 0;
+    line-height: 1.5;
+    padding-left: 0;
+}
+
+.game-success-dialog .modal-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
 .game-fail-dialog .modal-btn {
     padding: 16px 32px;
     border: none;
@@ -1042,38 +1099,50 @@ body {
 .modal-title {
     text-align: center;
     color: #333;
-    font-size: 1.8em;
-    margin-bottom: 25px;
+    font-size: 2.2em;
+    margin-bottom: 30px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 }
 
 .modal-content {
     margin-bottom: 30px;
+    text-align: center;
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
 }
 
 .modal-detail {
     text-align: center;
     color: #666;
-    font-size: 1.1em;
-    margin: 10px 0;
-    line-height: 1.4;
+    font-size: 1.3em;
+    margin: 15px 0;
+    line-height: 1.5;
+    padding-left: 0;
 }
 
 .modal-buttons {
     display: flex;
     gap: 15px;
     justify-content: center;
+    width: 100%;
+    margin-top: 20px;
 }
 
 .modal-btn {
-    padding: 12px 24px;
+    padding: 16px 32px;
     border: none;
-    border-radius: 25px;
-    font-size: 16px;
+    border-radius: 30px;
+    font-size: 20px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 100px;
+    min-width: 130px;
 }
 
 .modal-btn-red {
@@ -1208,6 +1277,11 @@ body {
     }
     
     .modal-dialog {
+        padding: 30px 20px;
+        width: 95%;
+    }
+    
+    .game-success-dialog {
         padding: 30px 20px;
         width: 95%;
     }

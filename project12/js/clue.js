@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let gameSessionId = Date.now(); // 游戏会话ID，用于标识单次游戏
 
     // 保存游戏记录的函数
-    function saveGameRecord(pass, score, pass_bounce) {
+    function saveGameRecord(pass, score, pass_bounce, isManualExit = false) {
         // 防止重复保存
         if (hasSavedRecord) {
             console.log('游戏记录已经保存过，跳过重复保存', {gameSessionId});
@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data.append('force_end', '1');
         data.append('final_score', score);
         data.append('session_id', gameSessionId); // 添加会话ID
+        data.append('is_manual_exit', isManualExit ? '1' : '0'); // 手動退出標識
         
         // 添加时间戳防止缓存
         data.append('timestamp', Date.now());
@@ -74,25 +75,27 @@ document.addEventListener('DOMContentLoaded', function() {
       resultModal.style.display = 'flex';
       if (pass) {
         modalTitle.textContent = '恭喜破關';
-        modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>過關分數：+${pass_bounce}`;
+        const gameTimeSec = Math.floor((Date.now() - gameStartTime) / 1000);
+        modalContent.innerHTML = `
+          <div style="margin:12px 0;">難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</div>
+          <div style="margin:12px 0;">遊戲時間：${gameTimeSec}秒</div>
+          <div style="margin:12px 0;">過關分數：+${pass_bounce}</div>
+        `;
       } else {
         modalTitle.textContent = '遊戲失敗';
-        modalContent.innerHTML = `難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}<br>未在時間內達成分數`;
+        modalContent.innerHTML = `
+          <div style="margin:12px 0;">難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</div>
+          <div style="margin:12px 0;">未在時間內達成分數</div>
+        `;
       }
       
       // 保存游戏记录（防重复机制在saveGameRecord内部）
-      saveGameRecord(pass, score, pass_bounce);
+      saveGameRecord(pass, score, pass_bounce, false);
     }
-    document.getElementById('play-again-btn').onclick = function() { location.reload(); };
-    document.getElementById('back-home-btn').onclick = function() { 
-        // 由於遊戲流程是：上一頁 -> 難度選擇頁面 -> 遊戲頁面
-        // 我們需要跳過難度選擇頁面，直接返回到上一頁
-        if (history.length > 2) {
-            history.go(-2);  // 返回兩步，跳過難度選擇頁面
-        } else {
-            window.location.href = 'index.php';  // 備用方案：返回首頁
-        }
+    document.getElementById('play-again-btn').onclick = function() { 
+        window.location.href = 'clue.php'; 
     };
+    document.getElementById('back-home-btn').onclick = function() { window.location.href = 'index.php'; };
 
     // 主要流程重寫
     let currentQuestion = null;
@@ -112,6 +115,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // 將變數設為全局，供結束遊戲按鈕使用
     window.clueCorrect = clueCorrect;
     window.clueTotal = clueTotal;
+
+    // 更新狀態欄的函數
+    function updateStatusBar() {
+        const correctCount = document.getElementById('correct-count');
+        const passCount = document.getElementById('pass-count');
+        const remainingCount = document.getElementById('remaining-count');
+        
+        if (correctCount) correctCount.textContent = clueCorrect;
+        if (passCount) passCount.textContent = 3; // 過關題數固定為3題
+        if (remainingCount) remainingCount.textContent = Math.max(0, 5 - clueTotal); // 剩餘題數 = 5 - 已答題數
+    }
 
     function updateTimeDisplay() {
         var timeLeftElement = document.getElementById('time-left');
@@ -168,6 +182,25 @@ document.addEventListener('DOMContentLoaded', function() {
         // 更新全局變數
         window.clueCorrect = clueCorrect;
         window.clueTotal = clueTotal;
+        
+        // 更新狀態欄
+        updateStatusBar();
+        
+        // 檢查是否達到過關條件（答對3題）
+        if (clueCorrect >= 3) {
+            // 達到過關條件，結束遊戲
+            setTimeout(function(){
+                const pass = true;
+                const score = clueCorrect;
+                let pass_bounce = 0;
+                if (difficulty === 'easy') pass_bounce = 20;
+                else if (difficulty === 'normal') pass_bounce = 50;
+                else if (difficulty === 'hard') pass_bounce = 100;
+                
+                showResultModal(pass, score, difficulty, pass_bounce);
+            }, 1200);
+            return;
+        }
         
         // 延遲後載入下一題
         setTimeout(function(){
@@ -229,6 +262,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('question-block').style.display = 'none';
             document.getElementById('result-block').style.display = 'none';
             document.getElementById('time-left').textContent = displayTime;
+            
+            // 更新狀態欄
+            updateStatusBar();
             // 選項
             const opts = [currentQuestion.option_1, currentQuestion.option_2, currentQuestion.option_3, currentQuestion.option_4];
             const btns = document.querySelectorAll('.option-btn');
@@ -240,6 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 初始化狀態欄
+    updateStatusBar();
+    
     // 初始載入不送答案
     loadQuestion();
 
@@ -270,16 +309,15 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (difficulty === 'hard') pass_bounce = 100;
         }
         
-        // 顯示結果（saveGameRecord會在showResultModal中自動調用）
+        // 手動退出時直接保存記錄，傳遞 isManualExit = true
+        saveGameRecord(pass, currentScore, pass_bounce, true);
+        
+        // 顯示結果
         showResultModal(pass, currentScore, difficulty, pass_bounce);
     };
     document.getElementById('resetBtn').onclick = function() {
-        // 智能返回：回到上一頁，如果沒有上一頁則回到線索遊戲難度選擇頁面
-        if (history.length > 1 && document.referrer && document.referrer !== window.location.href) {
-            history.back();
-        } else {
-            window.location.href = 'clue.php';
-        }
+        // 直接回到線索遊戲的難度選擇頁面，不需要確認
+        window.location.href = 'clue.php';
     };
 
     function showQuestionOnce() {
@@ -311,6 +349,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // 更新全局變數
             window.clueCorrect = clueCorrect;
             window.clueTotal = clueTotal;
+            
+            // 更新狀態欄
+            updateStatusBar();
+            
+            // 檢查是否達到過關條件（答對3題）
+            if (clueCorrect >= 3) {
+                // 達到過關條件，結束遊戲
+                setTimeout(function(){
+                    const pass = true;
+                    const score = clueCorrect;
+                    let pass_bounce = 0;
+                    if (difficulty === 'easy') pass_bounce = 20;
+                    else if (difficulty === 'normal') pass_bounce = 50;
+                    else if (difficulty === 'hard') pass_bounce = 100;
+                    
+                    showResultModal(pass, score, difficulty, pass_bounce);
+                }, 1200);
+                return;
+            }
             
             showQuestionOnce();
             setTimeout(function(){

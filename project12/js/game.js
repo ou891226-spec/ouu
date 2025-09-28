@@ -316,15 +316,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('找到結束按鈕，設置事件監聽器');
                 endButton.onclick = () => {
                     console.log('結束按鈕被點擊');
-                    // 如果已經勝利，不重複記錄分數
-                    if (this.won) {
-                        console.log('遊戲已勝利，只顯示勝利彈窗，不重複記錄分數');
-                        this.showWinModal();
-                        return;
+                    if (confirm('確定要結束遊戲嗎？')) {
+                        // 如果已經勝利，不重複記錄分數
+                        if (this.won) {
+                            console.log('遊戲已勝利，只顯示勝利彈窗，不重複記錄分數');
+                            this.showWinModal();
+                            return;
+                        }
+                        // 手動退出遊戲
+                        this.isContinuing = false;
+                        this.endGame(true); // 傳遞 isManualExit = true
                     }
-                    // 直接呼叫 endGame 顯示彈窗
-                    this.isContinuing = false;
-                    this.endGame();
                 };
             } else {
                 console.error('錯誤：找不到結束按鈕 #endBtn');
@@ -835,7 +837,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.gameOverModal.style.display = 'block';
             }
         }
-    
+
+        showGameEndModal() {
+            // 手動退出遊戲時顯示的模態框
+            console.log('顯示遊戲結束模態框（手動退出）');
+            
+            // 計算實際遊玩時間
+            const currentTime = Date.now();
+            const playTime = this.gameStartTime ? Math.floor((currentTime - this.gameStartTime) / 1000) : 0;
+            console.log('手動退出遊戲，開始時間:', this.gameStartTime);
+            console.log('手動退出遊戲，當前時間:', currentTime);
+            console.log('手動退出遊戲，實際遊玩時間:', playTime, '秒');
+            
+            // 修改標題為"遊戲結束"而不是"遊戲失敗"
+            const modalTitle = this.gameOverModal.querySelector('h2');
+            if (modalTitle) {
+                modalTitle.textContent = '👋遊戲結束';
+            }
+            
+            // 手動退出時記錄0分
+            console.log('手動退出遊戲，記錄0分');
+            const memberId = document.getElementById('member-id')?.value;
+            if (typeof saveGameRecord === 'function' && memberId) {
+                console.log('手動退出遊戲，呼叫 saveGameRecord，分數：0');
+                saveGameRecord(memberId, 0, this.difficulty, playTime, true);
+            }
+
+            // 使用統一的 handleGameEnd 函數來顯示彈窗，傳遞手動退出標識
+            if (typeof handleGameEnd === 'function') {
+                handleGameEnd(this.score, this.difficulty, 'manual', playTime);
+            } else {
+                // 備用方案：直接顯示彈窗
+                this.gameOverModal.style.display = 'block';
+            }
+        }
 
         togglePause() {
             this.isPaused = !this.isPaused;
@@ -851,8 +886,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        endGame() {
-            console.log('結束遊戲流程...');
+        endGame(isManualExit = false) {
+            console.log('結束遊戲流程...', 'isManualExit:', isManualExit);
             this.gameOver = true;
             this.isInitialized = false;
             
@@ -862,10 +897,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 注意：這裡不保存到 localStorage，因為我們從資料庫讀取
             }
             
-            // 如果已經勝利，顯示勝利彈窗；否則顯示失敗彈窗
+            // 如果已經勝利，顯示勝利彈窗
             if (this.won) {
                 this.showWinModal();
+            } else if (isManualExit) {
+                // 手動退出，顯示遊戲結束而不是失敗
+                this.showGameEndModal();
             } else {
+                // 正常遊戲失敗
                 this.showGameOverModal();
             }
             console.log('顯示遊戲結束彈窗');
@@ -950,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.game = new Game2048();
     console.log('遊戲實例已創建並保存到 window.game');
 
-    async function saveGameRecord(member_id, score, difficulty, play_time) {
+    async function saveGameRecord(member_id, score, difficulty, play_time, isManualExit = false) {
         console.log('=== 開始記錄遊戲分數 ===');
         console.log('會員ID:', member_id);
         console.log('記錄分數:', score);
@@ -972,7 +1011,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 member_id,
                 score,
                 difficulty,
-                play_time
+                play_time,
+                is_manual_exit: isManualExit
             })
         });
         const result = await res.json();

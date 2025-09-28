@@ -703,7 +703,7 @@ header {
   opacity: 1 !important;
 }
 
-/* 讓個人歷程按鈕的文字與其他按鈕對齊 */
+/* 讓個人分析按鈕的文字與其他按鈕對齊 */
 #personalHistoryBtn {
   display: flex;
   align-items: center;

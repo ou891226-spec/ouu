@@ -287,10 +287,7 @@ try {
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <div class="personal-history-group">
-      <button class="jelly-btn jelly-yellow" id="personalHistoryBtn" type="button" onclick="togglePersonalHistoryMenu()">個人歷程 <span id="arrowIcon" style="font-size: 20px !important; margin-left: 10px !important; color: #333 !important; font-weight: bold !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important; text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;">▼</span></button>
-      <div id="personalHistoryMenu" class="personal-history-menu" style="display:none;">
-        <a href="personal-analysis.php" class="jelly-btn jelly-yellow sub-btn">分析圖表</a>
-      </div>
+      <a href="personal-analysis.php" class="jelly-btn jelly-yellow">個人分析</a>
     </div>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>

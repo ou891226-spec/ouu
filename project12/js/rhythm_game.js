@@ -268,7 +268,7 @@ function togglePause() {
 
 // 在 rhythm_game.js 檔案中，找到 endGame 函式並替換成以下內容
 
-function endGame() {
+function endGame(isManualExit = false) {
   console.log("endGame() called.");
   console.log("Current Score:", score);
   console.log("Pass Score:", passScore);
@@ -304,7 +304,8 @@ function endGame() {
       difficulty: currentDifficulty,
       score: recordScore,
       play_time: gameDuration,
-      is_passed: isPassed
+      is_passed: isPassed,
+      is_manual_exit: isManualExit
     })
   })
   .then(res => res.json())
@@ -487,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 restartButton.addEventListener("click", () => location.reload());
-endButton.addEventListener("click", () => endGame());
+endButton.addEventListener("click", () => endGame(true)); // 手動退出
 document.getElementById("gameArea").addEventListener("click", handleHit);
 
 function showEndModal(success, finalGameScore, recordScore, levelStr, gameDuration) {

@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("back-to-start").addEventListener("click", () => {
-        showScreen("start-screen");
+        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
     });
     
     document.getElementById("help-from-difficulty").addEventListener("click", () => {
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("return-home-btn").addEventListener("click", () => {
         hideModal("game-fail-modal");
         stopGameTimer();
-        showScreen("difficulty-screen");
+        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
     });
     
     document.getElementById("play-again-success-btn").addEventListener("click", () => {
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("return-home-success-btn").addEventListener("click", () => {
         hideModal("game-success-modal");
         stopGameTimer();
-        showScreen("difficulty-screen");
+        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
     });
 });
 
@@ -682,7 +682,8 @@ async function saveGameResultOnExit() {
             difficulty: gameState.mode,
             score: 0, // 未完成遊戲，分數為0
             play_time: gameState.gameTime, // 使用實際遊戲時間
-            game_type: '算術邏輯'
+            game_type: '算術邏輯力',
+            is_manual_exit: true // 手動退出
         };
         
         console.log('保存過河遊戲中途退出結果:', gameData);

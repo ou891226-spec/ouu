@@ -1064,10 +1064,10 @@ function updateScore() {
     document.getElementById('score').textContent = score;
     if (score > highScore) {
         highScore = score;
-        document.getElementById('high-score').textContent = highScore;
-        // 保存最高分數到localStorage
+        // 保存最高分數到localStorage（但不顯示）
         localStorage.setItem(`vegetable_highscore_${currentDifficulty}`, highScore.toString());
     }
+    // 過關分數顯示保持不變，因為它是固定的目標分數
 }
 
 function startTimer() {
@@ -1084,7 +1084,7 @@ function updateTimer() {
         if (timer <= 0) {
             clearInterval(interval);
             interval = null;
-            endGame();
+            endGame(false); // 時間到，不是手動退出
         }
     }
 }
@@ -1142,13 +1142,14 @@ function resumeGame() {
     }
 }
 
-async function saveGameResult(bonusScore, playTime) {
+async function saveGameResult(bonusScore, playTime, isManualExit = false) {
     try {
         console.log('儲存遊戲結果:', {
             member_id: memberId,
             difficulty: currentDifficulty,
             score: bonusScore,
-            play_time: playTime
+            play_time: playTime,
+            is_manual_exit: isManualExit
         });
         
         const response = await fetch('Vegetable-Cost.php', {
@@ -1160,7 +1161,8 @@ async function saveGameResult(bonusScore, playTime) {
                 member_id: memberId,
                 difficulty: currentDifficulty,
                 score: bonusScore,
-                play_time: playTime
+                play_time: playTime,
+                is_manual_exit: isManualExit
             })
         });
         const result = await response.json();
@@ -1175,8 +1177,8 @@ async function saveGameResult(bonusScore, playTime) {
     }
 }
 
-function endGame() {
-    debugLog('執行 endGame，gameStarted: ' + gameStarted);
+function endGame(isManualExit = false) {
+    debugLog('執行 endGame，gameStarted: ' + gameStarted + ', isManualExit: ' + isManualExit);
     if (!gameStarted) return;
     if (interval) {
         clearInterval(interval);
@@ -1214,11 +1216,22 @@ function endGame() {
     let title = '';
     const difficultyName = currentDifficulty === 'easy' ? '簡單' : currentDifficulty === 'normal' ? '普通' : '困難';
     
-    if (score >= passScore) {
-        title = '🎉恭喜破關';
+    // 修改判斷邏輯：區分手動退出和遊戲失敗
+    if (isManualExit) {
+        // 手動退出遊戲
+        if (score >= passScore) {
+            title = '🎉恭喜破關';
+        } else {
+            title = '👋遊戲結束';
+        }
     } else {
-        title = '⏰遊戲失敗';
-        rewardScore = 0;
+        // 正常遊戲結束（時間到或達到目標）
+        if (score >= passScore) {
+            title = '🎉恭喜破關';
+        } else {
+            title = '⏰遊戲失敗';
+            rewardScore = 0;
+        }
     }
     
     // 設置標題
@@ -1242,14 +1255,20 @@ function endGame() {
         if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
-        // 失敗時：顯示難度、遊戲分數、遊戲時間、過關分數+0、失敗訊息
+        // 失敗時：顯示難度、遊戲分數、遊戲時間、過關分數+0
         document.getElementById('vegetable-gameover-score').textContent = score;
         document.getElementById('vegetable-gameover-time').textContent = playTime + '秒';
         document.getElementById('vegetable-gameover-bonus').textContent = '+0';
         if (scoreRow) scoreRow.style.display = 'block';
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
-        if (failMessage) failMessage.style.display = 'block';
+        
+        // 只有真正失敗時才顯示失敗訊息，手動退出不顯示
+        if (isManualExit) {
+            if (failMessage) failMessage.style.display = 'none';
+        } else {
+            if (failMessage) failMessage.style.display = 'block';
+        }
     }
     
     modal.classList.remove('hidden');
@@ -1261,7 +1280,7 @@ function endGame() {
         else if (currentDifficulty === 'normal') finalRewardScore = 50;
         else if (currentDifficulty === 'hard') finalRewardScore = 100;
     }
-    saveGameResult(finalRewardScore, playTime);
+    saveGameResult(finalRewardScore, playTime, isManualExit);
     
     // 立即更新主頁面分數
     if (window.updateScoreImmediately) {
@@ -1492,14 +1511,24 @@ function selectDifficulty(difficulty) {
     debugLog('選擇難度: ' + difficulty);
     currentDifficulty = difficulty;
     
-    // 載入該難度的最高分數
+    // 顯示該難度的過關分數
+    let passScore = 0;
+    if (window.difficultySettings && window.difficultySettings[difficulty]) {
+        passScore = window.difficultySettings[difficulty].pass_score;
+    } else {
+        // 預設值
+        if (difficulty === 'easy') passScore = 15;
+        else if (difficulty === 'normal') passScore = 20;
+        else if (difficulty === 'hard') passScore = 30;
+    }
+    document.getElementById('high-score').textContent = passScore;
+    
+    // 仍然保存最高分數用於統計，但不顯示
     const savedHighScore = localStorage.getItem(`vegetable_highscore_${difficulty}`);
     if (savedHighScore) {
         highScore = parseInt(savedHighScore);
-        document.getElementById('high-score').textContent = highScore;
     } else {
         highScore = 0;
-        document.getElementById('high-score').textContent = '0';
     }
     
     document.getElementById('difficulty-modal').classList.add('hidden');
@@ -1565,7 +1594,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (helpIcon) helpIcon.addEventListener('click', openHelpModal);
 
     const endBtn = document.getElementById('end-btn');
-    if (endBtn) endBtn.addEventListener('click', endGame);
+    if (endBtn) endBtn.addEventListener('click', () => {
+        if (confirm('確定要結束遊戲嗎？')) {
+            endGame(true); // 傳遞 isManualExit = true
+        }
+    });
 
     // 暫停按鈕事件監聽器
     const pauseBtn = document.getElementById('pause-btn');

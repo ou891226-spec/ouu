@@ -237,10 +237,6 @@ try {
     return true;
   }
 
-  function openProfileModal() {
-    document.getElementById('profileModal').style.display = 'flex';
-    document.getElementById('modalOverlay').style.display = 'block';
-  }
   function closeProfileModal() {
     document.getElementById('profileModal').style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
@@ -321,7 +317,21 @@ try {
   function openProfileModal() {
     document.getElementById('profileModal').style.display = 'flex';
     document.getElementById('modalOverlay').style.display = 'block';
-    loadUserAchievements(); // 載入成就
+    
+    // 檢查 loadUserAchievements 函數是否已載入
+    if (typeof loadUserAchievements === 'function') {
+      loadUserAchievements(); // 載入成就
+    } else {
+      console.log('loadUserAchievements 函數尚未載入，稍後再試');
+      // 延遲執行，等待 JS 文件載入完成
+      setTimeout(() => {
+        if (typeof loadUserAchievements === 'function') {
+          loadUserAchievements();
+        } else {
+          console.error('無法載入成就：loadUserAchievements 函數不存在');
+        }
+      }, 100);
+    }
   }
 </script>
 
@@ -465,7 +475,7 @@ function displayDefaultGames() {
   grid.innerHTML = `
     <div class="game-block">
       <div class="game-item">
-        <a href="Catch-Egg Game.php"><img src="img/egg1.png" alt="接金蛋" /></a>
+        <a href="Catch-Egg-Game.php"><img src="img/egg1.png" alt="接金蛋" /></a>
       </div>
       <div class="game-title">接金蛋</div>
     </div>

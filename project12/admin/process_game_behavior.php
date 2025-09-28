@@ -20,8 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_records'])) {
             $success_message = sprintf(
                 "批量處理完成！<br>
                 - 總共處理：%d 筆記錄<br>
-                - 遊戲退出：%d 筆 (≤15秒)<br>
-                - 遊戲完成：%d 筆 (>15秒)<br>
+                - 遊戲退出：%d 筆 (無後續動作)<br>
+                - 遊戲完成：%d 筆 (有實際遊戲行為)<br>
                 - 找到記錄：%d 筆",
                 $result['total_processed'],
                 $result['quick_exits'], 
@@ -42,8 +42,10 @@ try {
     $stats_sql = "
         SELECT 
             COUNT(*) as total_game_records,
-            COUNT(CASE WHEN play_time <= 15 AND play_time > 0 THEN 1 END) as quick_exit_records,
-            COUNT(CASE WHEN play_time > 15 THEN 1 END) as normal_records,
+            COUNT(CASE WHEN status = 'exited' OR (play_time = 0 AND score = 0) THEN 1 END) as quick_exit_records,
+            COUNT(CASE WHEN status = 'completed' OR (play_time > 0 AND score > 0) THEN 1 END) as normal_records,
+            COUNT(CASE WHEN status = 'failed' OR (play_time > 0 AND score = 0) THEN 1 END) as failed_records,
+            COUNT(CASE WHEN status = 'entered' THEN 1 END) as entered_records,
             COUNT(CASE WHEN play_time IS NULL THEN 1 END) as null_time_records
         FROM game_records
         WHERE play_time IS NOT NULL
@@ -199,8 +201,10 @@ try {
 
         <div class="info-box">
             <h3>📊 行為軌跡分析說明</h3>
-            <p><strong>遊戲退出</strong>：遊戲時間 ≤15秒 的記錄，表示用戶進入遊戲後快速退出</p>
-            <p><strong>遊戲完成</strong>：遊戲時間 >15秒 的記錄，表示用戶完整體驗了遊戲</p>
+            <p><strong>遊戲退出</strong>：用戶進入遊戲後沒有後續動作，或遊戲時間為0且分數為0</p>
+            <p><strong>遊戲完成</strong>：用戶有實際遊戲行為且獲得分數</p>
+            <p><strong>遊戲失敗</strong>：用戶有實際遊戲行為但沒有獲得分數</p>
+            <p><strong>遊戲進入</strong>：用戶剛進入遊戲，等待後續動作</p>
             <p>這些數據用於分析用戶行為模式，了解遊戲的吸引力和用戶體驗問題。</p>
         </div>
 
@@ -211,8 +215,9 @@ try {
             
             <div class="warning">
                 ⚠️ 此操作會分析現有的遊戲記錄，並為每筆記錄創建對應的行為軌跡記錄。
-                <br>• ≤15秒的記錄 → 標記為「遊戲退出」
-                <br>• >15秒的記錄 → 標記為「遊戲完成」
+                <br>• 無後續動作的記錄 → 標記為「遊戲退出」
+                <br>• 有實際遊戲行為且獲得分數 → 標記為「遊戲完成」
+                <br>• 有實際遊戲行為但沒有獲得分數 → 標記為「遊戲失敗」
             </div>
             
             <form method="POST" onsubmit="return confirm('確定要處理這些記錄嗎？此操作可能需要一些時間。');">

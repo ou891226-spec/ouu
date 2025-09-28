@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
 
 $member_id = $_SESSION['member_id'] ?? 8;
 $game_id = $_POST['game_id'] ?? 0;
@@ -9,32 +10,33 @@ $play_time = $_POST['play_time'] ?? 0;
 $difficulty = $_POST['difficulty'] ?? 'N/A';
 $game_type = $_POST['game_type'] ?? '瀏覽時間';
 $is_single_player = 0;
+$record_id = $_POST['record_id'] ?? null; // 新增：支援更新模式
 
-// 保存遊戲記錄
-$sql = "INSERT INTO game_records 
-  (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-  VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$member_id, $game_id, $difficulty, $score, $play_time, $game_type, $is_single_player, null]);
+// 檢查是否為更新模式
+if ($record_id && $record_id > 0) {
+    // 更新現有記錄
+    $update_result = updateGameRecord($record_id, $score, $play_time, $score > 0 ? 'completed' : 'failed');
+    if (!$update_result) {
+        error_log("更新遊戲記錄失敗: record_id={$record_id}");
+    }
+} else {
+    // 傳統模式：直接插入新記錄
+    $sql = "INSERT INTO game_records 
+      (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id, status)
+      VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$member_id, $game_id, $difficulty, $score, $play_time, $game_type, $is_single_player, null, 'completed']);
+}
 
-// 更新會員總分數
-$update_sql = "UPDATE member SET total_score = total_score + ? WHERE member_id = ?";
-$update_stmt = $pdo->prepare($update_sql);
-$update_stmt->execute([$score, $member_id]);
+// 只有在非更新模式下才更新分數（避免重複計算）
+if (!$record_id || $record_id <= 0) {
+    // 更新會員總分數
+    $update_sql = "UPDATE member SET total_score = total_score + ? WHERE member_id = ?";
+    $update_stmt = $pdo->prepare($update_sql);
+    $update_stmt->execute([$score, $member_id]);
 
-// 根據遊戲類型更新對應的分類分數
-if ($game_type === '反應力' || $game_type === '節奏遊戲' || $game_type === '看字選色遊戲' || $game_type === '接金蛋遊戲') {
-    $reaction_sql = "UPDATE member SET reaction_score = reaction_score + ? WHERE member_id = ?";
-    $reaction_stmt = $pdo->prepare($reaction_sql);
-    $reaction_stmt->execute([$score, $member_id]);
-} elseif ($game_type === '記憶力' || $game_type === '翻牌對對樂' || $game_type === '追蹤犯人遊戲' || $game_type === '圖片線索問答') {
-    $memory_sql = "UPDATE member SET memory_score = memory_score + ? WHERE member_id = ?";
-    $memory_stmt = $pdo->prepare($memory_sql);
-    $memory_stmt->execute([$score, $member_id]);
-} elseif ($game_type === '算術邏輯力' || $game_type === '2048' || $game_type === '算菜錢遊戲' || $game_type === '過河遊戲') {
-    $logic_sql = "UPDATE member SET logic_score = logic_score + ? WHERE member_id = ?";
-    $logic_stmt = $pdo->prepare($logic_sql);
-    $logic_stmt->execute([$score, $member_id]);
+    // 根據遊戲類型更新對應的分類分數
+    updateCategoryScore($member_id, $game_type, $score);
 }
 
 // 記錄遊戲行為軌跡

@@ -1,5 +1,6 @@
 <?php
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
  
 header('Content-Type: application/json');
  
@@ -32,21 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        $stmt = $pdo->prepare("
-            INSERT INTO game_records
-            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)
-        ");
-        $stmt->execute([
-            'member_id' => $data['member_id'],
-            'game_id' => $gameId,
-            'difficulty' => $data['difficulty'],
-            'score' => $bonus_score,  // 修正：記錄標準獎勵分數而不是實際遊戲分數
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => $gameType,
-            'is_single_player' => 1,
-            'opponent_id' => null
-        ]);
+        // 使用新追蹤邏輯
+        $record_id = recordGameEntry($data['member_id'], $gameType, $data['difficulty'], $gameId);
+        if ($record_id) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            
+            // 區分手動退出和遊戲失敗
+            $isManualExit = isset($data['is_manual_exit']) && $data['is_manual_exit'] === true;
+            if ($isManualExit) {
+                // 手動退出遊戲
+                $status = ($data['is_passed'] ?? false) ? 'completed' : 'exited';
+            } else {
+                // 正常遊戲結束
+                $status = ($data['is_passed'] ?? false) ? 'completed' : 'failed';
+            }
+            
+            updateGameRecord($record_id, $bonus_score, $play_time, $status);
+        }
        
         $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score WHERE member_id = :member_id");
         $update_stmt->execute([

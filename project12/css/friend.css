@@ -101,14 +101,7 @@ body {
     object-fit: cover;
 }
 .friend-status-dot {
-    position: absolute;
-    left: 4px;
-    bottom: 4px;
-    width: 8px;
-    height: 8px;
-    background: #19e219;
-    border-radius: 50%;
-    border: 2px solid #fff;
+    display: none;
 }
 .friend-info {
     display: flex;

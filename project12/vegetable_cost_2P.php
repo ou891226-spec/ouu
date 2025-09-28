@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 處理取得食材資料的 API 請求（在登入檢查之前）
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
     require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
     header('Content-Type: application/json');
     
     try {
@@ -34,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_ingredients'])) {
 
 require_once 'check_login.php';
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
 
 // 獲取當前用戶的好友列表
 $my_id = $_SESSION['member_id'];
@@ -62,35 +64,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['action'])) {
        
         $gameId = 3; // 算菜錢遊戲的 ID
        
-        // 保存玩家1的記錄
-        $stmt = $pdo->prepare("
-            INSERT INTO game_records
-            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)
-        ");
-        $stmt->execute([
-            'member_id' => $data['player1_id'],
-            'game_id' => $gameId,
-            'difficulty' => $data['difficulty'],
-            'score' => $data['player1_score'],
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '算術邏輯力',
-            'is_single_player' => 0,
-            'opponent_id' => $data['player2_id']
-        ]);
+        // 使用新追蹤邏輯 - 玩家1
+        $record_id1 = recordGameEntry($data['player1_id'], '算術邏輯力', $data['difficulty'], $gameId);
+        if ($record_id1) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            $status = ($data['player1_score'] > 0) ? 'completed' : 'failed';
+            updateGameRecord($record_id1, $data['player1_score'], $play_time, $status);
+        }
 
-        // 保存玩家2的記錄（本地玩家）
+        // 使用新追蹤邏輯 - 玩家2（如果不是本地玩家）
         if ($data['player2_id'] !== 'local_player') {
-            $stmt->execute([
-                'member_id' => $data['player2_id'],
-                'game_id' => $gameId,
-                'difficulty' => $data['difficulty'],
-                'score' => $data['player2_score'],
-                'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-                'game_type' => '算術邏輯力',
-                'is_single_player' => 0,
-                'opponent_id' => $data['player1_id']
-            ]);
+            $record_id2 = recordGameEntry($data['player2_id'], '算術邏輯力', $data['difficulty'], $gameId);
+            if ($record_id2) {
+                $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+                $status = ($data['player2_score'] > 0) ? 'completed' : 'failed';
+                updateGameRecord($record_id2, $data['player2_score'], $play_time, $status);
+            }
         }
 
         // 更新玩家1的總分數和邏輯力分數
@@ -172,6 +161,13 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>算菜錢遊戲 - 雙人模式</title>
     <link rel="stylesheet" href="css/vegetable_cost_2P.css">
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("算術邏輯力", 5);
+        });
+    </script>
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id']; ?>">

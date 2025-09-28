@@ -4,13 +4,100 @@ body {
     margin: 0;
     padding: 0;
 }
+
+/* 答題狀況狀態欄樣式 - 橫向排版設計 */
+.main-container .status-bar {
+    background: #f0f0f0 !important;
+    border-radius: 8px !important;
+    padding: 20px 32px !important;
+    margin: 16px 0 24px 0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    min-height: 60px !important;
+}
+
+.main-container .status-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 8px 16px !important;
+}
+
+.main-container .status-label {
+    color: #333 !important;
+    font-size: 1.5rem !important;
+    font-weight: 500 !important;
+}
+
+.main-container .status-value {
+    font-size: 1.6rem !important;
+    font-weight: bold !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+}
+
+.main-container .correct-count {
+    color: #2ecc40 !important;
+    background: none !important;
+}
+
+.main-container .pass-count {
+    color: #2ecc40 !important;
+    background: none !important;
+}
+
+.main-container .remaining-count {
+    color: #e74c3c !important;
+    background: none !important;
+}
+
+/* 剩餘時間框樣式調整 */
+#timer-block {
+    background: #f0f0f0 !important;
+    border-radius: 8px !important;
+    padding: 12px 20px !important;
+    margin: 16px auto 24px auto !important;
+    text-align: center !important;
+    display: inline-block !important;
+    min-width: 200px !important;
+    max-width: 300px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+#countdown {
+    color: #333 !important;
+    font-size: 1.2rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}
+
+#time-left {
+    color: #e74c3c !important;
+    font-size: 1.4rem !important;
+    font-weight: bold !important;
+}
 .main-container {
-    max-width: 760px;
+    max-width: 900px;
     margin: 48px auto 0 auto;
     background: #fff;
     border-radius: 22px;
     box-shadow: 0 6px 32px rgba(0,0,0,0.15);
     padding: 48px 36px 36px 36px;
+}
+
+.main-container h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 0;
+    letter-spacing: 1px;
 }
 #image-block img {
     max-width: 720px;
@@ -24,16 +111,17 @@ body {
     font-size: 1.6em;
 }
 .option-btn {
-    margin: 14px;
-    padding: 18px 48px;
-    font-size: 1.35em;
+    margin: 24px;
+    padding: 40px 80px;
+    font-size: 2.8em;
     cursor: pointer;
-    border-radius: 14px;
+    border-radius: 24px;
     border: none;
     outline: none;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.20);
     transition: transform 0.12s, box-shadow 0.12s;
     font-weight: bold;
+    min-height: 120px;
 }
 .option-btn:hover {
     transform: scale(1.07);
@@ -126,10 +214,10 @@ body {
 .options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px 24px;
+  gap: 40px 50px;
   justify-items: center;
-  margin: 0 auto 18px auto;
-  max-width: 420px;
+  margin: 0 auto 40px auto;
+  max-width: 800px;
 } 
 
 .options-flex {

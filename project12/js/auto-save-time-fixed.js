@@ -50,7 +50,7 @@ function isMiniGamePage() {
     const currentPath = window.location.pathname;
     const miniGamePages = [
         '/2048ht.php',
-        '/Catch-Egg Game.php',
+        '/Catch-Egg-Game.php',
         '/Vegetable-Cost.php',
         '/Memory-Game.php',
         '/Memory-Game-2P.php',

@@ -44,7 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$row) {
-        echo "<script>alert('此帳號尚未註冊，請註冊新帳號'); window.location.href='register.php';</script>";
+        // 設置錯誤訊息並重定向到註冊頁面
+        header("Location: registerForm.php?error=" . urlencode("此帳號尚未註冊，請註冊新帳號"));
         exit;
     } else {
         // 檢查密碼是否已加密（長度超過20字元）

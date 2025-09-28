@@ -201,14 +201,14 @@ difficultyOptions.forEach(option => {
   });
 });
 
-function endGame(success) {
+function endGame(success, isManualExit = false) {
   clearInterval(gameInterval);
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
   pauseBGM(); // 遊戲結束時停止音樂
   
-  sendScoreToServer(score, level, success); 
+  sendScoreToServer(score, level, success, isManualExit); 
   
-  showEndModal(success, score, level);
+  showEndModal(success, score, level, isManualExit);
 }
 
 function showEndModal(success, finalScore, level) {
@@ -264,8 +264,10 @@ function togglePause() {
 }
 
 document.getElementById('end-btn').addEventListener('click', () => {
-  const success = score >= passScore;
-  endGame(success);
+  if (confirm('確定要結束遊戲嗎？')) {
+    const success = score >= passScore;
+    endGame(success, true); // 傳遞 isManualExit = true
+  }
 });
 
 document.getElementById('restart-btn').addEventListener('click', () => {
@@ -378,14 +380,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function sendScoreToServer(score, level, is_passed) {
+function sendScoreToServer(score, level, is_passed, isManualExit = false) {
   const difficultyText = level === 3 ? 'easy' : level === 4 ? 'normal' : 'hard';
   const data = {
     member_id: memberId,
     difficulty: difficultyText,
-    score: score, 
-    play_time: gameTime - timeLeft,
-    is_passed: is_passed,
+        score: score, 
+        play_time: gameTime - timeLeft,
+        is_passed: is_passed,
+        is_manual_exit: isManualExit,
   };
 
   fetch('save_prisoner_game.php', {

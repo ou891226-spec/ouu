@@ -1,5 +1,6 @@
 <?php
 require_once 'check_login.php';
+require_once 'game_entry_tracker.php';
 header('Content-Type: text/html; charset=utf-8');
 
 if (
@@ -36,19 +37,23 @@ if (
         }
         // 如果沒過關，record_score 保持為 0
 
-        $stmt = $pdo->prepare("INSERT INTO game_records
-            (member_id, game_id, difficulty, score, play_date, play_time, game_type, is_single_player, opponent_id)
-            VALUES (:member_id, :game_id, :difficulty, :score, NOW(), :play_time, :game_type, :is_single_player, :opponent_id)");
-        $stmt->execute([
-            'member_id' => $data['member_id'],
-            'game_id' => 4,
-            'difficulty' => $difficulty,
-            'score' => $record_score,
-            'play_time' => isset($data['play_time']) ? $data['play_time'] : null,
-            'game_type' => '算術邏輯力',
-            'is_single_player' => 1,
-            'opponent_id' => null
-        ]);
+        // 使用新追蹤邏輯
+        $record_id = recordGameEntry($data['member_id'], '算術邏輯力', $difficulty, 4);
+        if ($record_id) {
+            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+            
+            // 區分手動退出和遊戲失敗
+            $isManualExit = isset($data['is_manual_exit']) && $data['is_manual_exit'] === true;
+            if ($isManualExit) {
+                // 手動退出遊戲
+                $status = $is_passed ? 'completed' : 'exited';
+            } else {
+                // 正常遊戲結束（時間到或達到目標）
+                $status = $is_passed ? 'completed' : 'failed';
+            }
+            
+            updateGameRecord($record_id, $record_score, $play_time, $status);
+        }
         
         // 只有過關時才更新會員總分數和算術邏輯分數
         if ($is_passed) {
@@ -90,6 +95,13 @@ if (
         
         // 頁面加載開始
         debugLog('頁面開始加載');
+    </script>
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("算術邏輯力", 4);
+        });
     </script>
 </head>
 <body>

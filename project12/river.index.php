@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db_connect.php';
+require_once 'game_entry_tracker.php';
 
 // 從資料庫讀取過河遊戲的難度設定
 $difficultySettings = [];
@@ -31,6 +32,13 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>狼羊菜過河遊戲</title>
     <link rel="stylesheet" href="css/river.style.css">
+    <script src="js/unified-game-tracker.js"></script>
+    <script>
+        // 初始化遊戲追蹤器
+        document.addEventListener("DOMContentLoaded", function() {
+            gameTracker.init("算術邏輯力", 10);
+        });
+    </script>
 </head>
 <body>
     <!-- 開始畫面 -->
@@ -249,7 +257,7 @@ try {
 
     <!-- 遊戲成功彈出對話框 -->
     <div id="game-success-modal" class="modal-overlay">
-        <div class="modal-dialog">
+        <div class="modal-dialog game-success-dialog">
             <h2 class="modal-title">🎉 恭喜破關</h2>
             <div class="modal-content">
                 <p class="modal-detail">難度: <span id="success-difficulty">簡單</span></p>

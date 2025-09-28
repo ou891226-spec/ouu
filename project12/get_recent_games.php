@@ -62,7 +62,7 @@ try {
         '翻牌對對樂' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '追蹤犯人遊戲' => ['img' => 'img/prisoner1.png?v=2', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
         '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
-        '接金蛋遊戲' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg Game.php', 'title' => '接金蛋'],
+        '接金蛋遊戲' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg-Game.php', 'title' => '接金蛋'],
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
         '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],

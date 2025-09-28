@@ -94,15 +94,24 @@ let currentDifficulty = 'easy';
 function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
     
-    // 載入該難度的最高分數
+    // 顯示該難度的過關分數
+    let passScore;
+    if (difficulty === 'easy') {
+        passScore = 200;
+    } else if (difficulty === 'normal') {
+        passScore = 450;
+    } else if (difficulty === 'hard') {
+        passScore = 600;
+    }
+    document.getElementById('high-score').textContent = passScore;
+    
+    // 仍然保存最高分數用於統計，但不顯示
     const savedHighScore = localStorage.getItem(`egg_highscore_${difficulty}`);
     if (savedHighScore) {
         difficultyHighScores[difficulty] = parseInt(savedHighScore);
         highScore = difficultyHighScores[difficulty];
-        document.getElementById('high-score').textContent = highScore;
     } else {
         highScore = 0;
-        document.getElementById('high-score').textContent = '0';
     }
     
     // 根據難度設定時間
@@ -116,7 +125,7 @@ function selectDifficulty(difficulty) {
         timeLeft = 120;
         totalTime = 120;
     }
-    fetch("Catch-Egg Game.php", {
+    fetch("Catch-Egg-Game.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -142,16 +151,16 @@ function selectDifficulty(difficulty) {
 function updateScore() {
     document.getElementById('score').textContent = score;
     
-    // 更新最高分數：如果當前分數超過最高分數，則更新；如果當前分數低於最高分數，則保持最高分數不變
+    // 更新最高分數記錄（但不顯示，只保存用於統計）
     if (score > highScore) {
         highScore = score;
-        document.getElementById('high-score').textContent = highScore;
         
         // 保存該難度的最高分數
         difficultyHighScores[currentDifficulty] = highScore;
         localStorage.setItem(`egg_highscore_${currentDifficulty}`, highScore.toString());
     }
     // 注意：當score < highScore時（比如接到炸彈），最高分數保持不變，這是正確的行為
+    // 過關分數顯示保持不變，因為它是固定的目標分數
     
     // 檢查是否達到目標分數
     let targetScore;
@@ -734,7 +743,7 @@ function resumeGame() {
 }
 
 // 結束遊戲
-function endGame(isWin = false) {
+function endGame(isWin = false, isManualExit = false) {
     gameStarted = false;  // 重置遊戲狀態
     gamePaused = false;   // 重置暫停狀態
     clearInterval(itemInterval);
@@ -783,13 +792,14 @@ function endGame(isWin = false) {
     }
     
     // 只保存獎勵分數到資料庫
-    fetch("Catch-Egg Game.php", {
+    const memberId = window.memberId || localStorage.getItem('member_id') || 8;
+    fetch("Catch-Egg-Game.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Requested-With": "XMLHttpRequest"
         },
-        body: `action=end_game&score=${bonusScore}&member_id=${localStorage.getItem('member_id')}`
+        body: `action=end_game&score=${bonusScore}&member_id=${memberId}&play_time=${gameTime - timeLeft}&is_manual_exit=${isManualExit ? '1' : '0'}`
     })
     .then(response => response.json())
     .then(data => {
@@ -903,7 +913,7 @@ function goToEggNextStep() {
     // 切換到第二個視頻
     video.src = 'gd/egg2.mp4';
     video.setAttribute('data-current-video', 'egg2');
-    instructionText.innerHTML = '動動手指，左右拖曳籃子來接蛋！<br>接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋(+10分)、<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋(+3分)，並閃避<span style="font-size:1.2em;">💣</span>炸彈(-20分)。<br>只要達到目標分數，就能立即獲勝！<br><small>分數說明：目前分數會因炸彈減少，<br>但最高分數只會記錄歷史最高成就</small>';
+    instructionText.innerHTML = '動動手指，左右拖曳籃子來接蛋！<br>接到<img src="img/egg.png" style="width:1.8em;height:1.8em;vertical-align:middle;margin:0 2px;">金蛋(+10分)、<img src="img/catch_egg.png" style="width:2.2em;height:1.8em;vertical-align:middle;margin:0 2px;">白蛋(+3分)，並閃避<span style="font-size:1.2em;">💣</span>炸彈(-20分)。<br>只要達到過關分數，就能立即獲勝！<br><small>分數說明：目前分數會因炸彈減少，<br>過關分數是您需要達到的目標分數</small>';
     stepIndicator.textContent = '步驟 2/2';
     
     // 隱藏下一步按鈕，顯示上一步按鈕
@@ -1028,20 +1038,21 @@ window.onload = function() {
     totalTime = 60; // 默認簡單模式時間
     timeLeft = 60;
     
-    // 初始化最高分數顯示（默認簡單模式）
+    // 初始化過關分數顯示（默認簡單模式）
+    document.getElementById('high-score').textContent = '200'; // 簡單模式的過關分數
+    
+    // 初始化最高分數記錄（用於統計，不顯示）
     const savedHighScore = localStorage.getItem('egg_highscore_easy');
     if (savedHighScore) {
         highScore = parseInt(savedHighScore);
-        document.getElementById('high-score').textContent = highScore;
     } else {
         highScore = 0;
-        document.getElementById('high-score').textContent = '0';
     }
     
     document.getElementById('difficulty-modal').style.display = 'flex';
     if (pauseBtn) pauseBtn.onclick = pauseGame;
     if (resumeBtn) resumeBtn.onclick = resumeGame;
-    if (endBtn) endBtn.onclick = endGame;
+    if (endBtn) endBtn.onclick = () => endGame(false, true); // 手動退出
     if (resetBtn) resetBtn.onclick = resetGame;
     
     // 確保關閉按鈕事件綁定正確
