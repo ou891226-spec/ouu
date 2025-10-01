@@ -6,32 +6,11 @@ const noteTrack = document.getElementById("noteTrack");
 const hitZone = document.getElementById("hitZone");
 const timerDisplay = document.getElementById("timer");
 const currentScoreDisplay = document.getElementById("score");
-const highScoreDisplay = document.getElementById("high-score");
+const passScoreDisplay = document.getElementById("pass-score");
 const successSfx = document.getElementById("success-sfx");
 const failSfx = document.getElementById("fail-sfx");
 const tapSfx = document.getElementById("tap-sfx");
 
-// 音訊播放函數，包含錯誤處理
-function playAudio(audioElement) {
-  if (!audioElement) return;
-  
-  try {
-    // 重置音訊到開始位置
-    audioElement.currentTime = 0;
-    // 播放音訊
-    const playPromise = audioElement.play();
-    
-    // 處理 Promise 返回的播放結果
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        console.log("音訊播放被阻止或失敗:", error);
-        // 不顯示錯誤，因為這通常是用戶互動政策導致的
-      });
-    }
-  } catch (error) {
-    console.log("音訊播放錯誤:", error);
-  }
-}
 const statusText = document.createElement("div"); // 顯示狀態訊息
 const finalResult = document.createElement("div"); // 顯示結束結果
 
@@ -47,7 +26,6 @@ const closeInfo = document.getElementById('close-info');
 
 let notes = [];
 let score = 0;
-let highScore = localStorage.getItem("rhythmHighScore") || 0;
 let gameTime = 60;
 let gameRunning = false;
 let paused = false;
@@ -66,9 +44,7 @@ let pauseTime = 0; // 新增：用於記錄暫停的時間點
 const memberIdInput = document.getElementById('member-id');
 const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
 
-// 返回按鈕已在HTML中直接綁定onclick事件
-
-highScoreDisplay.textContent = highScore;
+// 返回按鈕事件處理 - 移到 DOMContentLoaded 中
 
 // 音樂與節奏設定
 const rhythmPatterns = {
@@ -82,6 +58,7 @@ function setDifficulty(levelStr) {
   rhythmPattern = rhythmPatterns[levelStr];
   rhythmIndex = 0;
   passScore = levelStr === 'easy' ? 300 : levelStr === 'normal' ? 800 : 1200;
+  passScoreDisplay.textContent = passScore;
 }
 
 function startGame() {
@@ -137,7 +114,7 @@ function moveNotes() {
     note.style.left = `${x}px`;
     if (x < -50) {
       showHitResult('Miss', 0);
-      playAudio(failSfx); // 播放失敗音效
+      failSfx.play(); // 播放失敗音效
       note.remove();
       notes.splice(index, 1);
       missCount++;
@@ -147,7 +124,7 @@ function moveNotes() {
 
 function handleHit() {
   if (!gameRunning || paused) return;
-  playAudio(tapSfx);
+  tapSfx.play();
   const zoneLeft = hitZone.getBoundingClientRect().left;
   const zoneRight = zoneLeft + hitZone.offsetWidth;
   let hitResult = '';
@@ -164,24 +141,24 @@ function handleHit() {
         scoreToAdd = 20;
         perfectCount++;
         hitResult = 'Perfect';
-        playAudio(successSfx); // 播放成功音效
+        successSfx.play(); // 播放成功音效
       } else if (diff < 50) {
         scoreToAdd = 10;
         goodCount++;
         hitResult = 'Good';
-        playAudio(successSfx); // 播放成功音效
+        successSfx.play(); // 播放成功音效
       } else {
         missCount++;
         hitResult = 'Miss';
         scoreToAdd = 0;
-        playAudio(failSfx); // 播放失敗音效
+        failSfx.play(); // 播放失敗音效
       }
       score += scoreToAdd;
       currentScoreDisplay.textContent = score;
-      if (score > highScore) {
-        highScore = score;
-        highScoreDisplay.textContent = score;
-        localStorage.setItem("rhythmHighScore", score);
+      // 檢查是否達到目標分數，如果達到就結束遊戲
+      if (score >= passScore) {
+        endGame();
+        return; // 遊戲結束，退出函式
       }
       showHitResult(hitResult, scoreToAdd);
       note.remove();
@@ -296,11 +273,13 @@ function endGame(isManualExit = false) {
   }
 
   console.log("Attempting to save score...");
-  fetch('save_rhythm_game.php', {
+  fetch('api/game_result.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       member_id: sendMemberId,
+      game_type: "反應力",
+      game_id: 7,
       difficulty: currentDifficulty,
       score: recordScore,
       play_time: gameDuration,
@@ -484,6 +463,18 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn.removeEventListener('click', closeInfoModal);
     closeBtn.addEventListener('click', closeInfoModal);
     console.log('節拍遊戲關閉按鈕事件已綁定');
+  }
+  
+  // 返回按鈕事件處理
+  const backBtn = document.getElementById('back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      console.log('返回按鈕被點擊');
+      window.history.back();
+    });
+    console.log('節奏遊戲返回按鈕事件已綁定');
+  } else {
+    console.log('找不到返回按鈕元素');
   }
 });
 

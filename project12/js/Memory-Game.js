@@ -44,26 +44,46 @@ const gameSettings = {
     }
 };
 
-// 使用從PHP傳來的資料更新設定
-difficulties.forEach(diff => {
-    if (gameSettings[diff.difficulty_level]) {
-        gameSettings[diff.difficulty_level] = {
-            ...gameSettings[diff.difficulty_level],
-            gridSize: diff.color_count,
-            timeLimit: diff.time_limit,
-            baseScore: diff.score_multiplier
-        };
-    }
-});
+// 使用從PHP傳來的資料更新設定 - 修復版本
+console.log('Processing difficulties:', difficulties);
+if (difficulties && typeof difficulties === 'object' && !Array.isArray(difficulties)) {
+    Object.keys(difficulties).forEach(difficultyKey => {
+        const diff = difficulties[difficultyKey];
+        if (gameSettings[difficultyKey]) {
+            gameSettings[difficultyKey] = {
+                ...gameSettings[difficultyKey],
+                gridSize: diff.color_count || diff.gridSize,
+                timeLimit: diff.time_limit || diff.timeLimit,
+                baseScore: diff.score_multiplier || diff.baseScore
+            };
+        }
+    });
+} else if (Array.isArray(difficulties)) {
+    // 如果是陣列格式，使用舊的處理方式
+    difficulties.forEach(diff => {
+        if (gameSettings[diff.difficulty_level]) {
+            gameSettings[diff.difficulty_level] = {
+                ...gameSettings[diff.difficulty_level],
+                gridSize: diff.color_count,
+                timeLimit: diff.time_limit,
+                baseScore: diff.score_multiplier
+            };
+        }
+    });
+} else {
+    console.warn('Difficulties is not in expected format:', difficulties);
+}
 
 // 使用從PHP傳來的顏色設定
 const themeColors = {};
-colors.forEach(color => {
-    if (!themeColors[color.difficulty_level]) {
-        themeColors[color.difficulty_level] = {};
-    }
-    themeColors[color.difficulty_level][color.color_name] = color.color_code;
-});
+if (colors && Array.isArray(colors)) {
+    colors.forEach(color => {
+        if (!themeColors[color.difficulty_level]) {
+            themeColors[color.difficulty_level] = {};
+        }
+        themeColors[color.difficulty_level][color.color_name] = color.color_code;
+    });
+}
  
 // 卡片符號
 const symbols = {
@@ -331,6 +351,14 @@ function initializeGame() {
     
     // 創建卡片對
     const totalPairs = (cols * rows) / 2;
+    
+    // 防護性檢查
+    console.log('Checking symbols and currentTheme:', { symbols, currentTheme });
+    if (!symbols || !symbols[currentTheme]) {
+        console.error('Symbols or currentTheme not properly initialized:', { symbols, currentTheme });
+        return;
+    }
+    
     const selectedSymbols = symbols[currentTheme].slice(0, totalPairs);
     const cardSymbols = [...selectedSymbols, ...selectedSymbols];
     shuffleArray(cardSymbols);
@@ -717,26 +745,24 @@ function calculateScore() {
     }
 }
  
-// 儲存遊戲結果
-async function saveGameResult(isWin, score, playTime, isManualExit = false) {
+// 儲存遊戲結果 - 使用統一系統
+async function saveMemoryGameResult(isWin, score, playTime, isManualExit = false) {
     try {
-        const response = await fetch('Memory-Game.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                member_id: getCurrentMemberId(),
-                difficulty: currentDifficulty,
-                status: isWin ? 'completed' : 'failed',
-                score: score,
-                play_time: playTime,
-                is_manual_exit: isManualExit
-            })
+        // 使用統一系統的 saveGameResult 函數
+        const result = await saveGameResult({
+            member_id: getCurrentMemberId(),
+            game_type: '記憶力',
+            difficulty: currentDifficulty,
+            score: score,
+            play_time: playTime,
+            is_manual_exit: isManualExit,
+            is_passed: isWin
         });
-        const result = await response.json();
+        
         if (!result.success) {
             console.error('儲存遊戲結果失敗:', result.message);
+        } else {
+            console.log('遊戲結果已儲存:', result);
         }
     } catch (error) {
         console.error('儲存遊戲結果時發生錯誤:', error);
@@ -798,28 +824,23 @@ function showGameOver(isWin) {
         'hard': 100
     };
 
-    // 設置標題
+    // 設置結果訊息
+    let score = 0;
+    
     if (isWin === 'manual') {
-        // 手動退出時，根據是否達到目標分數決定標題
-        score = calculateScore(); // 先計算分數
-        if (score > 0) {
-            gameOverTitle.textContent = '🎉恭喜破關';
-        } else {
-            gameOverTitle.textContent = '⏰ 遊戲失敗';
-        }
+        // 手動退出時，直接顯示遊戲失敗，分數為 0
+        score = 0;
+        gameOverTitle.textContent = '⏰ 遊戲失敗';
     } else {
         gameOverTitle.textContent = isWin ? '🎉恭喜破關' : '⏰ 遊戲失敗';
     }
-   
-    // 設置結果訊息
-    let score = 0;
     const timeRow = document.getElementById('memory-time-row');
     const bonusRow = document.getElementById('memory-bonus-row');
     const failMessage = document.getElementById('memory-fail-message');
     const timeSpan = document.getElementById('memory-gameover-time');
     const bonusSpan = document.getElementById('memory-gameover-bonus');
     
-    if (isWin) {
+    if (isWin && isWin !== 'manual') {
         // 勝利時：顯示難度、遊戲時間、過關分數
         if (score === 0) score = calculateScore(); // 如果還沒計算過分數，才計算
         if (difficultySpan) difficultySpan.textContent = difficultyNames[currentDifficulty];
@@ -838,16 +859,14 @@ function showGameOver(isWin) {
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
         
-        // 只有真正失敗時才顯示失敗訊息，手動退出不顯示
-        if (isWin === 'manual') {
-            if (failMessage) failMessage.style.display = 'none';
-        } else {
-            if (failMessage) failMessage.style.display = 'block';
-        }
+        // 失敗時都顯示失敗訊息（包括手動退出）
+        if (failMessage) failMessage.style.display = 'block';
     }
  
     // 儲存遊戲結果（帶分數與 play_time）
-    saveGameResult(isWin, score, playTime, isWin === 'manual');
+    const isWinBool = (isWin === true); // 只有真正完成才算獲勝，手動退出不算
+    const isManualExit = (isWin === 'manual');
+    saveMemoryGameResult(isWinBool, score, playTime, isManualExit);
     
     // 立即更新主頁面分數
     if (window.forceRefreshScore) {

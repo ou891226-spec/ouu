@@ -73,35 +73,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 $member_id = 8; // 使用預設會員ID
             }
             
-            // 使用硬編碼的過關分數，避免數據庫查詢錯誤
-            $pass_score = 200; // 簡單模式固定200分
-            if ($difficulty === 'normal') $pass_score = 450;
-            if ($difficulty === 'hard') $pass_score = 600;
+            // 從資料庫讀取過關分數
+            $pass_score = 200; // 預設值
+            try {
+                $stmt = $pdo->prepare("SELECT pass_score FROM difficulty_settings WHERE game_id = 2 AND difficulty = ?");
+                $stmt->execute([$difficulty]);
+                $result = $stmt->fetch();
+                if ($result) {
+                    $pass_score = $result['pass_score'];
+                }
+            } catch (Exception $e) {
+                error_log("讀取接金蛋遊戲難度設定失敗: " . $e->getMessage());
+                // 使用預設值
+                if ($difficulty === 'normal') $pass_score = 450;
+                if ($difficulty === 'hard') $pass_score = 600;
+            }
             
             // 區分手動退出和遊戲失敗
             $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
-            if ($isManualExit) {
-                // 手動退出遊戲
-                $status = ($score >= $pass_score) ? 'completed' : 'exited';
-            } else {
-                // 正常遊戲結束（時間到或達到目標）
-                $status = ($score >= $pass_score) ? 'completed' : 'failed';
-            }
+            $isPassed = $score >= $pass_score;
             
-            // 確保沒有其他輸出
-            if (ob_get_length()) ob_clean();
+            // 使用統一遊戲結果處理系統
+            require_once 'game_entry_tracker.php';
             
-            // 直接返回JSON響應，不進行複雜的數據庫操作
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'member_id' => (string)$member_id,
+            $gameData = [
+                'member_id' => $member_id,
+                'game_type' => '反應力',
                 'difficulty' => $difficulty,
-                'status' => $status,
-                'score' => (int)$score,
-                'play_time' => (int)$playTime,
-                'task_completed' => false
-            ]);
+                'score' => $score,
+                'play_time' => $playTime,
+                'is_manual_exit' => $isManualExit,
+                'is_passed' => $isPassed,
+                'game_id' => 2
+            ];
+            
+            try {
+                // 使用API端點處理遊戲結果
+                $apiUrl = 'api/game_result.php';
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $apiUrl);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gameData));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen(json_encode($gameData))
+                ]);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($httpCode !== 200) {
+                    throw new Exception("API調用失敗: HTTP $httpCode, Response: $response");
+                }
+                
+                $result = json_decode($response, true);
+                if (!$result || !$result['success']) {
+                    throw new Exception("API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+                }
+                
+                header('Content-Type: application/json');
+                echo json_encode($result);
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => '儲存失敗: ' . $e->getMessage()
+                ]);
+            }
             break;
             
         default:
@@ -131,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         <div class="score-board">
             <span class="label">目前分數：</span>
             <span id="score" class="value">0</span>
-            <span class="label">過關分數：</span>
+            <span class="label">目標分數：</span>
             <span id="high-score" class="value">0</span>
             <span class="label">剩餘時間：</span>
             <span id="timer" class="value">60</span>
@@ -188,8 +229,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             <h2>選擇難度</h2>
             <?php
             // 從統一的 difficulty_settings 表讀取接金蛋遊戲的難度設定
-            $stmt = $pdo->query("SELECT difficulty, pass_score FROM difficulty_settings WHERE game_id = 2 ORDER BY difficulty");
-            $difficulties = $stmt->fetchAll();
+            $difficulties = [];
+            $stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 2 ORDER BY difficulty");
+            $stmt->execute();
+            $settings = $stmt->fetchAll();
+            
+            // 調試：檢查查詢結果
+            error_log("接金蛋遊戲難度設定查詢結果: " . print_r($settings, true));
+            
+            foreach ($settings as $setting) {
+                $difficulties[] = [
+                    'difficulty' => $setting['difficulty'],
+                    'pass_score' => $setting['pass_score'],
+                    'pass_bounce' => $setting['pass_bounce'],
+                    'time_limit' => $setting['time_limit']
+                ];
+            }
+            
+            // 調試：檢查最終數組
+            error_log("最終 difficulties 數組: " . print_r($difficulties, true));
             
             // 定義正確的順序：簡單、普通、困難
             $correct_order = ['easy', 'normal', 'hard'];
@@ -317,7 +375,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             localStorage.setItem('member_id', 8);
         }
         
+        // 將資料庫的難度設定傳遞給 JavaScript
+        console.log('PHP difficulties:', <?php echo json_encode($difficulties); ?>);
+        const difficultySettings = <?php echo json_encode($difficulties); ?>;
+        console.log('JavaScript difficultySettings:', difficultySettings);
+        
+        // 如果資料庫設定為空，使用硬編碼的設定
+        if (!difficultySettings || difficultySettings.length === 0) {
+            console.log('使用硬編碼設定');
+            window.difficultySettings = [
+                {difficulty: 'easy', pass_score: 200, time_limit: 60},
+                {difficulty: 'normal', pass_score: 450, time_limit: 60},
+                {difficulty: 'hard', pass_score: 600, time_limit: 60}
+            ];
+        } else {
+            window.difficultySettings = difficultySettings;
+        }
     </script>
+    <script src="js/game-common.js"></script>
     <script src="js/Catch-Egg.js"></script>
     <!-- <script src="js/auto-save-time-fixed.js"></script> --> <!-- 移除：此腳本是為2048遊戲設計的 -->
 </body>

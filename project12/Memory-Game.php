@@ -15,7 +15,7 @@ if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQ
     require_once 'check_login.php';
 }
 
-// 處理遊戲結果保存的 API 請求
+// 處理遊戲結果保存的 API 請求 - 使用統一系統
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 清除任何之前的輸出
     if (ob_get_length()) ob_clean();
@@ -24,56 +24,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
    
     try {
-        // 開始交易
-        $pdo->beginTransaction();
-       
-        $gameId = 5;
-       
-        // 使用新追蹤邏輯
-        $record_id = recordGameEntry($data['member_id'], '記憶力', $data['difficulty'], $gameId);
-        if ($record_id) {
-            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
-            
-            // 區分手動退出和遊戲失敗
-            if (isset($data['is_manual_exit']) && $data['is_manual_exit'] === true) {
-                // 手動退出遊戲
-                $status = ($data['score'] > 0) ? 'completed' : 'exited';
-            } else {
-                // 正常遊戲結束（時間到或達到目標）
-                $status = ($data['score'] > 0) ? 'completed' : 'failed';
-            }
-            updateGameRecord($record_id, $data['score'], $play_time, $status);
-        }
-       
-        // 更新會員總分數和記憶力分數
-        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, memory_score = memory_score + :score WHERE member_id = :member_id");
-        $update_stmt->execute([
-            'score' => $data['score'],
-            'member_id' => $data['member_id']
+        // 使用統一API處理遊戲結果
+        $data['game_type'] = '記憶力';
+        $data['game_id'] = 5;
+        
+        // 使用API端點處理遊戲結果
+        $apiUrl = 'api/game_result.php';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen(json_encode($data))
         ]);
-       
-        // 提交交易
-        $pdo->commit();
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         
-        // 記錄遊戲行為軌跡
-        require_once 'log_game_behavior.php';
-        logGameBehavior(
-            $data['member_id'], 
-            '記憶力', 
-            isset($data['play_time']) ? $data['play_time'] : 0, 
-            $data['score'], 
-            $data['difficulty']
-        );
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
         
-        // 觸發任務和成就檢查
-        require_once 'check_and_grant_achievements.php';
-        checkAndGrantAchievements($data['member_id'], 'memory_game', $data['score'], isset($data['play_time']) ? $data['play_time'] : null);
-        checkAndCompleteAllTasks($data['member_id'], '記憶力');
+        if ($httpCode !== 200) {
+            throw new Exception("API調用失敗: HTTP $httpCode, Response: $response");
+        }
         
-        // 確保沒有其他輸出
-        if (ob_get_length()) ob_clean();
-       
-        echo json_encode(['success' => true, 'message' => '遊戲結果已儲存']);
+        $result = json_decode($response, true);
+        if (!$result || !$result['success']) {
+            throw new Exception("API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+        }
+        
+        echo json_encode($result);
         exit;
     } catch (Exception $e) {
         // 如果發生錯誤，回滾交易
@@ -87,9 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $pdo->query("SELECT * FROM memory_game_themes WHERE is_active = true");
 $themes = $stmt->fetchAll();
 
-// 獲取難度設定 (使用統一的 difficulty_settings 表)
-$stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 5 ORDER BY difficulty");
-$difficulties = $stmt->fetchAll();
+// 獲取難度設定
+$difficulties = [];
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 5 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll();
+
+foreach ($settings as $setting) {
+    $difficulties[$setting['difficulty']] = $setting;
+}
 
 // 獲取遊戲顏色
 $stmt = $pdo->query("SELECT * FROM memory_game_colors WHERE is_active = true");
@@ -106,7 +93,7 @@ $colors = $stmt->fetchAll();
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("記憶力", 3);
+            gameTracker.init("記憶力", 5);
         });
     </script>
 </head>
@@ -183,15 +170,15 @@ $colors = $stmt->fetchAll();
             <div class="difficulty-buttons">
                 <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
                     <span class="difficulty-name">簡單模式</span>
-                    <span class="difficulty-desc">(4x3 網格，60秒)</span>
+                    <span class="difficulty-desc">(4x3 網格，<?php echo isset($difficulties['easy']['time_limit']) ? $difficulties['easy']['time_limit'] : 60; ?>秒)</span>
                 </button>
                 <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
                     <span class="difficulty-name">普通模式</span>
-                    <span class="difficulty-desc">(4x4 網格，120秒)</span>
+                    <span class="difficulty-desc">(4x4 網格，<?php echo isset($difficulties['normal']['time_limit']) ? $difficulties['normal']['time_limit'] : 120; ?>秒)</span>
                 </button>
                 <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
                     <span class="difficulty-name">困難模式</span>
-                    <span class="difficulty-desc">(8x4 網格，180秒)</span>
+                    <span class="difficulty-desc">(8x4 網格，<?php echo isset($difficulties['hard']['time_limit']) ? $difficulties['hard']['time_limit'] : 180; ?>秒)</span>
                 </button>
             </div>
         </div>
@@ -264,6 +251,7 @@ $colors = $stmt->fetchAll();
         const memberId = <?php echo $_SESSION['member_id'] ?? 0; ?>;
         localStorage.setItem('member_id', memberId);
     </script>
-    <script src="js/Memory-Game.js"></script>
+    <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
+    <script src="js/Memory-Game.js?v=<?php echo time(); ?>"></script>
 </body>
 </html> 

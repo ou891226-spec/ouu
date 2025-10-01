@@ -4,23 +4,15 @@ require_once 'game_entry_tracker.php';
 
 // 從資料庫讀取算菜錢遊戲的難度設定
 $difficultySettings = [];
-try {
-    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 5 ORDER BY difficulty");
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($settings as $setting) {
-        $difficultySettings[$setting['difficulty']] = [
-            'time_limit' => $setting['time_limit'],
-            'points_per_correct' => $setting['points_per_correct'],
-            'pass_score' => $setting['pass_score']
-        ];
-    }
-} catch (PDOException $e) {
-    // 如果查詢失敗，使用預設設定
-    $difficultySettings = [
-        'easy' => ['time_limit' => 60, 'points_per_correct' => 3, 'pass_score' => 15],
-        'normal' => ['time_limit' => 120, 'points_per_correct' => 3, 'pass_score' => 20],
-        'hard' => ['time_limit' => 180, 'points_per_correct' => 3, 'pass_score' => 30]
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 3 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($settings as $setting) {
+    $difficultySettings[$setting['difficulty']] = [
+        'time_limit' => $setting['time_limit'],
+        'points_per_correct' => $setting['points_per_correct'],
+        'pass_score' => $setting['pass_score']
     ];
 }
 
@@ -47,53 +39,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
    
     try {
-        // 開始交易
-        $pdo->beginTransaction();
-       
-        $gameId = 3; // 算菜錢遊戲的 ID
-       
-        // 使用新追蹤邏輯
-        $record_id = recordGameEntry($data['member_id'], '算術邏輯力', $data['difficulty'], $gameId);
-        if ($record_id) {
-            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
-            
-            // 區分手動退出和遊戲失敗
-            if (isset($data['is_manual_exit']) && $data['is_manual_exit'] === true) {
-                // 手動退出遊戲
-                $status = ($data['score'] > 0) ? 'completed' : 'exited';
-            } else {
-                // 正常遊戲結束（時間到或達到目標）
-                $status = ($data['score'] > 0) ? 'completed' : 'failed';
-            }
-            updateGameRecord($record_id, $data['score'], $play_time, $status);
-        }
-       
-        // 更新會員總分數和邏輯力分數
-        $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
-        $update_stmt->execute([
-            'score' => $data['score'],
-            'member_id' => $data['member_id']
+        // 使用統一API處理遊戲結果
+        $data['game_type'] = '算術邏輯力';
+        $data['game_id'] = 3;
+        
+        // 使用API端點處理遊戲結果
+        $apiUrl = 'api/game_result.php';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen(json_encode($data))
         ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         
-        // 記錄遊戲行為軌跡
-        require_once 'log_game_behavior.php';
-        logGameBehavior(
-            $data['member_id'], 
-            '算術邏輯力', 
-            isset($data['play_time']) ? $data['play_time'] : 0, 
-            $data['score'], 
-            $data['difficulty']
-        );
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
         
-        // 檢查並完成所有相關任務
-        require_once 'check_and_grant_achievements.php';
-        checkAndGrantAchievements($data['member_id'], 'vegetable_cost', $data['score'], isset($data['play_time']) ? $data['play_time'] : 0);
-        checkAndCompleteAllTasks($data['member_id'], '算術邏輯力');
-       
-        // 提交交易
-        $pdo->commit();
-       
-        echo json_encode(['success' => true, 'message' => '遊戲結果已儲存']);
+        if ($httpCode !== 200) {
+            throw new Exception("API調用失敗: HTTP $httpCode, Response: $response");
+        }
+        
+        $result = json_decode($response, true);
+        if (!$result || !$result['success']) {
+            throw new Exception("API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+        }
+        
+        echo json_encode($result);
         exit;
     } catch (Exception $e) {
         // 如果發生錯誤，回滾交易
@@ -122,7 +98,7 @@ if (!isset($_SESSION['member_id'])) {
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("算術邏輯力", 5);
+            gameTracker.init("算術邏輯力", 3);
         });
     </script>
 </head>
@@ -155,7 +131,7 @@ if (!isset($_SESSION['member_id'])) {
         </div>
         <div class="main-control-btns">
             <button id="pause-btn" class="main-btn pause-btn">暫停遊戲</button>
-            <button id="end-btn" class="main-btn end-btn" onclick="endGame()">結束遊戲</button>
+            <button id="end-btn" class="main-btn end-btn" onclick="endGame(true)">結束遊戲</button>
             <button id="restart-btn" class="main-btn restart-btn" onclick="restartGame()">重新開始</button>
         </div>
     </div>
@@ -197,15 +173,15 @@ if (!isset($_SESSION['member_id'])) {
             <div class="difficulty-btn-group">
                 <button class="difficulty-btn easy-mode" data-difficulty="easy">
                     <div class="diff-main">簡單模式（簡單加減計算）</div>
-                    <div class="diff-sub">80秒，目標：15分</div>
+                    <div class="diff-sub"><?php echo isset($difficultySettings['easy']['time_limit']) ? $difficultySettings['easy']['time_limit'] : 80; ?>秒，目標：<?php echo isset($difficultySettings['easy']['pass_score']) ? $difficultySettings['easy']['pass_score'] : 15; ?>分</div>
                 </button>
                 <button class="difficulty-btn normal-mode" data-difficulty="normal">
                     <div class="diff-main">普通模式（促銷優惠計算）</div>
-                    <div class="diff-sub">150秒，目標：20分</div>
+                    <div class="diff-sub"><?php echo isset($difficultySettings['normal']['time_limit']) ? $difficultySettings['normal']['time_limit'] : 150; ?>秒，目標：<?php echo isset($difficultySettings['normal']['pass_score']) ? $difficultySettings['normal']['pass_score'] : 20; ?>分</div>
                 </button>
                 <button class="difficulty-btn hard-mode" data-difficulty="hard">
                     <div class="diff-main">困難模式（複雜組合計算）</div>
-                    <div class="diff-sub">200秒，目標：30分</div>
+                    <div class="diff-sub"><?php echo isset($difficultySettings['hard']['time_limit']) ? $difficultySettings['hard']['time_limit'] : 200; ?>秒，目標：<?php echo isset($difficultySettings['hard']['pass_score']) ? $difficultySettings['hard']['pass_score'] : 30; ?>分</div>
                 </button>
             </div>
         </div>
@@ -272,6 +248,7 @@ if (!isset($_SESSION['member_id'])) {
             }
         }
     </script>
+    <script src="js/game-common.js"></script>
     <script src="js/Vegetable-Cost.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>

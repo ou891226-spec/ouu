@@ -981,6 +981,7 @@ function checkAnswer(selectedAnswer, correctAnswer) {
             ? window.difficultySettings[currentDifficulty].points_per_correct 
             : 3; // 預設值
         score += pointsPerCorrect;
+        console.log('答對題目，分數更新為:', score);
         updateScore();
         showAnswerFeedback(true, null, null);
     } else {
@@ -1061,6 +1062,7 @@ function showAnswerFeedback(isCorrect, selectedAnswer, correctAnswer) {
 }
 
 function updateScore() {
+    console.log('updateScore被調用，當前分數:', score);
     document.getElementById('score').textContent = score;
     if (score > highScore) {
         highScore = score;
@@ -1068,6 +1070,24 @@ function updateScore() {
         localStorage.setItem(`vegetable_highscore_${currentDifficulty}`, highScore.toString());
     }
     // 過關分數顯示保持不變，因為它是固定的目標分數
+    
+    // 檢查是否達到過關分數
+    let passScore = 0;
+    if (window.difficultySettings && window.difficultySettings[currentDifficulty]) {
+        passScore = window.difficultySettings[currentDifficulty].pass_score;
+    } else {
+        // 預設值
+        if (currentDifficulty === 'easy') passScore = 15;
+        else if (currentDifficulty === 'normal') passScore = 20;
+        else if (currentDifficulty === 'hard') passScore = 30;
+    }
+    
+    // 如果達到過關分數，立即結束遊戲
+    console.log('檢查過關條件: 目前分數=' + score + ', 過關分數=' + passScore);
+    if (score >= passScore) {
+        console.log('達到過關分數，立即結束遊戲');
+        endGame(false); // false表示不是手動退出
+    }
 }
 
 function startTimer() {
@@ -1152,19 +1172,35 @@ async function saveGameResult(bonusScore, playTime, isManualExit = false) {
             is_manual_exit: isManualExit
         });
         
-        const response = await fetch('Vegetable-Cost.php', {
+        const response = await fetch('api/game_result.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 member_id: memberId,
+                game_id: 3,
+                game_type: '算術邏輯力',
                 difficulty: currentDifficulty,
                 score: bonusScore,
                 play_time: playTime,
                 is_manual_exit: isManualExit
             })
         });
+        
+        // 檢查響應狀態
+        if (!response.ok) {
+            throw new Error(`HTTP錯誤: ${response.status}`);
+        }
+        
+        // 檢查響應內容類型
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('收到非JSON響應:', textResponse);
+            throw new Error('服務器返回了非JSON格式的響應');
+        }
+        
         const result = await response.json();
         console.log('儲存結果回應:', result);
         if (!result.success) {
@@ -1174,6 +1210,7 @@ async function saveGameResult(bonusScore, playTime, isManualExit = false) {
         }
     } catch (error) {
         console.error('儲存遊戲結果時發生錯誤:', error);
+        // 不拋出錯誤，避免影響遊戲流程
     }
 }
 
@@ -1222,7 +1259,7 @@ function endGame(isManualExit = false) {
         if (score >= passScore) {
             title = '🎉恭喜破關';
         } else {
-            title = '👋遊戲結束';
+            title = '⏰遊戲失敗';
         }
     } else {
         // 正常遊戲結束（時間到或達到目標）
@@ -1271,7 +1308,13 @@ function endGame(isManualExit = false) {
         }
     }
     
-    modal.classList.remove('hidden');
+    console.log('準備顯示modal:', modal);
+    if (modal) {
+        modal.classList.remove('hidden');
+        console.log('modal已顯示，classList:', modal.classList.toString());
+    } else {
+        console.error('找不到game-over-modal元素');
+    }
     
     // 傳遞獎勵分數而不是實際遊戲分數
     let finalRewardScore = 0;
@@ -1595,9 +1638,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const endBtn = document.getElementById('end-btn');
     if (endBtn) endBtn.addEventListener('click', () => {
-        if (confirm('確定要結束遊戲嗎？')) {
-            endGame(true); // 傳遞 isManualExit = true
-        }
+        endGame(true); // 傳遞 isManualExit = true，直接結束遊戲
     });
 
     // 暫停按鈕事件監聽器

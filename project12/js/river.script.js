@@ -42,6 +42,16 @@ const difficultyScreen = document.getElementById("difficulty-screen");
 const rulesScreen = document.getElementById("rules-screen");
 const gameScreen = document.getElementById("game-screen");
 
+// 返回主頁按鈕處理
+function handleBackButton() {
+    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back();
+    } else {
+        window.location.href = 'index.php';
+    }
+}
+
 // 音效函數
 function playSound(type) {
     // 創建音效（使用 Web Audio API）
@@ -111,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("back-to-start").addEventListener("click", () => {
-        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
+        handleBackButton();
     });
     
     document.getElementById("help-from-difficulty").addEventListener("click", () => {
@@ -119,10 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 規則畫面按鈕
-    document.getElementById("back-from-rules").addEventListener("click", () => {
-        showScreen("start-screen");
-    });
-    
     document.getElementById("go-to-difficulty").addEventListener("click", () => {
         showScreen("difficulty-screen");
     });
@@ -158,14 +164,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById("endGameBtn").addEventListener("click", () => {
-        // 結束遊戲功能
-        if (confirm("確定要結束遊戲嗎？")) {
-            // 停止計時器
-            stopGameTimer();
-            // 保存遊戲結果（即使沒有完成）
-            saveGameResultOnExit();
-            showScreen("difficulty-screen");
-        }
+        // 結束遊戲功能 - 直接結束，不顯示確認視窗
+        // 停止計時器
+        stopGameTimer();
+        // 保存遊戲結果（即使沒有完成）
+        saveGameResultOnExit();
+        showScreen("difficulty-screen");
     });
     
     boatEl.addEventListener("click", moveBoat);
@@ -180,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("return-home-btn").addEventListener("click", () => {
         hideModal("game-fail-modal");
         stopGameTimer();
-        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
+        handleBackButton();
     });
     
     document.getElementById("play-again-success-btn").addEventListener("click", () => {
@@ -192,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("return-home-success-btn").addEventListener("click", () => {
         hideModal("game-success-modal");
         stopGameTimer();
-        window.location.href = "https://smartfun-seniors-dhhugsf2d4e7dqay.eastasia-01.azurewebsites.net/index.php";
+        handleBackButton();
     });
 });
 
@@ -636,15 +640,17 @@ async function saveGameResult() {
         
         const gameData = {
             member_id: window.memberId,
+            game_id: 9, // 過河遊戲的ID
             difficulty: gameState.mode,
             score: gameState.score,
             play_time: gameState.gameTime, // 使用實際遊戲時間
-            game_type: '算術邏輯'
+            game_type: '算術邏輯力',
+            is_passed: true // 成功完成遊戲
         };
         
         console.log('保存過河遊戲結果:', gameData);
         
-        const response = await fetch('save_river_game.php', {
+        const response = await fetch('api/game_result.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -679,16 +685,18 @@ async function saveGameResultOnExit() {
         
         const gameData = {
             member_id: window.memberId,
+            game_id: 9, // 過河遊戲的ID
             difficulty: gameState.mode,
             score: 0, // 未完成遊戲，分數為0
             play_time: gameState.gameTime, // 使用實際遊戲時間
             game_type: '算術邏輯力',
-            is_manual_exit: true // 手動退出
+            is_manual_exit: true, // 手動退出
+            is_passed: false // 未完成遊戲
         };
         
         console.log('保存過河遊戲中途退出結果:', gameData);
         
-        const response = await fetch('save_river_game.php', {
+        const response = await fetch('api/game_result.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -719,15 +727,17 @@ async function saveGameResultOnFailure() {
         
         const gameData = {
             member_id: window.memberId,
+            game_id: 9, // 過河遊戲的ID
             difficulty: gameState.mode,
             score: 0, // 遊戲失敗，分數為0
             play_time: gameState.gameTime, // 使用實際遊戲時間
-            game_type: '算術邏輯'
+            game_type: '算術邏輯力',
+            is_passed: false // 遊戲失敗
         };
         
         console.log('保存過河遊戲失敗結果:', gameData);
         
-        const response = await fetch('save_river_game.php', {
+        const response = await fetch('api/game_result.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

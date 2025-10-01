@@ -135,7 +135,7 @@ $colors = $stmt->fetchAll();
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("記憶力", 3);
+            gameTracker.init("記憶力", 5);
         });
     </script>
 </head>

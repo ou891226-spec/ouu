@@ -22,15 +22,16 @@ while ($row = $colors_stmt->fetch(PDO::FETCH_ASSOC)) {
 
 // 從資料庫讀取難度設定
 $difficulty_settings = [];
-// 1. 只撈 game_id = 1 的難度設定
-$settings_query = "SELECT * FROM difficulty_settings WHERE game_id = 1";
-$settings_stmt = $pdo->query($settings_query);
-while ($row = $settings_stmt->fetch(PDO::FETCH_ASSOC)) {
-    $difficulty_settings[$row['difficulty']] = [
-        'time_limit' => $row['time_limit'],
-        'points_per_correct' => $row['points_per_correct'],
-        'pass_score' => $row['pass_score'],
-        'pass_bounce' => $row['pass_bounce']
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 1 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($settings as $setting) {
+    $difficulty_settings[$setting['difficulty']] = [
+        'time_limit' => $setting['time_limit'],
+        'points_per_correct' => $setting['points_per_correct'],
+        'pass_score' => $setting['pass_score'],
+        'pass_bounce' => $setting['pass_bounce']
     ];
 }
 // 2. 看字選色專屬難度設定（顏色數量、每題作答時間）
@@ -49,134 +50,10 @@ if (!isset($_SESSION['score'])) {
 // 確保每次 POST 都正確取得難度
 $difficulty = isset($_POST['difficulty']) ? $_POST['difficulty'] : (isset($_GET['difficulty']) ? $_GET['difficulty'] : 'normal');
 
-// 在頁面載入時，根據當前難度讀取最高分數
+// 移除舊的最高分數讀取系統，統一使用API系統
 $high_score = 0;
-if (isset($_SESSION['account'])) {
-    try {
-        // 1. 先獲取會員ID
-        $member_query = "SELECT member_id FROM member WHERE account = ?";
-        $member_stmt = $pdo->prepare($member_query);
-        if (!$member_stmt) {
-            error_log("Failed to prepare member query: " . $pdo->errorInfo()[2]);
-            throw new Exception("Database error");
-        }
-        $member_stmt->execute([$_SESSION['account']]);
-        $member_result = $member_stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($member_result) {
-            $member_id = $member_result['member_id'];
-            
-            // 2. 獲取遊戲ID
-            $game_query = "SELECT game_id FROM games WHERE game_name = '看字選色遊戲'";
-            $game_stmt = $pdo->prepare($game_query);
-            if (!$game_stmt) {
-                error_log("Failed to prepare game query: " . $pdo->errorInfo()[2]);
-                throw new Exception("Database error");
-            }
-            $game_stmt->execute();
-            $game_result = $game_stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($game_result) {
-                $game_id = $game_result['game_id'];
-                
-                // 3. 讀取對應難度的最高分數
-                $score_query = "SELECT high_score 
-                              FROM game_high_scores 
-                              WHERE member_id = ? 
-                              AND game_id = ? 
-                              AND difficulty_level = ?";
-                $score_stmt = $pdo->prepare($score_query);
-                if (!$score_stmt) {
-                    error_log("Failed to prepare score query: " . $pdo->errorInfo()[2]);
-                    throw new Exception("Database error");
-                }
-                $score_stmt->execute([$member_id, $game_id, $difficulty]);
-                $score_result = $score_stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($score_result) {
-                    $high_score = $score_result['high_score'];
-                    $_SESSION['high_score_' . $difficulty] = $high_score;
-                }
-                $score_stmt->closeCursor();
-            }
-            $game_stmt->closeCursor();
-        }
-        $member_stmt->closeCursor();
-        
-    } catch (Exception $e) {
-        error_log("Error reading high score: " . $e->getMessage());
-        $high_score = 0;
-    }
-}
 
-// 更新最高分數的函數
-function updateHighScore($newScore) {
-    global $pdo, $difficulty;
-    if (!isset($_SESSION['account'])) {
-        error_log("No account session found when updating high score");
-        return false;
-    }
-
-    try {
-        // 先獲取會員ID
-        $member_query = "SELECT member_id FROM member WHERE account = ?";
-        $member_stmt = $pdo->prepare($member_query);
-        if (!$member_stmt) {
-            error_log("Failed to prepare member query: " . $pdo->errorInfo()[2]);
-            return false;
-        }
-        $member_stmt->execute([$_SESSION['account']]);
-        $member_result = $member_stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$member_result) {
-            $member_stmt->closeCursor();
-            return false;
-        }
-        $member_id = $member_result['member_id'];
-        $member_stmt->closeCursor();
-
-        // 再獲取遊戲ID
-        $game_query = "SELECT game_id FROM games WHERE game_name = '看字選色遊戲'";
-        $game_stmt = $pdo->prepare($game_query);
-        if (!$game_stmt) {
-            error_log("Failed to prepare game query: " . $pdo->errorInfo()[2]);
-            return false;
-        }
-        $game_stmt->execute();
-        $game_result = $game_stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$game_result) {
-            $game_stmt->closeCursor();
-            return false;
-        }
-        $game_id = $game_result['game_id'];
-        $game_stmt->closeCursor();
-
-        // 檢查是否已有記錄
-        $check_query = "SELECT high_score FROM game_high_scores WHERE member_id = ? AND game_id = ? AND difficulty_level = ?";
-        $check_stmt = $pdo->prepare($check_query);
-        $check_stmt->execute([$member_id, $game_id, $difficulty]);
-        $check_result = $check_stmt->fetch(PDO::FETCH_ASSOC);
-        $has_record = $check_stmt->rowCount() > 0;
-        $check_stmt->closeCursor();
-
-        if ($has_record) {
-            // 更新現有記錄（只在新分數更高時更新）
-            $update_query = "UPDATE game_high_scores SET high_score = ? WHERE member_id = ? AND game_id = ? AND difficulty_level = ? AND high_score < ?";
-            $update_stmt = $pdo->prepare($update_query);
-            $update_stmt->execute([$newScore, $member_id, $game_id, $difficulty, $newScore]);
-            $update_stmt->closeCursor();
-        } else {
-            // 插入新記錄
-            $insert_query = "INSERT INTO game_high_scores (member_id, game_id, difficulty_level, high_score) VALUES (?, ?, ?, ?)";
-            $insert_stmt = $pdo->prepare($insert_query);
-            $insert_stmt->execute([$member_id, $game_id, $difficulty, $newScore]);
-            $insert_stmt->closeCursor();
-        }
-        return true;
-    } catch (Exception $e) {
-        error_log("Error updating high score: " . $e->getMessage());
-        return false;
-    }
-}
+// 移除舊的updateHighScore函數，統一使用API系統
 
 // 記錄遊戲結果的函數
 function recordGameResult($score, $playTime, $difficulty, $isManualExit = false) {
@@ -192,72 +69,79 @@ function recordGameResult($score, $playTime, $difficulty, $isManualExit = false)
         }
         $member_stmt->execute([$account]);
         $member_result = $member_stmt->fetch(PDO::FETCH_ASSOC);
+        error_log("查詢 member 結果: account=$account, result=" . ($member_result ? 'found' : 'not found'));
         if ($member_result) {
             $member_id = $member_result['member_id'];
-            // 獲取遊戲ID
-            $game_query = "SELECT game_id, game_type FROM games WHERE game_name = '看字選色遊戲'";
-            $game_stmt = $pdo->prepare($game_query);
-            if (!$game_stmt) {
-                error_log("Failed to prepare game query: " . $pdo->errorInfo()[2]);
+            error_log("找到 member_id: $member_id");
+        } else {
+            error_log("❌ 找不到 account=$account 的 member 記錄");
+            return false;
+        }
+        
+        // 獲取遊戲ID - 直接使用已知的遊戲ID和類型
+        $game_id = 1; // 自選色遊戲的ID
+        $game_type = '看字選色遊戲'; // 自選色遊戲的類型
+
+            // 檢查是否過關
+            $settings_query = "SELECT pass_score, pass_bounce FROM difficulty_settings WHERE game_id = ? AND difficulty = ?";
+            $settings_stmt = $pdo->prepare($settings_query);
+            if (!$settings_stmt) {
+                error_log("Failed to prepare settings query: " . $pdo->errorInfo()[2]);
                 return false;
             }
-            $game_stmt->execute();
-            $game_result = $game_stmt->fetch(PDO::FETCH_ASSOC);
-            if ($game_result) {
-                $game_id = $game_result['game_id'];
-                $game_type = $game_result['game_type'];
+            $settings_stmt->execute([$game_id, $difficulty]);
+            error_log("查詢 difficulty_settings: game_id=$game_id, difficulty=$difficulty");
+            $settings_result = $settings_stmt->fetch(PDO::FETCH_ASSOC);
+            if ($settings_result) {
+                $pass_score = $settings_result['pass_score'];
+                $pass_bounce = $settings_result['pass_bounce'];
+                error_log("找到設定: pass_score=$pass_score, pass_bounce=$pass_bounce");
 
-                // 檢查是否過關
-                $settings_query = "SELECT pass_score, pass_bounce FROM difficulty_settings WHERE difficulty = ?";
-                $settings_stmt = $pdo->prepare($settings_query);
-                if (!$settings_stmt) {
-                    error_log("Failed to prepare settings query: " . $pdo->errorInfo()[2]);
+                // 統一系統會自動處理分數更新、成就和任務檢查
+                
+                // 使用統一遊戲結果處理系統
+                $record_score = ($score >= $pass_score) ? $pass_bounce : 0;
+                $is_passed = ($score >= $pass_score);
+                error_log("計算結果: score=$score, record_score=$record_score, is_passed=" . ($is_passed ? 'true' : 'false'));
+            } else {
+                error_log("找不到 game_id=$game_id, difficulty=$difficulty 的設定");
+                return false;
+            }
+            
+            $gameData = [
+                'member_id' => $member_id,
+                'game_type' => $game_type,
+                'difficulty' => $difficulty,
+                'score' => $record_score,
+                'play_time' => $playTime,
+                'is_manual_exit' => $isManualExit,
+                'is_passed' => $is_passed,
+                'game_id' => $game_id
+            ];
+            
+            try {
+                // 直接調用處理函數，避免curl問題
+                require_once 'game_entry_tracker.php';
+                
+                // 檢查資料庫連接
+                global $pdo;
+                if (!$pdo) {
+                    error_log("資料庫連接失敗");
                     return false;
                 }
-                $settings_stmt->execute([$difficulty]);
-                $settings_result = $settings_stmt->fetch(PDO::FETCH_ASSOC);
-                if ($settings_result) {
-                    $pass_score = $settings_result['pass_score'];
-                    $pass_bounce = $settings_result['pass_bounce'];
-
-                    // 如果分數達到過關標準，更新會員總分和反應分數
-                    if ($score >= $pass_score) {
-                        // 更新會員總分
-                        $update_score_query = "UPDATE member SET total_score = total_score + $pass_bounce WHERE member_id = $member_id";
-                        $pdo->query($update_score_query);
-                        
-                        // 更新會員反應分數
-                        $update_reaction_query = "UPDATE member SET reaction_score = reaction_score + $pass_bounce WHERE member_id = $member_id";
-                        $pdo->query($update_reaction_query);
-                        
-                        // 檢查並授予成就
-                        require_once 'check_and_grant_achievements.php';
-                        checkAndGrantAchievements($member_id, 'reaction_game', $pass_bounce, $playTime);
-                        
-                        // 檢查並完成所有相關任務
-                        checkAndCompleteAllTasks($member_id, '看字選色遊戲');
-                    }
-                }
-
-                // 根據是否過關決定記錄的分數
-                $record_score = ($score >= $pass_score) ? $pass_bounce : 0;
                 
-                // 使用新追蹤邏輯
-                $record_id = recordGameEntry($member_id, $game_type, $difficulty, $game_id);
-                if ($record_id) {
-                    // 區分手動退出和遊戲失敗
-                    if ($isManualExit) {
-                        // 手動退出遊戲
-                        $status = ($score >= $pass_score) ? 'completed' : 'exited';
-                    } else {
-                        // 正常遊戲結束（時間到或達到目標）
-                        $status = ($score >= $pass_score) ? 'completed' : 'failed';
-                    }
-                    updateGameRecord($record_id, $record_score, $playTime, $status);
+                // 直接調用processGameResult函數
+                $result = processGameResult($gameData);
+                
+                if (!$result || !$result['success']) {
+                    error_log("看字選色遊戲API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+                } else {
+                    error_log("看字選色遊戲結果儲存成功: record_id=" . ($result['record_id'] ?? 'unknown'));
                 }
-                return true;
+            } catch (Exception $e) {
+                error_log("看字選色遊戲結果處理失敗: " . $e->getMessage());
             }
-        }
+            return true;
     }
     return false;
 }
@@ -271,17 +155,13 @@ function resetScore() {
 // 處理 AJAX 請求
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
-        if ($_POST['action'] === 'update_high_score' && isset($_POST['high_score'])) {
-            $newScore = intval($_POST['high_score']);
-            if (updateHighScore($newScore)) {
-                echo "High score updated successfully";
-            } else {
-                echo "No new high score";
-            }
-        } elseif ($_POST['action'] === 'record_game' && isset($_POST['score']) && isset($_POST['play_time'])) {
+        if ($_POST['action'] === 'record_game' && isset($_POST['score']) && isset($_POST['play_time'])) {
             $score = intval($_POST['score']);
             $playTime = intval($_POST['play_time']);
+            $difficulty = $_POST['difficulty'] ?? 'easy';
             $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
+            error_log("收到記錄請求: score=$score, playTime=$playTime, difficulty=$difficulty, isManualExit=" . ($isManualExit ? 'true' : 'false'));
+            error_log("會員ID: " . ($_SESSION['member_id'] ?? 'null'));
             if (recordGameResult($score, $playTime, $difficulty, $isManualExit)) {
                 echo "Game recorded successfully";
             } else {
@@ -293,64 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 echo "Failed to reset score";
             }
-        } elseif ($_POST['action'] === 'get_high_score' && isset($_POST['difficulty'])) {
-            $current_difficulty = $_POST['difficulty'];
-            $high_score = 0;
-            
-            if (isset($_SESSION['account'])) {
-                try {
-                    // 1. 獲取會員ID
-                    $member_query = "SELECT member_id FROM member WHERE account = ?";
-                    $member_stmt = $pdo->prepare($member_query);
-                    if (!$member_stmt) {
-                        throw new Exception("Failed to prepare member query");
-                    }
-                    $member_stmt->execute([$_SESSION['account']]);
-                    $member_result = $member_stmt->fetch(PDO::FETCH_ASSOC);
-                    
-                    if ($member_result) {
-                        $member_id = $member_result['member_id'];
-                        
-                        // 2. 獲取遊戲ID
-                        $game_query = "SELECT game_id FROM games WHERE game_name = '看字選色遊戲'";
-                        $game_stmt = $pdo->prepare($game_query);
-                        if (!$game_stmt) {
-                            throw new Exception("Failed to prepare game query");
-                        }
-                        $game_stmt->execute();
-                        $game_result = $game_stmt->fetch(PDO::FETCH_ASSOC);
-                        
-                        if ($game_result) {
-                            $game_id = $game_result['game_id'];
-                            
-                            // 3. 讀取對應難度的最高分數
-                            $score_query = "SELECT high_score 
-                                          FROM game_high_scores 
-                                          WHERE member_id = ? 
-                                          AND game_id = ? 
-                                          AND difficulty_level = ?";
-                            $score_stmt = $pdo->prepare($score_query);
-                            if (!$score_stmt) {
-                                throw new Exception("Failed to prepare score query");
-                            }
-                            $score_stmt->execute([$member_id, $game_id, $current_difficulty]);
-                            $score_result = $score_stmt->fetch(PDO::FETCH_ASSOC);
-                            
-                            if ($score_result) {
-                                $high_score = $score_result['high_score'];
-                            }
-                            $score_stmt->closeCursor();
-                        }
-                        $game_stmt->closeCursor();
-                    }
-                    $member_stmt->closeCursor();
-                    
-                } catch (Exception $e) {
-                    error_log("Error reading high score: " . $e->getMessage());
-                }
-            }
-            echo $high_score;
-            exit;
+        // 移除舊的get_high_score處理，統一使用API系統
         }
     }
     exit;
@@ -367,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("反應力", 9);
+            gameTracker.init("反應力", 1);
         });
     </script>
 </head>
@@ -387,15 +210,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="difficulty-buttons">
                 <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
                     <span class="difficulty-name">簡單模式</span>
-                    <span class="difficulty-desc">(60秒)</span>
+                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['easy']['time_limit']) ? $difficulty_settings['easy']['time_limit'] : 60; ?>秒，目標：<?php echo isset($difficulty_settings['easy']['pass_score']) ? $difficulty_settings['easy']['pass_score'] : 15; ?>分)</span>
                 </button>
                 <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
                     <span class="difficulty-name">普通模式</span>
-                    <span class="difficulty-desc">(50秒)</span>
+                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['normal']['time_limit']) ? $difficulty_settings['normal']['time_limit'] : 50; ?>秒，目標：<?php echo isset($difficulty_settings['normal']['pass_score']) ? $difficulty_settings['normal']['pass_score'] : 20; ?>分)</span>
                 </button>
                 <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
                     <span class="difficulty-name">困難模式</span>
-                    <span class="difficulty-desc">(40秒)</span>
+                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['hard']['time_limit']) ? $difficulty_settings['hard']['time_limit'] : 40; ?>秒，目標：<?php echo isset($difficulty_settings['hard']['pass_score']) ? $difficulty_settings['hard']['pass_score'] : 30; ?>分)</span>
                 </button>
             </div>
         </div>
@@ -756,14 +579,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (score > highScore) {
                     highScore = score;
-                    // 更新最高分數到伺服器（保留後端統計用途）
-                    fetch('text-color.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: 'action=update_high_score&high_score=' + highScore + '&difficulty=' + difficulty
-                    });
+                    // 移除舊的最高分數更新，統一使用API系統
                 }
             } else {
                 // 答錯了，播放錯誤音效並顯示整個畫面震動效果
@@ -912,42 +728,61 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             
             if (score > highScore) {
                 highScore = score;
-                // 更新最高分數到伺服器（保留後端統計用途）
-                fetch('text-color.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=update_high_score&high_score=' + highScore + '&difficulty=' + difficulty
-                });
+                // 移除舊的最高分數更新，統一使用API系統
             }
             
-            // 記錄遊戲結果
-            fetch('text-color.php', {
+            console.log('遊戲結束，分數:', score, '遊戲時間:', playTime, '難度:', difficulty);
+            
+            // 保存遊戲記錄到資料庫
+            const memberId = document.getElementById('member-id')?.value || 1;
+            const passScore = parseInt(difficultySettings[difficulty].pass_score);
+            const isPassed = score >= passScore;
+            const recordScore = isPassed ? parseInt(difficultySettings[difficulty].pass_bounce) : 0;
+            
+            console.log('準備保存遊戲記錄:', {
+                memberId: memberId,
+                score: recordScore,
+                playTime: playTime,
+                difficulty: difficulty,
+                isPassed: isPassed
+            });
+            
+            // 調用統一的遊戲結果 API
+            fetch('api/game_result.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: 'action=record_game&score=' + score + '&play_time=' + playTime + '&difficulty=' + difficulty + '&is_manual_exit=' + (isManualExit ? '1' : '0')
+                body: JSON.stringify({
+                    member_id: memberId,
+                    game_type: '反應力',
+                    game_id: 1,
+                    difficulty: difficulty,
+                    score: recordScore,
+                    play_time: playTime,
+                    is_manual_exit: isManualExit,
+                    is_passed: isPassed
+                })
             })
-            .then(response => response.text())
-            .then(result => {
-                console.log('遊戲結果已記錄:', result);
-                // 清除成就快取
-                if (typeof clearAchievementsCache === 'function') {
-                    clearAchievementsCache();
-                }
-                // 立即刷新分數顯示
-                if (typeof fetchUserScore === 'function') {
-                    fetchUserScore();
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('遊戲記錄保存成功:', data);
+                } else {
+                    console.error('遊戲記錄保存失敗:', data.message);
                 }
             })
             .catch(error => {
-                console.error('記錄遊戲結果時發生錯誤:', error);
+                console.error('保存遊戲記錄時發生錯誤:', error);
             });
             
-            // 取得過關分數
-            const passScore = parseInt(difficultySettings[difficulty].pass_score);
+            // 注意：不需要在遊戲結束時清除成就快取，這會導致成就資料丟失
+            // 立即刷新分數顯示
+            if (typeof fetchUserScore === 'function') {
+                fetchUserScore();
+            }
+            
+            // 取得過關分數（已在上面定義過）
             const passBonus = parseInt(difficultySettings[difficulty].pass_bounce);
 
             // 檢查並更新任務狀態
@@ -981,7 +816,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             if (parseInt(score) >= passScore) {
                 // 過關
                 modalHtml = `
-                    <h2>恭喜破關</h2>
+                    <h2>🎉恭喜破關</h2>
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>獲得分數：${score}</p>
                     <p>遊戲時間：${playTime} 秒</p>
@@ -993,10 +828,10 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             } else {
                 // 失敗
                 modalHtml = `
-                    <h2>遊戲失敗</h2>
+                    <h2>⏰遊戲結束</h2>
                     <p>難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</p>
                     <p>目標分數：${passScore}</p>
-                    <p>獲得分數：${score}</p>
+                    <p>獲得分數：+${score}</p>
                     <p>未在時間內達成分數！</p>
                     <button class="red-btn" onclick="location.reload()">再玩一次</button>
                     <button class="blue-btn" onclick="returnToMain()">返回主頁</button>
@@ -1060,10 +895,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 link.href = link.href.split('?')[0] + '?v=' + Date.now();
             }
             
-            // 清除可能的JavaScript快取
-            if (typeof clearAchievementsCache === 'function') {
-                clearAchievementsCache();
-            }
+            // 注意：不需要清除成就快取，這會導致成就資料丟失
             
             // 強制重新載入顏色資料
             console.log('載入的顏色資料：', colors);
@@ -1251,6 +1083,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
             });
         });
     </script>
+    <script src="js/game-common.js"></script>
     <script src="js/achievements.js"></script>
 </body>
 </html>

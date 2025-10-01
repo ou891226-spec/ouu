@@ -13,9 +13,8 @@ function getValidAvatar($avatar) {
         return null;
     }
     
-    // 檢查檔案是否存在
-    $avatar_path = "img/avatars/" . $avatar;
-    if (file_exists($avatar_path)) {
+    // 檢查檔案是否存在（avatar 已經是完整路徑）
+    if (file_exists($avatar)) {
         return $avatar;
     }
     

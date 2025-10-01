@@ -37,6 +37,11 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 10
            ) THEN 'completed'
            WHEN (
+               -- 分數效率：平均每局獲得50分以上
+               (d.task_name = '分數效率' OR d.task_description LIKE '%平均每局獲得50分以上%') AND
+               (SELECT COALESCE(AVG(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
+           ) THEN 'completed'
+           WHEN (
                -- 績分高手：總分達到50分
                (d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%') AND
                (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
@@ -52,6 +57,11 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 1000
            ) THEN 'completed'
            WHEN (
+               -- 分數挑戰者：累積獲得200分以上
+               (d.task_name = '分數挑戰者' OR d.task_description LIKE '%累積獲得200分以上%' OR d.task_description LIKE '%單局獲得200分以上%') AND
+               (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 200
+           ) THEN 'completed'
+           WHEN (
                -- 分數王者：總分達到5000分
                (d.task_name = '分數王者' OR d.task_description LIKE '%總分達到5000分%') AND
                (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 5000
@@ -65,6 +75,44 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
+           ) THEN 'completed'
+           WHEN (
+               -- 平衡玩家：每種類型遊戲都完成至少1局
+               (d.task_name = '平衡玩家' OR d.task_description LIKE '%每種類型遊戲都完成至少1局%') AND
+               (SELECT COUNT(DISTINCT CASE 
+                   WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                   WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   ELSE game_type
+               END) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()) >= 3
+           ) THEN 'completed'
+           WHEN (
+               -- 全面發展：每種類型遊戲都完成至少3局
+               (d.task_name = '全面發展' OR d.task_description LIKE '%每種類型遊戲都完成至少3局%') AND
+               (SELECT COUNT(DISTINCT CASE 
+                   WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                   WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   ELSE game_type
+               END) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()) >= 3 AND
+               (SELECT COUNT(*) FROM (
+                   SELECT CASE 
+                       WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                       WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                       WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                       ELSE game_type 
+                   END as game_category,
+                   COUNT(*) as count
+                   FROM game_records 
+                   WHERE member_id = mt.member_id 
+                   AND DATE(play_date) = CURDATE()
+                   GROUP BY game_category
+                   HAVING count >= 3
+               ) as qualified_categories) >= 3
            ) THEN 'completed'
            WHEN (
                -- 持久戰士：累積遊戲時間達到目標
@@ -123,6 +171,11 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    ELSE 3
                END
            ) THEN 'completed'
+           WHEN (
+               -- 遊戲之神：完成100局遊戲
+               (d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 100
+           ) THEN 'completed'
            ELSE 'pending'
        END as status,
        CASE 
@@ -141,6 +194,12 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            -- 遊戲達人：完成10局遊戲（更寬鬆的匹配條件）
            WHEN d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%' THEN (
                SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 分數效率：平均每局獲得50分以上（只計算今天的）
+           WHEN d.task_name = '分數效率' OR d.task_description LIKE '%平均每局獲得50分以上%' THEN (
+               SELECT COALESCE(AVG(score), 0) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
            )
@@ -168,6 +227,12 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
            )
+           -- 分數挑戰者：累積獲得200分以上（只計算今天的）
+           WHEN d.task_name = '分數挑戰者' OR d.task_description LIKE '%累積獲得200分以上%' OR d.task_description LIKE '%單局獲得200分以上%' THEN (
+               SELECT COALESCE(SUM(score), 0) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
            -- 分數收集者：獲得指定分數（只計算今天的）
            WHEN d.task_description LIKE '%獲得%分%' OR d.task_description LIKE '%分數%' THEN (
                SELECT COALESCE(SUM(score), 0) FROM game_records 
@@ -184,6 +249,70 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                END) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
+           )
+           -- 平衡玩家：每種類型遊戲都完成至少1局
+           WHEN d.task_name = '平衡玩家' OR d.task_description LIKE '%每種類型遊戲都完成至少1局%' THEN (
+               SELECT COUNT(DISTINCT CASE 
+                   WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                   WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   ELSE game_type
+               END) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+               AND (
+                   (CASE WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                         WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                         WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                         ELSE game_type END) IN (
+                       SELECT game_category FROM (
+                           SELECT CASE 
+                               WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                               WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                               WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                               ELSE game_type 
+                           END as game_category,
+                           COUNT(*) as count
+                           FROM game_records 
+                           WHERE member_id = mt.member_id 
+                           AND DATE(play_date) = CURDATE()
+                           GROUP BY game_category
+                           HAVING count >= 1
+                       ) as qualified_categories
+                   )
+               )
+           )
+           -- 全面發展：每種類型遊戲都完成至少3局
+           WHEN d.task_name = '全面發展' OR d.task_description LIKE '%每種類型遊戲都完成至少3局%' THEN (
+               SELECT COUNT(DISTINCT CASE 
+                   WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                   WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   ELSE game_type
+               END) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+               AND (
+                   (CASE WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                         WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                         WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                         ELSE game_type END) IN (
+                       SELECT game_category FROM (
+                           SELECT CASE 
+                               WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                               WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                               WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                               ELSE game_type 
+                           END as game_category,
+                           COUNT(*) as count
+                           FROM game_records 
+                           WHERE member_id = mt.member_id 
+                           AND DATE(play_date) = CURDATE()
+                           GROUP BY game_category
+                           HAVING count >= 3
+                       ) as qualified_categories
+                   )
+               )
            )
            -- 持久戰士：累積遊戲時間（更合理的累積模式）
            WHEN d.task_description LIKE '%分鐘%' OR d.task_description LIKE '%遊玩時間%' THEN (
@@ -270,6 +399,12 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    AND DATE(play_date) < CURDATE()
                )
            )
+           -- 遊戲之神：完成100局遊戲
+           WHEN d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
            -- 其他任務：完成狀態
            WHEN mt.claimed_date IS NOT NULL OR mt.completed_date IS NOT NULL THEN 1
            ELSE 0
@@ -281,10 +416,14 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_name = '遊戲傳奇' OR d.task_description LIKE '%完成50個關卡%' OR d.task_description LIKE '%50個關卡%' THEN 50
            -- 遊戲達人：完成10局遊戲
            WHEN d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%' THEN 10
+           -- 分數效率：平均每局獲得50分以上
+           WHEN d.task_name = '分數效率' OR d.task_description LIKE '%平均每局獲得50分以上%' THEN 50
            -- 績分高手：總分達到50分
            WHEN d.task_name = '績分高手' OR d.task_description LIKE '%總分達到50分%' THEN 50
            -- 進階者：總分達到500分
            WHEN d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%' THEN 500
+           -- 分數挑戰者：累積獲得200分以上
+           WHEN d.task_name = '分數挑戰者' OR d.task_description LIKE '%累積獲得200分以上%' OR d.task_description LIKE '%單局獲得200分以上%' THEN 200
            -- 分數收集者：根據描述提取目標分數
            WHEN d.task_description LIKE '%獲得1000分%' OR d.task_description LIKE '%總分達到1000分%' THEN 1000
            WHEN d.task_description LIKE '%獲得500分%' OR d.task_description LIKE '%總分達到500分%' THEN 500
@@ -294,6 +433,10 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_description LIKE '%分數%' THEN 1000  -- 預設1000分
            -- 全能玩家：3種不同類型
            WHEN d.task_name = '全能玩家' OR d.task_description LIKE '%三種不同類型%' OR d.task_description LIKE '%不同類型%' OR d.task_description LIKE '%所有類型%' THEN 3
+           -- 平衡玩家：每種類型遊戲都完成至少1局
+           WHEN d.task_name = '平衡玩家' OR d.task_description LIKE '%每種類型遊戲都完成至少1局%' THEN 3
+           -- 全面發展：每種類型遊戲都完成至少3局
+           WHEN d.task_name = '全面發展' OR d.task_description LIKE '%每種類型遊戲都完成至少3局%' THEN 3
            -- 持久戰士：累積遊戲時間任務（根據描述中的分鐘數計算秒數）
            WHEN d.task_description LIKE '%5分鐘%' THEN 300
            WHEN d.task_description LIKE '%3分鐘%' THEN 180
@@ -325,6 +468,8 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_description LIKE '%30秒%' OR d.task_name = '速度之王' THEN 1
            -- 刷新最高分數：完成1次
            WHEN d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%' THEN 1
+           -- 遊戲之神：完成100局遊戲
+           WHEN d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%' THEN 100
            -- 其他任務：1次完成
            ELSE 1
        END as required

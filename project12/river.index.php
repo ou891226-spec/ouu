@@ -5,23 +5,15 @@ require_once 'game_entry_tracker.php';
 
 // 從資料庫讀取過河遊戲的難度設定
 $difficultySettings = [];
-try {
-    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 9 ORDER BY difficulty");
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach ($settings as $setting) {
-        $difficultySettings[$setting['difficulty']] = [
-            'time_limit' => $setting['time_limit'],
-            'points_per_correct' => $setting['points_per_correct'],
-            'pass_score' => $setting['pass_bounce'] // 使用 pass_bounce 欄位
-        ];
-    }
-} catch (PDOException $e) {
-    // 如果查詢失敗，使用預設設定
-    $difficultySettings = [
-        'easy' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 20],
-        'normal' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 50],
-        'hard' => ['time_limit' => 0, 'points_per_correct' => 0, 'pass_score' => 100]
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 9 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+foreach ($settings as $setting) {
+    $difficultySettings[$setting['difficulty']] = [
+        'time_limit' => $setting['time_limit'],
+        'points_per_correct' => $setting['points_per_correct'],
+        'pass_score' => $setting['pass_bounce'] // 使用 pass_bounce 欄位
     ];
 }
 ?>
@@ -36,7 +28,7 @@ try {
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("算術邏輯力", 10);
+            gameTracker.init("算術邏輯力", 9);
         });
     </script>
 </head>
@@ -75,14 +67,17 @@ try {
             <div class="difficulty-options">
                 <div class="difficulty-option easy-option" data-difficulty="easy">
                     <span class="option-name">簡單</span>
+                    <span class="option-desc">(<?php echo isset($difficultySettings['easy']['pass_score']) ? $difficultySettings['easy']['pass_score'] : 20; ?>分過關)</span>
                 </div>
                 
                 <div class="difficulty-option normal-option" data-difficulty="normal">
                     <span class="option-name">普通</span>
+                    <span class="option-desc">(<?php echo isset($difficultySettings['normal']['pass_score']) ? $difficultySettings['normal']['pass_score'] : 50; ?>分過關)</span>
                 </div>
                 
                 <div class="difficulty-option hard-option" data-difficulty="hard">
                     <span class="option-name">困難</span>
+                    <span class="option-desc">(<?php echo isset($difficultySettings['hard']['pass_score']) ? $difficultySettings['hard']['pass_score'] : 100; ?>分過關)</span>
                 </div>
             </div>
         </div>
@@ -179,8 +174,7 @@ try {
             </div>
             
             <div class="rules-footer">
-                <button id="back-from-rules" class="btn-secondary">返回主選單</button>
-                <button id="watch-help-btn" class="btn-watch-help" onclick="showHelpModal()">🎮 觀看遊戲說明</button>
+                <button id="watch-help-btn" class="btn-watch-help" onclick="showHelpModal()">🎮 影片說明</button>
                 <button id="go-to-difficulty" class="btn-primary">選擇難度</button>
             </div>
         </div>
@@ -269,8 +263,6 @@ try {
             </div>
         </div>
     </div>
-
-    <!-- 主題選擇視窗 -->
 
     <!-- 遊戲說明視窗 -->
     <div id="help-modal" class="modal hidden">

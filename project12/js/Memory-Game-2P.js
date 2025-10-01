@@ -83,19 +83,13 @@ let httpSyncEnabled = false; // 是否啟用 HTTP 同步
         return; // 暫時禁用頁面離開退出檢測
         
         if (gameMode === 'online' && invitationId && gameStartTimestamp && canFlip) {
-            // 檢查遊戲是否已經真正開始且進行了一段時間（至少15秒）
-            const gameDuration = Date.now() - gameStartTimestamp;
-            if (gameDuration > 15000) {
-                // 強制退出戰局
-                forceQuitGame();
-                
-                // 顯示警告訊息
-                e.preventDefault();
-                e.returnValue = '您正在進行線上對戰，離開頁面將自動退出戰局。';
-                return e.returnValue;
-            } else {
-                console.log('遊戲進行時間不足15秒，不觸發退出');
-            }
+            // 強制退出戰局
+            forceQuitGame();
+            
+            // 顯示警告訊息
+            e.preventDefault();
+            e.returnValue = '您正在進行線上對戰，離開頁面將自動退出戰局。';
+            return e.returnValue;
         }
     };
     

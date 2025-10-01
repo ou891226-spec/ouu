@@ -165,7 +165,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("算術邏輯力", 5);
+            gameTracker.init("算術邏輯力", 3);
         });
     </script>
 </head>

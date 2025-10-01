@@ -127,7 +127,7 @@ function analyzeExistingGameRecords() {
         $records = $stmt->fetchAll();
         
         $processed = 0;
-        $quick_exits = 0;
+        $exit_records = 0;
         $completions = 0;
         
         foreach ($records as $record) {
@@ -144,8 +144,9 @@ function analyzeExistingGameRecords() {
             )) {
                 $processed++;
                 
-                if ($record['play_time'] <= 15) {
-                    $quick_exits++;
+                // 根據遊戲狀態分類
+                if ($record['status'] === 'exited') {
+                    $exit_records++;
                 } else {
                     $completions++;
                 }
@@ -154,7 +155,7 @@ function analyzeExistingGameRecords() {
         
         return [
             'total_processed' => $processed,
-            'quick_exits' => $quick_exits,
+            'exit_records' => $exit_records,
             'completions' => $completions,
             'total_records' => count($records)
         ];

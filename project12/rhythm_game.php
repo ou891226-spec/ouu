@@ -5,54 +5,21 @@ require_once 'game_entry_tracker.php';
  
 // 獲取難度設定
 $difficulties = [];
-try {
-    // 使用統一的 difficulty_settings 表查詢節奏遊戲設定 (game_id = 7)
-    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 7 ORDER BY difficulty");
-    $db_difficulties = $stmt->fetchAll();
-    
-    // 轉換為節奏遊戲需要的格式
-    $difficulties = [];
-    foreach ($db_difficulties as $setting) {
-        $difficulties[] = [
-            'difficulty_level' => $setting['difficulty'],
-            'note_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 5 : 7),
-            'time_limit' => $setting['time_limit'] ?? 60,
-            'speed' => $setting['difficulty'] === 'easy' ? 1.0 : ($setting['difficulty'] === 'normal' ? 1.5 : 2.0),
-            'pass_score' => $setting['pass_score'] ?? 100,
-            'is_active' => true
-        ];
-    }
-} catch (PDOException $e) {
-    // 如果查詢失敗，使用預設設定
-    $difficulties = [
-        [
-            'difficulty_level' => 'easy',
-            'note_count' => 3,
-            'time_limit' => 60,
-            'speed' => 1.0,
-            'pass_score' => 120,
-            'is_active' => true
-        ],
-        [
-            'difficulty_level' => 'normal',
-            'note_count' => 5,
-            'time_limit' => 60,
-            'speed' => 1.5,
-            'pass_score' => 200,
-            'is_active' => true
-        ],
-        [
-            'difficulty_level' => 'hard',
-            'note_count' => 7,
-            'time_limit' => 60,
-            'speed' => 2.0,
-            'pass_score' => 300,
-            'is_active' => true
-        ]
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 7 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll();
+
+foreach ($settings as $setting) {
+    $difficulties[$setting['difficulty']] = [
+        'difficulty_level' => $setting['difficulty'],
+        'note_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 5 : 7),
+        'time_limit' => $setting['time_limit'],
+        'speed' => $setting['difficulty'] === 'easy' ? 1.0 : ($setting['difficulty'] === 'normal' ? 1.5 : 2.0),
+        'pass_score' => $setting['pass_score'],
+        'is_active' => true
     ];
 }
 
-$highScore = 0;
 ?>
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -65,7 +32,7 @@ $highScore = 0;
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("反應力", 8);
+            gameTracker.init("反應力", 7);
         });
     </script>
 </head>
@@ -76,7 +43,7 @@ $highScore = 0;
 
         <div class="score-board">
             <h2>分數: <span id="score">0</span></h2>
-            <h2>最高分數: <span id="high-score"><?php echo $highScore; ?></span></h2>
+            <h2>目標分數: <span id="pass-score">0</span></h2>
             <h2>時間: <span id="timer">60</span> 秒</h2>
         </div>
 
@@ -91,9 +58,9 @@ $highScore = 0;
                     <div class="help-label">說明</div>
                 </div>
                 <h2>選擇難度</h2>
-                <div class="difficulty-option easy" data-level="easy">簡單(300分過關)</div>
-                <div class="difficulty-option medium" data-level="normal">普通(800分過關)</div>
-                <div class="difficulty-option hard" data-level="hard">困難(1200分過關)</div>
+                <div class="difficulty-option easy" data-level="easy">簡單(<?php echo isset($difficulties['easy']['pass_score']) ? $difficulties['easy']['pass_score'] : 300; ?>分過關)</div>
+                <div class="difficulty-option medium" data-level="normal">普通(<?php echo isset($difficulties['normal']['pass_score']) ? $difficulties['normal']['pass_score'] : 800; ?>分過關)</div>
+                <div class="difficulty-option hard" data-level="hard">困難(<?php echo isset($difficulties['hard']['pass_score']) ? $difficulties['hard']['pass_score'] : 1200; ?>分過關)</div>
             </div>
         </div>
 
@@ -169,6 +136,7 @@ $highScore = 0;
         <audio id="fail-sfx" src="audio/fail.m4a" preload="auto"></audio>
         <audio id="tap-sfx" src="audio/tap.m4a" preload="auto"></audio>
     </div>    
-    <script src="js/rhythm_game.js"></script>
+    <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
+    <script src="js/rhythm_game.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

@@ -43,12 +43,15 @@ body {
     box-shadow: 0 4px 18px rgba(0,0,0,0.13);
     padding: 45px 35px 40px 35px;
     min-width: 380px;
+    max-width: 420px;
+    width: 90%;
     display: flex;
     flex-direction: column;
     align-items: center;
     position: relative;
     margin: auto;
     animation: modalPop 0.3s ease-out;
+    box-sizing: border-box;
 }
 
 .modal-content h2 {
@@ -200,6 +203,7 @@ body {
     margin: 20px 0;
     width: 100%;
     align-items: center;
+    max-width: 320px;
 }
 
 .difficulty-btn {
@@ -214,7 +218,10 @@ body {
     align-items: center;
     justify-content: center;
     gap: 5px;
-    width: 280px;
+    width: 100%;
+    max-width: 300px;
+    min-height: 80px;
+    box-sizing: border-box;
 }
 .difficulty-btn .difficulty-name {
     font-size: 18px;

@@ -40,6 +40,11 @@ try {
             (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
         ) THEN 'completed'
         WHEN (
+            -- 遊戲狂熱者：一天內完成20局遊戲
+            (d.task_name = '遊戲狂熱者' OR d.task_description LIKE '%一天內完成20局遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 20
+        ) THEN 'completed'
+        WHEN (
             -- 遊戲達人：完成10局遊戲
             (d.task_name = '遊戲達人' OR d.task_description LIKE '%完成10局%' OR d.task_description LIKE '%10局%' OR d.task_description LIKE '%完成%局遊戲%') AND
             (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 10
@@ -58,6 +63,11 @@ try {
             -- 進階者：總分達到500分
             (d.task_name = '進階者' OR d.task_description LIKE '%總分達到500分%') AND
             (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 500
+        ) THEN 'completed'
+        WHEN (
+            -- 分數挑戰者：累積獲得200分以上
+            (d.task_name = '分數挑戰者' OR d.task_description LIKE '%單局獲得200分以上%' OR d.task_description LIKE '%累積獲得200分以上%') AND
+            (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 200
         ) THEN 'completed'
         WHEN (
             -- 分數收集者：獲得指定分數
@@ -170,17 +180,42 @@ try {
     $stmt->execute([$task_id]);
     $task_info = $stmt->fetch();
     
-    if ($task_info && $task_info['reward_achievement']) {
-      // 查找對應的成就ID
-      $find_achievement_sql = "SELECT achievement_id FROM achievements WHERE achievement_name = ?";
-      $stmt = $pdo->prepare($find_achievement_sql);
-      $stmt->execute([$task_info['reward_achievement']]);
+    // 直接授予對應的
+    $achievement_mapping = [
+        '遊戲狂熱者' => '遊戲狂熱者',
+        '分數挑戰者' => '分數挑戰者', 
+        '遊戲達人' => '遊戲達人',
+        '遊戲大師' => '遊戲大師',
+        '遊戲傳奇' => '遊戲傳奇',
+        '績分高手' => '績分高手',
+        '進階者' => '進階者'
+    ];
+    
+    if (isset($achievement_mapping[$task_info['task_name']])) {
+      $achievement_name = $achievement_mapping[$task_info['task_name']];
+      
+      // 確保成就存在
+      $check_achievement_sql = "SELECT achievement_id FROM achievements WHERE achievement_name = ?";
+      $stmt = $pdo->prepare($check_achievement_sql);
+      $stmt->execute([$achievement_name]);
       $achievement = $stmt->fetch();
+      
+      if (!$achievement) {
+        // 如果成就不存在，創建它
+        $create_achievement_sql = "INSERT INTO achievements (achievement_name, achievement_description, achievement_icon) VALUES (?, ?, 'achievement.png')";
+        $stmt = $pdo->prepare($create_achievement_sql);
+        $stmt->execute([$achievement_name, $achievement_name . '成就']);
+        
+        // 重新查詢成就ID
+        $stmt = $pdo->prepare($check_achievement_sql);
+        $stmt->execute([$achievement_name]);
+        $achievement = $stmt->fetch();
+      }
       
       if ($achievement) {
         // 檢查是否已經獲得過這個成就
-        $check_achievement_sql = "SELECT COUNT(*) FROM member_achievements WHERE member_id = ? AND achievement_id = ?";
-        $stmt = $pdo->prepare($check_achievement_sql);
+        $check_member_achievement_sql = "SELECT COUNT(*) FROM member_achievements WHERE member_id = ? AND achievement_id = ?";
+        $stmt = $pdo->prepare($check_member_achievement_sql);
         $stmt->execute([$member_id, $achievement['achievement_id']]);
         $has_achievement = $stmt->fetchColumn() > 0;
         
@@ -189,7 +224,7 @@ try {
           $add_achievement_sql = "INSERT INTO member_achievements (member_id, achievement_id, earned_date) VALUES (?, ?, NOW())";
           $stmt = $pdo->prepare($add_achievement_sql);
           $stmt->execute([$member_id, $achievement['achievement_id']]);
-          file_put_contents('debug.log', 'achievement_added: ' . $task_info['reward_achievement'] . PHP_EOL, FILE_APPEND);
+          file_put_contents('debug.log', 'achievement_added: ' . $achievement_name . PHP_EOL, FILE_APPEND);
         }
       }
     }

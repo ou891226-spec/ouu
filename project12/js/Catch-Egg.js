@@ -94,15 +94,19 @@ let currentDifficulty = 'easy';
 function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
     
-    // 顯示該難度的過關分數
-    let passScore;
-    if (difficulty === 'easy') {
-        passScore = 200;
-    } else if (difficulty === 'normal') {
-        passScore = 450;
-    } else if (difficulty === 'hard') {
-        passScore = 600;
+    // 從資料庫設定獲取目標分數
+    let passScore = 200; // 預設值
+    console.log('選擇難度:', difficulty);
+    console.log('difficultySettings:', window.difficultySettings);
+    
+    if (window.difficultySettings) {
+        const setting = window.difficultySettings.find(s => s.difficulty === difficulty);
+        console.log('找到的設定:', setting);
+        if (setting) {
+            passScore = setting.pass_score;
+        }
     }
+    console.log('最終目標分數:', passScore);
     document.getElementById('high-score').textContent = passScore;
     
     // 仍然保存最高分數用於統計，但不顯示
@@ -125,13 +129,19 @@ function selectDifficulty(difficulty) {
         timeLeft = 120;
         totalTime = 120;
     }
-    fetch("Catch-Egg-Game.php", {
+    fetch("api/game_result.php", {
         method: "POST",
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest"
         },
-        body: `action=start_game&difficulty=${difficulty}`
+        body: JSON.stringify({
+            action: "start_game",
+            member_id: window.memberId || localStorage.getItem('member_id') || 8,
+            difficulty: difficulty,
+            game_id: 2,
+            game_type: "反應力"
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -143,7 +153,20 @@ function selectDifficulty(difficulty) {
             document.getElementById('pauseBtn').classList.add('hidden');
             document.getElementById('resumeBtn').classList.add('hidden');
             showCountdown(startGameTimer);
+        } else {
+            console.error('遊戲開始失敗:', data.message);
+            alert('遊戲開始失敗: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('網路錯誤:', error);
+        // 即使網路錯誤也繼續遊戲
+        document.getElementById('difficulty-modal').style.display = 'none';
+        document.getElementById('endBtn').classList.add('hidden');
+        document.getElementById('resetBtn').classList.add('hidden');
+        document.getElementById('pauseBtn').classList.add('hidden');
+        document.getElementById('resumeBtn').classList.add('hidden');
+        showCountdown(startGameTimer);
     });
 }
 
@@ -163,13 +186,12 @@ function updateScore() {
     // 過關分數顯示保持不變，因為它是固定的目標分數
     
     // 檢查是否達到目標分數
-    let targetScore;
-    if (currentDifficulty === 'easy') {
-        targetScore = 200;
-    } else if (currentDifficulty === 'normal') {
-        targetScore = 450;
-    } else if (currentDifficulty === 'hard') {
-        targetScore = 600;
+    let targetScore = 200; // 預設值
+    if (window.difficultySettings) {
+        const setting = window.difficultySettings.find(s => s.difficulty === currentDifficulty);
+        if (setting) {
+            targetScore = setting.pass_score;
+        }
     }
     
     if (score >= targetScore && gameStarted) {
@@ -279,7 +301,13 @@ function startGameTimer() {
                 let baseScore = score;
                 
                 // 時間結束時檢查是否達到目標分數
-                let targetScore = currentDifficulty === 'easy' ? 200 : currentDifficulty === 'normal' ? 450 : 600;
+                let targetScore = 200; // 預設值
+                if (window.difficultySettings) {
+                    const setting = window.difficultySettings.find(s => s.difficulty === currentDifficulty);
+                    if (setting) {
+                        targetScore = setting.pass_score;
+                    }
+                }
                 if (score >= targetScore) {
                     // 達到目標分數，勝利
                     let bonusScore = currentDifficulty === 'easy' ? 20 : currentDifficulty === 'normal' ? 50 : 100;
@@ -553,15 +581,15 @@ function dropItem() {
                 }
                 clearInterval(item.fallInterval);
             } else {
-                let speed = 3;
-                if (currentDifficulty === 'normal') speed = 5;
-                else if (currentDifficulty === 'hard') speed = 5;
+                let speed = 2; // 簡單模式：慢一點
+                if (currentDifficulty === 'normal') speed = 3; // 普通模式：中等速度
+                else if (currentDifficulty === 'hard') speed = 4; // 困難模式：稍快一點
                 item.style.top = (top + speed) + 'px';
             }
         } else {
-            let speed = 3;
-            if (currentDifficulty === 'normal') speed = 5;
-            else if (currentDifficulty === 'hard') speed = 5;
+            let speed = 2; // 簡單模式：慢一點
+            if (currentDifficulty === 'normal') speed = 3; // 普通模式：中等速度
+            else if (currentDifficulty === 'hard') speed = 4; // 困難模式：稍快一點
             item.style.top = (top + speed) + 'px';
         }
     }, 16); // 使用60fps的更新頻率，更流暢
@@ -699,15 +727,15 @@ function resumeGame() {
         }
                                 clearInterval(item.fallInterval);
                             } else {
-                                let speed = 3;
-                                if (currentDifficulty === 'normal') speed = 5;
-                                else if (currentDifficulty === 'hard') speed = 5;
+                                let speed = 2; // 簡單模式：慢一點
+                                if (currentDifficulty === 'normal') speed = 3; // 普通模式：中等速度
+                                else if (currentDifficulty === 'hard') speed = 4; // 困難模式：稍快一點
                                 item.style.top = (top + speed) + 'px';
                             }
                         } else {
-                            let speed = 3;
-                            if (currentDifficulty === 'normal') speed = 5;
-                            else if (currentDifficulty === 'hard') speed = 5;
+                            let speed = 2; // 簡單模式：慢一點
+                            if (currentDifficulty === 'normal') speed = 3; // 普通模式：中等速度
+                            else if (currentDifficulty === 'hard') speed = 4; // 困難模式：稍快一點
                             item.style.top = (top + speed) + 'px';
                         }
                     }, 16); // 使用60fps的更新頻率，更流暢
@@ -725,7 +753,13 @@ function resumeGame() {
                         let bonusScore = 0;
                         let baseScore = score;
                         // 時間結束時檢查是否達到目標分數
-                        let targetScore = currentDifficulty === 'easy' ? 200 : currentDifficulty === 'normal' ? 450 : 600;
+                        let targetScore = 200; // 預設值
+                        if (window.difficultySettings) {
+                            const setting = window.difficultySettings.find(s => s.difficulty === currentDifficulty);
+                            if (setting) {
+                                targetScore = setting.pass_score;
+                            }
+                        }
                         if (score >= targetScore) {
                             // 達到目標分數，勝利
                             let bonusScore = currentDifficulty === 'easy' ? 20 : currentDifficulty === 'normal' ? 50 : 100;
@@ -775,7 +809,13 @@ function endGame(isWin = false, isManualExit = false) {
     
     // 計算獎勵分數
     let bonusScore = 0;
-    let targetScore = currentDifficulty === 'easy' ? 200 : currentDifficulty === 'normal' ? 450 : 600;
+    let targetScore = 200; // 預設值
+    if (window.difficultySettings) {
+        const setting = window.difficultySettings.find(s => s.difficulty === currentDifficulty);
+        if (setting) {
+            targetScore = setting.pass_score;
+        }
+    }
     
     // 檢查是否真正達到目標分數
     const actuallyWon = score >= targetScore;
@@ -793,13 +833,23 @@ function endGame(isWin = false, isManualExit = false) {
     
     // 只保存獎勵分數到資料庫
     const memberId = window.memberId || localStorage.getItem('member_id') || 8;
-    fetch("Catch-Egg-Game.php", {
+    fetch("api/game_result.php", {
         method: "POST",
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
             "X-Requested-With": "XMLHttpRequest"
         },
-        body: `action=end_game&score=${bonusScore}&member_id=${memberId}&play_time=${gameTime - timeLeft}&is_manual_exit=${isManualExit ? '1' : '0'}`
+        body: JSON.stringify({
+            action: "end_game",
+            member_id: memberId,
+            game_id: 2,
+            game_type: "反應力",
+            difficulty: currentDifficulty,
+            score: bonusScore,
+            play_time: totalTime - timeLeft,
+            is_manual_exit: isManualExit,
+            is_passed: actuallyWon
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -1199,5 +1249,10 @@ window.onload = function() {
         console.log('找到返回按鈕，已在HTML中綁定事件');
     } else {
         console.log('找不到返回按鈕元素');
+    }
+    
+    // 初始化遊戲追蹤器
+    if (typeof gameTracker !== 'undefined') {
+        gameTracker.init("反應力", 2);
     }
 };

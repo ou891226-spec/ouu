@@ -111,7 +111,7 @@ try {
     $action_types = [];
 }
 
-// 1. 遊戲退出統計分析
+// 遊戲退出統計分析
 try {
     // 為遊戲退出分析創建專門的過濾條件
     $game_exit_where_conditions = [];
@@ -143,15 +143,23 @@ try {
             gr.game_type,
             g.game_name as game_names,
             COUNT(CASE WHEN gr.status = 'exited' THEN 1 END) as game_exits,
+            COUNT(*) as total_records,
             ROUND(
                 COUNT(CASE WHEN gr.status = 'exited' THEN 1 END) * 100.0 / COUNT(*), 2
-            ) as exit_rate
+            ) as exit_rate,
+            CONCAT(
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'easy' THEN 1 END) * 100.0 / COUNT(*), 1), '% 簡單, ',
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'normal' THEN 1 END) * 100.0 / COUNT(*), 1), '% 普通, ',
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'hard' THEN 1 END) * 100.0 / COUNT(*), 1), '% 困難'
+            ) as difficulty_distribution
         FROM game_records gr
         LEFT JOIN games g ON gr.game_id = g.game_id
         WHERE gr.game_type IS NOT NULL
+        AND (gr.play_time > 0 OR gr.score > 0)
+        AND NOT (gr.game_id = 9 AND g.game_name = '過河遊戲' AND gr.difficulty = 'hard')
         $game_exit_where_clause
         GROUP BY gr.game_id, gr.game_type, g.game_name
-        HAVING (game_exits >= 1 OR COUNT(*) >= 1)
+        HAVING COUNT(*) >= 10 AND (game_exits >= 1 OR COUNT(*) >= 1)
         ORDER BY gr.game_type, exit_rate DESC
         LIMIT 15
     ";
@@ -163,7 +171,7 @@ try {
     $game_exit_data = [];
 }
 
-// 2. 遊戲完成率分析
+// 遊戲完成率分析
 try {
     $completion_analysis_sql = "
         SELECT 
@@ -194,26 +202,9 @@ try {
                 ROUND(COUNT(CASE WHEN gr.difficulty = 'normal' THEN 1 END) * 100.0 / COUNT(*), 1), '% 普通, ',
                 ROUND(COUNT(CASE WHEN gr.difficulty = 'hard' THEN 1 END) * 100.0 / COUNT(*), 1), '% 困難'
             ) as difficulty_distribution,
-            ROUND(
-                COUNT(DISTINCT CASE WHEN gr2.record_id IS NOT NULL THEN gr.member_id END) * 100.0 / 
-                COUNT(DISTINCT gr.member_id), 2
-            ) as retry_rate
+            0 as retry_rate
         FROM game_records gr 
         LEFT JOIN games g ON gr.game_id = g.game_id
-        LEFT JOIN game_records gr2 ON (
-            gr.member_id = gr2.member_id 
-            AND gr.game_id = gr2.game_id 
-            AND gr2.play_date > gr.play_date 
-            AND (
-                (gr2.difficulty = 'easy' AND gr2.score = 20) OR
-                (gr2.difficulty = 'normal' AND gr2.score = 50) OR
-                (gr2.difficulty = 'hard' AND gr2.score = 100) OR
-                (gr2.difficulty = 'easy' AND gr2.score < 20) OR
-                (gr2.difficulty = 'normal' AND gr2.score < 50) OR
-                (gr2.difficulty = 'hard' AND gr2.score < 100)
-            )
-            AND gr2.status != 'entered'
-        )
         JOIN member m ON gr.member_id = m.member_id 
         WHERE (
             (gr.difficulty = 'easy' AND gr.score = 20) OR
@@ -225,7 +216,7 @@ try {
         )
         AND gr.status != 'entered'
         GROUP BY gr.game_id, gr.game_type, g.game_name
-        HAVING successful_attempts >= 1
+        HAVING successful_attempts >= 1 AND COUNT(*) >= 20
         ORDER BY gr.game_type, success_rate DESC
     ";
     
@@ -236,7 +227,7 @@ try {
     $completion_analysis = [];
 }
 
-// 3. 遊戲失敗統計分析
+// 遊戲失敗統計分析
 try {
     // 為遊戲失敗分析創建專門的過濾條件
     $game_failed_where_conditions = [];
@@ -281,6 +272,7 @@ try {
                     FROM game_records gr2 
                     WHERE gr2.game_type = gr.game_type 
                     AND gr2.status != 'entered'
+                    AND (gr2.play_time > 0 OR gr2.score > 0)
                 ), 2) as failure_rate,
                 CONCAT(
                     ROUND(COUNT(CASE WHEN gr.difficulty = 'easy' THEN 1 END) * 100.0 / COUNT(*), 1), '% 簡單, ',
@@ -289,15 +281,10 @@ try {
                 ) as difficulty_distribution
             FROM game_records gr
             LEFT JOIN games g ON gr.game_id = g.game_id
-            WHERE (
-                (gr.difficulty = 'easy' AND gr.score < 20) OR
-                (gr.difficulty = 'normal' AND gr.score < 50) OR
-                (gr.difficulty = 'hard' AND gr.score < 100)
-            )
-            AND gr.status != 'entered'
+            WHERE gr.status = 'failed'
             $game_failed_where_clause
             GROUP BY gr.game_type, g.game_name
-            HAVING total_failed >= 1
+            HAVING total_failed >= 3
         ) failed
         LEFT JOIN (
             SELECT 
@@ -532,6 +519,7 @@ $game_type_to_name = [
                             <th>遊戲名稱</th>
                             <th>退出次數</th>
                             <th>退出率</th>
+                            <th>難度分布</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -542,29 +530,56 @@ $game_type_to_name = [
                             '算術邏輯力' => 'logic', 
                             '記憶力' => 'memory'
                         ];
+                        $current_type = '';
+                        $type_rowspan = [];
+                        $type_count = [];
+                        
+                        // 計算每個類型的遊戲數量
+                        foreach ($game_exit_data as $row) {
+                            $type = $row['game_type'];
+                            $type_count[$type] = ($type_count[$type] ?? 0) + 1;
+                        }
+                        
                         foreach ($game_exit_data as $row): 
                             // 根據遊戲類型設定背景色
                             $type_class = $type_colors[$row['game_type']] ?? 'default';
+                            
+                            // 檢查是否需要顯示遊戲類型標題
+                            if ($current_type !== $row['game_type']) {
+                                $current_type = $row['game_type'];
+                                $type_name = $game_type_to_name[$row['game_type']] ?? $row['game_type'];
+                                $rowspan = $type_count[$row['game_type']];
+                            } else {
+                                $type_name = '';
+                                $rowspan = 0;
+                            }
                         ?>
                             <tr class="<?php echo $type_class; ?>">
-                                <td><?php echo htmlspecialchars($game_type_to_name[$row['game_type']] ?? $row['game_type']); ?></td>
+                                <?php if ($type_name): ?>
+                                    <td rowspan="<?php echo $rowspan; ?>" style="text-align: center; vertical-align: middle; font-weight: bold; width: 120px;"><?php echo htmlspecialchars($type_name); ?></td>
+                                <?php endif; ?>
                                 <td><?php echo htmlspecialchars($row['game_names']); ?></td>
                                 <td><?php echo number_format($row['game_exits']); ?></td>
                                 <td>
                                     <?php echo $row['exit_rate']; ?>%
                                     <?php if ($row['exit_rate'] > 30): ?>
-                                        <span style="color: #dc3545;">⚠️ 高退出率</span>
+                                        <span style="color: #dc3545;">⚠️ 需關注</span>
                                         <small style="color: #666;">(>30%)</small>
                                     <?php elseif ($row['exit_rate'] > 15): ?>
                                         <span style="color: #ffc107;">⚠️ 需注意</span>
                                         <small style="color: #666;">(15-30%)</small>
                                     <?php elseif ($row['exit_rate'] <= 10): ?>
-                                        <span style="color: #28a745;">✅ 表現優秀</span>
+                                        <span style="color: #28a745;">✅ 優秀</span>
                                         <small style="color: #666;">(≤10%)</small>
                                     <?php else: ?>
-                                        <span style="color: #28a745;">✅ 正常</span>
+                                        <span style="color: #28a745;">✅ 良好</span>
                                         <small style="color: #666;">(10-15%)</small>
                                     <?php endif; ?>
+                                </td>
+                                <td>
+                                    <small style="color: #666; font-size: 12px;">
+                                        <?php echo htmlspecialchars($row['difficulty_distribution']); ?>
+                                    </small>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -583,14 +598,13 @@ $game_type_to_name = [
             <?php else: ?>
             <table>
                 <thead>
-                    <tr>
+                        <tr>
                             <th>遊戲類型</th>
                             <th>遊戲名稱</th>
                             <th>成功次數</th>
                             <th>成功率</th>
                             <th>難度分布</th>
-                            <th>重試率</th>
-                    </tr>
+                        </tr>
                 </thead>
                 <tbody>
                         <?php 
@@ -599,23 +613,44 @@ $game_type_to_name = [
                             '算術邏輯力' => 'logic', 
                             '記憶力' => 'memory'
                         ];
+                        $current_type = '';
+                        $type_count = [];
+                        
+                        // 計算每個類型的遊戲數量
+                        foreach ($completion_analysis as $analysis) {
+                            $type = $analysis['game_type'];
+                            $type_count[$type] = ($type_count[$type] ?? 0) + 1;
+                        }
+                        
                         foreach ($completion_analysis as $analysis): 
                             $type_class = $type_colors[$analysis['game_type']] ?? 'default';
+                            
+                            // 檢查是否需要顯示遊戲類型標題
+                            if ($current_type !== $analysis['game_type']) {
+                                $current_type = $analysis['game_type'];
+                                $type_name = $game_type_to_name[$analysis['game_type']] ?? $analysis['game_type'];
+                                $rowspan = $type_count[$analysis['game_type']];
+                            } else {
+                                $type_name = '';
+                                $rowspan = 0;
+                            }
                         ?>
                         <tr class="<?php echo $type_class; ?>">
-                            <td><?php echo htmlspecialchars($game_type_to_name[$analysis['game_type']] ?? $analysis['game_type']); ?></td>
+                            <?php if ($type_name): ?>
+                                <td rowspan="<?php echo $rowspan; ?>" style="text-align: center; vertical-align: middle; font-weight: bold; width: 120px;"><?php echo htmlspecialchars($type_name); ?></td>
+                            <?php endif; ?>
                             <td><?php echo htmlspecialchars($analysis['game_names']); ?></td>
                             <td><strong><?php echo number_format($analysis['successful_attempts']); ?></strong></td>
                             <td>
                                     <?php echo $analysis['success_rate']; ?>%
                                 <?php if ($analysis['success_rate'] >= 70): ?>
-                                    <span style="color: #28a745;">✅ 表現優秀</span>
+                                    <span style="color: #28a745;">✅ 優秀</span>
                                     <small style="color: #666;">(≥70%)</small>
                                 <?php elseif ($analysis['success_rate'] >= 50): ?>
-                                    <span style="color: #ffc107;">⚠️ 需要改進</span>
+                                    <span style="color: #ffc107;">⚠️ 需改進</span>
                                     <small style="color: #666;">(50-69%)</small>
                                 <?php else: ?>
-                                    <span style="color: #dc3545;">⚠️ 需要關注</span>
+                                    <span style="color: #dc3545;">⚠️ 需注意</span>
                                     <small style="color: #666;">(<50%)</small>
                                 <?php endif; ?>
                             </td>
@@ -624,20 +659,6 @@ $game_type_to_name = [
                                     <?php echo htmlspecialchars($analysis['difficulty_distribution']); ?>
                                 </small>
                             </td>
-                            <td>
-                                <?php 
-                                $retry_rate = $analysis['retry_rate'] ?? 0;
-                                if ($retry_rate >= 70): ?>
-                                    <span style="color: #28a745; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
-                                    <small style="color: #666;">高重試</small>
-                                <?php elseif ($retry_rate >= 40): ?>
-                                    <span style="color: #ffc107; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
-                                    <small style="color: #666;">中等重試</small>
-                                <?php else: ?>
-                                    <span style="color: #dc3545; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
-                                    <small style="color: #666;">低重試</small>
-                                <?php endif; ?>
-                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -671,26 +692,47 @@ $game_type_to_name = [
                             '算術邏輯力' => 'logic', 
                             '記憶力' => 'memory'
                         ];
+                        $current_type = '';
+                        $type_count = [];
+                        
+                        // 計算每個類型的遊戲數量
+                        foreach ($game_failed_data as $row) {
+                            $type = $row['game_type'];
+                            $type_count[$type] = ($type_count[$type] ?? 0) + 1;
+                        }
+                        
                         foreach ($game_failed_data as $row): 
                             $type_class = $type_colors[$row['game_type']] ?? 'default';
+                            
+                            // 檢查是否需要顯示遊戲類型標題
+                            if ($current_type !== $row['game_type']) {
+                                $current_type = $row['game_type'];
+                                $type_name = $game_type_to_name[$row['game_type']] ?? $row['game_type'];
+                                $rowspan = $type_count[$row['game_type']];
+                            } else {
+                                $type_name = '';
+                                $rowspan = 0;
+                            }
                         ?>
                             <tr class="<?php echo $type_class; ?>">
-                                <td><?php echo htmlspecialchars($game_type_to_name[$row['game_type']] ?? $row['game_type']); ?></td>
+                                <?php if ($type_name): ?>
+                                    <td rowspan="<?php echo $rowspan; ?>" style="text-align: center; vertical-align: middle; font-weight: bold; width: 120px;"><?php echo htmlspecialchars($type_name); ?></td>
+                                <?php endif; ?>
                                 <td><?php echo htmlspecialchars($row['game_names']); ?></td>
                                 <td><strong><?php echo number_format($row['total_failed']); ?></strong></td>
                                 <td>
                                     <?php echo $row['failure_rate']; ?>%
                                     <?php if ($row['failure_rate'] > 70): ?>
-                                        <span style="color: #dc3545;">⚠️ 需要關注</span>
+                                        <span style="color: #dc3545;">⚠️ 需關注</span>
                                         <small style="color: #666;">(>70%)</small>
                                     <?php elseif ($row['failure_rate'] > 50): ?>
-                                        <span style="color: #ffc107;">⚠️ 注意</span>
+                                        <span style="color: #ffc107;">⚠️ 需進改</span>
                                         <small style="color: #666;">(50-70%)</small>
                                     <?php elseif ($row['failure_rate'] > 30): ?>
                                         <span style="color: #ffc107;">⚠️ 需注意</span>
                                         <small style="color: #666;">(30-50%)</small>
                                     <?php else: ?>
-                                        <span style="color: #28a745;">✅ 表現良好</span>
+                                        <span style="color: #28a745;">✅ 良好</span>
                                         <small style="color: #666;">(<30%)</small>
                                     <?php endif; ?>
                                 </td>

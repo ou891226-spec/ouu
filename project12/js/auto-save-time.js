@@ -132,19 +132,19 @@ function saveSessionTime() {
   
   if (timeSinceLastSave > 0 && isPageActive && !isGamePage()) {
     // 保存到遊戲記錄
-    const gameData = new URLSearchParams({
+    const gameData = {
       game_id: 0,
       score: 0,
       play_time: timeSinceLastSave,
       difficulty: 'N/A',
       game_type: '網站瀏覽總時間',
-    });
+    };
 
-    fetch('save_game_result.php', {
+    fetch('api/game_result.php', {
       method: 'POST',
-      body: gameData,
+      body: JSON.stringify(gameData),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       }
     }).catch(error => {
       console.log('遊戲時間儲存失敗');

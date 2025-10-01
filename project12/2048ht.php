@@ -1,15 +1,70 @@
 <?php
-require_once 'check_login.php';
+// 檢查是否為AJAX請求，如果是則不輸出HTML
+if (
+    isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+    $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+) {
+    // AJAX請求處理在後面
+} else {
+    // 只有非AJAX請求才需要check_login
+    require_once 'check_login.php';
+}
+
 require_once 'game_entry_tracker.php';
-header('Content-Type: text/html; charset=utf-8');
+
+// 只有非AJAX請求才設置HTML header
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+    header('Content-Type: text/html; charset=utf-8');
+}
+
+// 獲取難度設定
+$difficultySettings = [];
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 4 ORDER BY difficulty_id");
+$stmt->execute();
+$settings = $stmt->fetchAll();
+
+foreach ($settings as $setting) {
+    $difficulty = $setting['difficulty'];
+    $difficultySettings[$difficulty] = [
+        'pass_score' => $setting['pass_score'],
+        'pass_bounce' => $setting['pass_bounce'],
+        'time_limit' => $setting['time_limit'],
+        'points_per_correct' => $setting['points_per_correct']
+    ];
+}
 
 if (
     isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
     $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
     $_SERVER['REQUEST_METHOD'] === 'POST'
 ) {
+    // 清除任何之前的輸出緩衝
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // 禁用錯誤顯示，避免HTML錯誤訊息
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ALL);
+    
+    // 啟動session（如果尚未啟動）
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     require_once 'db_connect.php';
+    header('Content-Type: application/json');
+    
     $data = json_decode(file_get_contents('php://input'), true);
+    
+    // 驗證用戶登入狀態
+    if (!isset($_SESSION['member_id']) || empty($_SESSION['member_id'])) {
+        echo json_encode(['success' => false, 'message' => '用戶未登入']);
+        exit;
+    }
+    
     try {
         // 檢查是否為遊戲勝利（分數大於0表示勝利）
         $score = isset($data['score']) ? intval($data['score']) : 0;
@@ -21,63 +76,69 @@ if (
         $record_score = 0;
         
         if ($is_passed) {
-            // 遊戲勝利，依難度給固定獎勵分數
-            switch ($difficulty) {
-                case 'hard':
-                    $record_score = 100;
-                    break;
-                case 'normal': // 保持向後兼容
-                    $record_score = 50;
-                    break;
-                case 'easy':
-                default:
-                    $record_score = 20;
-                    break;
-            }
+            // 從資料庫讀取過關獎勵分數
+            $record_score = isset($difficultySettings[$difficulty]['pass_bounce']) ? $difficultySettings[$difficulty]['pass_bounce'] : 0;
         }
         // 如果沒過關，record_score 保持為 0
 
-        // 使用新追蹤邏輯
-        $record_id = recordGameEntry($data['member_id'], '算術邏輯力', $difficulty, 4);
-        if ($record_id) {
-            $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
-            
-            // 區分手動退出和遊戲失敗
-            $isManualExit = isset($data['is_manual_exit']) && $data['is_manual_exit'] === true;
-            if ($isManualExit) {
-                // 手動退出遊戲
-                $status = $is_passed ? 'completed' : 'exited';
-            } else {
-                // 正常遊戲結束（時間到或達到目標）
-                $status = $is_passed ? 'completed' : 'failed';
-            }
-            
-            updateGameRecord($record_id, $record_score, $play_time, $status);
+        // 使用統一遊戲結果處理系統
+        $play_time = isset($data['play_time']) ? $data['play_time'] : 0;
+        $isManualExit = isset($data['is_manual_exit']) && $data['is_manual_exit'] === true;
+        
+        $gameData = [
+            'member_id' => $data['member_id'],
+            'game_type' => '算術邏輯力',
+            'difficulty' => $difficulty,
+            'score' => $record_score,
+            'play_time' => $play_time,
+            'is_manual_exit' => $isManualExit,
+            'is_passed' => $is_passed,
+            'game_id' => 4
+        ];
+        
+    try {
+        // 使用API端點處理遊戲結果
+        $apiUrl = 'api/game_result.php';
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($gameData));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen(json_encode($gameData))
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200) {
+            throw new Exception("API調用失敗: HTTP $httpCode, Response: $response");
         }
         
-        // 只有過關時才更新會員總分數和算術邏輯分數
-        if ($is_passed) {
-            $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + :score, logic_score = logic_score + :score WHERE member_id = :member_id");
-            $update_stmt->execute([
-                'score' => $record_score,
-                'member_id' => $data['member_id']
-            ]);
-            
-            // 記錄遊戲行為軌跡
-            require_once 'log_game_behavior.php';
-            logGameBehavior($data['member_id'], '算術邏輯力', 0, $record_score, $difficulty);
-            
-            // 檢查並完成所有相關任務
-            require_once 'check_and_grant_achievements.php';
-            checkAndGrantAchievements($data['member_id'], 'game_2048', $record_score, 0);
-            checkAndCompleteAllTasks($data['member_id'], '算術邏輯力');
+        $result = json_decode($response, true);
+        if (!$result || !$result['success']) {
+            throw new Exception("API處理失敗: " . ($result['message'] ?? '未知錯誤'));
         }
         
-        echo json_encode(['success' => true]);
+        // 再次確保清除任何輸出
+        if (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json');
+        echo json_encode($result);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        if (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json');
+        error_log("2048遊戲結果處理失敗: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => '遊戲結果處理失敗: ' . $e->getMessage()]);
     }
-    exit;
+} catch (Exception $e) {
+    if (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+exit;
 }
 ?>
 <!DOCTYPE html>
@@ -98,6 +159,10 @@ if (
     </script>
     <script src="js/unified-game-tracker.js"></script>
     <script>
+        // 將PHP難度設定傳遞給JavaScript
+        const difficultySettings = <?php echo json_encode($difficultySettings); ?>;
+        console.log('難度設定:', difficultySettings);
+        
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
             gameTracker.init("算術邏輯力", 4);
@@ -118,17 +183,17 @@ if (
                 <span class="help-text">說明</span>
             </button>
             <div class="difficulty-buttons">
-                <button class="difficulty-btn easy" data-target="1500" type="button">
+                <button class="difficulty-btn easy" data-target="<?php echo isset($difficultySettings['easy']['pass_score']) ? $difficultySettings['easy']['pass_score'] : 500; ?>" type="button">
                     <span class="difficulty-name">簡單模式</span>
-                    <span class="difficulty-desc">(1500分)</span>
+                    <span class="difficulty-desc">(<strong><?php echo isset($difficultySettings['easy']['pass_score']) ? $difficultySettings['easy']['pass_score'] : 500; ?></strong>分)</span>
                 </button>
-                <button class="difficulty-btn normal" data-target="5000" type="button">
+                <button class="difficulty-btn normal" data-target="<?php echo isset($difficultySettings['normal']['pass_score']) ? $difficultySettings['normal']['pass_score'] : 1200; ?>" type="button">
                     <span class="difficulty-name">普通模式</span>
-                    <span class="difficulty-desc">(5000分)</span>
+                    <span class="difficulty-desc">(<strong><?php echo isset($difficultySettings['normal']['pass_score']) ? $difficultySettings['normal']['pass_score'] : 1200; ?></strong>分)</span>
                 </button>
-                <button class="difficulty-btn hard" data-target="10000" type="button">
+                <button class="difficulty-btn hard" data-target="<?php echo isset($difficultySettings['hard']['pass_score']) ? $difficultySettings['hard']['pass_score'] : 2500; ?>" type="button">
                     <span class="difficulty-name">困難模式</span>
-                    <span class="difficulty-desc">(10000分)</span>
+                    <span class="difficulty-desc">(<strong><?php echo isset($difficultySettings['hard']['pass_score']) ? $difficultySettings['hard']['pass_score'] : 2500; ?></strong>分)</span>
                 </button>
             </div>
         </div>
@@ -140,8 +205,6 @@ if (
         <div class="score-bar">
             <span style="font-weight:bold;">目前分數：</span>
             <span class="score" id="score" style="color:#43a047;">0</span>
-            <span style="font-weight:bold; margin-left:16px;">最高分數：</span>
-            <span class="best" id="best-score" style="color:#43a047;">0</span>
             <span style="font-weight:bold; margin-left:16px;">目標分數：</span>
             <span class="target-score" id="target-score" style="color:#f44336;">0</span>
         </div>
@@ -420,22 +483,22 @@ if (
             debugLog('遊戲界面初始化完成');
         }
 
-        // 初始化最高分數顯示
-        function initBestScore() {
-            const bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
-            const bestScoreElement = document.getElementById('best-score');
-            if (bestScoreElement) {
-                bestScoreElement.textContent = bestScore;
-            }
-            debugLog('初始化最高分數: ' + bestScore);
-        }
+        // 初始化最高分數顯示 - 已移除
+        // function initBestScore() {
+        //     const bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+        //     const bestScoreElement = document.getElementById('best-score');
+        //     if (bestScoreElement) {
+        //         bestScoreElement.textContent = bestScore;
+        //     }
+        //     debugLog('初始化最高分數: ' + bestScore);
+        // }
 
         // 當 DOM 加載完成時初始化遊戲界面
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 debugLog('DOM 加載完成，開始初始化遊戲界面');
                 initGameUI();
-                initBestScore(); // 初始化最高分數
+                // initBestScore(); // 初始化最高分數 - 已移除
                 // 顯示難度選擇彈窗
                 const difficultyModal = document.getElementById('difficultyModal');
                 const modalContent = difficultyModal.querySelector('.modal-content');
@@ -448,7 +511,7 @@ if (
         } else {
             debugLog('DOM 已加載，立即初始化遊戲界面');
             initGameUI();
-            initBestScore(); // 初始化最高分數
+            // initBestScore(); // 初始化最高分數 - 已移除
             // 顯示難度選擇彈窗
             const difficultyModal = document.getElementById('difficultyModal');
             const modalContent = difficultyModal.querySelector('.modal-content');
@@ -461,21 +524,21 @@ if (
 
         // 修改遊戲結束時的處理
         function handleGameEnd(score, difficulty, isWin, gameTime) {
-            // 更新本地存儲的最高分
-            const currentBest = parseInt(localStorage.getItem('bestScore')) || 0;
-            const newBest = Math.max(score, currentBest);
-            if (score > currentBest) {
-                localStorage.setItem('bestScore', score);
-                // 更新頁面上的最高分顯示
-                const bestScoreElement = document.getElementById('best-score');
-                if (bestScoreElement) {
-                    bestScoreElement.textContent = score;
-                }
-                debugLog('更新最高分數: ' + score);
-            }
+            // 更新本地存儲的最高分 - 已移除
+            // const currentBest = parseInt(localStorage.getItem('bestScore')) || 0;
+            // const newBest = Math.max(score, currentBest);
+            // if (score > currentBest) {
+            //     localStorage.setItem('bestScore', score);
+            //     // 更新頁面上的最高分顯示
+            //     const bestScoreElement = document.getElementById('best-score');
+            //     if (bestScoreElement) {
+            //         bestScoreElement.textContent = score;
+            //     }
+            //     debugLog('更新最高分數: ' + score);
+            // }
             
             // 顯示相應的彈窗並填入數據
-            if (isWin) {
+            if (isWin === true) { // 只有真正勝利才顯示勝利彈窗
                 // 填入勝利彈窗的數據
                 const rewardScore = getRewardScore(difficulty);
                 
@@ -489,13 +552,15 @@ if (
                 if (winRewardScore) winRewardScore.textContent = rewardScore;
                 if (winModal) winModal.style.display = 'block';
             } else {
-                // 填入失敗彈窗的數據
+                // 失敗或手動退出都顯示失敗彈窗
                 const gameOverDifficulty = document.getElementById('game-over-difficulty');
                 const gameOverTargetScore = document.getElementById('game-over-target-score');
+                const gameOverRewardScore = document.getElementById('game-over-reward-score');
                 const gameOverModal = document.getElementById('game-over-modal');
                 
                 if (gameOverDifficulty) gameOverDifficulty.textContent = getDifficultyName(difficulty);
                 if (gameOverTargetScore) gameOverTargetScore.textContent = getTargetScore(difficulty);
+                if (gameOverRewardScore) gameOverRewardScore.textContent = '+0'; // 失敗或手動退出都是 0 分
                 if (gameOverModal) gameOverModal.style.display = 'block';
             }
         }
@@ -510,11 +575,15 @@ if (
         
         // 獲取目標分數
         function getTargetScore(difficulty) {
+            if (difficultySettings && difficultySettings[difficulty]) {
+                return difficultySettings[difficulty].pass_score.toString();
+            }
+            // 預設值
             switch(difficulty) {
-                case 'easy': return '1500';
-                case 'normal': return '5000';
-                case 'hard': return '10000';
-                default: return '1500';
+                case 'easy': return '500';
+                case 'normal': return '1200';
+                case 'hard': return '2500';
+                default: return '500';
             }
         }
         
@@ -566,6 +635,7 @@ if (
         // 頁面加載時檢測
         document.addEventListener('DOMContentLoaded', checkTouchDevice);
     </script>
+    <script src="js/game-common.js"></script>
     <script src="js/game.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>

@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['process_records'])) {
                 - 遊戲完成：%d 筆 (有實際遊戲行為)<br>
                 - 找到記錄：%d 筆",
                 $result['total_processed'],
-                $result['quick_exits'], 
+                $result['exit_records'], 
                 $result['completions'],
                 $result['total_records']
             );
@@ -42,9 +42,9 @@ try {
     $stats_sql = "
         SELECT 
             COUNT(*) as total_game_records,
-            COUNT(CASE WHEN status = 'exited' OR (play_time = 0 AND score = 0) THEN 1 END) as quick_exit_records,
-            COUNT(CASE WHEN status = 'completed' OR (play_time > 0 AND score > 0) THEN 1 END) as normal_records,
-            COUNT(CASE WHEN status = 'failed' OR (play_time > 0 AND score = 0) THEN 1 END) as failed_records,
+            COUNT(CASE WHEN status = 'exited' THEN 1 END) as exit_records,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_records,
+            COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_records,
             COUNT(CASE WHEN status = 'entered' THEN 1 END) as entered_records,
             COUNT(CASE WHEN play_time IS NULL THEN 1 END) as null_time_records
         FROM game_records
@@ -86,7 +86,7 @@ try {
     $unprocessed_stats = $unprocessed_stmt->fetch();
     
 } catch (Exception $e) {
-    $game_stats = ['total_game_records' => 0, 'quick_exit_records' => 0, 'normal_records' => 0, 'null_time_records' => 0];
+    $game_stats = ['total_game_records' => 0, 'exit_records' => 0, 'completed_records' => 0, 'failed_records' => 0, 'entered_records' => 0, 'null_time_records' => 0];
     $behavior_stats = ['total_behaviors' => 0, 'exit_behaviors' => 0, 'complete_behaviors' => 0];
     $unprocessed_stats = ['unprocessed_count' => 0];
 }
@@ -168,12 +168,12 @@ try {
                 <div class="stat-label">遊戲記錄總數</div>
                 <div class="breakdown">
                     <div class="breakdown-item">
-                        <div class="breakdown-number"><?php echo number_format($game_stats['quick_exit_records']); ?></div>
-                        <div class="breakdown-label">≤15秒記錄</div>
+                        <div class="breakdown-number"><?php echo number_format($game_stats['exit_records']); ?></div>
+                        <div class="breakdown-label">退出記錄</div>
                     </div>
                     <div class="breakdown-item">
-                        <div class="breakdown-number"><?php echo number_format($game_stats['normal_records']); ?></div>
-                        <div class="breakdown-label">>15秒記錄</div>
+                        <div class="breakdown-number"><?php echo number_format($game_stats['completed_records']); ?></div>
+                        <div class="breakdown-label">完成記錄</div>
                     </div>
                 </div>
             </div>

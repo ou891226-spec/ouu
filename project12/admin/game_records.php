@@ -428,49 +428,26 @@ $game_type_to_name = [
                         ?></td>
                         <td>
                             <?php 
-                            // 根據遊戲記錄推斷行為類型
+                            // 根據遊戲記錄的狀態判斷行為類型（使用新的統一系統）
                             $behavior_type = '';
                             
-                            // 根據遊戲記錄的狀態判斷行為類型
                             if ($record['status'] === 'completed') {
                                 $behavior_type = 'game_complete';
                             } elseif ($record['status'] === 'exited') {
                                 $behavior_type = 'game_exit';
                             } elseif ($record['status'] === 'failed') {
                                 $behavior_type = 'game_failed';
+                            } elseif ($record['status'] === 'entered') {
+                                // 還在進行中的遊戲，視為退出
+                                $behavior_type = 'game_exit';
                             } elseif ($record['behavior_type']) {
                                 $behavior_type = $record['behavior_type'];
                             } else {
-                                // 根據分數和遊玩時間推斷行為類型
-                                if ($record['game_id'] == 4) {
-                                    // 2048遊戲：分數0表示退出，分數>0表示完成
-                                    if ($record['score'] > 0) {
-                                        $behavior_type = 'game_complete';
-                                    } else {
-                                        $behavior_type = 'game_exit';
-                                    }
-                                } elseif (in_array($record['game_id'], [3, 9])) {
-                                    // 算菜錢、過河遊戲：根據分數判斷（這些遊戲可能沒有準確的遊玩時間）
-                                    if ($record['score'] > 0) {
-                                        $behavior_type = 'game_complete';
-                                    } else {
-                                        $behavior_type = 'game_exit';
-                                    }
+                                // 舊記錄的兼容處理
+                                if ($record['score'] > 0) {
+                                    $behavior_type = 'game_complete';
                                 } else {
-                                    // 其他遊戲：根據分數和遊玩時間判斷
-                                    if ($record['score'] > 0) {
-                                        // 有分數表示過關，無論時間長短都是完成
-                                        $behavior_type = 'game_complete';
-                                    } elseif ($record['play_time'] <= 15 && $record['play_time'] > 0) {
-                                        // 短時間退出
-                                        $behavior_type = 'game_exit';
-                                    } elseif ($record['play_time'] > 15) {
-                                        // 玩了很久但沒得分，表示沒過關
-                                        $behavior_type = 'game_exit';
-                                    } elseif (!$record['play_time'] || $record['play_time'] == 0) {
-                                        // 沒時間記錄，根據分數判斷
-                                        $behavior_type = ($record['score'] > 0) ? 'game_complete' : 'game_exit';
-                                    }
+                                    $behavior_type = 'game_exit';
                                 }
                             }
                             

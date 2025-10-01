@@ -41,4 +41,4 @@ if (!isset($_SESSION['name']) || empty($_SESSION['name']) || !isset($_SESSION['a
         error_log("check_login.php 獲取用戶資料錯誤: " . $e->getMessage());
     }
 }
-?> 
+?>

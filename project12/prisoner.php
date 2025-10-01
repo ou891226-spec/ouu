@@ -5,51 +5,18 @@ require_once 'game_entry_tracker.php';
  
 // 獲取難度設定
 $difficulties = [];
+$stmt = $pdo->prepare("SELECT * FROM difficulty_settings WHERE game_id = 6 ORDER BY difficulty");
+$stmt->execute();
+$settings = $stmt->fetchAll();
 
-try {
-    // 使用統一的 difficulty_settings 表查詢犯人遊戲設定 (game_id = 6)
-    $stmt = $pdo->query("SELECT * FROM difficulty_settings WHERE game_id = 6 ORDER BY difficulty");
-    $db_difficulties = $stmt->fetchAll();
-    
-    // 轉換為犯人遊戲需要的格式
-    $difficulties = [];
-    foreach ($db_difficulties as $setting) {
-        $difficulties[] = [
-            'difficulty_level' => $setting['difficulty'],
-            'hole_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
-            'time_limit' => $setting['time_limit'] ?? 60,
-            'sequence_length' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
-            'pass_score' => $setting['pass_score'] ?? 20,
-            'is_active' => true
-        ];
-    }
-} catch (PDOException $e) {
-    // 如果查詢失敗，使用預設設定
-    $difficulties = [
-        [
-            'difficulty_level' => 'easy',
-            'hole_count' => 3,
-            'time_limit' => 60,
-            'sequence_length' => 3,
-            'pass_score' => 20,
-            'is_active' => true
-        ],
-        [
-            'difficulty_level' => 'normal',
-            'hole_count' => 4,
-            'time_limit' => 60,
-            'sequence_length' => 4,
-            'pass_score' => 20,
-            'is_active' => true
-        ],
-        [
-            'difficulty_level' => 'hard',
-            'hole_count' => 5,
-            'time_limit' => 120,
-            'sequence_length' => 5,
-            'pass_score' => 20,
-            'is_active' => true
-        ]
+foreach ($settings as $setting) {
+    $difficulties[$setting['difficulty']] = [
+        'difficulty_level' => $setting['difficulty'],
+        'hole_count' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
+        'time_limit' => $setting['time_limit'],
+        'sequence_length' => $setting['difficulty'] === 'easy' ? 3 : ($setting['difficulty'] === 'normal' ? 4 : 5),
+        'pass_score' => $setting['pass_score'],
+        'is_active' => true
     ];
 }
 
@@ -67,9 +34,12 @@ $highScore = 0;
   <link rel="stylesheet" href="css/prisoner.css">
     <script src="js/unified-game-tracker.js"></script>
     <script>
+        // 從資料庫獲取的難度設定
+        const difficultySettings = <?php echo json_encode($difficulties); ?>;
+        
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("記憶力", 7);
+            gameTracker.init("記憶力", 6);
         });
     </script>
 </head>
@@ -80,8 +50,8 @@ $highScore = 0;
 
     <div class="score-board">
         <h2>目前分數: <span id="score">0</span></h2>
-        <h2>最高分數: <span id="high-score"><?php echo $highScore; ?></span></h2>
-        <h2>剩餘時間: <span id="timer">60</span> 秒</h2>
+        <h2>目標分數: <span id="target-score">20</span></h2>
+        <h2>剩餘時間: <span id="timer">30</span> 秒</h2>
     </div>
 
   <div id="difficulty-modal" class="modal">
@@ -97,9 +67,9 @@ $highScore = 0;
           </div>
 
           <h2>選擇難度</h2>
-          <div class="difficulty-option easy" data-level="3">簡單 (20分過關)</div>
-          <div class="difficulty-option medium" data-level="4">普通 (20分過關)</div>
-          <div class="difficulty-option hard" data-level="5">困難 (20分過關)</div>
+          <div class="difficulty-option easy" data-level="3">簡單 (<?php echo isset($difficulties['easy']['pass_score']) ? $difficulties['easy']['pass_score'] : 20; ?>分過關)</div>
+          <div class="difficulty-option medium" data-level="4">普通 (<?php echo isset($difficulties['normal']['pass_score']) ? $difficulties['normal']['pass_score'] : 20; ?>分過關)</div>
+          <div class="difficulty-option hard" data-level="5">困難 (<?php echo isset($difficulties['hard']['pass_score']) ? $difficulties['hard']['pass_score'] : 20; ?>分過關)</div>
       </div>
   </div>
 
@@ -145,10 +115,15 @@ $highScore = 0;
     </div>
 
     <div id="result-modal" class="modal" style="display: none;">
-      <div class="modal-content">
+      <div class="modal-content" id="custom-end-modal-content">
         <h2 id="result-title"></h2>
-        <p id="result-difficulty"></p>
-        <p id="result-score"></p>
+        <div class="result-details">
+            <p id="result-difficulty"></p>
+            <p id="result-game-score"></p>
+            <p id="result-play-time"></p>
+            <p id="result-gained-score"></p>
+            <p id="result-final-message"></p>
+        </div>
         <div>
           <button onclick="location.reload()">再玩一次</button>
           <button onclick="history.back()">返回主頁</button>
@@ -208,6 +183,7 @@ $highScore = 0;
   </div>
   <audio id="game-bgm" src="audio/prisoner.mp3" loop></audio>
 
-  <script src="js/prisoner.js"></script>
+  <script src="js/game-common.js"></script>
+  <script src="js/prisoner.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('開始創建遊戲實例');
             this.board = Array(4).fill().map(() => Array(4).fill(0));
             this.score = 0;
-            this.bestScore = 0; // 初始化為 0，稍後從資料庫讀取
+            // this.bestScore = 0; // 最高分數功能已移除
             this.targetScore = 1500;
             this.difficulty = 'easy';
             this.gameOver = false;
@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setupWinModalListeners();
             this.setupGameOverModalListeners();
             
-            // 從資料庫讀取最高分數
-            this.loadBestScore();
+            // 從資料庫讀取最高分數 - 功能已移除
+            // this.loadBestScore();
         }
 
         init() {
@@ -316,17 +316,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('找到結束按鈕，設置事件監聽器');
                 endButton.onclick = () => {
                     console.log('結束按鈕被點擊');
-                    if (confirm('確定要結束遊戲嗎？')) {
-                        // 如果已經勝利，不重複記錄分數
-                        if (this.won) {
-                            console.log('遊戲已勝利，只顯示勝利彈窗，不重複記錄分數');
-                            this.showWinModal();
-                            return;
-                        }
-                        // 手動退出遊戲
-                        this.isContinuing = false;
-                        this.endGame(true); // 傳遞 isManualExit = true
+                    // 直接結束遊戲，不顯示確認視窗
+                    // 如果已經勝利，不重複記錄分數
+                    if (this.won) {
+                        console.log('遊戲已勝利，只顯示勝利彈窗，不重複記錄分數');
+                        this.showWinModal();
+                        return;
                     }
+                    // 手動退出遊戲
+                    this.isContinuing = false;
+                    this.endGame(true); // 傳遞 isManualExit = true
                 };
             } else {
                 console.error('錯誤：找不到結束按鈕 #endBtn');
@@ -483,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 更新分數
             const scoreElement = document.getElementById('score');
-            const bestScoreElement = document.getElementById('best-score');
             
             if (scoreElement) {
                 scoreElement.textContent = this.score;
@@ -492,18 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('找不到分數元素 #score');
             }
             
-            // 檢查並更新最高分數
-            if (this.score > this.bestScore) {
-                this.bestScore = this.score;
-                console.log(`更新最高分數為: ${this.bestScore}`);
-            }
-            
-            if (bestScoreElement) {
-                bestScoreElement.textContent = this.bestScore;
-                console.log(`更新最高分數: ${this.bestScore}`);
-            } else {
-                console.error('找不到最高分數元素 #best-score');
-            }
+            // 最高分數功能已移除
             
             // 更新目標分數顯示
             this.updateTargetScoreDisplay();
@@ -849,10 +836,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('手動退出遊戲，當前時間:', currentTime);
             console.log('手動退出遊戲，實際遊玩時間:', playTime, '秒');
             
-            // 修改標題為"遊戲結束"而不是"遊戲失敗"
+            // 手動退出也顯示"遊戲失敗"
             const modalTitle = this.gameOverModal.querySelector('h2');
             if (modalTitle) {
-                modalTitle.textContent = '👋遊戲結束';
+                modalTitle.textContent = '⏰ 遊戲失敗';
             }
             
             // 手動退出時記錄0分
@@ -891,11 +878,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOver = true;
             this.isInitialized = false;
             
-            // 更新最高分（如果需要，可以保存到資料庫）
-            if (this.score > this.bestScore) {
-                this.bestScore = this.score;
-                // 注意：這裡不保存到 localStorage，因為我們從資料庫讀取
-            }
+            // 更新最高分（如果需要，可以保存到資料庫）- 已移除
+            // if (this.score > this.bestScore) {
+            //     this.bestScore = this.score;
+            //     // 注意：這裡不保存到 localStorage，因為我們從資料庫讀取
+            // }
             
             // 如果已經勝利，顯示勝利彈窗
             if (this.won) {
@@ -941,48 +928,48 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('遊戲重置完成');
         }
 
-        // 從資料庫讀取最高分數
-        async loadBestScore() {
-            console.log('開始從資料庫讀取最高分數...');
-            try {
-                const response = await fetch('get_high_score.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        game_id: 4, // 2048 遊戲的 ID
-                        member_id: memberId
-                    })
-                });
-                
-                console.log('API 回應狀態:', response.status);
-                const data = await response.json();
-                console.log('API 回應數據:', data);
-                
-                if (data.success) {
-                    this.bestScore = data.high_score || 0;
-                    console.log(`從資料庫讀取最高分數: ${this.bestScore}`);
-                } else {
-                    console.log('無法從資料庫讀取最高分數，使用預設值 0');
-                    this.bestScore = 0;
-                }
-            } catch (error) {
-                console.error('讀取最高分數失敗:', error);
-                this.bestScore = 0;
-            }
-            
-            // 更新顯示
-            this.updateBestScoreDisplay();
-        }
+        // 從資料庫讀取最高分數 - 功能已移除
+        // async loadBestScore() {
+        //     console.log('開始從資料庫讀取最高分數...');
+        //     try {
+        //         const response = await fetch('get_high_score.php', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //             },
+        //             body: JSON.stringify({
+        //                 game_id: 4, // 2048 遊戲的 ID
+        //                 member_id: memberId
+        //             })
+        //         });
+        //         
+        //         console.log('API 回應狀態:', response.status);
+        //         const data = await response.json();
+        //         console.log('API 回應數據:', data);
+        //         
+        //         if (data.success) {
+        //             this.bestScore = data.high_score || 0;
+        //             console.log(`從資料庫讀取最高分數: ${this.bestScore}`);
+        //         } else {
+        //             console.log('無法從資料庫讀取最高分數，使用預設值 0');
+        //             this.bestScore = 0;
+        //         }
+        //     } catch (error) {
+        //         console.error('讀取最高分數失敗:', error);
+        //         this.bestScore = 0;
+        //     }
+        //     
+        //     // 更新顯示
+        //     this.updateBestScoreDisplay();
+        // }
         
-        // 更新最高分數顯示
-        updateBestScoreDisplay() {
-            if (this.bestScoreElement) {
-                this.bestScoreElement.textContent = this.bestScore;
-                console.log(`更新最高分數顯示: ${this.bestScore}`);
-            }
-        }
+        // 更新最高分數顯示 - 功能已移除
+        // updateBestScoreDisplay() {
+        //     if (this.bestScoreElement) {
+        //         this.bestScoreElement.textContent = this.bestScore;
+        //         console.log(`更新最高分數顯示: ${this.bestScore}`);
+        //     }
+        // }
     }
 
     // 創建遊戲實例並保存到全局變量
@@ -1001,18 +988,20 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('傳入的 play_time 值:', play_time);
         console.log('是否為數字:', !isNaN(play_time));
         console.log('=== 調試信息結束 ===');
-        const res = await fetch(window.location.href, {
+        const res = await fetch('api/game_result.php', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 member_id,
                 score,
                 difficulty,
                 play_time,
-                is_manual_exit: isManualExit
+                is_manual_exit: isManualExit,
+                game_type: '算術邏輯力',
+                game_id: 4,
+                is_passed: score > 0
             })
         });
         const result = await res.json();

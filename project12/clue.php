@@ -11,10 +11,28 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         echo json_encode(['error' => '缺少難度參數']);
         exit;
     }
+    
+    // 處理開始新遊戲
+    if (isset($_POST['action']) && $_POST['action'] === 'start_game') {
+        // 重置所有遊戲相關的session
+        $_SESSION['clue_total'] = 0;
+        $_SESSION['clue_correct'] = 0;
+        $_SESSION['used_question_ids'] = [];
+        unset($_SESSION['game_start_time']);
+        unset($_SESSION['game_record_saved']);
+        unset($_SESSION['clue_record_id']);
+        
+        echo json_encode(['success' => true, 'message' => '遊戲已重置']);
+        exit;
+    }
+    
     // 初始化 session
     if (!isset($_SESSION['clue_total'])) $_SESSION['clue_total'] = 0;
     if (!isset($_SESSION['clue_correct'])) $_SESSION['clue_correct'] = 0;
     if (!isset($_SESSION['used_question_ids'])) $_SESSION['used_question_ids'] = [];
+    
+    // 調試信息：記錄session狀態
+    error_log("線索遊戲AJAX - Session狀態: clue_total=" . $_SESSION['clue_total'] . ", clue_correct=" . $_SESSION['clue_correct']);
     
     // 記錄遊戲開始時間（只在第一次初始化時記錄）
     if (!isset($_SESSION['game_start_time'])) {
@@ -22,13 +40,8 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         // 重置防重复保存标志（只在新的游戏会话开始时）
         unset($_SESSION['game_record_saved']);
         
-        // 記錄遊戲進入
-        if (isset($_SESSION['member_id'])) {
-            $record_id = recordGameEntry($_SESSION['member_id'], '圖片線索', $difficulty, 8);
-            if ($record_id) {
-                $_SESSION['clue_record_id'] = $record_id;
-            }
-        }
+        // 記錄遊戲進入（統一系統會自動處理）
+        // 移除舊的記錄邏輯，統一系統會自動處理
     }
 
     // 檢查上一題答案
@@ -39,11 +52,18 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         if ($user_answer === $correct_answer) {
             $_SESSION['clue_correct']++;
         }
+        
+        // 強制保存session
+        session_write_close();
+        session_start();
+        
+        // 調試信息：記錄答案處理結果
+        error_log("線索遊戲答案處理 - 用戶答案: $user_answer, 正確答案: $correct_answer, 總題數: " . $_SESSION['clue_total'] . ", 答對數: " . $_SESSION['clue_correct']);
     }
 
-    // 5 題結束，回傳結果
-    if ($_SESSION['clue_total'] >= 5) {
-        $pass = $_SESSION['clue_correct'] >= 3;
+    // 檢查是否達到過關條件或5題結束
+    if ($_SESSION['clue_correct'] >= 3 || $_SESSION['clue_total'] >= 5) {
+        $pass = $_SESSION['clue_correct'] >= 3; // 直接使用3題過關
         $score = $_SESSION['clue_correct'];
         // 查詢 pass_bounce
         $game_id = 8;
@@ -51,52 +71,55 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         $stmt2->execute([$game_id, $difficulty]);
         $pass_bounce = ($row = $stmt2->fetch()) ? (int)$row['pass_bounce'] : 0;
         
-        // 如果過關且有登入會員，更新 total_score
-        if ($pass && isset($_SESSION['member_id'])) {
+        // 使用統一API處理遊戲結果
+        if (isset($_SESSION['member_id'])) {
             $member_id = $_SESSION['member_id'];
-            $stmt3 = $pdo->prepare('UPDATE member SET total_score = total_score + ? WHERE member_id = ?');
-            $stmt3->execute([$pass_bounce, $member_id]);
-        }
-        
-        // 更新遊戲記錄（新追蹤邏輯）
-        if (isset($_SESSION['member_id']) && isset($_SESSION['clue_record_id'])) {
-            $member_id = $_SESSION['member_id'];
-            $record_id = $_SESSION['clue_record_id'];
-            
-            // 使用前端傳送的遊戲時間，如果沒有則使用後端計算的時間
             $play_time = $_POST['game_time'] ?? (isset($_SESSION['game_start_time']) ? 
                 time() - $_SESSION['game_start_time'] : 0);
-            
-            // 根據是否過關決定保存的分數和狀態
-            $score_to_save = $pass ? $pass_bounce : 0;
-            
-            // 區分手動退出和遊戲失敗
             $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
-            if ($isManualExit) {
-                // 手動退出遊戲
-                $status = $pass ? 'completed' : 'exited';
-            } else {
-                // 正常遊戲結束（時間到或達到目標）
-                $status = $pass ? 'completed' : 'failed';
+            
+            $gameData = [
+                'member_id' => $member_id,
+                'game_type' => '記憶力', // 圖片線索問答屬於記憶力類型
+                'difficulty' => $difficulty,
+                'score' => $pass ? $pass_bounce : 0,
+                'play_time' => $play_time,
+                'is_manual_exit' => $isManualExit,
+                'is_passed' => $pass,
+                'game_id' => 8
+            ];
+            
+            // 直接調用API處理函數，避免curl問題
+            try {
+                require_once 'api/game_result.php';
+                
+                // 檢查資料庫連接
+                global $pdo;
+                if (!$pdo) {
+                    error_log("圖片線索遊戲：資料庫連接失敗");
+                } else {
+                    // 直接調用processGameResult函數
+                    $result = processGameResult($gameData);
+                    
+                    if (!$result || !$result['success']) {
+                        error_log("圖片線索問答API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+                    } else {
+                        error_log("圖片線索遊戲結果儲存成功: record_id=" . ($result['record_id'] ?? 'unknown'));
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("圖片線索遊戲結果處理失敗: " . $e->getMessage());
             }
             
-            // 更新遊戲記錄
-            updateGameRecord($record_id, $score_to_save, $play_time, $status);
-            
-            // 檢查並完成所有相關任務
-            require_once 'check_and_grant_achievements.php';
-            checkAndGrantAchievements($member_id, 'memory_game', $score_to_save, $play_time);
-            checkAndCompleteAllTasks($member_id, '記憶力');
-            
-            // 清除記錄ID，防止重複更新
-            unset($_SESSION['clue_record_id']);
+                // 清除記錄ID，防止重複更新
+                unset($_SESSION['clue_record_id']);
         }
         
         // 清空 session（保留防重复标志）
         $_SESSION['clue_total'] = 0;
         $_SESSION['clue_correct'] = 0;
         $_SESSION['used_question_ids'] = [];
-        unset($_SESSION['game_start_time']); // 清除遊戲開始時間
+        // 注意：不删除 $_SESSION['game_start_time']，需要保留用於計算遊戲時間
         // 注意：不删除 $_SESSION['game_record_saved']，防止重复保存
         
         echo json_encode([
@@ -112,7 +135,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
     // 處理強制結束遊戲
     if (isset($_POST['force_end']) && $_POST['force_end'] === '1') {
         $final_score = (int)($_POST['final_score'] ?? 0);
-        $pass = $final_score >= 3;
+        $pass = $final_score >= 3; // 直接使用3題過關
         
         // 查詢 pass_bounce
         $game_id = 8;
@@ -164,7 +187,7 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
         $_SESSION['clue_total'] = 0;
         $_SESSION['clue_correct'] = 0;
         $_SESSION['used_question_ids'] = [];
-        unset($_SESSION['game_start_time']); // 清除遊戲開始時間
+        // 注意：不删除 $_SESSION['game_start_time']，需要保留用於計算遊戲時間
         // 注意：不删除 $_SESSION['game_record_saved']，防止重复保存
         
         echo json_encode([
@@ -213,6 +236,168 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
     ]);
     exit;
 }
+
+
+// 處理非 AJAX 的答案提交
+if (isset($_POST['user_answer']) && isset($_POST['correct_answer'])) {
+    // 取得難度參數（從 POST 或 GET）
+    $difficulty = $_POST['difficulty'] ?? $_GET['difficulty'] ?? null;
+    if (!$difficulty) {
+        header('Location: clue.php');
+        exit;
+    }
+    
+    // 初始化 session（只在第一次時初始化）
+    if (!isset($_SESSION['clue_total'])) $_SESSION['clue_total'] = 0;
+    if (!isset($_SESSION['clue_correct'])) $_SESSION['clue_correct'] = 0;
+    if (!isset($_SESSION['used_question_ids'])) $_SESSION['used_question_ids'] = [];
+    
+    // 處理答案
+    $user_answer = $_POST['user_answer'];
+    $correct_answer = $_POST['correct_answer'];
+    $_SESSION['clue_total']++;
+    if ($user_answer === $correct_answer) {
+        $_SESSION['clue_correct']++;
+    }
+    
+    
+    // 檢查是否達到過關條件或5題結束
+    if ($_SESSION['clue_correct'] >= 3 || $_SESSION['clue_total'] >= 5) {
+        $pass = $_SESSION['clue_correct'] >= 3; // 直接使用3題過關
+        $score = $_SESSION['clue_correct'];
+        
+        // 查詢 pass_bounce
+        $game_id = 8;
+        $stmt2 = $pdo->prepare('SELECT pass_bounce FROM difficulty_settings WHERE game_id = ? AND difficulty = ? LIMIT 1');
+        $stmt2->execute([$game_id, $difficulty]);
+        $pass_bounce = ($row = $stmt2->fetch()) ? (int)$row['pass_bounce'] : 0;
+        
+        // 使用統一API處理遊戲結果
+        if (isset($_SESSION['member_id'])) {
+            $gameData = [
+                'member_id' => $_SESSION['member_id'],
+                'game_type' => '記憶力',
+                'game_id' => 8,
+                'difficulty' => $difficulty,
+                'score' => $pass ? $pass_bounce : 0,
+                'play_time' => isset($_SESSION['game_start_time']) ? (time() - $_SESSION['game_start_time']) : 0,
+                'is_manual_exit' => false,
+                'is_passed' => $pass
+            ];
+            
+            // 使用API端點處理遊戲結果
+            $apiUrl = 'api/game_result.php';
+            // 直接調用API處理函數，避免curl問題
+            try {
+                require_once 'api/game_result.php';
+                
+                // 檢查資料庫連接
+                global $pdo;
+                if (!$pdo) {
+                    error_log("圖片線索遊戲：資料庫連接失敗");
+                } else {
+                    // 直接調用processGameResult函數
+                    $result = processGameResult($gameData);
+                    
+                    if (!$result || !$result['success']) {
+                        error_log("圖片線索問答API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+                    } else {
+                        error_log("圖片線索遊戲結果儲存成功: record_id=" . ($result['record_id'] ?? 'unknown'));
+                    }
+                }
+            } catch (Exception $e) {
+                error_log("圖片線索遊戲結果處理失敗: " . $e->getMessage());
+            }
+        }
+        
+        // 清除 session（保留用於結果顯示）
+        // 注意：不立即清除session，讓結果頁面能正確顯示
+        // session將在重新開始遊戲時被清除
+        
+        // 顯示結果頁面
+        ?>
+        <!DOCTYPE html>
+        <html lang="zh-Hant">
+        <head>
+            <meta charset="UTF-8">
+            <title>遊戲結果</title>
+            <link rel="stylesheet" href="css/clue.css?v=<?php echo time(); ?>">
+            <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+            <meta http-equiv="Pragma" content="no-cache">
+            <meta http-equiv="Expires" content="0">
+        </head>
+        <body>
+            <div class="result-container">
+                <div class="modal-content">
+                    <h2><?= $pass ? '🎉恭喜破關' : '⏰遊戲結束' ?></h2>
+                    <div class="result-info">
+                        <p><strong>答對題數：</strong><?= $score ?>/5</p>
+                        <p><strong>過關條件：</strong>3題</p>
+                        <?php if (!$pass): ?>
+                            <p>未達成目標分數!</p>
+                        <?php endif; ?>
+                        <?php if ($pass): ?>
+                            <p><strong>獲得分數：+</strong><?= $pass_bounce ?>分</p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="result-btns">
+                        <button onclick="restartGame()">再玩一次</button>
+                        <button onclick="handleBackButton()">返回主頁</button>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // 返回主頁按鈕處理
+                function handleBackButton() {
+                    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+                    if (document.referrer && document.referrer !== window.location.href) {
+                        history.back();
+                    } else {
+                        window.location.href = 'game-category.php';
+                    }
+                }
+                
+                // 重新開始遊戲
+                function restartGame() {
+                    // 發送AJAX請求重置遊戲
+                    fetch('clue.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'ajax=1&action=start_game'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // 重置成功，跳轉到難度選擇頁面
+                            window.location.href = 'clue.php';
+                        } else {
+                            console.error('重置遊戲失敗:', data.message);
+                            // 即使重置失敗也跳轉
+                            window.location.href = 'clue.php';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('重置遊戲請求失敗:', error);
+                        // 即使請求失敗也跳轉
+                        window.location.href = 'clue.php';
+                    });
+                }
+            </script>
+        </body>
+        </html>
+        <?php
+        exit;
+    }
+    
+    // 繼續下一題，重定向到遊戲頁面
+    header('Location: clue.php?difficulty=' . urlencode($difficulty));
+    exit;
+}
+
+// 移除重複的結果頁面處理邏輯，統一使用第一個結果頁面
 
 // 取得難度參數
 $difficulty = $_GET['difficulty'] ?? null;
@@ -341,8 +526,18 @@ if (!$difficulty) {
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("記憶力", 6);
+            gameTracker.init("記憶力", 8);
         });
+        
+        // 返回主頁按鈕處理
+        function handleBackButton() {
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'game-category.php';
+            }
+        }
     </script>
 </head>
     <body>
@@ -362,9 +557,9 @@ if (!$difficulty) {
                     </div>
                 </div>
                 <div class="difficulty-list">
-                    <button class="difficulty-btn easy" data-difficulty="easy">簡單</button>
-                    <button class="difficulty-btn medium" data-difficulty="normal">普通</button>
-                    <button class="difficulty-btn hard" data-difficulty="hard">困難</button>
+                    <button class="difficulty-btn easy" data-difficulty="easy">簡單 (3題答對過關)</button>
+                    <button class="difficulty-btn medium" data-difficulty="normal">普通 (3題答對過關)</button>
+                    <button class="difficulty-btn hard" data-difficulty="hard">困難 (3題答對過關)</button>
                 </div>
             </div>
         </div>
@@ -418,9 +613,31 @@ if (!$difficulty) {
         <script>
 
             document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                console.log('綁定按鈕事件:', btn);
                 btn.onclick = function() {
                     const diff = this.getAttribute('data-difficulty');
+                    console.log('點擊難度按鈕:', diff);
+                    // 開始新遊戲，重置session
+                    fetch(window.location.pathname, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'ajax=1&action=start_game&difficulty=' + encodeURIComponent(diff)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = window.location.pathname + '?difficulty=' + encodeURIComponent(diff);
+                        } else {
+                            console.error('開始遊戲失敗:', data.message);
                     window.location.href = window.location.pathname + '?difficulty=' + encodeURIComponent(diff);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('開始遊戲錯誤:', error);
+                    window.location.href = window.location.pathname + '?difficulty=' + encodeURIComponent(diff);
+                    });
                 }
             });
             // 說明彈窗
@@ -542,9 +759,12 @@ $all_ids->execute([$difficulty]);
 $all_ids = $all_ids->fetchAll(PDO::FETCH_COLUMN);
 
 // 初始化 session
+if (!isset($_SESSION['clue_total'])) $_SESSION['clue_total'] = 0;
+if (!isset($_SESSION['clue_correct'])) $_SESSION['clue_correct'] = 0;
 if (!isset($_SESSION['used_question_ids']) || count($_SESSION['used_question_ids']) >= count($all_ids)) {
     $_SESSION['used_question_ids'] = [];
 }
+
 
 // 排除已出現過的題目
 $used_ids = $_SESSION['used_question_ids'];
@@ -570,7 +790,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
 <head>
     <meta charset="UTF-8">
     <title>圖片線索問答遊戲</title>
-    <link rel="stylesheet" href="css/clue.css">
+    <link rel="stylesheet" href="css/clue.css?v=<?php echo time(); ?>">
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 40px; }
         #question-block, #result-block { display: none; }
@@ -595,8 +815,274 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
     <script>
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("記憶力", 6);
+            gameTracker.init("記憶力", 8);
+            
+            // 倒數計時器邏輯
+            const timeLeftElement = document.getElementById('time-left');
+            const questionBlock = document.getElementById('question-block');
+            const imageBlock = document.getElementById('image-block');
+            let gameTimer = null;
+            
+            if (timeLeftElement) {
+                let timeLeft = parseInt(timeLeftElement.textContent);
+                gameTimer = setInterval(function() {
+                    timeLeft--;
+                    timeLeftElement.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(gameTimer);
+                        // 時間到，顯示問題
+                        imageBlock.style.display = 'none';
+                        questionBlock.style.display = 'block';
+                    }
+                }, 1000);
+            }
+            
+            // 選項按鈕事件處理
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const selectedValue = this.getAttribute('data-value');
+                    const correctAnswer = document.querySelector('.main-container').getAttribute('data-correct-answer');
+                    const difficulty = new URLSearchParams(window.location.search).get('difficulty');
+                    console.log('選擇答案:', selectedValue);
+                    console.log('正確答案:', correctAnswer);
+                    console.log('難度:', difficulty);
+                    
+                    // 顯示答案結果
+                    const isCorrect = selectedValue === correctAnswer;
+                    const resultMsg = document.getElementById('result-msg');
+                    const correctAnswerSpan = document.getElementById('correct-answer');
+                    
+                    if (resultMsg) {
+                        resultMsg.textContent = isCorrect ? '答對了！' : '答錯了！';
+                        resultMsg.style.color = isCorrect ? '#4CAF50' : '#f44336';
+                    }
+                    
+                    if (correctAnswerSpan) {
+                        correctAnswerSpan.textContent = correctAnswer;
+                    }
+                    
+                    // 更新計數器 - 使用data-initial屬性確保正確的初始值
+                    const correctCountEl = document.getElementById('correct-count');
+                    const remainingCountEl = document.getElementById('remaining-count');
+                    
+                    if (correctCountEl && remainingCountEl) {
+                        // 從data-initial屬性獲取初始值，確保與session同步
+                        let currentCorrect = parseInt(correctCountEl.getAttribute('data-initial')) || 0;
+                        let currentTotal = <?= $_SESSION['clue_total'] ?? 0 ?> + 1; // 當前總題數（包含這題）
+                        
+                        if (isCorrect) {
+                            currentCorrect++;
+                        }
+                        
+                        // 剩餘題數 = 總題數(5) - 當前總題數
+                        let currentRemaining = 5 - currentTotal;
+                        
+                        correctCountEl.textContent = currentCorrect;
+                        remainingCountEl.textContent = currentRemaining;
+                        
+                        console.log('更新計數器 - 答對:', currentCorrect, '總題數:', currentTotal, '剩餘:', currentRemaining);
+                        console.log('Session數據 - 總題數:', <?= $_SESSION['clue_total'] ?? 0 ?>, '答對數:', <?= $_SESSION['clue_correct'] ?? 0 ?>);
+                    }
+                    
+                    // 顯示結果區塊
+                    const resultBlock = document.getElementById('result-block');
+                    if (resultBlock) {
+                        resultBlock.style.display = 'block';
+                    }
+                    
+                    // 隱藏選項區塊
+                    const questionBlock = document.getElementById('question-block');
+                    if (questionBlock) {
+                        questionBlock.style.display = 'none';
+                    }
+                    
+                    // 提交答案
+                    const form = document.getElementById('answer-form');
+                    if (form) {
+                        // 創建隱藏輸入來傳遞用戶答案
+                        const userInput = document.createElement('input');
+                        userInput.type = 'hidden';
+                        userInput.name = 'user_answer';
+                        userInput.value = selectedValue;
+                        form.appendChild(userInput);
+                        
+                        // 創建隱藏輸入來傳遞正確答案
+                        const correctInput = document.createElement('input');
+                        correctInput.type = 'hidden';
+                        correctInput.name = 'correct_answer';
+                        correctInput.value = correctAnswer;
+                        form.appendChild(correctInput);
+                        
+                        // 創建隱藏輸入來傳遞難度
+                        const difficultyInput = document.createElement('input');
+                        difficultyInput.type = 'hidden';
+                        difficultyInput.name = 'difficulty';
+                        difficultyInput.value = difficulty;
+                        form.appendChild(difficultyInput);
+                        
+                        // 提交表單
+                        form.submit();
+                    }
+                });
+            });
+            
+            // 控制按鈕事件處理
+            const pauseBtn = document.getElementById('pauseBtn');
+            const endBtn = document.getElementById('endBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            if (pauseBtn) {
+                let isPaused = false;
+                
+                pauseBtn.addEventListener('click', function() {
+                    if (!isPaused) {
+                        // 暫停遊戲
+                        isPaused = true;
+                        pauseBtn.textContent = '繼續遊戲';
+                        pauseBtn.style.setProperty('background-color', '#28a745', 'important'); // 綠色
+                        
+                        // 暫停倒數計時器
+                        if (gameTimer) {
+                            clearInterval(gameTimer);
+                        }
+                        
+                        // 隱藏圖片和問題
+                        if (imageBlock) imageBlock.style.display = 'none';
+                        if (questionBlock) questionBlock.style.display = 'none';
+                        
+                        console.log('遊戲已暫停');
+                    } else {
+                        // 繼續遊戲
+                        isPaused = false;
+                        pauseBtn.textContent = '暫停遊戲';
+                        pauseBtn.style.setProperty('background-color', '#ffa500', 'important'); // 橘色
+                        
+                        // 重新顯示圖片
+                        if (imageBlock) imageBlock.style.display = 'block';
+                        
+                        // 恢復倒數計時器
+                        if (timeLeftElement) {
+                            let timeLeft = parseInt(timeLeftElement.textContent);
+                            gameTimer = setInterval(function() {
+                                timeLeft--;
+                                timeLeftElement.textContent = timeLeft;
+                                
+                                if (timeLeft <= 0) {
+                                    clearInterval(gameTimer);
+                                    // 時間到，顯示問題
+                                    if (imageBlock) imageBlock.style.display = 'none';
+                                    if (questionBlock) questionBlock.style.display = 'block';
+                                }
+                            }, 1000);
+                        }
+                        
+                        console.log('遊戲已繼續');
+                    }
+                });
+            }
+            
+            if (endBtn) {
+                endBtn.addEventListener('click', function() {
+                    console.log('結束遊戲');
+                    // 先保存遊戲記錄到API，然後顯示結果頁面
+                    const difficulty = new URLSearchParams(window.location.search).get('difficulty');
+                    const currentScore = parseInt(document.getElementById('correct-count').textContent) || 0;
+                    const playTime = Math.floor((Date.now() - window.gameStartTime) / 1000) || 0;
+                    
+                    // 準備遊戲數據
+                    const gameData = {
+                        member_id: window.memberId || null,
+                        game_type: '記憶力',
+                        game_id: 8,
+                        difficulty: difficulty,
+                        score: currentScore >= 3 ? 50 : 0, // 根據是否過關給分
+                        play_time: playTime,
+                        is_manual_exit: true,
+                        is_passed: currentScore >= 3
+                    };
+                    
+                    console.log('準備保存的遊戲數據:', gameData);
+                    
+                    // 調用API保存遊戲記錄
+                    fetch('api/game_result.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(gameData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('遊戲記錄保存結果:', data);
+                        // 顯示結果頁面
+                        showResultPage(currentScore >= 3, currentScore, difficulty, currentScore >= 3 ? 50 : 0);
+                    })
+                    .catch(error => {
+                        console.error('保存遊戲記錄失敗:', error);
+                        // 即使保存失敗也顯示結果頁面
+                        showResultPage(currentScore >= 3, currentScore, difficulty, currentScore >= 3 ? 50 : 0);
+                    });
+                });
+            }
+            
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    console.log('重新開始');
+                    // 發送AJAX請求重置遊戲
+                    fetch('clue.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'ajax=1&action=start_game'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // 重置成功，跳轉到難度選擇頁面
+                            window.location.href = 'clue.php';
+                        } else {
+                            console.error('重置遊戲失敗:', data.message);
+                            // 即使重置失敗也跳轉
+                            window.location.href = 'clue.php';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('重置遊戲請求失敗:', error);
+                        // 即使請求失敗也跳轉
+                        window.location.href = 'clue.php';
+                    });
+                });
+            }
+            
+            // 顯示結果頁面的函數 - 改為直接顯示結果，不跳轉
+            function showResultPage(pass, score, difficulty, pass_bounce) {
+                // 創建結果頁面HTML並替換當前頁面內容
+                const resultHtml = `
+                    <div class="result-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+                        <div class="modal-content" style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 400px;">
+                            <h2>${pass ? '🎉恭喜破關' : '⏰遊戲結束'}</h2>
+                            <div class="result-info">
+                                <p><strong>答對題數：</strong>${score}/5</p>
+                                <p><strong>過關條件：</strong>3題</p>
+                                ${!pass ? '<p>未達成目標分數!</p>' : ''}
+                                ${pass ? `<p><strong>獲得分數：+</strong>${pass_bounce}分</p>` : ''}
+                            </div>
+                            <div class="result-btns">
+                                <button onclick="restartGame()" style="margin: 0.5rem; padding: 0.5rem 1rem; background: #F91519; color: white; border: none; border-radius: 4px; cursor: pointer;">再玩一次</button>
+                                <button onclick="handleBackButton()" style="margin: 0.5rem; padding: 0.5rem 1rem; background: #1D3557; color: white; border: none; border-radius: 4px; cursor: pointer;">返回主頁</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.innerHTML = resultHtml;
+            }
         });
+        
+        // 記錄遊戲開始時間
+        window.gameStartTime = Date.now();
+        window.memberId = <?= json_encode($_SESSION['member_id'] ?? null) ?>;
     </script>
 </head>
 <body>
@@ -609,17 +1095,24 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
         <div class="status-bar">
             <div class="status-item">
                 <span class="status-label">答對題數 :</span>
-                <span class="status-value correct-count" id="correct-count">0</span>
+                <span class="status-value correct-count" id="correct-count" data-initial="<?= $_SESSION['clue_correct'] ?? 0 ?>"><?= $_SESSION['clue_correct'] ?? 0 ?></span>
             </div>
             <div class="status-item">
                 <span class="status-label">過關題數 :</span>
-                <span class="status-value pass-count" id="pass-count">0</span>
+                <span class="status-value pass-count" id="pass-count">3</span>
             </div>
             <div class="status-item">
                 <span class="status-label">剩餘題數 :</span>
-                <span class="status-value remaining-count" id="remaining-count">5</span>
+                <span class="status-value remaining-count" id="remaining-count" data-initial="<?= max(0, 5 - ($_SESSION['clue_total'] ?? 0)) ?>"><?= max(0, 5 - ($_SESSION['clue_total'] ?? 0)) ?></span>
             </div>
         </div>
+        
+        <!-- 調試信息 -->
+        <div style="display: none;" id="debug-info">
+            <p>Session總題數: <?= $_SESSION['clue_total'] ?? 0 ?></p>
+            <p>Session答對數: <?= $_SESSION['clue_correct'] ?? 0 ?></p>
+        </div>
+        
         
         <div id="timer-block">
             <div id="countdown">剩餘時間：<span id="time-left"><?= (int)$question['display_time'] ?></span> 秒</div>
@@ -629,7 +1122,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
         </div>
         <div id="question-block">
             <h3><?= htmlspecialchars($question['question_text']) ?></h3>
-            <form id="answer-form" class="options-grid">
+            <form id="answer-form" class="options-grid" method="POST" action="clue.php">
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_1']) ?>"> <?= htmlspecialchars($question['option_1']) ?> </button>
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_2']) ?>"> <?= htmlspecialchars($question['option_2']) ?> </button>
                 <button type="button" class="option-btn" data-value="<?= htmlspecialchars($question['option_3']) ?>"> <?= htmlspecialchars($question['option_3']) ?> </button>
@@ -646,6 +1139,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
             <button id="resetBtn" class="blue-btn">重新開始</button>
         </div>
     </div>
+    <script src="js/game-common.js"></script>
     <script src="js/clue.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
     <script>
@@ -662,6 +1156,16 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
                 gameTracker.exitGame();
             }
         });
+        
+        // 返回主頁按鈕處理
+        function handleBackButton() {
+            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            if (document.referrer && document.referrer !== window.location.href) {
+                history.back();
+            } else {
+                window.location.href = 'game-category.php';
+            }
+        }
     </script>
 </body>
 </html> 
