@@ -356,7 +356,19 @@ function processGameResult($data) {
         $record_id = $pdo->lastInsertId();
         error_log("遊戲記錄插入成功: record_id=$record_id");
         
-        // 5. 跳過每日任務檢查（避免登入檢查問題）
+        // 5. 更新會員總分數和分類分數
+        if ($final_status === 'completed' && $final_score > 0) {
+            // 更新會員總分數
+            $update_stmt = $pdo->prepare("UPDATE member SET total_score = total_score + ? WHERE member_id = ?");
+            $update_stmt->execute([$final_score, $member_id]);
+            
+            // 根據遊戲類型更新對應的分類分數
+            updateCategoryScore($member_id, $game_type, $final_score);
+            
+            error_log("已更新會員分數: member_id=$member_id, 增加分數=$final_score, 遊戲類型=$game_type");
+        }
+        
+        // 6. 跳過每日任務檢查（避免登入檢查問題）
         $completed_tasks = [];
         
         // 提交交易

@@ -662,6 +662,12 @@ async function saveGameResult() {
         
         if (result.success) {
             console.log('過河遊戲結果保存成功');
+            // 立即更新主頁面分數
+            if (window.forceRefreshScore) {
+                setTimeout(() => {
+                    window.forceRefreshScore();
+                }, 1000); // 1秒後更新，確保資料庫已保存
+            }
         } else {
             console.error('過河遊戲結果保存失敗:', result.message);
         }

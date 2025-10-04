@@ -291,6 +291,12 @@ function endGame(isManualExit = false) {
   .then(data => {
     if (data.success) {
       console.log('成績已儲存！', data);
+      // 立即更新主頁面分數
+      if (window.forceRefreshScore) {
+        setTimeout(() => {
+          window.forceRefreshScore();
+        }, 1000); // 1秒後更新，確保資料庫已保存
+      }
     } else {
       console.error('儲存失敗：', data.message);
     }

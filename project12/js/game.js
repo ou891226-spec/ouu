@@ -1008,6 +1008,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('API回應', result);
         if (!result.success) {
             alert('儲存紀錄失敗: ' + result.message);
+        } else {
+            // 立即更新主頁面分數
+            if (window.forceRefreshScore) {
+                setTimeout(() => {
+                    window.forceRefreshScore();
+                }, 1000); // 1秒後更新，確保資料庫已保存
+            }
         }
         
         // 檢查並更新任務狀態

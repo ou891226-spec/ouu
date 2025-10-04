@@ -2816,6 +2816,12 @@ async function saveGameResult(isWin, playTime) {
             console.log('JSON響應:', result);
             if (result.success) {
                 console.log('遊戲結果已保存成功:', result);
+                // 立即更新主頁面分數
+                if (window.forceRefreshScore) {
+                    setTimeout(() => {
+                        window.forceRefreshScore();
+                    }, 1000); // 1秒後更新，確保資料庫已保存
+                }
             } else {
                 console.error('保存失敗:', result.message, result.debug);
             }

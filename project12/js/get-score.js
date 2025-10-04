@@ -4,7 +4,7 @@ function fetchUserScore() {
   // 檢查元素是否存在
   const scoreElement = document.getElementById('scoreValue');
   if (!scoreElement) {
-    console.error('找不到 scoreValue 元素');
+    console.log('找不到 scoreValue 元素，可能不在主頁面，跳過分數更新');
     return;
   }
   
@@ -36,6 +36,31 @@ function fetchUserScore() {
     });
 }
 
+// 通知主頁面更新分數的函數
+function notifyMainPageScoreUpdate() {
+  console.log('通知主頁面更新分數...');
+  
+  // 嘗試通知父頁面（如果是在iframe中）
+  if (window.parent && window.parent !== window) {
+    try {
+      window.parent.postMessage({type: 'scoreUpdate'}, '*');
+      console.log('已通知父頁面更新分數');
+    } catch (e) {
+      console.log('無法通知父頁面:', e.message);
+    }
+  }
+  
+  // 嘗試通知opener（如果是從主頁面打開的）
+  if (window.opener && !window.opener.closed) {
+    try {
+      window.opener.postMessage({type: 'scoreUpdate'}, '*');
+      console.log('已通知opener更新分數');
+    } catch (e) {
+      console.log('無法通知opener:', e.message);
+    }
+  }
+}
+
 // 立即更新分數的函數
 function updateScoreImmediately() {
   console.log('立即更新分數...');
@@ -54,6 +79,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // 每30秒重新載入分數
 setInterval(fetchUserScore, 30000);
 
+// 監聽來自其他頁面的分數更新通知
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'scoreUpdate') {
+    console.log('收到分數更新通知，重新載入分數...');
+    fetchUserScore();
+  }
+});
+
+// 智能分數更新函數
+function smartScoreUpdate() {
+  console.log('智能分數更新...');
+  
+  // 先嘗試直接更新（如果在主頁面）
+  fetchUserScore();
+  
+  // 然後嘗試通知其他頁面
+  notifyMainPageScoreUpdate();
+}
+
 // 添加手動刷新功能
 window.refreshScore = fetchUserScore;
 window.updateScoreImmediately = updateScoreImmediately;
+window.forceRefreshScore = smartScoreUpdate;

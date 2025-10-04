@@ -50,6 +50,11 @@ try {
             (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 10
         ) THEN 'completed'
         WHEN (
+            -- 遊戲愛好者：完成15局遊戲
+            (d.task_name = '遊戲愛好者' OR d.task_description LIKE '%完成15局%' OR d.task_description LIKE '%15局%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 15
+        ) THEN 'completed'
+        WHEN (
             -- 持久戰士：累積遊戲時間達到目標
             (d.task_description LIKE '%分鐘%' OR d.task_description LIKE '%遊玩時間%') AND
             (SELECT COALESCE(SUM(play_time), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time IS NOT NULL) >= 300
@@ -120,6 +125,14 @@ try {
                 WHEN d.task_description LIKE '%添加10%' THEN 10
                 ELSE 3
             END
+        ) THEN 'completed'
+        WHEN (
+            -- 成就大師：獲得3個成就
+            (d.task_name = '成就大師' OR d.task_description LIKE '%獲得.*成就%' OR d.task_description LIKE '%成就大師%') AND
+            (SELECT COUNT(*) FROM member_achievements ma 
+             JOIN achievements a ON ma.achievement_id = a.achievement_id 
+             WHERE ma.member_id = mt.member_id AND DATE(ma.earned_date) = CURDATE() 
+             AND a.achievement_name != '每日登入') >= 3
         ) THEN 'completed'
         WHEN (
             -- 速度之王：30秒內完成遊戲

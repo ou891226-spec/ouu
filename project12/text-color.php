@@ -1084,6 +1084,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         });
     </script>
     <script src="js/game-common.js"></script>
+    <script src="js/get-score.js"></script>
     <script src="js/achievements.js"></script>
 </body>
 </html>

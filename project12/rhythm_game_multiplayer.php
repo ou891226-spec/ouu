@@ -302,6 +302,7 @@ try {
       localStorage.setItem('member_id', phpCurrentUserId);
     }
   </script>
+  <script src="js/get-score.js"></script>
   <script src="js/rhythm_game_multiplayer.js"></script>
 </body>
 </html>

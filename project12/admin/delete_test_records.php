@@ -317,6 +317,7 @@ try {
             <a href="user_behavior.php">行為軌跡</a>
             <a href="question_management.php">遊戲管理</a>
             <a href="user_management.php">用戶管理</a>
+            <a href="ability_analysis.php">能力分析</a>
             <a href="delete_test_records.php" style="background: #007bff; color: white;">刪除測試記錄</a>
         </div>
 

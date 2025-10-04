@@ -636,6 +636,7 @@ exit;
         document.addEventListener('DOMContentLoaded', checkTouchDevice);
     </script>
     <script src="js/game-common.js"></script>
+    <script src="js/get-score.js"></script>
     <script src="js/game.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>

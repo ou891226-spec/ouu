@@ -710,5 +710,6 @@ $colors = $stmt->fetchAll();
             }, 1000);
         });
     </script>
+    <script src="js/get-score.js"></script>
 </body>
 </html> 

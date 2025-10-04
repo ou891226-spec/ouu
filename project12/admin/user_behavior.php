@@ -402,6 +402,7 @@ $game_type_to_name = [
             <a href="user_behavior.php" class="active">👤 行為軌跡</a>
             <a href="question_management.php">🎯 遊戲管理</a>
             <a href="user_management.php">👥 用戶管理</a>
+            <a href="ability_analysis.php">🧠 能力分析</a>
         </div>
         
         <div class="filters">

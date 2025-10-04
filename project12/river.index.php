@@ -411,5 +411,7 @@ foreach ($settings as $setting) {
         window.difficultySettings = <?php echo json_encode($difficultySettings); ?>;
         window.memberId = <?php echo isset($_SESSION['member_id']) ? $_SESSION['member_id'] : 'null'; ?>;
     </script>
+    <script src="js/get-score.js"></script>
+    <script src="js/river.script.js"></script>
 </body>
 </html>

@@ -184,6 +184,7 @@ $highScore = 0;
   <audio id="game-bgm" src="audio/prisoner.mp3" loop></audio>
 
   <script src="js/game-common.js"></script>
+  <script src="js/get-score.js"></script>
   <script src="js/prisoner.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

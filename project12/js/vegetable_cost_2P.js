@@ -2151,6 +2151,13 @@ async function saveGameResult() {
         
         const result = await response.json();
         console.log('遊戲結果保存:', result);
+        
+        // 立即更新主頁面分數
+        if (window.forceRefreshScore) {
+            setTimeout(() => {
+                window.forceRefreshScore();
+            }, 1000); // 1秒後更新，確保資料庫已保存
+        }
     } catch (error) {
         console.error('保存遊戲結果失敗:', error);
     }

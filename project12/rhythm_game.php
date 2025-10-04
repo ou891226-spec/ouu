@@ -137,6 +137,7 @@ foreach ($settings as $setting) {
         <audio id="tap-sfx" src="audio/tap.m4a" preload="auto"></audio>
     </div>    
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
+    <script src="js/get-score.js?v=<?php echo time(); ?>"></script>
     <script src="js/rhythm_game.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

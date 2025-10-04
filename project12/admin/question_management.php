@@ -82,6 +82,7 @@ try {
             <a href="user_behavior.php">👤 行為軌跡</a>
             <a href="question_management.php" class="active">🎯 遊戲管理</a>
             <a href="user_management.php">👥 用戶管理</a>
+            <a href="ability_analysis.php">🧠 能力分析</a>
         </div>
         
         <div class="content">
@@ -127,18 +128,6 @@ try {
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            
-            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
-                <h3>功能說明</h3>
-                <p>此頁面顯示所有遊戲的統計數據，包括：</p>
-                <ul>
-                    <li>各遊戲的遊玩次數</li>
-                    <li>平均分數</li>
-                    <li>最高分數</li>
-                    <li>整體統計概覽</li>
-                </ul>
-                <p>您可以透過這些數據了解用戶的遊戲偏好和表現。</p>
-                        </div>
         </div>
     </div>
 </body>

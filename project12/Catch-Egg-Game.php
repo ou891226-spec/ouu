@@ -393,6 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         }
     </script>
     <script src="js/game-common.js"></script>
+    <script src="js/get-score.js"></script>
     <script src="js/Catch-Egg.js"></script>
     <!-- <script src="js/auto-save-time-fixed.js"></script> --> <!-- 移除：此腳本是為2048遊戲設計的 -->
 </body>

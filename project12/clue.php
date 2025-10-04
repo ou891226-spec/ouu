@@ -1167,5 +1167,6 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
             }
         }
     </script>
+    <script src="js/get-score.js"></script>
 </body>
 </html> 

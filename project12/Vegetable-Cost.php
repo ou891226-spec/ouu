@@ -249,6 +249,7 @@ if (!isset($_SESSION['member_id'])) {
         }
     </script>
     <script src="js/game-common.js"></script>
+    <script src="js/get-score.js"></script>
     <script src="js/Vegetable-Cost.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
 </body>

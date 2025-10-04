@@ -537,6 +537,7 @@ $current_user = $stmt->fetch(PDO::FETCH_ASSOC);
             }
         }
     </script>
+    <script src="js/get-score.js"></script>
     <script src="js/vegetable_cost_2P.js"></script>
 </body>
 </html>

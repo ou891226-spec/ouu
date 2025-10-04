@@ -58,6 +58,13 @@ async function saveGameResult(gameData) {
         console.log('最終狀態:', result.status);
         console.log('最終分數:', result.score);
         
+        // 立即更新主頁面分數
+        if (window.forceRefreshScore) {
+            setTimeout(() => {
+                window.forceRefreshScore();
+            }, 1000); // 1秒後更新，確保資料庫已保存
+        }
+        
         // 如果有完成的任務，顯示通知
         if (result.completed_tasks && result.completed_tasks.length > 0) {
             console.log('完成的任務:', result.completed_tasks);

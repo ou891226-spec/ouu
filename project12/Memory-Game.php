@@ -252,6 +252,7 @@ $colors = $stmt->fetchAll();
         localStorage.setItem('member_id', memberId);
     </script>
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
+    <script src="js/get-score.js?v=<?php echo time(); ?>"></script>
     <script src="js/Memory-Game.js?v=<?php echo time(); ?>"></script>
 </body>
 </html> 

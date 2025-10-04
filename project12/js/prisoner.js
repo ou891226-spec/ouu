@@ -426,11 +426,13 @@ function sendScoreToServer(score, level, is_passed, isManualExit = false) {
     .then(result => {
       if (result.success) {
         console.log("✅ 成績已儲存");
-      } else {
-        console.error("❌ 儲存失敗：", result.message);
-      }
-    })
-    .catch(err => {
-      console.error("❌ 發送錯誤：", err);
+        // 立即更新主頁面分數
+        if (window.forceRefreshScore) {
+          setTimeout(() => {
+            window.forceRefreshScore();
+          }, 1000); // 1秒後更新，確保資料庫已保存
+        }
+      } 
+
     });
 }
