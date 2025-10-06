@@ -12,7 +12,7 @@ $admin_name = $_SESSION['admin_name'] ?? '管理員';
 // 預載部分用戶供下拉選單（最多200）
 $users = [];
 try {
-    $stmt = $pdo->query("SELECT member_id, COALESCE(member_name, name, account) AS display_name FROM member ORDER BY member_id DESC LIMIT 200");
+    $stmt = $pdo->query("SELECT member_id, member_name AS display_name FROM member ORDER BY member_id DESC LIMIT 200");
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $users = [];

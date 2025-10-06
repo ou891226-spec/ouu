@@ -379,10 +379,13 @@ try {
           <div class="friend-info">
             <span class="friend-name"><?php echo htmlspecialchars($invite['member_name']); ?></span>
             <span class="friend-account">(<?php echo htmlspecialchars($invite['account']); ?>)</span>
+            <?php if ($invite['status'] === 'pending'): ?>
             <div style="font-size:12px;color:#888;margin-top:4px;">
-              狀態：<?php echo htmlspecialchars($status_label); ?>
+              狀態：待處理
             </div>
+            <?php endif; ?>
           </div>
+          <button class="delete-friend-btn" data-request-id="<?php echo $invite['request_id']; ?>" data-receiver-name="<?php echo htmlspecialchars($invite['member_name']); ?>">&#128465;</button>
         </div>
       <?php endforeach; ?>
     <?php endif; ?>
@@ -585,27 +588,38 @@ document.addEventListener('DOMContentLoaded', function() {
   deleteButtons.forEach(button => {
     button.addEventListener('click', function() {
       const friendId = this.getAttribute('data-id');
+      const requestId = this.getAttribute('data-request-id');
       const friendRow = this.closest('.friend-row');
       const friendNameElement = friendRow.querySelector('.friend-name');
+      const receiverName = this.getAttribute('data-receiver-name');
       
-      console.log('刪除按鈕被點擊:', { friendId, friendRow, friendNameElement });
+      console.log('刪除按鈕被點擊:', { friendId, requestId, friendRow, friendNameElement, receiverName });
       
-      if (!friendId) {
-        console.error('無法獲取 friendId');
-        showDeleteErrorModal('無法獲取好友ID，請重新載入頁面');
+      // 判斷是刪除好友還是取消邀請
+      if (friendId) {
+        // 刪除好友
+        if (!friendNameElement) {
+          console.error('無法獲取好友名稱元素');
+          showDeleteErrorModal('無法獲取好友信息，請重新載入頁面');
+          return;
+        }
+        
+        const friendName = friendNameElement.textContent;
+        showDeleteConfirmModal(friendName, friendId, friendRow, 'friend');
+      } else if (requestId) {
+        // 取消邀請
+        if (!receiverName) {
+          console.error('無法獲取接收者名稱');
+          showDeleteErrorModal('無法獲取邀請信息，請重新載入頁面');
+          return;
+        }
+        
+        showDeleteConfirmModal(receiverName, requestId, friendRow, 'invitation');
+      } else {
+        console.error('無法獲取刪除目標ID');
+        showDeleteErrorModal('無法獲取刪除目標，請重新載入頁面');
         return;
       }
-      
-      if (!friendNameElement) {
-        console.error('無法獲取好友名稱元素');
-        showDeleteErrorModal('無法獲取好友信息，請重新載入頁面');
-        return;
-      }
-      
-      const friendName = friendNameElement.textContent;
-      
-      // 確認刪除
-      showDeleteConfirmModal(friendName, friendId, friendRow);
     });
   });
 });
@@ -672,25 +686,95 @@ function deleteFriend(friendId, friendRow) {
   });
 }
 
+function deleteInvitation(requestId, invitationRow) {
+  console.log('=== deleteInvitation 開始 ===');
+  console.log('requestId:', requestId);
+  console.log('invitationRow:', invitationRow);
+  console.log('typeof invitationRow:', typeof invitationRow);
+  
+  if (!invitationRow) {
+    console.error('invitationRow 參數為 null 或 undefined！');
+    showDeleteErrorModal('邀請行信息錯誤，請重新操作');
+    return;
+  }
+  
+  // 顯示刪除中狀態
+  const deleteBtn = invitationRow.querySelector('.delete-friend-btn');
+  const originalText = deleteBtn.innerHTML;
+  deleteBtn.innerHTML = '⏳';
+  deleteBtn.disabled = true;
+  
+  // 發送刪除請求
+  fetch('delete-invitation.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: `request_id=${requestId}`
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // 成功刪除，移除該行
+      invitationRow.style.opacity = '0.5';
+      invitationRow.style.transition = 'opacity 0.3s ease';
+      
+      setTimeout(() => {
+        invitationRow.remove();
+        
+        // 檢查是否還有邀請
+        const invitationContainer = invitationRow.closest('.friend-container');
+        const invitationList = invitationContainer.querySelector('.friend-list');
+        const remainingInvitations = invitationList.querySelectorAll('.friend-row');
+        
+        if (remainingInvitations.length === 0) {
+          invitationList.innerHTML = '<div class="empty-state">目前沒有送出的邀請</div>';
+        }
+      }, 300);
+      
+      showDeleteSuccessModal('已成功取消邀請');
+    } else {
+      // 刪除失敗，恢復按鈕
+      deleteBtn.innerHTML = originalText;
+      deleteBtn.disabled = false;
+      showDeleteErrorModal('取消邀請失敗：' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('取消邀請時發生錯誤：', error);
+    // 恢復按鈕
+    deleteBtn.innerHTML = originalText;
+    deleteBtn.disabled = false;
+    showDeleteErrorModal('取消邀請時發生錯誤，請稍後再試');
+  });
+}
+
 // 全域變數儲存刪除資訊
 window.deleteInfo = null;
 
 // 顯示刪除確認彈窗
-window.showDeleteConfirmModal = function(friendName, friendId, friendRow) {
+window.showDeleteConfirmModal = function(name, id, row, type) {
   // 添加調試信息
-  console.log('showDeleteConfirmModal 參數:', { friendName, friendId, friendRow });
+  console.log('showDeleteConfirmModal 參數:', { name, id, row, type });
   
-  if (!friendId) {
-    console.error('friendId 是空的！');
-    showDeleteErrorModal('無法獲取好友ID，請重新載入頁面');
+  if (!id) {
+    console.error('id 是空的！');
+    showDeleteErrorModal('無法獲取目標ID，請重新載入頁面');
     return;
   }
   
-  window.deleteInfo = { friendId: friendId, friendRow: friendRow };
+  window.deleteInfo = { id: id, row: row, type: type };
   
   const modal = document.getElementById('deleteConfirmModal');
   const message = document.getElementById('deleteConfirmMessage');
-  message.textContent = `確定要移除好友「${friendName}」嗎？`;
+  
+  if (type === 'friend') {
+    message.textContent = `確定要移除好友「${name}」嗎？`;
+  } else if (type === 'invitation') {
+    message.textContent = `確定要取消對「${name}」的邀請嗎？`;
+  } else {
+    message.textContent = `確定要刪除「${name}」嗎？`;
+  }
   
   modal.style.display = 'flex';
 };
@@ -701,7 +785,7 @@ window.closeDeleteConfirmModal = function() {
   window.deleteInfo = null;
 };
 
-// 確認刪除好友
+// 確認刪除好友或邀請
 window.confirmDeleteFriend = function() {
   console.log('=== confirmDeleteFriend 開始 ===');
   console.log('window.deleteInfo:', window.deleteInfo);
@@ -713,29 +797,39 @@ window.confirmDeleteFriend = function() {
     return;
   }
   
-  console.log('window.deleteInfo.friendId:', window.deleteInfo.friendId);
-  console.log('window.deleteInfo.friendRow:', window.deleteInfo.friendRow);
+  console.log('window.deleteInfo.id:', window.deleteInfo.id);
+  console.log('window.deleteInfo.row:', window.deleteInfo.row);
+  console.log('window.deleteInfo.type:', window.deleteInfo.type);
   
-  if (!window.deleteInfo.friendId) {
-    console.error('deleteInfo.friendId 是空的！');
-    showDeleteErrorModal('好友ID丟失，請重新操作');
+  if (!window.deleteInfo.id) {
+    console.error('deleteInfo.id 是空的！');
+    showDeleteErrorModal('目標ID丟失，請重新操作');
     return;
   }
   
-  if (!window.deleteInfo.friendRow) {
-    console.error('deleteInfo.friendRow 是空的！');
-    showDeleteErrorModal('好友行信息丟失，請重新操作');
+  if (!window.deleteInfo.row) {
+    console.error('deleteInfo.row 是空的！');
+    showDeleteErrorModal('行信息丟失，請重新操作');
     return;
   }
   
-  console.log('準備調用 deleteFriend 函數');
+  console.log('準備調用刪除函數');
   
   // 先保存 deleteInfo 的值，因為 closeDeleteConfirmModal 會將其設為 null
-  const friendId = window.deleteInfo.friendId;
-  const friendRow = window.deleteInfo.friendRow;
+  const id = window.deleteInfo.id;
+  const row = window.deleteInfo.row;
+  const type = window.deleteInfo.type;
   
   closeDeleteConfirmModal();
-  deleteFriend(friendId, friendRow);
+  
+  if (type === 'friend') {
+    deleteFriend(id, row);
+  } else if (type === 'invitation') {
+    deleteInvitation(id, row);
+  } else {
+    showDeleteErrorModal('未知的刪除類型');
+  }
+  
   console.log('=== confirmDeleteFriend 結束 ===');
 };
 

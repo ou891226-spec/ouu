@@ -31,7 +31,7 @@ if (!$member_id || !$new_name) {
 
 try {
     // 檢查名字是否重複（排除自己）
-    $sql_check = "SELECT member_id FROM member WHERE name = ? AND member_id != ?";
+    $sql_check = "SELECT member_id FROM member WHERE member_name = ? AND member_id != ?";
     $stmt_check = $pdo->prepare($sql_check);
     $stmt_check->execute([$new_name, $member_id]);
     if ($stmt_check->fetch()) {
@@ -46,12 +46,12 @@ try {
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
         
         // 更新名字與密碼
-        $sql = "UPDATE member SET name = ?, password = ? WHERE member_id = ?";
+        $sql = "UPDATE member SET member_name = ?, password = ? WHERE member_id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$new_name, $hashed_password, $member_id]);
     } else {
         // 只更新名字
-        $sql = "UPDATE member SET name = ? WHERE member_id = ?";
+        $sql = "UPDATE member SET member_name = ? WHERE member_id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$new_name, $member_id]);
     }

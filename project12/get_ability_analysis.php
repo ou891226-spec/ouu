@@ -1,21 +1,18 @@
 <?php
+// 使用輸出淨化工具
+require_once 'output_cleaner.php';
+initCleanOutput();
+
 session_start();
 require_once 'db.php';
-
-header('Content-Type: application/json');
-
-// 抑制錯誤輸出
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
 
 $member_id = $_SESSION['member_id'] ?? null;
 
 if (!$member_id) {
-    echo json_encode([
+    outputCleanJson([
         'success' => false,
         'message' => '尚未登入'
     ]);
-    exit;
 }
 
 try {
@@ -26,11 +23,10 @@ try {
     $score_result = $score_stmt->fetch();
     
     if (!$score_result) {
-        echo json_encode([
+        outputCleanJson([
             'success' => false,
             'message' => '找不到用戶數據'
         ]);
-        exit;
     }
     
     // 獲取所有用戶的平均分數作為基準
@@ -128,7 +124,7 @@ try {
     // 生成能力分析報告
     $analysis_report = generateAnalysisReport($reaction_level, $memory_level, $logic_level);
     
-    echo json_encode([
+    outputCleanJson([
         'success' => true,
         'data' => [
             'reaction' => round($reaction_strength, 1),
@@ -157,7 +153,7 @@ try {
     ]);
     
 } catch (Exception $e) {
-    echo json_encode([
+    outputCleanJson([
         'success' => false,
         'message' => '分析失敗：' . $e->getMessage()
     ]);
@@ -284,4 +280,5 @@ function generateAnalysisReport($reaction_level, $memory_level, $logic_level) {
     
     return $report;
 }
+
 ?> 

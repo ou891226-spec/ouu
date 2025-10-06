@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/85efda47-1f5e-444a-bf56-2e54fbfe2b43/resourceGroups/SmartFun-Seniors/providers/Microsoft.Web/sites/smartfun-ai-service",
+    "appService.deploySubpath": "AI"
+}

@@ -54,6 +54,19 @@ h1 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* 新分數看板樣式覆蓋 */
+.score-board.new-score-board {
+  display: flex;
+  justify-content: space-around;
+  background: #fafbfc;
+  border-radius: 16px;
+  padding: 18px 30px 10px 35px;
+  margin-bottom: 18px;
+  margin-left: 0;
+  margin-right: 0;
+  box-shadow: none;
+}
+
 /* 暫停狀態提示樣式 */
 .pause-indicator {
   display: flex;
@@ -99,6 +112,11 @@ h1 {
   font-size: 16px;
   color: #333;
   gap: 8px;
+}
+
+/* 最後一個分數項目（剩餘時間）往左調整 */
+.score-item:last-child {
+  margin-left: -20px;
 }
 
 .score-item span:first-child {
@@ -463,10 +481,10 @@ button:hover {
 /* 新分數區塊 */
 .new-score-board {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   background: #fafbfc;
   border-radius: 16px;
-  padding: 18px 0 10px 0;
+  padding: 18px 30px 10px 50px;
   margin-bottom: 18px;
   box-shadow: none;
 }

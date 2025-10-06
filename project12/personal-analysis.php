@@ -139,10 +139,44 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <div id="report-section" class="category-games" style="display: none;">
     <div class="analysis-report">
       <h3>能力分析報告</h3>
+      
+      <!-- AI分析按鈕 -->
+      <div class="ai-analysis-controls" style="text-align: center; margin-bottom: 20px;">
+        <button id="aiAnalysisBtn" class="ai-btn" onclick="generateAIAnalysis()" style="
+          background: linear-gradient(45deg,rgb(212, 197, 158) 0%,rgb(245, 138, 89) 100%);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 25px;
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+          transition: all 0.3s ease;
+        ">
+          🤖 生成AI智能分析
+        </button>
+        <div id="aiLoading" style="display: none; margin-top: 10px;">
+          <span style="color: #ffffff; background-color:rgb(237, 174, 57); padding: 4px 8px; border-radius: 4px;">AI正在分析中...</span>
+        </div>
+      </div>
+      
       <div class="report-content">
         <div class="player-type" id="playerType"></div>
         <div class="description" id="description"></div>
         <div class="suggestions" id="suggestions"></div>
+        
+        <!-- AI分析標識 -->
+        <div id="aiIndicator" style="display: none; text-align: center; margin-top: 15px;">
+          <span style="
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+          ">✨ AI智能分析</span>
+        </div>
       </div>
     </div>
   </div>
@@ -175,8 +209,12 @@ function loadAbilityAnalysis() {
     .then(data => {
       if (data.success) {
         createRadarChart(data.data);
-        updateAnalysisReport(data.data);
+        // 移除自動顯示分析報告，只載入圖表和統計數據
+        // updateAnalysisReport(data.data);
         updateDetailedStats(data.data);
+        
+        // 初始化空的報告區域
+        initializeEmptyReport();
       } else {
         console.error('載入分析數據失敗:', data.message);
         // 顯示錯誤信息
@@ -392,25 +430,101 @@ function createTrendChart(trendData) {
   });
 }
 
+// 初始化空的報告區域
+function initializeEmptyReport() {
+  document.getElementById('playerType').innerHTML = 
+    '<strong>玩家類型：</strong><span style="color: #ccc;">請點擊上方按鈕生成AI分析</span>';
+  document.getElementById('description').innerHTML = 
+    '<strong>分析說明：</strong><span style="color: #ccc;">等待AI分析...</span>';
+  document.getElementById('suggestions').innerHTML = 
+    '<strong>改進建議：</strong><span style="color: #ccc;">AI將為您提供個性化建議</span>';
+  
+  // 隱藏AI分析標識
+  const aiIndicator = document.getElementById('aiIndicator');
+  aiIndicator.style.display = 'none';
+}
+
 // 更新分析報告
 function updateAnalysisReport(data) {
-  const report = data.report;
+  const report = data.report || data; // 兼容不同的數據結構
+  
+  // 安全地獲取報告內容
+  const playerType = report?.type || '智能分析玩家';
+  const description = report?.description || '<span style="color: #ffffff; background-color: #2196F3; padding: 2px 6px; border-radius: 3px;">AI正在為您分析...</span>';
+  const suggestions = report?.suggestions || [];
+  const isAIEnhanced = report?.ai_enhanced || false;
   
   document.getElementById('playerType').innerHTML = 
-    `<strong>玩家類型：</strong>${report.type}`;
+    `<strong>玩家類型：</strong>${playerType}`;
   document.getElementById('description').innerHTML = 
-    `<strong>分析說明：</strong>${report.description}`;
+    `<strong>分析說明：</strong>${description}`;
   
-  if (report.suggestions && report.suggestions.length > 0) {
-    const suggestionsHtml = report.suggestions.map(suggestion => 
+  if (suggestions && Array.isArray(suggestions) && suggestions.length > 0) {
+    const suggestionsHtml = suggestions.map(suggestion => 
       `<li>${suggestion}</li>`
     ).join('');
     document.getElementById('suggestions').innerHTML = 
       `<strong>改進建議：</strong><ul>${suggestionsHtml}</ul>`;
   } else {
+    // 如果 suggestions 是字符串，直接顯示
+    const suggestionsText = typeof suggestions === 'string' ? suggestions : '您的能力發展得很好！';
     document.getElementById('suggestions').innerHTML = 
-      '<strong>改進建議：</strong>您的能力發展得很好！';
+      `<strong>改進建議：</strong>${suggestionsText}`;
   }
+  
+  // 顯示是否為AI分析
+  const aiIndicator = document.getElementById('aiIndicator');
+  if (isAIEnhanced) {
+    aiIndicator.style.display = 'block';
+  } else {
+    aiIndicator.style.display = 'none';
+  }
+}
+
+// 生成AI分析
+function generateAIAnalysis() {
+  const btn = document.getElementById('aiAnalysisBtn');
+  const loading = document.getElementById('aiLoading');
+  
+  // 顯示載入狀態
+  btn.style.display = 'none';
+  loading.style.display = 'block';
+  
+          fetch('AI/ai_analysis.php')
+    .then(response => response.json())
+    .then(data => {
+        
+      if (data.success) {
+        // 顯示AI分析結果
+        updateAnalysisReport(data.data);
+        
+        // 顯示成功訊息
+        loading.innerHTML = '<span style="color: #ffffff; background-color: #4CAF50; padding: 4px 8px; border-radius: 4px;">✅ AI分析完成！</span>';
+        
+        // 3秒後隱藏載入訊息並恢復按鈕
+        setTimeout(() => {
+          loading.style.display = 'none';
+          btn.style.display = 'inline-block';
+          btn.innerHTML = '🔄 重新生成AI分析';
+        }, 3000);
+        
+      } else {
+        throw new Error(data.message || 'AI分析失敗');
+      }
+    })
+    .catch(error => {
+      console.error('AI分析錯誤:', error);
+      
+      // 顯示錯誤訊息
+      loading.innerHTML = '<span style="color: #ffffff; background-color: #f44336; padding: 4px 8px; border-radius: 4px;">❌ AI分析失敗</span>';
+      
+      // 3秒後恢復按鈕
+      setTimeout(() => {
+        loading.style.display = 'none';
+        btn.style.display = 'inline-block';
+        btn.innerHTML = '🤖 生成AI智能分析';
+      }, 3000);
+    });
 }
 
 // 顯示分析區塊（類似遊戲分類的切換功能）

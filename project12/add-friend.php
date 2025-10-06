@@ -127,10 +127,10 @@ $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
         xhr.send('q=' + encodeURIComponent(q));
     };
 
-    // 關閉查無此帳號 modal
+    // 關閉查無此帳號 modal 並返回好友列表
     document.querySelectorAll('.back-friendlist-btn').forEach(function(btn){
         btn.onclick = function() {
-            this.closest('.invite-modal').style.display = 'none';
+            window.location.href = 'friend.php';
         };
     });
 

@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["member_id"] = $row['member_id'];
                 $_SESSION["account"] = $row['account'];
                 $_SESSION["member_name"] = $row['member_name'];
-                $_SESSION["name"] = $row['name'] ?? $row['member_name'];
+                $_SESSION["name"] = $row['member_name'];
                 
                 // 修復頭像邏輯：如果沒有頭像就強制生成
                 if ($row['avatar'] && $row['avatar'] !== 'img/big.jpg') {
@@ -112,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["member_id"] = $row['member_id'];
                 $_SESSION["account"] = $row['account'];
                 $_SESSION["member_name"] = $row['member_name'];
-                $_SESSION["name"] = $row['name'] ?? $row['member_name'];
+                $_SESSION["name"] = $row['member_name'];
                 
                 // 修復頭像邏輯：如果沒有頭像就強制生成
                 if ($row['avatar'] && $row['avatar'] !== 'img/big.jpg') {

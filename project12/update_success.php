@@ -30,7 +30,7 @@
                         <i class="fas fa-user"></i>
                         <span>新姓名</span>
                     </div>
-                    <div class="info-value"><?php echo htmlspecialchars($_GET['name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars(urldecode($_GET['name'])); ?></div>
                 </div>
                 <?php endif; ?>
                 

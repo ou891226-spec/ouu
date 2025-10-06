@@ -91,7 +91,8 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
-               AND DATE(play_date) = CURDATE()) >= 3
+               AND DATE(play_date) = CURDATE() 
+               AND status = 'completed') >= 3
            ) THEN 'completed'
            WHEN (
                -- 全面發展：每種類型遊戲都完成至少3局
@@ -103,7 +104,8 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
-               AND DATE(play_date) = CURDATE()) >= 3 AND
+               AND DATE(play_date) = CURDATE() 
+               AND status = 'completed') >= 3 AND
                (SELECT COUNT(*) FROM (
                    SELECT CASE 
                        WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
@@ -115,6 +117,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    FROM game_records 
                    WHERE member_id = mt.member_id 
                    AND DATE(play_date) = CURDATE()
+                   AND status = 'completed'
                    GROUP BY game_category
                    HAVING count >= 3
                ) as qualified_categories) >= 3
@@ -188,6 +191,31 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                -- 遊戲之神：完成100局遊戲
                (d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%') AND
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 100
+           ) THEN 'completed'
+           WHEN (
+               -- 簡單專家：完成10局簡單難度遊戲
+               (d.task_name = '簡單專家' OR d.task_description LIKE '%完成10局簡單難度遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'easy') >= 10
+           ) THEN 'completed'
+           WHEN (
+               -- 普通大師：完成10局普通難度遊戲
+               (d.task_name = '普通大師' OR d.task_description LIKE '%完成10局普通難度遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'normal') >= 10
+           ) THEN 'completed'
+           WHEN (
+               -- 困難王者：完成5局困難難度遊戲
+               (d.task_name = '困難王者' OR d.task_description LIKE '%完成5局困難難度遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'hard') >= 5
+           ) THEN 'completed'
+           WHEN (
+               -- 快速完成：5分鐘內完成3局遊戲
+               (d.task_name = '快速完成' OR d.task_description LIKE '%5分鐘內完成3局遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 300) >= 3
+           ) THEN 'completed'
+           WHEN (
+               -- 效率專家：10分鐘內完成5局遊戲
+               (d.task_name = '效率專家' OR d.task_description LIKE '%10分鐘內完成5局遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 600) >= 5
            ) THEN 'completed'
            ELSE 'pending'
        END as status,
@@ -279,6 +307,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                END) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
+               AND status = 'completed'
                AND (
                    (CASE WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                          WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
@@ -295,6 +324,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                            FROM game_records 
                            WHERE member_id = mt.member_id 
                            AND DATE(play_date) = CURDATE()
+                           AND status = 'completed'
                            GROUP BY game_category
                            HAVING count >= 1
                        ) as qualified_categories
@@ -311,6 +341,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                END) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE()
+               AND status = 'completed'
                AND (
                    (CASE WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                          WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
@@ -327,6 +358,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                            FROM game_records 
                            WHERE member_id = mt.member_id 
                            AND DATE(play_date) = CURDATE()
+                           AND status = 'completed'
                            GROUP BY game_category
                            HAVING count >= 3
                        ) as qualified_categories
@@ -503,6 +535,41 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%' THEN 1
            -- 遊戲之神：完成100局遊戲
            WHEN d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%' THEN 100
+           -- 簡單專家：完成10局簡單難度遊戲
+           WHEN d.task_name = '簡單專家' OR d.task_description LIKE '%完成10局簡單難度遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND difficulty = 'easy'
+           )
+           -- 普通大師：完成10局普通難度遊戲
+           WHEN d.task_name = '普通大師' OR d.task_description LIKE '%完成10局普通難度遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND difficulty = 'normal'
+           )
+           -- 困難王者：完成5局困難難度遊戲
+           WHEN d.task_name = '困難王者' OR d.task_description LIKE '%完成5局困難難度遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND difficulty = 'hard'
+           )
+           -- 快速完成：5分鐘內完成3局遊戲
+           WHEN d.task_name = '快速完成' OR d.task_description LIKE '%5分鐘內完成3局遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND play_time <= 300
+           )
+           -- 效率專家：10分鐘內完成5局遊戲
+           WHEN d.task_name = '效率專家' OR d.task_description LIKE '%10分鐘內完成5局遊戲%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE() 
+               AND play_time <= 600
+           )
            -- 其他任務：1次完成
            ELSE 1
        END as required

@@ -177,7 +177,20 @@ function loadDailyTasks() {
         // 支援累積型任務的進度計算
         const current = parseInt(task.progress) || 0;
         const required = parseInt(task.required) || 1;
-        const progressText = `${current}/${required}`;
+        
+        // 判斷是否為遊戲時間相關任務，如果是則添加"秒"字
+        const isTimeTask = task.task_name === '持久戰士' || 
+                          task.task_name === '速度之王' ||
+                          task.task_name === '時間大師' ||
+                          task.task_description.includes('分鐘') || 
+                          task.task_description.includes('秒') ||
+                          task.task_description.includes('遊玩時間') ||
+                          task.task_description.includes('遊戲時間') ||
+                          task.task_description.includes('累積時間') ||
+                          task.task_description.includes('總共') && task.task_description.includes('分鐘');
+        
+        
+        const progressText = isTimeTask ? `${current}/${required}秒` : `${current}/${required}`;
         
         // 判斷是否已完成（支援累積型任務）
         const isCompleted = current >= required || task.status === 'completed' || task.status === 'claimed';

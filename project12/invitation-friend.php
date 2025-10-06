@@ -28,7 +28,6 @@ $invites = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="invitation-row" data-request-id="<?php echo $invite['request_id']; ?>">
                 <div class="invitation-avatar-block">
                     <img src="<?php echo htmlspecialchars($invite['avatar'] ?? 'default.png'); ?>" class="invitation-avatar">
-                    <span class="invitation-status-dot"></span>
                 </div>
                 <div class="invitation-info">
                     <span class="invitation-name"><?php echo htmlspecialchars($invite['member_name']); ?></span>
