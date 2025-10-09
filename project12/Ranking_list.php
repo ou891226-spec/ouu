@@ -83,7 +83,6 @@ try {
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
     <a href="personal-analysis.php" class="jelly-btn jelly-yellow">個人分析</a>
-    <a href="system-architecture.php" class="jelly-btn jelly-yellow">系統架構</a>
     <a href="news.php" class="jelly-btn jelly-yellow">相關報導</a>
     <a href="us.php" class="jelly-btn jelly-yellow">關於我們</a>
   </div>

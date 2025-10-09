@@ -217,6 +217,16 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (d.task_name = '效率專家' OR d.task_description LIKE '%10分鐘內完成5局遊戲%') AND
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 600) >= 5
            ) THEN 'completed'
+           WHEN (
+               -- 連續勝利：連續正常玩完5局遊戲
+               (d.task_name = '連續勝利' OR d.task_description LIKE '%連續正常玩完5局遊戲%' OR d.task_description LIKE '%連續.*5局%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 5
+           ) THEN 'completed'
+           WHEN (
+               -- 時間挑戰者：正常玩完3局遊戲，每局時間不超過1分鐘
+               (d.task_name = '時間挑戰者' OR d.task_description LIKE '%每局時間不超過1分鐘%' OR d.task_description LIKE '%3局遊戲.*1分鐘%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 60) >= 3
+           ) THEN 'completed'
            ELSE 'pending'
        END as status,
        CASE 
@@ -500,6 +510,8 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_name = '平衡玩家' OR d.task_description LIKE '%每種類型遊戲都完成至少1局%' THEN 3
            -- 全面發展：每種類型遊戲都完成至少3局
            WHEN d.task_name = '全面發展' OR d.task_description LIKE '%每種類型遊戲都完成至少3局%' THEN 3
+           -- 時間挑戰者：正常玩完3局遊戲，每局時間不超過1分鐘
+           WHEN d.task_name = '時間挑戰者' OR d.task_description LIKE '%每局時間不超過1分鐘%' OR d.task_description LIKE '%3局遊戲.*1分鐘%' THEN 3
            -- 持久戰士：累積遊戲時間任務（根據描述中的分鐘數計算秒數）
            WHEN d.task_description LIKE '%5分鐘%' THEN 300
            WHEN d.task_description LIKE '%3分鐘%' THEN 180
@@ -535,7 +547,9 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_name = '刷新最高分數' OR d.task_description LIKE '%最高分數%' THEN 1
            -- 遊戲之神：完成100局遊戲
            WHEN d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%' THEN 100
-           -- 簡單專家：完成10局簡單難度遊戲
+           -- 連續勝利：連續正常玩完5局遊戲
+           WHEN d.task_name = '連續勝利' OR d.task_description LIKE '%連續正常玩完5局遊戲%' OR d.task_description LIKE '%連續.*5局%' THEN 5
+           -- 簡單專家：正常玩完成10局簡單難度遊戲
            WHEN d.task_name = '簡單專家' OR d.task_description LIKE '%完成10局簡單難度遊戲%' THEN (
                SELECT COUNT(*) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -570,6 +584,14 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                AND DATE(play_date) = CURDATE() 
                AND play_time <= 600
            )
+           -- 連續勝利：連續正常玩完5局遊戲
+           WHEN d.task_name = '連續勝利' OR d.task_description LIKE '%連續正常玩完5局遊戲%' OR d.task_description LIKE '%連續.*5局%' THEN (
+               SELECT COUNT(*) FROM game_records 
+               WHERE member_id = mt.member_id 
+               AND DATE(play_date) = CURDATE()
+           )
+           -- 時間挑戰者：正常玩完3局遊戲，每局時間不超過1分鐘
+           WHEN d.task_name = '時間挑戰者' OR d.task_description LIKE '%每局時間不超過1分鐘%' OR d.task_description LIKE '%3局遊戲.*1分鐘%' THEN 3
            -- 其他任務：1次完成
            ELSE 1
        END as required

@@ -88,17 +88,17 @@ try {
 
         <div class="summary" id="summary">
             <div class="summary-item">
-                <div>反應力平均強度(%) <span style="color:#888; cursor:help;" title="此數字為所選時間範圍內的『強度百分比』平均值，根據遊戲結束後的分數正規化(0–100)。非原始分數。">ⓘ</span></div>
+                <div>反應力平均強度(%) <span style="color:#888; cursor:help;" title="基於第95百分位數計算的強度百分比。100%代表頂尖5%水準，更抗極端值影響。">ⓘ</span></div>
                 <h3 id="avgReaction">-</h3>
                 <div id="deltaReaction"></div>
             </div>
             <div class="summary-item">
-                <div>記憶力平均強度(%) <span style="color:#888; cursor:help;" title="此數字為所選時間範圍內的『強度百分比』平均值，根據遊戲結束後的分數正規化(0–100)。非原始分數。">ⓘ</span></div>
+                <div>記憶力平均強度(%) <span style="color:#888; cursor:help;" title="基於第95百分位數計算的強度百分比。100%代表頂尖5%水準，更抗極端值影響。">ⓘ</span></div>
                 <h3 id="avgMemory">-</h3>
                 <div id="deltaMemory"></div>
             </div>
             <div class="summary-item">
-                <div>算術邏輯力平均強度(%) <span style="color:#888; cursor:help;" title="此數字為所選時間範圍內的『強度百分比』平均值，根據遊戲結束後的分數正規化(0–100)。非原始分數。">ⓘ</span></div>
+                <div>算術邏輯力平均強度(%) <span style="color:#888; cursor:help;" title="基於第95百分位數計算的強度百分比。100%代表頂尖5%水準，更抗極端值影響。">ⓘ</span></div>
                 <h3 id="avgLogic">-</h3>
                 <div id="deltaLogic"></div>
             </div>
@@ -127,9 +127,17 @@ try {
             const qs = new URLSearchParams();
             if (memberId) qs.set('member_id', memberId);
             if (range) qs.set('range', range);
+            
+            console.log('Loading data with params:', qs.toString());
             const res = await fetch('api/ability_stats.php?' + qs.toString());
             const data = await res.json();
-            if (!data.success) { alert(data.message || '載入失敗'); return; }
+            console.log('API Response:', data);
+            
+            if (!data.success) { 
+                console.error('API Error:', data.message);
+                alert(data.message || '載入失敗'); 
+                return; 
+            }
 
             // Summary: 以百分比強度（與趨勢一致）
             const ts = data.trend_strength || null;
@@ -165,15 +173,20 @@ try {
             setDeltaPct($('deltaLogic'),    ts ? ts.logic    : null);
 
             // Radar: 以百分比強度 (0-100) 顯示，與前台一致
+            const radarValues = [
+                (data.strength && data.strength.reaction) || 0,
+                (data.strength && data.strength.memory) || 0,
+                (data.strength && data.strength.logic) || 0
+            ];
+            
+            console.log('Radar Values:', radarValues);
+            console.log('Strength Data:', data.strength);
+            
             const radarData = {
                 labels: ['反應力', '記憶力', '算術邏輯力'],
                 datasets: [{
                     label: '能力強度(%)',
-                    data: [
-                        (data.strength && data.strength.reaction) || 0,
-                        (data.strength && data.strength.memory) || 0,
-                        (data.strength && data.strength.logic) || 0
-                    ],
+                    data: radarValues,
                     borderColor: '#667eea',
                     backgroundColor: 'rgba(102, 126, 234, 0.2)'
                 }]

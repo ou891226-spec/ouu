@@ -77,10 +77,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       <span class="tab-icon" style="font-size: 24px;">📈</span>
       能力趨勢變化
     </button>
-         <button class="category-tab" onclick="showAnalysisSection('stats')" id="statsTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
-           <span class="tab-icon" style="font-size: 24px;">📊</span>
-           詳細統計
-         </button>
     <button class="category-tab" onclick="showAnalysisSection('report')" id="reportTab" style="flex: 1; min-width: 0; padding: 15px 12px; font-size: 22px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center; text-align: center;">
       <span class="tab-icon" style="font-size: 24px;">📋</span>
       能力分析報告
@@ -99,39 +95,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
     <div class="trend-chart-container">
       <h3>能力趨勢變化（最近12個月）</h3>
       <canvas id="abilityTrendChart"></canvas>
-    </div>
-  </div>
-  
-  <!-- 詳細統計內容 -->
-  <div id="stats-section" class="category-games" style="display: none;">
-    <div class="detailed-stats" style="text-align: center !important;">
-      <h3 style="text-align: center !important;">詳細統計</h3>
-      <div class="stats-grid" style="text-align: center !important;">
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">反應力遊戲總次數：</span>
-          <span class="stat-value" id="reactionGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">記憶力遊戲總次數：</span>
-          <span class="stat-value" id="memoryGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">邏輯力遊戲總次數：</span>
-          <span class="stat-value" id="logicGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">反應力平均分數：</span>
-          <span class="stat-value" id="reactionAvg">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">記憶力平均分數：</span>
-          <span class="stat-value" id="memoryAvg">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">邏輯力平均分數：</span>
-          <span class="stat-value" id="logicAvg">0</span>
-        </div>
-      </div>
     </div>
   </div>
   
@@ -176,6 +139,37 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
             font-size: 12px;
             font-weight: bold;
           ">✨ AI智能分析</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 詳細統計內容 -->
+    <div class="detailed-stats" style="text-align: center !important; margin-top: 30px;">
+      <h3 style="text-align: center !important;">詳細統計</h3>
+      <div class="stats-grid" style="text-align: center !important;">
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力遊戲總次數：</span>
+          <span class="stat-value" id="reactionGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力遊戲總次數：</span>
+          <span class="stat-value" id="memoryGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力遊戲總次數：</span>
+          <span class="stat-value" id="logicGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力平均分數：</span>
+          <span class="stat-value" id="reactionAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力平均分數：</span>
+          <span class="stat-value" id="memoryAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力平均分數：</span>
+          <span class="stat-value" id="logicAvg">0</span>
         </div>
       </div>
     </div>
@@ -481,8 +475,8 @@ function updateAnalysisReport(data) {
   }
 }
 
-// 生成AI分析
-function generateAIAnalysis() {
+// 生成AI分析 - 使用 Google GenAI
+async function generateAIAnalysis() {
   const btn = document.getElementById('aiAnalysisBtn');
   const loading = document.getElementById('aiLoading');
   
@@ -490,16 +484,23 @@ function generateAIAnalysis() {
   btn.style.display = 'none';
   loading.style.display = 'block';
   
-          fetch('AI/ai_analysis.php')
-    .then(response => response.json())
-    .then(data => {
-        
-      if (data.success) {
+  try {
+    // 首先獲取用戶數據
+    const response = await fetch('get_ability_analysis.php');
+    const userData = await response.json();
+    
+    if (!userData.success) {
+      throw new Error('無法獲取用戶數據');
+    }
+    
+    // 使用 Google GenAI 進行分析
+    const aiResponse = await callGoogleGenAI(userData.data);
+    
         // 顯示AI分析結果
-        updateAnalysisReport(data.data);
+    updateAnalysisReport(aiResponse);
         
         // 顯示成功訊息
-        loading.innerHTML = '<span style="color: #ffffff; background-color: #4CAF50; padding: 4px 8px; border-radius: 4px;">✅ AI分析完成！</span>';
+    loading.innerHTML = '<span style="color: #ffffff; background-color: #4CAF50; padding: 4px 8px; border-radius: 4px;">✅ AI分析完成</span>';
         
         // 3秒後隱藏載入訊息並恢復按鈕
         setTimeout(() => {
@@ -508,15 +509,11 @@ function generateAIAnalysis() {
           btn.innerHTML = '🔄 重新生成AI分析';
         }, 3000);
         
-      } else {
-        throw new Error(data.message || 'AI分析失敗');
-      }
-    })
-    .catch(error => {
+  } catch (error) {
       console.error('AI分析錯誤:', error);
       
       // 顯示錯誤訊息
-      loading.innerHTML = '<span style="color: #ffffff; background-color: #f44336; padding: 4px 8px; border-radius: 4px;">❌ AI分析失敗</span>';
+    loading.innerHTML = '<span style="color: #ffffff; background-color: #f44336; padding: 4px 8px; border-radius: 4px;">❌ AI分析失敗: ' + error.message + '</span>';
       
       // 3秒後恢復按鈕
       setTimeout(() => {
@@ -524,19 +521,68 @@ function generateAIAnalysis() {
         btn.style.display = 'inline-block';
         btn.innerHTML = '🤖 生成AI智能分析';
       }, 3000);
-    });
+  }
+}
+
+// 調用 Google GenAI
+async function callGoogleGenAI(userData) {
+  // 不再需要在前端建立 prompt，只傳遞用戶數據到後端
+  try {
+    // 將 userData (包含分數和統計資料) 傳遞給後端函式
+    return await callGenAIThroughBackend(userData); 
+    
+  } catch (error) {
+    throw new Error('AI 分析服務調用失敗: ' + error.message);
+  }
+}
+
+// 調用 Node.js 後端服務
+async function callGenAIThroughBackend(userData) {
+    // 部署到 Azure 時，請替換為 Node.js 服務的實際 URL
+    // const NODE_SERVER_URL = 'http://localhost:3001/api/ai/analysis'; 
+    const NODE_SERVER_URL = 'https://smartfun-nodejs-ai-us-bfhxe7gsd9gbaehz.southeastasia-01.azurewebsites.net/api/ai/analysis';
+  
+    try {
+        const response = await fetch(NODE_SERVER_URL, {
+            method: 'POST',
+            // 處理跨域請求
+            mode: 'cors', 
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            // 將用戶數據作為 JSON 傳送到 Node.js 後端
+            body: JSON.stringify(userData) 
+        });
+        
+        // 檢查 HTTP 狀態碼
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Node.js 後端請求失敗: ${response.status} - ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Node.js 後端分析服務錯誤');
+        }
+        
+        return result.report; 
+        
+    } catch (error) {
+        throw new Error('呼叫 Node.js 後端失敗: ' + error.message);
+    }
 }
 
 // 顯示分析區塊（類似遊戲分類的切換功能）
 function showAnalysisSection(section) {
   // 隱藏所有內容區塊
-  const sections = ['radar-section', 'trend-section', 'stats-section', 'report-section'];
+  const sections = ['radar-section', 'trend-section', 'report-section'];
   sections.forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
   
   // 移除所有按鈕的active類別
-  const tabs = ['radarTab', 'trendTab', 'statsTab', 'reportTab'];
+  const tabs = ['radarTab', 'trendTab', 'reportTab'];
   tabs.forEach(id => {
     document.getElementById(id).classList.remove('active');
   });

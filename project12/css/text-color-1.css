@@ -8,11 +8,11 @@ body {
 
 .game-container {
     background-color: white;
-    padding: 40px;
+    padding: 30px;
     border-radius: 15px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
     text-align: center;
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
@@ -51,30 +51,32 @@ h2 {
 #buttonContainer {
     display: flex;
     justify-content: center;
-    gap: 25px;
-    margin: 40px 0;
+    gap: 20px;
+    margin: 30px 0 50px 0;
     flex-wrap: wrap;
-    max-width: 1000px;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    background-color: transparent;
 }
 
 /* 困難模式特殊佈局：上面3個，下面2個 */
 #buttonContainer.hard-mode {
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    gap: 30px;
+    background-color: transparent;
 }
 
 #buttonContainer.hard-mode .top-row {
     display: flex;
-    gap: 35px;
+    gap: 25px;
     justify-content: center;
 }
 
 #buttonContainer.hard-mode .bottom-row {
     display: flex;
-    gap: 35px;
+    gap: 25px;
     justify-content: center;
 }
 
@@ -82,31 +84,32 @@ h2 {
 #buttonContainer.normal-mode {
     flex-direction: column;
     align-items: center;
-    gap: 40px;
+    gap: 30px;
+    background-color: transparent;
 }
 
 #buttonContainer.normal-mode .top-row {
     display: flex;
-    gap: 35px;
+    gap: 25px;
     justify-content: center;
     padding: 0 20px;
 }
 
 #buttonContainer.normal-mode .bottom-row {
     display: flex;
-    gap: 35px;
+    gap: 25px;
     justify-content: center;
     padding: 0 20px;
 }
 
 .color-btn {
-    width: 180px;
-    height: 180px;
+    width: 140px;
+    height: 140px;
     border: none;
     border-radius: 15px;
     cursor: pointer;
     transition: transform 0.2s;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     color: white;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
@@ -117,20 +120,7 @@ h2 {
     transform: scale(1.05);
 }
 
-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 16px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 24px;
-    margin: 15px;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-}
+
 
 button:hover {
     background-color: #45a049;
@@ -169,7 +159,7 @@ button:hover {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #f0f0f0;
+    background-color: transparent;
     transition: all 0.3s ease;
 }
 
@@ -366,177 +356,6 @@ button:hover {
     margin: 0 auto 18px auto;
 }
 
-/* 難度選擇彈窗專屬樣式 */
-#difficultyModal .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 500px;
-    position: relative;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    animation: modalPop 0.3s ease-out;
-}
-
-#difficultyModal h2 {
-    font-size: 40px;
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.back-button {
-    position: absolute;
-    top: 25px;
-    left: 30px;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50%;
-    border: 2px solid #000 !important;
-    background: #fff;
-    color: #000;
-    font-size: 50px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: background 0.2s, color 0.2s, border 0.2s;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    flex-direction: column;
-}
-
-.back-button .back-arrow {
-    font-size: 50px;
-    font-weight: bold   ;
-    line-height: 1;
-    color: #000;
-}
-
-.back-label {
-    position: absolute;
-    left: 50%;
-    top: 100%;
-    transform: translateX(-50%);
-    font-size: 20px;
-    color: #000;
-    margin-top: 0.1rem;
-    letter-spacing: 0.05em;
-    -webkit-user-select: none;
-    user-select: none;
-    white-space: nowrap;
-    line-height: 1.1;
-}
-
-.back-button:hover {
-    background: #f2f2f2;
-    color: #000;
-    border-color: #000 !important;
-}
-
-.help-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 50px !important;
-    height: 50px !important;
-    border-radius: 50%;
-    border: 2px solid #000 !important;
-    background: #fff;
-    color: #000;
-    font-size: 50px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-}
-
-.help-button .help-label {
-    position: absolute;
-    left: 50%;
-    top: 100%;
-    transform: translateX(-50%);
-    font-size: 20px;
-    color: #000;
-    margin-top: 0.1rem;
-    letter-spacing: 0.05em;
-    -webkit-user-select: none;
-    user-select: none;
-    white-space: nowrap;
-    line-height: 1.1;
-}
-
-.help-button:hover {
-    background: #f2f2f2;
-    color: #000;
-    border-color: #000 !important;
-}
-
-.difficulty-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin: 30px 0;
-}
-
-.difficulty-btn {
-    padding: 10 px;
-    border: none;
-    border-radius: 15px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.difficulty-btn .difficulty-name {
-    font-size: 30px;
-    font-weight: bold;
-}
-
-.difficulty-btn .difficulty-desc {
-    font-size: 25px;
-    opacity: 0.9;
-}
-
-.difficulty-btn.easy {
-    background: #4CAF50;
-    color: rgb(0, 0, 0);
-}
-
-.difficulty-btn.normal {
-    background: #FF9800;
-    color: #000;
-}
-
-.difficulty-btn.hard {
-    background: #F44336;
-    color: #000;
-}
-
-.difficulty-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-#help-modal .modal-content {
-    max-width: 500px;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    margin: auto;
-    background: #fff;
-    position: relative;
-    text-align: center;
-}
-
 #help-modal h2 {
     font-size: 24px;
     font-weight: bold;
@@ -650,32 +469,81 @@ button:hover {
 .red-btn {
     background: #f44336 !important;
     color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 32px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 .red-btn:hover {
     background: #d32f2f !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
 }
 .blue-btn {
     background: #1d3557 !important;
     color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 32px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 .blue-btn:hover {
     background: #152a47 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
 }
 
 /* 重新開始按鈕保持原來的藍色 */
 #resetBtn {
     background: #2196f3 !important;
     color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 32px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 #resetBtn:hover {
     background: #1976d2 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+}
+
+/* 按鈕容器樣式 */
+.control-btns {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 40px;
+    flex-wrap: wrap;
 }
 .orange-btn {
     background: #ffa500 !important;
     color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 16px 32px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 .orange-btn:hover {
     background: #ff8c00 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
 }
 
 #endGameModal .modal-content {
@@ -754,4 +622,177 @@ button:hover {
         flex: 2;
         font-size: 20px;
     }
+}
+/* 難度選擇彈窗專屬樣式 - 與算菜錢遊戲一致 */
+
+/* 1. Modal 容器 (背景遮罩) */
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal.show {
+    display: flex;
+}
+
+/* 2. Modal 內容區塊 */
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  animation: fadeIn 0.3s ease-in-out;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 3. 難度選擇 Modal Header 區塊 */
+.difficulty-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.2rem;
+  position: relative;
+}
+
+/* 4. 返回按鈕樣式 (.back-btn) */
+.back-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #222;
+  font-size: 18px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  gap: 0;
+}
+.back-btn span {
+  font-size: 15px;
+  margin-top: -2px;
+}
+
+/* 5. 標題樣式 */
+.difficulty-title {
+  flex: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #222;
+  letter-spacing: 1px;
+}
+
+/* 6. 說明按鈕樣式 (.help-btn) */
+.help-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #222;
+  font-size: 18px;
+  font-weight: 500;
+  gap: 0;
+  padding: 0;
+}
+.help-btn span {
+  font-size: 15px;
+  margin-top: -2px;
+}
+
+/* 7. 難度按鈕群組 */
+.difficulty-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 18px;
+}
+
+/* 8. 個別難度按鈕樣式 */
+.difficulty-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 20px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  padding: 28px 0 18px 0;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.difficulty-btn .diff-main {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.difficulty-btn .diff-sub {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* 9. 顏色主題與懸停效果 */
+.easy-mode {
+  background: #7bc96f;
+  color: #222;
+}
+.easy-mode:hover {
+  background: #6bb85e;
+}
+
+.normal-mode {
+  background: #ffe066;
+  color: #222;
+}
+.normal-mode:hover {
+  background: #ffd23b;
+}
+
+.hard-mode {
+  background: #f25f5c;
+  color: #000000;
+}
+.hard-mode:hover {
+  background: #d94340;
+}
+
+/* 10. 手機板響應式調整 */
+@media (max-width: 600px) {
+  .modal-content {
+      padding: 1.2rem;
+      border-radius: 0.8rem;
+      max-width: 96vw;
+  }
+  .difficulty-btn {
+    font-size: 1.1rem;
+    padding: 18px 0 12px 0;
+  }
+  .difficulty-title {
+    font-size: 1.3rem;
+  }
 }

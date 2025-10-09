@@ -289,22 +289,40 @@ try {
         $health = null;
     }
 
-    // 能力強度（0-100）計算：對齊前台 get_ability_analysis.php 的定義
-    // 以 member 表中的各能力分數，除以全體最大值做正規化
+    // 能力強度（0-100）計算：使用第95百分位數作為基準，更抗極端值
     $strength = [ 'reaction' => 0.0, 'memory' => 0.0, 'logic' => 0.0 ];
+    
+    // 計算第95百分位數的函數
+    function percentile95($pdo, $column, $whereClause = '', $params = []) {
+        try {
+            // 先取得所有分數
+            $sql = "SELECT {$column} FROM member WHERE {$column} > 0 {$whereClause} ORDER BY {$column}";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $scores = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (empty($scores)) return 0;
+            
+            $n = count($scores);
+            $pos = 0.95 * ($n - 1);
+            $lo = floor($pos);
+            $hi = ceil($pos);
+            
+            if ($lo == $hi) {
+                return floatval($scores[$lo]);
+            }
+            
+            return floatval($scores[$lo]) + ($pos - $lo) * (floatval($scores[$hi]) - floatval($scores[$lo]));
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+    
     try {
-        $maxSql = "SELECT 
-                MAX(reaction_score) AS max_reaction,
-                MAX(memory_score)   AS max_memory,
-                MAX(logic_score)    AS max_logic
-            FROM member
-            WHERE reaction_score > 0 OR memory_score > 0 OR logic_score > 0";
-        $maxStmt = $pdo->query($maxSql);
-        $maxRow = $maxStmt->fetch(PDO::FETCH_ASSOC) ?: ['max_reaction' => 0, 'max_memory' => 0, 'max_logic' => 0];
-
-        $maxReaction = floatval($maxRow['max_reaction'] ?? 0);
-        $maxMemory   = floatval($maxRow['max_memory'] ?? 0);
-        $maxLogic    = floatval($maxRow['max_logic'] ?? 0);
+        // 計算各能力的第95百分位數
+        $p95Reaction = percentile95($pdo, 'reaction_score');
+        $p95Memory   = percentile95($pdo, 'memory_score');
+        $p95Logic    = percentile95($pdo, 'logic_score');
 
         if ($memberId) {
             // 指定使用者：用該使用者的 member 分數做正規化
@@ -312,11 +330,11 @@ try {
             $scoreStmt->execute([$memberId]);
             $score = $scoreStmt->fetch(PDO::FETCH_ASSOC) ?: ['reaction_score' => 0, 'memory_score' => 0, 'logic_score' => 0];
 
-            $strength['reaction'] = $maxReaction > 0 ? min(100, max(0, floatval($score['reaction_score']) / $maxReaction * 100)) : 0.0;
-            $strength['memory']   = $maxMemory   > 0 ? min(100, max(0, floatval($score['memory_score'])   / $maxMemory   * 100)) : 0.0;
-            $strength['logic']    = $maxLogic    > 0 ? min(100, max(0, floatval($score['logic_score'])    / $maxLogic    * 100)) : 0.0;
+            $strength['reaction'] = $p95Reaction > 0 ? min(100, max(0, floatval($score['reaction_score']) / $p95Reaction * 100)) : 0.0;
+            $strength['memory']   = $p95Memory   > 0 ? min(100, max(0, floatval($score['memory_score'])   / $p95Memory   * 100)) : 0.0;
+            $strength['logic']    = $p95Logic    > 0 ? min(100, max(0, floatval($score['logic_score'])    / $p95Logic    * 100)) : 0.0;
         } else {
-            // 全部用戶：以所有有分數使用者的平均分數對全體最大值做正規化
+            // 全部用戶：以所有有分數使用者的平均分數對第95百分位數做正規化
             $avgScoreSql = "SELECT 
                     AVG(reaction_score) AS avg_reaction,
                     AVG(memory_score)   AS avg_memory,
@@ -330,9 +348,9 @@ try {
             $avgMemory   = floatval($avgScoreRow['avg_memory'] ?? 0);
             $avgLogic    = floatval($avgScoreRow['avg_logic'] ?? 0);
 
-            $strength['reaction'] = $maxReaction > 0 ? min(100, max(0, $avgReaction / $maxReaction * 100)) : 0.0;
-            $strength['memory']   = $maxMemory   > 0 ? min(100, max(0, $avgMemory   / $maxMemory   * 100)) : 0.0;
-            $strength['logic']    = $maxLogic    > 0 ? min(100, max(0, $avgLogic    / $maxLogic    * 100)) : 0.0;
+            $strength['reaction'] = $p95Reaction > 0 ? min(100, max(0, $avgReaction / $p95Reaction * 100)) : 0.0;
+            $strength['memory']   = $p95Memory   > 0 ? min(100, max(0, $avgMemory   / $p95Memory   * 100)) : 0.0;
+            $strength['logic']    = $p95Logic    > 0 ? min(100, max(0, $avgLogic    / $p95Logic    * 100)) : 0.0;
         }
         // 四捨五入到小數點一位
         $strength['reaction'] = round($strength['reaction'], 1);

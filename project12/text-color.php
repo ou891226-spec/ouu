@@ -198,27 +198,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
     <!-- 難度選擇視窗 -->
     <div id="difficultyModal" class="modal">
-        <div class="modal-content">
-            <button class="back-button" onclick="handleBackButton()">
-                <span class="back-arrow">←</span>
-                <div class="back-label">返回</div>
-            </button>
-            <h2>選擇難度</h2>
-            <button class="help-button" id="helpBtn">?
-                <div class="help-label">說明</div>
-            </button>
-            <div class="difficulty-buttons">
-                <button class="difficulty-btn easy" onclick="selectDifficulty('easy')">
-                    <span class="difficulty-name">簡單模式</span>
-                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['easy']['time_limit']) ? $difficulty_settings['easy']['time_limit'] : 60; ?>秒，目標：<?php echo isset($difficulty_settings['easy']['pass_score']) ? $difficulty_settings['easy']['pass_score'] : 15; ?>分)</span>
+        <div class="modal-content" style="padding: 2.5rem 2rem 2rem 2rem;">
+            <div class="difficulty-modal-header">
+                <a href="javascript:void(0)" onclick="handleBackButton()" class="back-btn">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#222" stroke-width="2"/><polyline points="13 8 9 12 13 16" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="9" y1="12" x2="17" y2="12" stroke="#222" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span>返回</span>
+                </a>
+                <div class="difficulty-title">選擇難度</div>
+                <button class="help-btn" type="button" id="helpBtn">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#222" stroke-width="2"/><text x="12" y="18" text-anchor="middle" font-size="18" fill="#222" font-family="Arial" dy="0">?</text></svg>
+                    <span>說明</span>
                 </button>
-                <button class="difficulty-btn normal" onclick="selectDifficulty('normal')">
-                    <span class="difficulty-name">普通模式</span>
-                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['normal']['time_limit']) ? $difficulty_settings['normal']['time_limit'] : 50; ?>秒，目標：<?php echo isset($difficulty_settings['normal']['pass_score']) ? $difficulty_settings['normal']['pass_score'] : 20; ?>分)</span>
+            </div>
+            <div class="difficulty-btn-group">
+                <button class="difficulty-btn easy-mode" data-difficulty="easy" onclick="selectDifficulty('easy')">
+                    <div class="diff-main">簡單模式（基本顏色識別）</div>
+                    <div class="diff-sub"><?php echo isset($difficulty_settings['easy']['time_limit']) ? $difficulty_settings['easy']['time_limit'] : 60; ?>秒，目標：<?php echo isset($difficulty_settings['easy']['pass_score']) ? $difficulty_settings['easy']['pass_score'] : 15; ?>分</div>
                 </button>
-                <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
-                    <span class="difficulty-name">困難模式</span>
-                    <span class="difficulty-desc">(<?php echo isset($difficulty_settings['hard']['time_limit']) ? $difficulty_settings['hard']['time_limit'] : 40; ?>秒，目標：<?php echo isset($difficulty_settings['hard']['pass_score']) ? $difficulty_settings['hard']['pass_score'] : 30; ?>分)</span>
+                <button class="difficulty-btn normal-mode" data-difficulty="normal" onclick="selectDifficulty('normal')">
+                    <div class="diff-main">普通模式（干擾顏色識別）</div>
+                    <div class="diff-sub"><?php echo isset($difficulty_settings['normal']['time_limit']) ? $difficulty_settings['normal']['time_limit'] : 50; ?>秒，目標：<?php echo isset($difficulty_settings['normal']['pass_score']) ? $difficulty_settings['normal']['pass_score'] : 20; ?>分</div>
+                </button>
+                <button class="difficulty-btn hard-mode" data-difficulty="hard" onclick="selectDifficulty('hard')">
+                    <div class="diff-main">困難模式（複雜視覺效果）</div>
+                    <div class="diff-sub"><?php echo isset($difficulty_settings['hard']['time_limit']) ? $difficulty_settings['hard']['time_limit'] : 40; ?>秒，目標：<?php echo isset($difficulty_settings['hard']['pass_score']) ? $difficulty_settings['hard']['pass_score'] : 30; ?>分</div>
                 </button>
             </div>
         </div>
@@ -289,7 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2 style="font-size: 1.2em; margin: 18px 0 10px 0;">請選擇這個顏色：<span id="targetColorText"></span></h2>
         <div id="buttonContainer"></div>
         <div id="distractionContainer"></div>
-        <div style="margin-top: 24px;">
+        <div class="control-btns">
             <button id="pauseBtn" class="orange-btn">暫停遊戲</button>
             <button id="endBtn" class="red-btn">結束遊戲</button>
             <button id="resetBtn" class="blue-btn">重新開始</button>

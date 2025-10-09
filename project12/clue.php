@@ -350,7 +350,7 @@ if (isset($_POST['user_answer']) && isset($_POST['correct_answer'])) {
             <script>
                 // 返回主頁按鈕處理
                 function handleBackButton() {
-                    // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+                    // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
                     if (document.referrer && document.referrer !== window.location.href) {
                         history.back();
                     } else {
@@ -415,55 +415,175 @@ if (!$difficulty) {
             body {
                 background: #f5f6fa;
             }
+            
+            /* 難度選擇彈窗專屬樣式 - 與算菜錢遊戲一致 */
             #difficulty-modal {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; z-index: 9999;
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
             }
+
             #difficulty-modal .modal-content {
-                background: #fff; padding: 32px 36px 28px 36px; border-radius: 20px; text-align: center;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-                min-width: 350px;
-                width: 450px;
+                background: #fff;
+                padding: 2rem;
+                border-radius: 1rem;
+                width: 90%;
+                max-width: 500px;
+                animation: fadeIn 0.3s ease-in-out;
                 position: relative;
-                font-size: 1.0rem;
-                min-height: 60vh;
-                max-height: 75vh;
-                overflow: auto;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+
+            @keyframes fadeIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+
+            /* 難度選擇 Modal Header 區塊 */
+            .difficulty-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 2.2rem;
+                position: relative;
+            }
+
+            /* 返回按鈕樣式 (.back-btn) */
+            .back-btn {
                 display: flex;
                 flex-direction: column;
+                align-items: center;
+                text-decoration: none;
+                color: #222;
+                font-size: 18px;
+                font-weight: 500;
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0;
+                gap: 0;
             }
-            .modal-header {
-                display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
-                position: relative;
+            .back-btn span {
+                font-size: 15px;
+                margin-top: -2px;
             }
-            .modal-title {
-                font-size: 1.8rem; font-weight: bold; color: #222;
+
+            /* 標題樣式 */
+            .difficulty-title {
+                flex: 1;
+                text-align: center;
+                font-size: 2rem;
+                font-weight: bold;
+                color: #222;
                 letter-spacing: 1px;
-                white-space: nowrap;
             }
-            .icon-block { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-            .icon-block .circle {
-                width: 40px; height: 40px; border-radius: 50%; border: 2px solid #000; display: flex; align-items: center; justify-content: center;
-                font-weight: bold; color: #000; background: #fff;
+
+            /* 說明按鈕樣式 (.help-btn) */
+            .help-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #222;
+                font-size: 18px;
+                font-weight: 500;
+                gap: 0;
+                padding: 0;
             }
-            .icon-block .label { font-size: 1.05rem; color: #555; }
-            .icon-link { text-decoration: none; color: inherit; }
+            .help-btn span {
+                font-size: 15px;
+                margin-top: -2px;
+            }
+
+            /* 難度按鈕群組 */
+            .difficulty-btn-group {
+                display: flex;
+                flex-direction: column;
+                gap: 28px;
+                margin-top: 18px;
+            }
+
+            /* 個別難度按鈕樣式 */
             .difficulty-btn {
-                display: block; width: 100%; margin: 0 auto 25px auto; padding: 28px 0; font-size: 1.4rem; font-weight: bold;
-                border: none; border-radius: 14px; cursor: pointer; transition: filter 0.15s;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-                letter-spacing: 1px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: none;
+                border-radius: 20px;
+                font-size: 1.6rem;
+                font-weight: bold;
+                padding: 28px 0 18px 0;
+                cursor: pointer;
+                transition: transform 0.1s, box-shadow 0.2s;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+                width: 100%;
+                max-width: 420px;
+                margin: 0 auto;
+                position: relative;
+                z-index: 1000;
+                pointer-events: auto;
             }
-            .difficulty-list {
-                display: flex; flex-direction: column; gap: 15px; flex: 1; justify-content: center; margin: 8px 0 16px 0;
+
+            .difficulty-btn .diff-main {
+                font-size: 1.5rem;
+                font-weight: bold;
+                margin-bottom: 8px;
             }
-            .difficulty-btn:last-child { margin-bottom: 0; }
-            .difficulty-btn.easy { background: #2ecc40; color: #000; }
-            .difficulty-btn.easy:hover { filter: brightness(0.95); }
-            .difficulty-btn.medium { background: #ffe066; color: #000; }
-            .difficulty-btn.medium:hover { filter: brightness(0.97); }
-            .difficulty-btn.hard { background: #ff4d4f; color: #000; }
-            .difficulty-btn.hard:hover { filter: brightness(0.95); }
+            .difficulty-btn .diff-sub {
+                font-size: 1.1rem;
+                font-weight: 500;
+            }
+
+            /* 顏色主題與懸停效果 */
+            .easy-mode {
+                background: #7bc96f;
+                color: #222;
+            }
+            .easy-mode:hover {
+                background: #6bb85e;
+            }
+
+            .normal-mode {
+                background: #ffe066;
+                color: #222;
+            }
+            .normal-mode:hover {
+                background: #ffd23b;
+            }
+
+            .hard-mode {
+                background: #f25f5c;
+                color: #000000;
+            }
+            .hard-mode:hover {
+                background: #d94340;
+            }
+
+            /* 手機板響應式調整 */
+            @media (max-width: 600px) {
+                #difficulty-modal .modal-content {
+                    padding: 1.2rem;
+                    border-radius: 0.8rem;
+                    max-width: 96vw;
+                }
+                .difficulty-btn {
+                    font-size: 1.1rem;
+                    padding: 18px 0 12px 0;
+                }
+                .difficulty-title {
+                    font-size: 1.3rem;
+                }
+            }
+            
             /* 說明彈窗 */
             #help-modal-bg {
                 display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100vw; height: 100vh;
@@ -480,47 +600,6 @@ if (!$difficulty) {
                 position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.6rem; color: #888; cursor: pointer;
             }
             #help-modal .close-btn:hover { color: #222; }
-            /* 返回按鈕 */
-            .back-button {
-                position: absolute !important;
-                top: 0.1rem !important;
-                left: 0.2rem !important;
-                width: 45px !important;
-                height: 45px !important;
-                border-radius: 50% !important;
-                border: 2px solid #000 !important;
-                background: #fff !important;
-                color: #222 !important;
-                font-size: 1.6rem !important;
-                cursor: pointer !important;
-                transition: all 0.2s ease !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: 9999 !important;
-            }
-            .back-button .back-arrow {
-                font-size: 1.6rem;
-                font-weight: 900;
-                line-height: 1;
-            }
-            .back-button .back-label {
-                position: absolute !important;
-                left: 50% !important;
-                top: 100% !important;
-                transform: translateX(-50%) !important;
-                font-size: 1.05rem !important;
-                color: #666 !important;
-                margin-top: 0.5rem !important;
-                user-select: none;
-                white-space: nowrap;
-                line-height: 1.1;
-            }
-            .back-button:hover {
-                background: #f2f2f2;
-                color: #111;
-                border-color: #000 !important;
-            }
         </style>
         <script src="js/unified-game-tracker.js"></script>
     <script>
@@ -531,7 +610,7 @@ if (!$difficulty) {
         
         // 返回主頁按鈕處理
         function handleBackButton() {
-            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
             if (document.referrer && document.referrer !== window.location.href) {
                 history.back();
             } else {
@@ -542,24 +621,31 @@ if (!$difficulty) {
 </head>
     <body>
         <div id="difficulty-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button class="back-button" onclick="history.back()" style="position:absolute;top:1rem;left:1.2rem;z-index:10;">
-                        <span class="back-arrow">←</span>
-                        <div class="back-label">返回</div>
+            <div class="modal-content" style="padding: 2.5rem 2rem 2rem 2rem;">
+                <div class="difficulty-modal-header">
+                    <a href="javascript:void(0)" onclick="handleBackButton()" class="back-btn">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#222" stroke-width="2"/><polyline points="13 8 9 12 13 16" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="9" y1="12" x2="17" y2="12" stroke="#222" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span>返回</span>
+                    </a>
+                    <div class="difficulty-title">選擇難度</div>
+                    <button class="help-btn" type="button" id="show-help">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" stroke="#222" stroke-width="2"/><text x="12" y="18" text-anchor="middle" font-size="18" fill="#222" font-family="Arial" dy="0">?</text></svg>
+                        <span>說明</span>
                     </button>
-                    <div style="flex: 1; text-align: center; margin-left: 3rem;">
-                        <span class="modal-title">選擇難度</span>
-                    </div>
-                    <div class="icon-block" id="show-help" style="cursor:pointer;">
-                        <div class="circle">?</div>
-                        <span class="label">說明</span>
-                    </div>
                 </div>
-                <div class="difficulty-list">
-                    <button class="difficulty-btn easy" data-difficulty="easy">簡單 (3題答對過關)</button>
-                    <button class="difficulty-btn medium" data-difficulty="normal">普通 (3題答對過關)</button>
-                    <button class="difficulty-btn hard" data-difficulty="hard">困難 (3題答對過關)</button>
+                <div class="difficulty-btn-group">
+                    <button class="difficulty-btn easy-mode" data-difficulty="easy">
+                        <div class="diff-main">簡單模式（基本圖片觀察）</div>
+                        <div class="diff-sub">5題，目標：3題正確</div>
+                    </button>
+                    <button class="difficulty-btn normal-mode" data-difficulty="normal">
+                        <div class="diff-main">普通模式（細節圖片觀察）</div>
+                        <div class="diff-sub">5題，目標：3題正確</div>
+                    </button>
+                    <button class="difficulty-btn hard-mode" data-difficulty="hard">
+                        <div class="diff-main">困難模式（複雜圖片觀察）</div>
+                        <div class="diff-sub">5題，目標：3題正確</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1159,7 +1245,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
         
         // 返回主頁按鈕處理
         function handleBackButton() {
-            // 智能返回：回到上一頁，如果沒有上一頁則回到首頁
+            // 智能返回：回到上一頁，如果沒有上一頁則回到遊戲分類頁面
             if (document.referrer && document.referrer !== window.location.href) {
                 history.back();
             } else {

@@ -1,0 +1,38 @@
+# 環境變量和敏感配置文件
+.env
+AI/.env
+*.env
+
+# API密鑰和敏感信息
+*api*key*
+*secret*
+*password*
+*token*
+
+# 日誌文件
+*.log
+logs/
+
+# 臨時文件
+*.tmp
+*.temp
+
+# 系統文件
+.DS_Store
+Thumbs.db
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 緩存文件
+cache/
+tmp/

@@ -179,15 +179,15 @@ function loadDailyTasks() {
         const required = parseInt(task.required) || 1;
         
         // 判斷是否為遊戲時間相關任務，如果是則添加"秒"字
-        const isTimeTask = task.task_name === '持久戰士' || 
+        // 排除"時間挑戰者"任務，因為它是關於完成局數的，不是累積時間
+        const isTimeTask = (task.task_name === '持久戰士' || 
                           task.task_name === '速度之王' ||
                           task.task_name === '時間大師' ||
-                          task.task_description.includes('分鐘') || 
-                          task.task_description.includes('秒') ||
                           task.task_description.includes('遊玩時間') ||
                           task.task_description.includes('遊戲時間') ||
                           task.task_description.includes('累積時間') ||
-                          task.task_description.includes('總共') && task.task_description.includes('分鐘');
+                          (task.task_description.includes('總共') && task.task_description.includes('分鐘'))) &&
+                          task.task_name !== '時間挑戰者';
         
         
         const progressText = isTimeTask ? `${current}/${required}秒` : `${current}/${required}`;
