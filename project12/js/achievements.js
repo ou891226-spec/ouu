@@ -135,7 +135,11 @@ function displayAchievements(achievements, todayStatus = null) {
     card.onclick = () => showAchievementDetail(achievement);
     
     card.innerHTML = `
-      <div class="emoji-icon" style="background:#97f55c;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;font-weight:bold;font-size:20px;color:#333;text-shadow:1px 1px 2px rgba(0,0,0,0.1);">${achievement.icon || '🏆'}</div>
+      <div class="achievement-icon" style="width:40px;height:40px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f0f0f0;">
+        <img src="${achievement.icon}" alt="${achievement.achievement_name}" 
+             style="width:100%;height:100%;object-fit:cover;" 
+             onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\'background:#97f55c;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#333;\\'>🏆</div>'">
+      </div>
       <div class="profile-card-label" style="font-size:12px;margin-top:5px;">${achievement.achievement_name}</div>
     `;
     

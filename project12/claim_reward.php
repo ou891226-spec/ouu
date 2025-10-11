@@ -1,16 +1,30 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// 禁用錯誤顯示，避免影響JSON響應
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL); // 記錄但不顯示
+
+// 清除任何之前的輸出
+if (ob_get_level()) ob_end_clean();
 
 require_once 'db.php';
-session_start();
 
-// 強制使用會員ID 23進行測試
-$member_id = $_SESSION['member_id'] ?? 23;
+// 只在session未啟動時啟動session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// 獲取用戶ID
+$member_id = $_SESSION['member_id'] ?? null;
 $task_id = $_POST['task_id'] ?? 0;
 
 // Debug log
 file_put_contents('debug.log', 'member_id=' . $member_id . ', task_id=' . $task_id . PHP_EOL, FILE_APPEND);
+
+if (!$member_id) {
+  echo json_encode(['success' => false, 'message' => '未登入']);
+  exit;
+}
 
 if (!$task_id) {
   echo json_encode(['success' => false, 'message' => '參數錯誤']);
@@ -193,15 +207,58 @@ try {
     $stmt->execute([$task_id]);
     $task_info = $stmt->fetch();
     
-    // 直接授予對應的
+    // 直接授予對應的成就
     $achievement_mapping = [
-        '遊戲狂熱者' => '遊戲狂熱者',
-        '分數挑戰者' => '分數挑戰者', 
         '遊戲達人' => '遊戲達人',
         '遊戲大師' => '遊戲大師',
         '遊戲傳奇' => '遊戲傳奇',
         '績分高手' => '績分高手',
-        '進階者' => '進階者'
+        '進階者' => '進階者',
+        '千分大師' => '千分大師',
+        '分數王者' => '分數王者',
+        '全能玩家' => '全能玩家',
+        '技藝達人' => '技藝達人',
+        '反應大師' => '反應大師',
+        '邏輯專家' => '邏輯專家',
+        '持久戰士' => '持久戰士',
+        '時間大師' => '時間大師',
+        '速度之王' => '速度之王',
+        '社交大師' => '社交大師',
+        '社交達人' => '社交達人',
+        '線索專家' => '線索專家',
+        '過河大師' => '過河大師',
+        '手眼協調大師' => '手眼協調大師',
+        '追蹤專家' => '追蹤專家',
+        '分數收集者' => '分數收集者',
+        '分數獵人' => '分數獵人',
+        '分數征服者' => '分數征服者',
+        '分數傳奇' => '分數傳奇',
+        '刷新最高分數' => '刷新最高分數',
+        '連續勝利' => '連續勝利',
+        '連續大師' => '連續大師',
+        '簡單專家' => '簡單專家',
+        '普通大師' => '普通大師',
+        '困難王者' => '困難王者',
+        '快速完成' => '快速完成',
+        '效率專家' => '效率專家',
+        '分數效率' => '分數效率',
+        '高分專家' => '高分專家',
+        '平衡玩家' => '平衡玩家',
+        '全面發展' => '全面發展',
+        '時間挑戰者' => '時間挑戰者',
+        '速度專家' => '速度專家',
+        '分數挑戰者' => '分數挑戰者',
+        '高分挑戰者' => '高分挑戰者',
+        '綜合大師' => '綜合大師',
+        '全能挑戰者' => '全能挑戰者',
+        '完美主義者' => '完美主義者',
+        '遊戲狂熱者' => '遊戲狂熱者',
+        '成就收集者' => '成就收集者',
+        '成就大師' => '成就大師',
+        '遊戲愛好者' => '遊戲愛好者',
+        '遊戲專家' => '遊戲專家',
+        '遊戲宗師' => '遊戲宗師',
+        '遊戲之神' => '遊戲之神'
     ];
     
     if (isset($achievement_mapping[$task_info['task_name']])) {

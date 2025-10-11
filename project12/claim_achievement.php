@@ -1,6 +1,18 @@
 <?php
+// 禁用錯誤顯示，避免影響JSON響應
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL); // 記錄但不顯示
+
+// 清除任何之前的輸出
+if (ob_get_level()) ob_end_clean();
+
 require_once 'db.php';
-session_start();
+
+// 只在session未啟動時啟動session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 header('Content-Type: application/json');
 

@@ -22,7 +22,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
 <!-- 側邊欄 -->
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -32,11 +32,11 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   </div>
 </div>
 
-<!-- 頁首 -->
+<!-- 功能選單 -->
 <header>
   <div id="menuButton" class="menu" onclick="toggleSidebar()">
-    <img src="img/contents.png" alt="目錄" class="menu-icon" />
-    <span id="menuText" class="menu-text">目錄</span>
+    <img src="img/contents.png" alt="功能選單" class="menu-icon" />
+    <span id="menuText" class="menu-text">功能選單</span>
   </div>
 
   <form class="search-bar" action="game.php" method="GET" onsubmit="return validateSearch()">
@@ -87,6 +87,37 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
   <div id="radar-section" class="category-games active">
     <div class="radar-chart-container">
       <canvas id="abilityRadarChart"></canvas>
+    </div>
+    
+    <!-- 詳細統計內容 -->
+    <div class="detailed-stats" style="text-align: center !important; margin-top: 30px;">
+      <h3 style="text-align: center !important;">詳細統計</h3>
+      <div class="stats-grid" style="text-align: center !important;">
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力遊戲總次數：</span>
+          <span class="stat-value" id="reactionGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力遊戲總次數：</span>
+          <span class="stat-value" id="memoryGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力遊戲總次數：</span>
+          <span class="stat-value" id="logicGames">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">反應力平均分數：</span>
+          <span class="stat-value" id="reactionAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">記憶力平均分數：</span>
+          <span class="stat-value" id="memoryAvg">0</span>
+        </div>
+        <div class="stat-item" style="text-align: center !important;">
+          <span class="stat-label">邏輯力平均分數：</span>
+          <span class="stat-value" id="logicAvg">0</span>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -143,36 +174,6 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       </div>
     </div>
     
-    <!-- 詳細統計內容 -->
-    <div class="detailed-stats" style="text-align: center !important; margin-top: 30px;">
-      <h3 style="text-align: center !important;">詳細統計</h3>
-      <div class="stats-grid" style="text-align: center !important;">
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">反應力遊戲總次數：</span>
-          <span class="stat-value" id="reactionGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">記憶力遊戲總次數：</span>
-          <span class="stat-value" id="memoryGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">邏輯力遊戲總次數：</span>
-          <span class="stat-value" id="logicGames">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">反應力平均分數：</span>
-          <span class="stat-value" id="reactionAvg">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">記憶力平均分數：</span>
-          <span class="stat-value" id="memoryAvg">0</span>
-        </div>
-        <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">邏輯力平均分數：</span>
-          <span class="stat-value" id="logicAvg">0</span>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 

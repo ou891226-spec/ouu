@@ -73,7 +73,7 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
         </div>
     </div>
 
-    <script src="js/mission.js"></script>
+    <script src="js/load-daily-tasks.js"></script>
     <script src="js/achievements.js"></script>
 <script src="js/avatar-upload.js"></script>
 </body>

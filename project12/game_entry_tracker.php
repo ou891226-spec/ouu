@@ -328,6 +328,15 @@ function processGameResult($data) {
             $final_score = 0;
         }
         
+        // 4. 確保 game_id 不為 NULL
+        if ($game_id === null) {
+            // 如果沒有提供game_id，嘗試從games表查找
+            $game_stmt = $pdo->prepare("SELECT game_id FROM games WHERE game_type = ? LIMIT 1");
+            $game_stmt->execute([$game_type]);
+            $game = $game_stmt->fetch();
+            $game_id = $game ? $game['game_id'] : 0;
+        }
+        
         // 4. 直接插入最終狀態的記錄
         error_log("準備插入遊戲記錄: member_id=$member_id, game_id=$game_id, difficulty=$difficulty, final_score=$final_score, play_time=$play_time, game_type=$game_type, final_status=$final_status");
         

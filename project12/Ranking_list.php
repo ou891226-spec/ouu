@@ -78,7 +78,7 @@ try {
 <div id="modalOverlay" class="overlay" style="display:none;" onclick="closeAllModals()"></div>
 <div id="sidebar" class="sidebar">
   <a href="index.php" class="jelly-btn jelly-red">首頁</a>
-  <a href="game-category.php" class="jelly-btn jelly-red">🎮 全部遊戲</a>
+  <a href="game-category.php" class="jelly-btn jelly-red">全部遊戲</a>
   <a href="friend.php" class="jelly-btn jelly-green">好友列表</a>
   <a href="Ranking_list.php" class="jelly-btn jelly-green">排行榜</a>
   <div class="btn-group">
@@ -88,11 +88,13 @@ try {
   </div>
 </div>
 
+<!-- 功能選單 -->
 <header>
   <div id="menuButton" class="menu" onclick="toggleSidebar()">
-    <img src="img/contents.png" alt="目錄" class="menu-icon">
-    <span id="menuText" class="menu-text">目錄</span>
+    <img src="img/contents.png" alt="功能選單" class="menu-icon" />
+    <span id="menuText" class="menu-text">功能選單</span>
   </div>
+
   <form class="search-bar" action="game.php" method="GET" onsubmit="return validateSearch()">
     <input type="text" name="keyword" id="searchInput" placeholder="搜尋遊戲">
   </form>

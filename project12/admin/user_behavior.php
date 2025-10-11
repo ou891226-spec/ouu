@@ -201,11 +201,9 @@ try {
                 ROUND(COUNT(CASE WHEN gr.difficulty = 'easy' THEN 1 END) * 100.0 / COUNT(*), 1), '% 簡單, ',
                 ROUND(COUNT(CASE WHEN gr.difficulty = 'normal' THEN 1 END) * 100.0 / COUNT(*), 1), '% 普通, ',
                 ROUND(COUNT(CASE WHEN gr.difficulty = 'hard' THEN 1 END) * 100.0 / COUNT(*), 1), '% 困難'
-            ) as difficulty_distribution,
-            0 as retry_rate
+            ) as difficulty_distribution
         FROM game_records gr 
         LEFT JOIN games g ON gr.game_id = g.game_id
-        JOIN member m ON gr.member_id = m.member_id 
         WHERE (
             (gr.difficulty = 'easy' AND gr.score = 20) OR
             (gr.difficulty = 'normal' AND gr.score = 50) OR
@@ -216,7 +214,7 @@ try {
         )
         AND gr.status != 'entered'
         GROUP BY gr.game_id, gr.game_type, g.game_name
-        HAVING successful_attempts >= 1 AND COUNT(*) >= 20
+        HAVING successful_attempts >= 1
         ORDER BY gr.game_type, success_rate DESC
     ";
     
@@ -256,56 +254,51 @@ try {
     
     $game_failed_sql = "
         SELECT 
-            failed.game_type,
-            failed.game_names,
-            failed.total_failed,
-            failed.failure_rate,
-            failed.difficulty_distribution,
-            COALESCE(retry.retry_rate, 0) as retry_rate
-        FROM (
-            SELECT 
-                gr.game_type,
-                g.game_name as game_names,
-                COUNT(*) as total_failed,
-                ROUND(COUNT(*) * 100.0 / (
-                    SELECT COUNT(*) 
-                    FROM game_records gr2 
-                    WHERE gr2.game_type = gr.game_type 
-                    AND gr2.status != 'entered'
-                    AND (gr2.play_time > 0 OR gr2.score > 0)
-                ), 2) as failure_rate,
-                CONCAT(
-                    ROUND(COUNT(CASE WHEN gr.difficulty = 'easy' THEN 1 END) * 100.0 / COUNT(*), 1), '% 簡單, ',
-                    ROUND(COUNT(CASE WHEN gr.difficulty = 'normal' THEN 1 END) * 100.0 / COUNT(*), 1), '% 普通, ',
-                    ROUND(COUNT(CASE WHEN gr.difficulty = 'hard' THEN 1 END) * 100.0 / COUNT(*), 1), '% 困難'
-                ) as difficulty_distribution
-            FROM game_records gr
-            LEFT JOIN games g ON gr.game_id = g.game_id
-            WHERE gr.status = 'failed'
-            $game_failed_where_clause
-            GROUP BY gr.game_type, g.game_name
-            HAVING total_failed >= 3
-        ) failed
-        LEFT JOIN (
-            SELECT 
-                gr.game_type,
-                ROUND(
-                    COUNT(DISTINCT CASE WHEN gr2.record_id IS NOT NULL THEN gr.member_id END) * 100.0 / 
-                    COUNT(DISTINCT gr.member_id), 2
-                ) as retry_rate
-            FROM game_records gr
-            LEFT JOIN game_records gr2 ON (
-                gr.member_id = gr2.member_id 
-                AND gr.game_type = gr2.game_type 
-                AND gr2.play_date > gr.play_date 
-                AND gr2.status != 'entered'
-            )
-            WHERE gr.status != 'entered'
-            $game_failed_where_clause
-            GROUP BY gr.game_type
-        ) retry ON failed.game_type = retry.game_type
-        ORDER BY failed.game_type, failed.total_failed DESC
-        LIMIT 15
+            gr.game_type,
+            g.game_name as game_names,
+            COUNT(CASE WHEN (
+                (gr.difficulty = 'easy' AND gr.score < 20) OR
+                (gr.difficulty = 'normal' AND gr.score < 50) OR
+                (gr.difficulty = 'hard' AND gr.score < 100)
+            ) THEN 1 END) as total_failed,
+            ROUND(
+                COUNT(CASE WHEN (
+                    (gr.difficulty = 'easy' AND gr.score < 20) OR
+                    (gr.difficulty = 'normal' AND gr.score < 50) OR
+                    (gr.difficulty = 'hard' AND gr.score < 100)
+                ) THEN 1 END) * 100.0 / 
+                COUNT(CASE WHEN (
+                    (gr.difficulty = 'easy' AND gr.score = 20) OR
+                    (gr.difficulty = 'normal' AND gr.score = 50) OR
+                    (gr.difficulty = 'hard' AND gr.score = 100) OR
+                    (gr.difficulty = 'easy' AND gr.score < 20) OR
+                    (gr.difficulty = 'normal' AND gr.score < 50) OR
+                    (gr.difficulty = 'hard' AND gr.score < 100)
+                ) THEN 1 END), 2
+            ) as failure_rate,
+            CONCAT(
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'easy' THEN 1 END) * 100.0 / COUNT(*), 1), '% 簡單, ',
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'normal' THEN 1 END) * 100.0 / COUNT(*), 1), '% 普通, ',
+                ROUND(COUNT(CASE WHEN gr.difficulty = 'hard' THEN 1 END) * 100.0 / COUNT(*), 1), '% 困難'
+            ) as difficulty_distribution,
+            COUNT(DISTINCT gr.member_id) as unique_players,
+            ROUND(
+                (COUNT(*) - COUNT(DISTINCT gr.member_id)) * 100.0 / COUNT(*), 2
+            ) as retry_rate
+        FROM game_records gr
+        LEFT JOIN games g ON gr.game_id = g.game_id
+        WHERE (
+            (gr.difficulty = 'easy' AND gr.score = 20) OR
+            (gr.difficulty = 'normal' AND gr.score = 50) OR
+            (gr.difficulty = 'hard' AND gr.score = 100) OR
+            (gr.difficulty = 'easy' AND gr.score < 20) OR
+            (gr.difficulty = 'normal' AND gr.score < 50) OR
+            (gr.difficulty = 'hard' AND gr.score < 100)
+        )
+        AND gr.status != 'entered'
+        GROUP BY gr.game_id, gr.game_type, g.game_name
+        HAVING total_failed >= 1
+        ORDER BY gr.game_type, total_failed DESC
     ";
     
     $game_failed_stmt = $pdo->prepare($game_failed_sql);
@@ -403,6 +396,7 @@ $game_type_to_name = [
             <a href="question_management.php">🎯 遊戲管理</a>
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
+            <a href="test_results.php">📈 測試結果</a>
         </div>
         
         <div class="filters">
@@ -560,7 +554,7 @@ $game_type_to_name = [
                                     <td rowspan="<?php echo $rowspan; ?>" style="text-align: center; vertical-align: middle; font-weight: bold; width: 120px;"><?php echo htmlspecialchars($type_name); ?></td>
                                 <?php endif; ?>
                                 <td><?php echo htmlspecialchars($row['game_names']); ?></td>
-                                <td><?php echo number_format($row['game_exits']); ?></td>
+                                <td style="font-weight: bold;"><?php echo number_format($row['game_exits']); ?></td>
                                 <td>
                                     <?php echo $row['exit_rate']; ?>%
                                     <?php if ($row['exit_rate'] > 30): ?>
@@ -644,15 +638,15 @@ $game_type_to_name = [
                             <td><strong><?php echo number_format($analysis['successful_attempts']); ?></strong></td>
                             <td>
                                     <?php echo $analysis['success_rate']; ?>%
-                                <?php if ($analysis['success_rate'] >= 70): ?>
+                                <?php if ($analysis['success_rate'] >= 60): ?>
                                     <span style="color: #28a745;">✅ 優秀</span>
-                                    <small style="color: #666;">(≥70%)</small>
-                                <?php elseif ($analysis['success_rate'] >= 50): ?>
+                                    <small style="color: #666;">(≥60%)</small>
+                                <?php elseif ($analysis['success_rate'] >= 40): ?>
                                     <span style="color: #ffc107;">⚠️ 需改進</span>
-                                    <small style="color: #666;">(50-69%)</small>
+                                    <small style="color: #666;">(40-59%)</small>
                                 <?php else: ?>
                                     <span style="color: #dc3545;">⚠️ 需注意</span>
-                                    <small style="color: #666;">(<50%)</small>
+                                    <small style="color: #666;">(<40%)</small>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -683,7 +677,7 @@ $game_type_to_name = [
                             <th>失敗次數</th>
                             <th>失敗率</th>
                             <th>難度分布</th>
-                            <th>重試率</th>
+                            <th>重試率 <small>(重試失敗佔總失敗的百分比)</small></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -745,16 +739,21 @@ $game_type_to_name = [
                                 <td>
                                     <?php 
                                     $retry_rate = $row['retry_rate'] ?? 0;
-                                    if ($retry_rate >= 70): ?>
-                                        <span style="color: #28a745; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
+                                    
+                                    // 新的判斷邏輯：重複失敗比例 (上限100%)
+                                    if ($retry_rate >= 80): // 80%以上表示絕大多數失敗都是重試
+                                        // 綠色: 代表玩家極度願意重試 (正面訊號)
+                                        ?><span style="color: #28a745; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
+                                        <small style="color: #666;">極高重試</small>
+                                    <?php elseif ($retry_rate >= 50): // 50-80%表示多數失敗是重試
+                                        // 橙色: 代表高重試 (正面訊號)
+                                        ?><span style="color: #ffc107; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
                                         <small style="color: #666;">高重試</small>
-                                    <?php elseif ($retry_rate >= 40): ?>
-                                        <span style="color: #ffc107; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
-                                        <small style="color: #666;">中等重試</small>
-                                    <?php else: ?>
-                                        <span style="color: #dc3545; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
+                                    <?php else: 
+                                        // 紅色: 低重試 (需關注，玩家失敗後不願再嘗試)
+                                        ?><span style="color: #dc3545; font-weight: bold;"><?php echo $retry_rate; ?>%</span>
                                         <small style="color: #666;">低重試</small>
-                <?php endif; ?>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

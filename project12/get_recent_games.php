@@ -34,8 +34,8 @@ try {
                 WHEN gr.game_type = '追蹤犯人遊戲' THEN '追蹤犯人遊戲'
                 WHEN gr.game_type = '圖片線索問答' THEN '圖片線索問答'
                 WHEN gr.game_id = 4 THEN '2048'  -- 直接根據 game_id = 4 判斷為 2048
-                WHEN (gr.game_type = '算術邏輯力' OR gr.game_type = '算數邏輯力') AND gr.game_id = 3 THEN '算菜錢遊戲'
-                WHEN (gr.game_type = '算術邏輯力' OR gr.game_type = '算數邏輯力') AND gr.game_id = 9 THEN '過河遊戲'
+                WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 3 THEN '算菜錢遊戲'
+                WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 9 THEN '過河遊戲'
                 WHEN gr.game_type = '反應力' THEN '接金蛋遊戲'
                 WHEN gr.game_type = '節奏遊戲' THEN '節奏遊戲'
                 WHEN gr.game_type = '看字選色遊戲' THEN '看字選色遊戲'

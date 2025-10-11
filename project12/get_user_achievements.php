@@ -23,7 +23,7 @@ try {
     $today = date('Y-m-d'); // 使用台灣時間
     $sql = "SELECT a.achievement_name, 
                    a.achievement_name as achievement_description,
-                   COALESCE(a.icon, '🏆') as icon, 
+                   CONCAT('img/', COALESCE(a.icon, 'Achievement.png')) as icon, 
                    ma.earned_date
             FROM member_achievements ma
             JOIN achievements a ON ma.achievement_id = a.achievement_id

@@ -220,6 +220,7 @@ $stats = $stats_stmt->fetch();
             <a href="question_management.php">🎯 遊戲管理</a>
             <a href="user_management.php" class="active">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
+            <a href="test_results.php">📈 測試結果</a>
         </div>
         
         <div class="stats">

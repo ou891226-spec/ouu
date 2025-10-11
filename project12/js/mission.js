@@ -95,11 +95,35 @@ function claimReward(button) {
           clearAchievementsCache();
         }
       } else {
-        alert(data.message || '領取失敗');
+        console.error('領取獎勵失敗:', data.message);
+        // 使用更友善的提示方式
+        if (typeof showErrorMessage === 'function') {
+          showErrorMessage(data.message || '領取失敗');
+        } else {
+          // 備用方案：在按鈕上顯示錯誤訊息
+          button.textContent = data.message || '領取失敗';
+          button.style.backgroundColor = '#ff6b6b';
+          setTimeout(() => {
+            button.textContent = '領取獎勵';
+            button.style.backgroundColor = '#ffd93d';
+          }, 2000);
+        }
       }
     })
-    .catch(() => {
-      alert('伺服器錯誤，請稍後再試');
+    .catch((error) => {
+      console.error('領取獎勵錯誤:', error);
+      // 使用更友善的提示方式，避免彈出視窗
+      if (typeof showErrorMessage === 'function') {
+        showErrorMessage('領取獎勵失敗，請稍後再試');
+      } else {
+        // 備用方案：在按鈕上顯示錯誤訊息
+        button.textContent = '領取失敗，請重試';
+        button.style.backgroundColor = '#ff6b6b';
+        setTimeout(() => {
+          button.textContent = '領取獎勵';
+          button.style.backgroundColor = '#ffd93d';
+        }, 2000);
+      }
     });
 }
 
@@ -136,8 +160,8 @@ function getTaskIcon(taskType) {
   return iconFile;
 }
 
-// ✅ 載入任務資料
-function loadDailyTasks() {
+// 載入任務資料 (已移至 load-daily-tasks.js)
+function loadDailyTasks_DISABLED() {
   console.log("開始載入每日任務...");
   
   fetch("get_daily_tasks_fixed.php")

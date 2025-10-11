@@ -156,31 +156,52 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 延遲顯示各個元素，創造漸進式動畫效果
             setTimeout(() => {
-                document.querySelector('.success-icon-wrapper').classList.add('animate');
+                const iconWrapper = document.querySelector('.success-icon-wrapper');
+                if (iconWrapper) {
+                    iconWrapper.classList.add('animate');
+                }
             }, 300);
             
             setTimeout(() => {
-                document.querySelector('.success-title').classList.add('animate');
+                const successTitle = document.querySelector('.success-title');
+                if (successTitle) {
+                    successTitle.classList.add('animate');
+                }
             }, 600);
             
             setTimeout(() => {
-                document.querySelector('.success-subtitle').classList.add('animate');
+                const subtitle = document.querySelector('.success-subtitle');
+                if (subtitle) {
+                    subtitle.classList.add('animate');
+                }
             }, 800);
             
             setTimeout(() => {
-                document.querySelector('.user-info-card').classList.add('animate');
+                const userInfoCard = document.querySelector('.user-info-card');
+                if (userInfoCard) {
+                    userInfoCard.classList.add('animate');
+                }
             }, 1000);
             
             setTimeout(() => {
-                document.querySelector('.security-tips').classList.add('animate');
+                const securityTips = document.querySelector('.security-tips');
+                if (securityTips) {
+                    securityTips.classList.add('animate');
+                }
             }, 1200);
             
             setTimeout(() => {
-                document.querySelector('.action-buttons').classList.add('animate');
+                const actionButtons = document.querySelector('.action-buttons');
+                if (actionButtons) {
+                    actionButtons.classList.add('animate');
+                }
             }, 1400);
             
             setTimeout(() => {
-                document.querySelector('.welcome-message').classList.add('animate');
+                const welcomeMessage = document.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.classList.add('animate');
+                }
             }, 1600);
             
             // 自動重導向功能

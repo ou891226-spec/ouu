@@ -823,12 +823,12 @@ header {
 }
 
 .floating-btn-icon {
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1;
 }
 
 .floating-btn-text {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: bold;
   white-space: nowrap;
   line-height: 1;
@@ -849,10 +849,10 @@ header {
   }
   
   .floating-btn-icon {
-    font-size: 18px;
+    font-size: 20px;
   }
   
   .floating-btn-text {
-    font-size: 12px;
+    font-size: 16px;
   }
 }

@@ -92,12 +92,16 @@ function getTaskIcon(taskType) {
 function loadDailyTasks() {
   console.log("開始載入每日任務...");
   
-  fetch("get_daily_tasks_fixed.php", {
+  // 添加時間戳防止緩存
+  const timestamp = new Date().getTime();
+  console.log("請求URL:", `get_daily_tasks_fixed.php?t=${timestamp}`);
+  fetch(`get_daily_tasks_fixed.php?t=${timestamp}&nocache=${Math.random()}`, {
     method: 'GET',
     credentials: 'same-origin', // 确保传递会话信息
     headers: {
       'Content-Type': 'application/json',
-    }
+    },
+    cache: 'no-cache' // 強制不使用緩存
   })
     .then(response => {
       console.log("收到回應:", response.status);
@@ -120,9 +124,13 @@ function loadDailyTasks() {
         throw new Error("API错误: " + tasks.error);
       }
       
-      const container = document.getElementById("daily-tasks-container");
+      // 嘗試找到任務容器，支援多種容器ID
+      let container = document.getElementById("daily-tasks-container") || 
+                     document.getElementById("missionList") || 
+                     document.getElementById("mission-list");
+      
       if (!container) {
-        console.error("找不到 daily-tasks-container 元素");
+        console.error("找不到任務容器元素 (daily-tasks-container, missionList, mission-list)");
         return;
       }
       
@@ -141,6 +149,16 @@ function loadDailyTasks() {
       }
 
       console.log("開始處理", tasks.length, "個任務");
+      
+      // 更新任務計數
+      const completedCountEl = document.getElementById("completedCount");
+      const totalCountEl = document.getElementById("totalCount");
+      if (totalCountEl) {
+        totalCountEl.textContent = tasks.length;
+      }
+      
+      let completedCount = 0;
+      
       tasks.forEach((task, index) => {
         console.log(`處理任務 ${index + 1}:`, task);
         
@@ -151,11 +169,41 @@ function loadDailyTasks() {
         // 支援累積型任務的進度計算
         const current = parseInt(task.progress) || 0;
         const required = parseInt(task.required) || 1;
-        const progressText = `${current}/${required}`;
+        
+        // 判斷是否為遊戲時間相關任務，如果是則添加"秒"字
+        // 排除"時間挑戰者"任務，因為它是關於完成局數的，不是累積時間
+        const isTimeTask = (task.task_name === '持久戰士' || 
+                          task.task_name === '速度之王' ||
+                          task.task_name === '時間大師' ||
+                          task.task_description.includes('遊玩時間') ||
+                          task.task_description.includes('遊戲時間') ||
+                          task.task_description.includes('累積時間') ||
+                          (task.task_description.includes('總共') && task.task_description.includes('分鐘'))) &&
+                          task.task_name !== '時間挑戰者';
+        
+        const progressText = isTimeTask ? `${current}/${required}秒` : `${current}/${required}`;
+        
+        // 調試信息
+        console.log(`任務 ${index + 1} (${task.task_name}):`, {
+          task_id: task.task_id,
+          task_name: task.task_name,
+          task_description: task.task_description,
+          progress: task.progress,
+          required: task.required,
+          current: current,
+          required_num: required,
+          isTimeTask: isTimeTask,
+          progressText: progressText
+        });
         
         // 判斷是否已完成（支援累積型任務）
         const isCompleted = current >= required || task.status === 'completed' || task.status === 'claimed';
         const isClaimed = task.status === 'claimed';
+        
+        // 計算已完成任務數量
+        if (isCompleted) {
+          completedCount++;
+        }
 
         item.setAttribute("data-completed", isCompleted.toString());
         item.setAttribute("data-progress", progressText);
@@ -209,14 +257,21 @@ function loadDailyTasks() {
         container.appendChild(item);
         console.log(`任務 ${index + 1} 已添加到DOM`);
       });
+
+      // 更新已完成任務計數
+      if (completedCountEl) {
+        completedCountEl.textContent = completedCount;
+      }
       
-      console.log("任務載入完成，共載入", tasks.length, "個任務");
+      console.log("任務載入完成，已完成:", completedCount, "總計:", tasks.length);
     })
     .catch(error => {
       console.error("載入任務失敗：", error);
       console.error("錯誤詳情：", error.message);
       
-      const container = document.getElementById("daily-tasks-container");
+      const container = document.getElementById("daily-tasks-container") || 
+                       document.getElementById("missionList") || 
+                       document.getElementById("mission-list");
       if (container) {
         container.innerHTML = `
           <div style="text-align: center; padding: 20px; color: #666;">
