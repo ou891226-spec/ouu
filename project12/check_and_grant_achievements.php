@@ -135,12 +135,12 @@ function checkSpecialAchievements($member_id, $score, $play_time, $game_type = n
                     break;
                 case '算術邏輯力':
                     // 算術邏輯力遊戲：需要更細緻的判斷
-                    // 2048遊戲需要達到2048分，算菜錢和過河遊戲完成即可
+                    // 2048遊戲需要達到2048分，算菜錢和數字排排樂完成即可
                     if ($score >= 2048) {
                         // 如果分數很高，肯定是完美
                         $isPerfectScore = true;
                     } else if ($score > 0 && $score < 2048) {
-                        // 分數較低但大於0，可能是算菜錢或過河遊戲
+                        // 分數較低但大於0，可能是算菜錢或數字排排樂
                         $isPerfectScore = true;
                     } else {
                         $isPerfectScore = false;
@@ -516,7 +516,7 @@ function checkAndCompleteAllTasks($member_id, $game_type = null, $play_time = 0)
                 '接金蛋遊戲' => ['接金蛋遊戲', '接金蛋', '接蛋遊戲', '接蛋', '接金蛋專家'],
                 '看字選色遊戲' => ['看字選色遊戲', '看字選色', '選色', '顏色', '看字選色專家'],
                 '追蹤犯人遊戲' => ['追蹤犯人遊戲', '追蹤犯人', '犯人遊戲', '犯人', '追蹤', '追蹤專家'],
-                '過河遊戲' => ['過河遊戲', '過河', '河', '過河專家']
+                '數字排排樂' => ['數字排排樂', '拼圖', '排排樂', '拼圖專家']
             ];
             
             $search_terms = $game_type_mapping[$game_type] ?? [$game_type];

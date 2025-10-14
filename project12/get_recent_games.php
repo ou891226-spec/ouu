@@ -33,12 +33,13 @@ try {
                 WHEN gr.game_type = '記憶力' THEN '翻牌對對樂'
                 WHEN gr.game_type = '追蹤犯人遊戲' THEN '追蹤犯人遊戲'
                 WHEN gr.game_type = '圖片線索問答' THEN '圖片線索問答'
-                WHEN gr.game_id = 4 THEN '2048'  -- 直接根據 game_id = 4 判斷為 2048
+                WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 4 THEN '2048'  -- 2048遊戲使用算術邏輯力類型
                 WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 3 THEN '算菜錢遊戲'
-                WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 9 THEN '過河遊戲'
+                WHEN (gr.game_type = '算術邏輯力') AND gr.game_id = 10 THEN '數字排排樂'
                 WHEN gr.game_type = '反應力' THEN '接金蛋遊戲'
                 WHEN gr.game_type = '節奏遊戲' THEN '節奏遊戲'
                 WHEN gr.game_type = '看字選色遊戲' THEN '看字選色遊戲'
+                WHEN gr.game_type = '2048' THEN '2048'  -- 保留原有的2048類型
                 ELSE gr.game_type
             END as normalized_game_type,
             SUM(gr.score) as total_score,
@@ -66,7 +67,7 @@ try {
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
         '圖片線索問答' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索問答'],
         '圖片線索' => ['img' => 'img/clue11.png?v=2', 'link' => 'clue.php', 'title' => '圖片線索'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
+        '數字排排樂' => ['img' => 'img/puzzle1.png?v=2', 'link' => 'puzzle.php', 'title' => '數字排排樂'],
         '算菜錢遊戲' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢遊戲']
     ];
     

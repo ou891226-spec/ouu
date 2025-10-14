@@ -60,9 +60,9 @@ try {
     $game_mappings = [
         '2048' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
         '邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],
-        '算術邏輯力' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
+        '算術邏輯力' => ['img' => 'img/game_20481.png?v=2', 'link' => '2048ht.php', 'title' => '2048'],  // 修正：算術邏輯力對應2048遊戲
         '算菜錢遊戲' => ['img' => 'img/vegetable1.png?v=2', 'link' => 'Vegetable-Cost.php', 'title' => '算菜錢'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲'],
+        '數字排排樂' => ['img' => 'img/puzzle1.png?v=2', 'link' => 'puzzle.php', 'title' => '數字排排樂'],
         '記憶力' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '翻牌對對樂' => ['img' => 'img/card1.png?v=2', 'link' => 'Memory-Game.php', 'title' => '翻牌對對樂'],
         '追蹤犯人遊戲' => ['img' => 'img/prisoner1.png?v=2', 'link' => 'prisoner.php', 'title' => '追蹤犯人'],
@@ -74,7 +74,8 @@ try {
         'Catch-Egg Game' => ['img' => 'img/egg1.png?v=2', 'link' => 'Catch-Egg-Game.php', 'title' => '接金蛋'],
         '節奏遊戲' => ['img' => 'img/rhythm1.png?v=2', 'link' => 'rhythm_game.php', 'title' => '節奏遊戲'],
         '看字選色遊戲' => ['img' => 'img/text_color111.png?v=2', 'link' => 'text-color.php', 'title' => '看字選色'],
-        '過河遊戲' => ['img' => 'img/river1.png?v=2', 'link' => 'river.index.php', 'title' => '過河遊戲']
+        '數字排排樂' => ['img' => 'img/puzzle1.png?v=2', 'link' => 'puzzle.php', 'title' => '數字排排樂'],
+        '數字排排樂' => ['img' => 'img/game_20481.png?v=2', 'link' => 'puzzle.php', 'title' => '數字排排樂']
     ];
     
     $formatted_games = [];

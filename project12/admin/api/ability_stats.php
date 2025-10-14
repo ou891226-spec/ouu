@@ -40,10 +40,10 @@ try {
     // 將遊戲類型映射到三項能力
     // reaction: 接金蛋/節奏/看字選色
     // memory: 翻牌對對樂/圖片線索問答/追蹤犯人
-    // logic: 算菜錢/過河/2048
+    // logic: 算菜錢/數字排排樂/2048
     $reactionTypes = ['反應力', '接金蛋遊戲', '接金蛋', '節奏遊戲', '看字選色遊戲'];
     $memoryTypes = ['記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲'];
-    $logicTypes = ['算術邏輯力', '算菜錢遊戲', '邏輯力', '2048', '過河遊戲'];
+    $logicTypes = ['算術邏輯力', '算菜錢遊戲', '邏輯力', '2048', '數字排排樂'];
 
     // 構建IN子句
     $inPlaceholders = function(array $arr) { return implode(',', array_fill(0, count($arr), '?')); };

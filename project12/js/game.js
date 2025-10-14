@@ -45,6 +45,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         init() {
             console.log('開始初始化遊戲...');
+            
+            // 初始化遊戲追蹤器 - 在真正開始遊戲時才開始計時
+            if (typeof gameTracker !== 'undefined') {
+                gameTracker.init("算術邏輯力", 4);
+            }
+            
+            // 開始總遊戲時間計時
+            if (typeof window.manualStartGameTimer !== 'undefined') {
+                window.manualStartGameTimer();
+            }
+            
             if (!this.isInitialized) {
                 console.log('創建遊戲板...');
                 this.createBoard();

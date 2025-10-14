@@ -162,11 +162,6 @@ exit;
         // 將PHP難度設定傳遞給JavaScript
         const difficultySettings = <?php echo json_encode($difficultySettings); ?>;
         console.log('難度設定:', difficultySettings);
-        
-        // 初始化遊戲追蹤器
-        document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("算術邏輯力", 4);
-        });
     </script>
 </head>
 <body>

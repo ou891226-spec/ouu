@@ -16,6 +16,19 @@ if ($receiver_id <= 0 || $receiver_id == $sender_id) {
 }
 
 try {
+    // 檢查是否已經是好友
+    $sql = "SELECT COUNT(*) as is_friend FROM friends 
+            WHERE (member_id = ? AND friend_id = ?) 
+            OR (member_id = ? AND friend_id = ?)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$sender_id, $receiver_id, $receiver_id, $sender_id]);
+    $friend_check = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($friend_check['is_friend'] > 0) {
+        http_response_code(400);
+        exit('已經是好友');
+    }
+    
     // 檢查是否已經有邀請
     $sql = "SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = 'pending'";
     $stmt = $pdo->prepare($sql);
@@ -23,6 +36,7 @@ try {
     $result = $stmt->fetch();
     
     if ($result) {
+        http_response_code(400);
         exit('已送出邀請');
     }
 

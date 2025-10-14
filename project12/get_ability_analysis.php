@@ -105,7 +105,7 @@ try {
             case '算術邏輯力':
             case '2048':
             case '算菜錢遊戲':
-            case '過河遊戲':
+            case '數字排排樂':
                 $logic_games[] = $record;
                 break;
         }

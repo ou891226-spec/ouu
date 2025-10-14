@@ -11,7 +11,8 @@ if (!isset($_SESSION['admin_id'])) {
 $admin_name = $_SESSION['admin_name'] ?? '管理員';
 
 // 處理篩選參數
-$game_type_filter = $_GET['game_type'] ?? '';
+$game_type_filter = $_GET['game_type'] ?? ''; // 類型
+$game_name_filter = $_GET['game_name'] ?? ''; // 遊戲名稱
 $date_filter = $_GET['date_filter'] ?? '';
 $selected_month = $_GET['selected_month'] ?? '';
 $selected_year = $_GET['selected_year'] ?? '';
@@ -24,6 +25,39 @@ $params = [];
 if ($game_type_filter) {
     $where_conditions[] = "gr.game_type = ?";
     $params[] = $game_type_filter;
+}
+
+if ($game_name_filter) {
+    // 根據遊戲名稱篩選，需要結合game_type和game_id
+    switch ($game_name_filter) {
+        case '接金蛋':
+            $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 1";
+            break;
+        case '節奏遊戲':
+            $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 6";
+            break;
+        case '看字選色':
+            $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 2";
+            break;
+        case '翻牌對對樂':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 5";
+            break;
+        case '圖片線索問答':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 8";
+            break;
+        case '追蹤犯人':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 7";
+            break;
+        case '算菜錢':
+            $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 3";
+            break;
+        case '數字排排樂':
+            $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 10";
+            break;
+        case '2048':
+            $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 4";
+            break;
+    }
 }
 
 if ($date_filter) {
@@ -145,8 +179,9 @@ $game_type_to_name = [
     
     // 算術邏輯力相關
     '算術邏輯力' => '算菜錢',
+    '算術邏輯力' => '數字排排樂',
     '算菜錢遊戲' => '算菜錢',
-    '過河遊戲' => '過河遊戲',
+    '數字排排樂' => '數字排排樂',
     '邏輯力' => '2048',
     '2048' => '2048',
     
@@ -269,6 +304,7 @@ $game_type_to_name = [
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
             <a href="test_results.php">📈 測試結果</a>
+            <a href="custom_score_trend.php">📊 趨勢分析</a>
             <a href="delete_test_records.php" style="color: #dc3545;">🗑️ 刪除測試記錄</a>
         </div>
         
@@ -282,20 +318,29 @@ $game_type_to_name = [
                     <label>遊戲類型：</label>
                     <select name="game_type">
                         <option value="">全部</option>
+                        <option value="反應力" <?php echo $game_type_filter === '反應力' ? 'selected' : ''; ?>>反應力</option>
+                        <option value="記憶力" <?php echo $game_type_filter === '記憶力' ? 'selected' : ''; ?>>記憶力</option>
+                        <option value="算術邏輯力" <?php echo $game_type_filter === '算術邏輯力' ? 'selected' : ''; ?>>算術邏輯力</option>
+                    </select>
+                </div>
+                <div>
+                    <label>遊戲名稱：</label>
+                    <select name="game_name">
+                        <option value="">全部</option>
                         <optgroup label="反應力">
-                            <option value="反應力" <?php echo $game_type_filter === '反應力' ? 'selected' : ''; ?>>接金蛋</option>
-                            <option value="節奏遊戲" <?php echo $game_type_filter === '節奏遊戲' ? 'selected' : ''; ?>>節奏遊戲</option>
-                            <option value="看字選色遊戲" <?php echo $game_type_filter === '看字選色遊戲' ? 'selected' : ''; ?>>看字選色</option>
+                            <option value="接金蛋" <?php echo $game_name_filter === '接金蛋' ? 'selected' : ''; ?>>接金蛋</option>
+                            <option value="節奏遊戲" <?php echo $game_name_filter === '節奏遊戲' ? 'selected' : ''; ?>>節奏遊戲</option>
+                            <option value="看字選色" <?php echo $game_name_filter === '看字選色' ? 'selected' : ''; ?>>看字選色</option>
                         </optgroup>
                         <optgroup label="記憶力">
-                            <option value="記憶力" <?php echo $game_type_filter === '記憶力' ? 'selected' : ''; ?>>翻牌對對樂</option>
-                            <option value="圖片線索問答" <?php echo $game_type_filter === '圖片線索問答' ? 'selected' : ''; ?>>圖片線索問答</option>
-                            <option value="追蹤犯人遊戲" <?php echo $game_type_filter === '追蹤犯人遊戲' ? 'selected' : ''; ?>>追蹤犯人</option>
+                            <option value="翻牌對對樂" <?php echo $game_name_filter === '翻牌對對樂' ? 'selected' : ''; ?>>翻牌對對樂</option>
+                            <option value="圖片線索問答" <?php echo $game_name_filter === '圖片線索問答' ? 'selected' : ''; ?>>圖片線索問答</option>
+                            <option value="追蹤犯人" <?php echo $game_name_filter === '追蹤犯人' ? 'selected' : ''; ?>>追蹤犯人</option>
                         </optgroup>
                         <optgroup label="算術邏輯力">
-                            <option value="算術邏輯力" <?php echo $game_type_filter === '算術邏輯力' ? 'selected' : ''; ?>>算菜錢</option>
-                            <option value="過河遊戲" <?php echo $game_type_filter === '過河遊戲' ? 'selected' : ''; ?>>過河遊戲</option>
-                            <option value="邏輯力" <?php echo $game_type_filter === '邏輯力' ? 'selected' : ''; ?>>2048</option>
+                            <option value="算菜錢" <?php echo $game_name_filter === '算菜錢' ? 'selected' : ''; ?>>算菜錢</option>
+                            <option value="數字排排樂" <?php echo $game_name_filter === '數字排排樂' ? 'selected' : ''; ?>>數字排排樂</option>
+                            <option value="2048" <?php echo $game_name_filter === '2048' ? 'selected' : ''; ?>>2048</option>
                         </optgroup>
                     </select>
                 </div>
@@ -337,23 +382,6 @@ $game_type_to_name = [
             <div class="stat-card">
                 <h3><?php echo number_format($stats['unique_users']); ?></h3>
                 <p>活躍用戶</p>
-            </div>
-            <div class="stat-card">
-                <h3><?php 
-                    $avg_seconds = $stats['avg_playtime'] ?? 0;
-                    $avg_days = floor($avg_seconds / 86400);
-                    $avg_hours = floor(($avg_seconds % 86400) / 3600);
-                    $avg_minutes = floor(($avg_seconds % 3600) / 60);
-                    
-                    if ($avg_days > 0) {
-                        echo sprintf('%d日%d時%d分', $avg_days, $avg_hours, $avg_minutes);
-                    } elseif ($avg_hours > 0) {
-                        echo sprintf('%d時%d分', $avg_hours, $avg_minutes);
-                    } else {
-                        echo sprintf('%d分', $avg_minutes);
-                    }
-                ?></h3>
-                <p>平均遊玩時間</p>
             </div>
             <div class="stat-card">
                 <h3><?php echo round($stats['avg_score']); ?></h3>
@@ -418,8 +446,8 @@ $game_type_to_name = [
                                 case 8:
                                     $game_name = '圖片線索問答';
                                     break;
-                                case 9:
-                                    $game_name = '過河遊戲';
+                                case 10:
+                                    $game_name = '數字排排樂';
                                     break;
                                 default:
                                     $game_name = $game_type_to_name[$record['game_type']] ?? $record['game_name'] ?? '-';
@@ -450,8 +478,8 @@ $game_type_to_name = [
                                     } else {
                                         $behavior_type = 'game_exit';
                                     }
-                                } elseif (in_array($record['game_id'], [3, 9])) {
-                                    // 算菜錢、過河遊戲：根據分數判斷（這些遊戲可能沒有準確的遊玩時間）
+                                } elseif (in_array($record['game_id'], [3, 10])) {
+                                    // 算菜錢、數字排排樂：根據分數判斷（這些遊戲可能沒有準確的遊玩時間）
                                     if ($record['score'] > 0) {
                                         $behavior_type = 'game_complete';
                                     } else {

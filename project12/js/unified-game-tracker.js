@@ -8,6 +8,11 @@ const gameTracker = {
     
     // 初始化追蹤器
     init: function(gameName, gameId) {
+        // 如果已經在追蹤，先結束舊的追蹤
+        if (this.isTracking) {
+            console.log(`遊戲追蹤器正在追蹤，重新初始化`);
+        }
+        
         this.gameName = gameName;
         this.gameId = gameId;
         this.startTime = Date.now();

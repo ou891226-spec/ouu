@@ -882,6 +882,17 @@ function loadQuestion() {
 // 遊戲控制函數
 function startGame() {
     debugLog('開始遊戲');
+    
+    // 初始化遊戲追蹤器 - 在真正開始遊戲時才開始計時
+    if (typeof gameTracker !== 'undefined') {
+        gameTracker.init("算術邏輯力", 3);
+    }
+    
+    // 開始總遊戲時間計時
+    if (typeof window.manualStartGameTimer !== 'undefined') {
+        window.manualStartGameTimer();
+    }
+    
     score = 0;
     // 根據難度設定時間 - 從資料庫讀取
     if (window.difficultySettings && window.difficultySettings[currentDifficulty]) {
@@ -1497,7 +1508,13 @@ function goToVegetableNextStep() {
     
     // 加載並播放視頻
     video.load();
-    video.play();
+    // 等待視頻載入完成後再播放，避免播放錯誤
+    video.addEventListener('loadeddata', function playVideo() {
+        video.play().catch(e => {
+            console.log('視頻播放失敗（正常情況）:', e.message);
+        });
+        video.removeEventListener('loadeddata', playVideo);
+    }, { once: true });
 }
 
 // 回到換算菜錢第一步
@@ -1520,7 +1537,13 @@ function goToVegetableFirstStep() {
     
     // 加載並播放視頻
     video.load();
-    video.play();
+    // 等待視頻載入完成後再播放，避免播放錯誤
+    video.addEventListener('loadeddata', function playVideo() {
+        video.play().catch(e => {
+            console.log('視頻播放失敗（正常情況）:', e.message);
+        });
+        video.removeEventListener('loadeddata', playVideo);
+    }, { once: true });
 }
 
 // 回到換算菜錢上一步
@@ -1543,7 +1566,13 @@ function goToVegetablePrevStep() {
     
     // 加載並播放視頻
     video.load();
-    video.play();
+    // 等待視頻載入完成後再播放，避免播放錯誤
+    video.addEventListener('loadeddata', function playVideo() {
+        video.play().catch(e => {
+            console.log('視頻播放失敗（正常情況）:', e.message);
+        });
+        video.removeEventListener('loadeddata', playVideo);
+    }, { once: true });
 }
 
 // 設為全局可訪問

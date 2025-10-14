@@ -126,6 +126,7 @@ $stats = $stats_stmt->fetch();
         .nav { background: white; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
         .nav a { margin-right: 20px; text-decoration: none; color: #007bff; }
         .nav a:hover { text-decoration: underline; }
+        .nav a.active { color: #0056b3; font-weight: bold; }
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 20px; border-radius: 5px; text-align: center; }
         .stat-card h3 { margin: 0; color: #007bff; font-size: 24px; }
@@ -221,6 +222,7 @@ $stats = $stats_stmt->fetch();
             <a href="user_management.php" class="active">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
             <a href="test_results.php">📈 測試結果</a>
+            <a href="custom_score_trend.php">📊 趨勢分析</a>
         </div>
         
         <div class="stats">

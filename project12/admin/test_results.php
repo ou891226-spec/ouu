@@ -74,12 +74,13 @@ try {
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
             <a href="test_results.php" class="active">📈 測試結果</a>
+            <a href="custom_score_trend.php">📊 趨勢分析</a>
         </div>
 
         <div class="formula-box">
-            <h4>📊 能力值計算公式</h4>
-            <p><strong>Z-score：</strong> <code>Z_score = (score - mean) / sd</code> | <code>Z_time = (mean_time - actual_time) / sd_time</code></p>
-            <p><strong>能力值：</strong> <code>能力值 = (0.3 × Z_score + 0.7 × Z_time) × 10 + 50</code> <em>（範圍：0-100）</em></p>
+            <h4>📈 提升率計算公式</h4>
+            <p><strong>提升率（%）：</strong> <code>(最近平均分 - 第一次平均分) / 第一次平均分 × 100%</code></p>
+            <p><em>此處的「平均分」是能力值分數 (0-100)。</em></p>
         </div>
 
         <div class="filters">
@@ -172,66 +173,51 @@ try {
             if (abilityChart) {
                 abilityChart.destroy();
             }
+            
+            // ***【修正點 1】***：從後端實際傳回的 improvement_stats 欄位取值
+            const improvementData = data.improvement_stats;
+
+            if (!improvementData || Object.keys(improvementData).length === 0) {
+                $('chartContainer').innerHTML = '<div class="loading">無提升率數據</div>';
+                $('abilityChart').style.display = 'none';
+                return;
+            }
 
             const chartData = {
-                labels: data.labels || [],
+                labels: ['⚡ 反應力', '🧠 記憶力', '🔢 算術邏輯力'],
                 datasets: [
                     {
-                        label: '⚡ 反應力',
-                        data: data.reaction || [],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.4,
-                        spanGaps: true
-                    },
-                    {
-                        label: '🧠 記憶力',
-                        data: data.memory || [],
-                        borderColor: '#43e97b',
-                        backgroundColor: 'rgba(67, 233, 123, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.4,
-                        spanGaps: true
-                    },
-                    {
-                        label: '🔢 算術邏輯力',
-                        data: data.logic || [],
-                        borderColor: '#f093fb',
-                        backgroundColor: 'rgba(240, 147, 251, 0.1)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.4,
-                        spanGaps: true
+                        label: '提升率 (%)',
+                        data: [
+                            // ***【修正點 2】***：取用 nested 的 improvement_rate 數值
+                            improvementData.reaction?.improvement_rate || 0,
+                            improvementData.memory?.improvement_rate || 0,
+                            improvementData.logic?.improvement_rate || 0
+                        ],
+                        backgroundColor: ['#667eea', '#43e97b', '#f093fb'], 
+                        borderColor: ['#667eea', '#43e97b', '#f093fb'],
+                        borderWidth: 1
                     }
                 ]
             };
 
+
             abilityChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar', // 改為長條圖
                 data: chartData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 100,
+                            // max: 100, // 提升率可超過 100%，因此移除 max 限制
                             grid: {
                                 color: 'rgba(0,0,0,0.1)'
                             },
                             title: {
                                 display: true,
-                                text: '能力值 (0-100)',
+                                text: '提升率 (%)', // 修改 Y 軸標題
                                 font: {
                                     size: 12,
                                     weight: 'bold'
@@ -244,7 +230,7 @@ try {
                             },
                             title: {
                                 display: true,
-                                text: '週期',
+                                text: '能力項目', // 修改 X 軸標題
                                 font: {
                                     size: 12,
                                     weight: 'bold'
@@ -262,20 +248,12 @@ try {
                             callbacks: {
                                 label: (context) => {
                                     const value = context.parsed.y;
-                                    return `${context.dataset.label}: ${value !== null ? value.toFixed(1) : 'N/A'}`;
+                                    return `${context.dataset.label}: ${value !== null ? value.toFixed(1) : 'N/A'}%`; // 加上 %
                                 }
                             }
                         },
                         legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20,
-                                font: {
-                                    size: 12
-                                }
-                            }
+                            display: false, // 長條圖通常不需要圖例，因為只有一個數據集
                         }
                     }
                 }
@@ -284,6 +262,8 @@ try {
             $('chartContainer').innerHTML = '';
             $('abilityChart').style.display = 'block';
         }
+
+        // ... (其他函式不變)
 
         function displayStats(stats) {
             if (!stats) {
@@ -295,21 +275,21 @@ try {
                 <div class="stats-grid">
                     <div class="stat-card">
                         <h4>⚡ 反應力</h4>
-                        <p><strong>平均：</strong>${stats.reaction?.avg?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最高：</strong>${stats.reaction?.max?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最低：</strong>${stats.reaction?.min?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>第一次平均分：</strong>${stats.reaction?.first_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>最近平均分：</strong>${stats.reaction?.recent_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>提升率：</strong><strong style="color: ${stats.reaction?.improvement_rate >= 0 ? '#43e97b' : '#dc3545'};">${stats.reaction?.improvement_rate >= 0 ? '+' : ''}${stats.reaction?.improvement_rate?.toFixed(1) || 'N/A'}%</strong></p>
                     </div>
                     <div class="stat-card">
                         <h4>🧠 記憶力</h4>
-                        <p><strong>平均：</strong>${stats.memory?.avg?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最高：</strong>${stats.memory?.max?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最低：</strong>${stats.memory?.min?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>第一次平均分：</strong>${stats.memory?.first_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>最近平均分：</strong>${stats.memory?.recent_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>提升率：</strong><strong style="color: ${stats.memory?.improvement_rate >= 0 ? '#43e97b' : '#dc3545'};">${stats.memory?.improvement_rate >= 0 ? '+' : ''}${stats.memory?.improvement_rate?.toFixed(1) || 'N/A'}%</strong></p>
                     </div>
                     <div class="stat-card">
                         <h4>🔢 算術邏輯力</h4>
-                        <p><strong>平均：</strong>${stats.logic?.avg?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最高：</strong>${stats.logic?.max?.toFixed(1) || 'N/A'}</p>
-                        <p><strong>最低：</strong>${stats.logic?.min?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>第一次平均分：</strong>${stats.logic?.first_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>最近平均分：</strong>${stats.logic?.recent_avg?.toFixed(1) || 'N/A'}</p>
+                        <p><strong>提升率：</strong><strong style="color: ${stats.logic?.improvement_rate >= 0 ? '#43e97b' : '#dc3545'};">${stats.logic?.improvement_rate >= 0 ? '+' : ''}${stats.logic?.improvement_rate?.toFixed(1) || 'N/A'}%</strong></p>
                     </div>
                 </div>
             `;
@@ -324,9 +304,9 @@ try {
                 const selectElement = $('memberId');
                 const selectedOption = selectElement.options[selectElement.selectedIndex];
                 const userName = selectedOption.text.split(' (')[0]; // 移除ID部分
-                $('chartTitle').textContent = `📈 ${userName} 的能力值趨勢圖`;
+                $('chartTitle').textContent = `📊 ${userName} 的能力提升率分析`;
             } else {
-                $('chartTitle').textContent = '📈 能力值趨勢圖';
+                $('chartTitle').textContent = '📊 能力提升率分析';
             }
         }
 

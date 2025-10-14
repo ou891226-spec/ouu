@@ -99,7 +99,7 @@ try {
             (SELECT COUNT(DISTINCT CASE 
                 WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                 WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                 ELSE game_type
             END) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
         ) THEN 'completed'
@@ -226,7 +226,7 @@ try {
         '社交大師' => '社交大師',
         '社交達人' => '社交達人',
         '線索專家' => '線索專家',
-        '過河大師' => '過河大師',
+        '拼圖大師' => '拼圖大師',
         '手眼協調大師' => '手眼協調大師',
         '追蹤專家' => '追蹤專家',
         '分數收集者' => '分數收集者',

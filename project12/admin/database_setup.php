@@ -105,6 +105,20 @@ try {
     )";
     $pdo->exec($health_assessment_table);
     
+    // 創建用戶線上狀態表
+    $online_status_table = "
+    CREATE TABLE IF NOT EXISTS user_online_status (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        member_id INT NOT NULL,
+        session_id VARCHAR(100) NOT NULL,
+        last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_online TINYINT(1) DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (member_id) REFERENCES member(member_id) ON DELETE CASCADE,
+        UNIQUE KEY unique_member_session (member_id, session_id)
+    )";
+    $pdo->exec($online_status_table);
+    
     // 插入預設管理員帳號
     $admin_check = $pdo->query("SELECT COUNT(*) FROM admin_users WHERE username = 'admin'");
     if ($admin_check->fetchColumn() == 0) {

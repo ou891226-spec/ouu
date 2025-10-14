@@ -84,7 +84,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
            ) THEN 'completed'
@@ -94,7 +94,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -107,7 +107,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -117,7 +117,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                    SELECT CASE 
                        WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                        WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                       WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                       WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                        ELSE game_type 
                    END as game_category,
                    COUNT(*) as count
@@ -145,9 +145,9 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力' AND game_id = 8) >= 1
            ) THEN 'completed'
            WHEN (
-               -- 過河大師：完成過河遊戲
-               (d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%') AND
-               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 9) >= 1
+               -- 拼圖大師：完成數字排排樂遊戲
+               (d.task_name = '拼圖大師' OR d.task_description LIKE '%數字排排樂%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 10) >= 1
            ) THEN 'completed'
            WHEN (
                -- 技藝達人：完成記憶力遊戲
@@ -173,6 +173,31 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                -- 追蹤專家：完成追蹤犯人遊戲
                (d.task_name = '追蹤專家' OR d.task_description LIKE '%追蹤犯人%' OR d.task_description LIKE '%犯人遊戲%') AND
                (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力') >= 3
+           ) THEN 'completed'
+           WHEN (
+               -- 色彩專家：完成看字選色遊戲
+               (d.task_name = '色彩專家' OR d.task_description LIKE '%看字選色%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力' AND game_id = 1) >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 數字大師：完成2048遊戲
+               (d.task_name = '數字大師' OR d.task_description LIKE '%2048%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 4) >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 記憶專家：完成翻牌對對樂遊戲
+               (d.task_name = '記憶專家' OR d.task_description LIKE '%翻牌對對樂%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力' AND game_id = 5) >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 節拍大師：完成節奏遊戲
+               (d.task_name = '節拍大師' OR d.task_description LIKE '%節奏遊戲%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力' AND game_id = 6) >= 1
+           ) THEN 'completed'
+           WHEN (
+               -- 算數專家：完成算菜錢遊戲
+               (d.task_name = '算數專家' OR d.task_description LIKE '%算菜錢%') AND
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 3) >= 1
            ) THEN 'completed'
            WHEN (
                -- 社交任務：添加好友
@@ -314,7 +339,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -325,7 +350,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -334,13 +359,13 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                AND (
                    (CASE WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                          WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                         WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                         WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                          ELSE game_type END) IN (
                        SELECT game_category FROM (
                            SELECT CASE 
                                WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                                WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                               WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                               WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                                ELSE game_type 
                            END as game_category,
                            COUNT(*) as count
@@ -359,7 +384,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -371,7 +396,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -383,7 +408,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                SELECT COUNT(DISTINCT CASE 
                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
-                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '過河遊戲', '邏輯力') THEN '算術邏輯力'
+                   WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
                    ELSE game_type
                END) FROM game_records 
                WHERE member_id = mt.member_id 
@@ -422,13 +447,13 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
                AND game_type = '記憶力' 
                AND game_id = 8
            )
-           -- 過河大師：完成過河遊戲
-           WHEN d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%' THEN (
+           -- 拼圖大師：完成數字排排樂遊戲
+           WHEN d.task_name = '拼圖大師' OR d.task_description LIKE '%數字排排樂%' THEN (
                SELECT COUNT(*) FROM game_records 
                WHERE member_id = mt.member_id 
                AND DATE(play_date) = CURDATE() 
                AND game_type = '算術邏輯力' 
-               AND game_id = 9
+               AND game_id = 10
            )
            -- 技藝達人：完成記憶力遊戲
            WHEN d.task_name = '技藝達人' OR d.task_description LIKE '%記憶力遊戲%' OR d.task_description LIKE '%記憶遊戲%' THEN (
@@ -644,9 +669,15 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN d.task_name = '追蹤專家' OR d.task_description LIKE '%追蹤犯人%' OR d.task_description LIKE '%犯人遊戲%' THEN 3
            -- 成就大師：獲得3個成就
            WHEN d.task_name = '成就大師' OR d.task_description LIKE '%獲得.*成就%' OR d.task_description LIKE '%成就大師%' THEN 3
-           -- 線索專家和過河大師：完成1次
+           -- 線索專家和拼圖大師：完成1次
            WHEN d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%' THEN 1
-           WHEN d.task_name = '過河大師' OR d.task_description LIKE '%過河遊戲%' THEN 1
+           WHEN d.task_name = '拼圖大師' OR d.task_description LIKE '%數字排排樂%' THEN 1
+           -- 新添加的遊戲任務：完成1次
+           WHEN d.task_name = '色彩專家' OR d.task_description LIKE '%看字選色%' THEN 1
+           WHEN d.task_name = '數字大師' OR d.task_description LIKE '%2048%' THEN 1
+           WHEN d.task_name = '記憶專家' OR d.task_description LIKE '%翻牌對對樂%' THEN 1
+           WHEN d.task_name = '節拍大師' OR d.task_description LIKE '%節奏遊戲%' THEN 1
+           WHEN d.task_name = '算數專家' OR d.task_description LIKE '%算菜錢%' THEN 1
            -- 速度之王：30秒內完成1場遊戲
            WHEN d.task_description LIKE '%30秒%' OR d.task_name = '速度之王' THEN 1
            -- 刷新最高分數：完成1次

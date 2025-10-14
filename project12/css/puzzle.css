@@ -1,0 +1,483 @@
+/* 設定基礎字體和背景 */
+body {
+    font-family: '微軟正黑體', 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f4f7; /* 柔和的淺灰色背景 */
+    margin: 0;
+    padding: 20px;
+}
+
+/* 遊戲主容器 */
+.game-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px; 
+    width: 100%;
+}
+
+
+h1 {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+
+/* --- 計分板樣式 --- */
+.score-board {
+    background-color: #eee;
+    padding: 10px 20px;
+    border-radius: 8px;
+    /* 關鍵修正: 讓內容居中 */
+    display: flex;
+    justify-content: center; /* 將項目水平置中 */
+    gap: 20px; /* 保持項目之間的間距 */
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.green-text {
+    color: #4CAF50; /* 綠色 */
+    margin-left: 5px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.red-text {
+    color: #F44336; /* 紅色 */
+    margin-left: 5px;
+    font-size: 24px;
+    font-weight: bold;
+}
+/* --- 計分板樣式結束 --- */
+
+
+/* 遊戲板佈局 */
+.game-board {
+    display: grid;
+    gap: 8px; 
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1 / 1; 
+    border: 5px solid #607D8B; 
+    border-radius: 8px;
+    padding: 5px;
+    margin: 0 0 20px 0;
+    text-align: center; 
+}
+
+/* 數字方塊樣式 */
+.tile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #FFEB3B; 
+    color: #333; 
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none; 
+    transition: background-color 0.1s, transform 0.1s;
+}
+
+/* 空白方塊樣式 */
+.empty {
+    background-color: #E0E0E0; 
+    cursor: default;
+}
+
+/* --- 控制按鈕樣式 --- */
+.controls {
+    display: flex;
+    justify-content: space-between; 
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 10px 20px; 
+    font-size: 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff; 
+    transition: background-color 0.2s;
+    flex-grow: 1; 
+    min-width: 90px;
+}
+
+
+.orange-btn { /* 暫停遊戲 */
+    background-color: #FFA500; /* 橘色 */
+}
+.green-btn { /* 繼續遊戲 */
+    background-color: #4CAF50; /* 綠色 */
+}
+
+
+.red-btn { /* 結束遊戲 */
+    background-color: #f44336; /* 紅色 */
+}
+
+
+.blue-btn { /* 重新開始 */
+    background-color: #03A9F4; /* 藍色 */
+}
+
+
+/* 成功訊息樣式 */
+.message {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #4CAF50; 
+    color: white;
+    border-radius: 8px;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none !important; 
+}
+
+/* --- 彈跳視窗樣式 (保持不變) --- */
+.modal-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px 40px;
+    padding-bottom: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px; 
+    text-align: center;
+}
+
+/* --- 彈跳視窗標頭樣式 --- */
+
+
+.modal-header {
+    display: flex;
+    /* 讓左右按鈕與標題之間有空間 */
+    justify-content: space-between; 
+    /* 關鍵修正: 讓所有內容垂直置中對齊 (這是讓標題上移的關鍵) */
+    align-items: center; 
+    width: 100%; 
+    padding: 0 ; 
+    margin-bottom: 15px; /* 標題與下方難度按鈕的間距 */
+}
+
+.modal-header h2 {
+    /* 讓標題不會被左右按鈕擠壓 */
+    flex-shrink: 0; 
+    text-align: center;
+    font-size: 40px; /* 調整字體大小 */
+    font-weight: bold;
+    color: #333;
+    /* 移除所有預設邊距，讓 align-items: center 才能生效 */
+    margin: 0; 
+    margin-top: 50px;
+    padding: 0; 
+}
+
+.header-control {
+    /* 讓圖標和文字垂直排列 */
+    display: flex;
+    flex-direction: column; 
+    /* 容器內的圖標和文字居中 */
+    align-items: center; 
+    cursor: pointer;
+    user-select: none;
+    padding: 0;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+    flex-shrink: 0; 
+    
+}
+
+.modal-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 43px;       
+    height: 43px;      
+    border-radius: 50%; 
+    border: 3px solid #222; /* 圓圈邊框 */
+    background-color: #fff; /* 圓圈背景色 */
+    font-size: 1.6rem;   
+    font-weight: bold;
+    color: #222;       
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    margin-bottom: 2px; /* 縮小與下方文字的間距 */
+}
+
+.back-icon {
+    color: #222; 
+}
+
+
+.help-icon {
+    color: #222;
+}
+
+.close-icon {
+    color: #111; 
+    width: 43px;       
+    height: 43px; 
+    font-weight: 900;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column; 
+    gap: 15px; 
+}
+
+.modal-btn {
+    width: 95%;
+    padding: 15px 20px;
+    margin-left: 10px;
+    font-size: 40px;
+    font-weight: bold;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-btn[data-difficulty-name="簡單"] {
+    background-color: #40F55B; 
+}
+.modal-btn[data-difficulty-name="簡單"]:hover {
+    background-color: #29b33e;
+}
+
+.modal-btn[data-difficulty-name="普通"] {
+    background-color: #FFE75C; 
+}
+.modal-btn[data-difficulty-name="普通"]:hover {
+    background-color: #bea30e;
+}
+
+.modal-btn[data-difficulty-name="困難"] {
+    background-color: #FF2A2A; 
+}
+.modal-btn[data-difficulty-name="困難"]:hover {
+    background-color: #e17055;
+}
+
+/* --- 幫助視窗專用樣式 --- */
+
+/* 讓幫助視窗的內文靠左對齊並調整字體大小 */
+.modal-body.help-body {
+    text-align: left; /* 讓文字靠左對齊 */
+    font-size: 1.2em;
+    color: #333;
+    padding-top: 10px;
+    line-height: 1.5;
+}
+
+.modal-body.help-body p {
+    margin: 10px 0;
+}
+
+/* 列表樣式調整 */
+.modal-body.help-body ul {
+    list-style-type: none; /* 移除點 */
+    padding-left: 0;
+    margin-left: 20px;
+}
+
+.modal-body.help-body li {
+    margin-bottom: 5px;
+    position: relative;
+    padding-left: 15px;
+}
+
+.modal-body.help-body li::before {
+    content: "•"; /* 使用圓點作為列表符號 */
+    color: #FFA500; /* 橘色點 */
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* 隱藏控制項樣式 (用於讓標頭置中) */
+.invisible-control {
+    visibility: hidden; /* 讓它佔位，但不可見 */
+}
+.invisible-icon {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: transparent !important;
+}
+.header-control.close-only {
+    width: 40px; /* 調整大小以適應 X */
+    height: 40px;
+    background-color: transparent; /* 移除背景顏色 */
+    box-shadow: none; /* 移除陰影 */
+    border-radius: 50%; /* 保持圓角，但因背景透明所以看不到圓圈 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
+
+.help-header {
+    display: flex;
+    /* 讓左右按鈕與標題之間有空間 */
+    justify-content: space-between; 
+    /* 關鍵修正: 讓所有內容垂直置中對齊 (這是讓標題上移的關鍵) */
+    align-items: center; 
+    width: 100%; 
+    padding: 0 ; 
+    margin-bottom: 15px; /* 標題與下方難度按鈕的間距 */
+}
+
+.help-header h2 {
+    /* 讓標題不會被左右按鈕擠壓 */
+    flex-shrink: 0; 
+    text-align: center;
+    font-size: 40px; /* 調整字體大小 */
+    font-weight: bold;
+    color: #333;
+    /* 移除所有預設邊距，讓 align-items: center 才能生效 */
+    margin: 0;
+    margin-left: 80px; 
+    padding: 0; 
+}
+
+.modal-content.help-modal-content {
+    position: relative;
+    /* 調整 padding，讓內容不至於被右上角的 X 遮擋 */
+    padding-top: 50px; 
+}
+
+/* 將 X 按鈕絕對定位到右上角 */
+.close-button-absolute {
+    position: absolute;
+    top: 15px;      /* 距離頂部 15px */
+    right: 15px;    /* 距離右側 15px */
+    cursor: pointer;
+    z-index: 10;    /* 確保它在最上層 */
+    padding: 5px;   /* 增加點擊區域 */
+    transition: color 0.2s;
+}
+
+.close-icon-only {
+    font-size: 30px; /* 放大 X 符號 */
+    color: #333; /* 可以根據需求調整顏色，例如 #F44336 (紅色) */
+    font-weight: bold;
+    line-height: 1; /* 確保 X 垂直居中 */
+    cursor: pointer;
+    -webkit-user-select: none; /* 防止選取 X 文本 */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* 確保 hover 效果能看到 */
+.header-control.close-only:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* hover 時顯示一個淺色背景 */
+    cursor: pointer;
+}
+
+/* 標題樣式 */
+.win-title {
+    font-size: 40px;
+    color: #333;
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 數據顯示容器 */
+.win-details-container {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center; 
+    font-size: 20px;
+    font-weight: 500;
+}
+
+/* 每一行數據 */
+.win-detail {
+    padding: 8px 0;
+}
+.win-detail:last-child {
+    border-bottom: none;
+}
+
+/* 分數顯示區塊 */
+.win-score-box {
+    font-size: 20px;
+    padding: 8px 0;
+}
+
+.win-fail-message {
+    font-weight: bold;
+    text-align: center;
+    font-size: 20px;
+    margin-top: 10px; 
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 通關按鈕佈局 */
+.modal-body.win-buttons {
+    display: flex;
+    /* 關鍵修正：水平並排 */
+    flex-direction: row; 
+    /* 讓按鈕在彈窗內容中置中 */
+    justify-content: center;
+    gap: 15px; /* 按鈕之間的間距 */
+    padding: 0 10px; /* 內邊距，防止按鈕緊貼邊緣 */
+}
+
+/* 通關按鈕基礎樣式 */
+.win-btn {
+    padding: 10px 20px;
+    font-size: 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.win-btn.retry-btn {
+    background-color: #F91519; 
+    color: white;
+}
+
+.win-btn.back-btn {
+    background-color: #1d3557; 
+    color: white;
+}
+
+/* 修正：確保計分板的字體大小和粗細 */
+.score-board span {
+    font-size: 20px;
+    font-weight: bold;
+}

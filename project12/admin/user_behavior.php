@@ -156,7 +156,7 @@ try {
         LEFT JOIN games g ON gr.game_id = g.game_id
         WHERE gr.game_type IS NOT NULL
         AND (gr.play_time > 0 OR gr.score > 0)
-        AND NOT (gr.game_id = 9 AND g.game_name = '過河遊戲' AND gr.difficulty = 'hard')
+        AND NOT (gr.game_id = 10 AND g.game_name = '數字排排樂' AND gr.difficulty = 'hard')
         $game_exit_where_clause
         GROUP BY gr.game_id, gr.game_type, g.game_name
         HAVING COUNT(*) >= 10 AND (game_exits >= 1 OR COUNT(*) >= 1)
@@ -397,6 +397,7 @@ $game_type_to_name = [
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
             <a href="test_results.php">📈 測試結果</a>
+            <a href="custom_score_trend.php">📊 趨勢分析</a>
         </div>
         
         <div class="filters">

@@ -32,6 +32,7 @@ try {
         .nav { background: white; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
         .nav a { margin-right: 20px; text-decoration: none; color: #007bff; }
         .nav a:hover { text-decoration: underline; }
+        .nav a.active { color: #0056b3; font-weight: bold; }
         .filters { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; }
         .filters form { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
         .filters select, .filters input { padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
@@ -61,6 +62,7 @@ try {
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php" class="active">🧠 能力分析</a>
             <a href="test_results.php">📈 測試結果</a>
+            <a href="custom_score_trend.php">📊 趨勢分析</a>
         </div>
 
         <div class="filters">

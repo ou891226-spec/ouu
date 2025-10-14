@@ -967,15 +967,18 @@ function openProfileModal() {
   // 添加調試信息
   console.log('打開個人資料彈窗');
   
-  // 檢查loadUserAchievements函數是否存在
-  if (typeof loadUserAchievements === 'function') {
-    console.log('loadUserAchievements函數存在，開始載入成就');
-    loadUserAchievements();
-  } else {
-    console.error('loadUserAchievements函數不存在！');
-    // 如果函數不存在，直接調用API
-    loadUserAchievementsDirect();
-  }
+  // 延遲載入成就，確保achievements.js已經載入
+  setTimeout(function() {
+    // 檢查loadUserAchievements函數是否存在
+    if (typeof loadUserAchievements === 'function') {
+      console.log('loadUserAchievements函數存在，開始載入成就');
+      loadUserAchievements();
+    } else {
+      console.error('loadUserAchievements函數不存在！');
+      // 如果函數不存在，直接調用API
+      loadUserAchievementsDirect();
+    }
+  }, 100); // 延遲100毫秒
 }
 
 // 直接載入成就的備用函數

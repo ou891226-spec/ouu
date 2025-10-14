@@ -332,9 +332,9 @@ function togglePassword() {
       </div>
       <div class="game-block">
         <div class="game-item">
-          <a href="river.index.php"><img src="img/river1.png" alt="過河遊戲"></a>
+          <a href="puzzle.php"><img src="img/puzzle1.png" alt="數字排排樂"></a>
         </div>
-        <div class="game-title">過河遊戲</div>
+        <div class="game-title">數字排排樂</div>
       </div>
     </div>
   </div>
@@ -432,9 +432,9 @@ function togglePassword() {
     </div>
     <div class="game-block">
       <div class="game-item">
-        <a href="river.index.php"><img src="img/river1.png" alt="過河遊戲"></a>
+        <a href="puzzle.php"><img src="img/puzzle1.png" alt="數字排排樂"></a>
       </div>
-      <div class="game-title">過河遊戲</div>
+      <div class="game-title">數字排排樂</div>
     </div>
   </div>
 </div>

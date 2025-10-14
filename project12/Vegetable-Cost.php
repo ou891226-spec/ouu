@@ -95,12 +95,6 @@ if (!isset($_SESSION['member_id'])) {
     <title>算菜錢遊戲</title>
     <link rel="stylesheet" href="css/Vegetable-Cost.css">
     <script src="js/unified-game-tracker.js"></script>
-    <script>
-        // 初始化遊戲追蹤器
-        document.addEventListener("DOMContentLoaded", function() {
-            gameTracker.init("算術邏輯力", 3);
-        });
-    </script>
 </head>
 <body>
     <input type="hidden" id="member-id" value="<?php echo $_SESSION['member_id']; ?>">

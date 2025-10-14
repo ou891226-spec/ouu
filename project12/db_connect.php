@@ -40,7 +40,9 @@ try {
   
   // 設定時區為台北時間
   $pdo->exec("SET time_zone = '+08:00'");
-  error_log("db_connect.php: 資料庫時區已設定為 +08:00");
+  if (!$isApiRequest) {
+    error_log("db_connect.php: 資料庫時區已設定為 +08:00");
+  }
 } catch (PDOException $e) {
   error_log("資料庫連線錯誤：" . $e->getMessage());
   // 清除任何輸出緩衝

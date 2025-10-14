@@ -41,7 +41,10 @@ function updateGameTimeDisplay() {
         timeValue.textContent = formatTime(displayTime);
         console.log('更新時間顯示:', formatTime(displayTime), 'totalGameTime:', totalGameTime, 'isInGame:', isInGame);
     } else {
-        console.log('找不到 timeValue 元素');
+        // 只在非遊戲頁面才顯示找不到元素的訊息，避免控制台雜訊
+        if (!isMiniGamePage()) {
+            console.log('找不到 timeValue 元素');
+        }
     }
 }
 
@@ -76,6 +79,19 @@ function startGameTimer() {
         console.log('開始遊戲計時');
     }
 }
+
+// 手動開始計時（供遊戲調用）
+function manualStartGameTimer() {
+    if (!isInGame) {
+        gameStartTime = Date.now();
+        isInGame = true;
+        console.log('手動開始遊戲計時');
+    }
+}
+
+// 導出到全局
+window.manualStartGameTimer = manualStartGameTimer;
+window.manualEndGameTimer = endGameTimer;
 
 // 結束遊戲計時
 function endGameTimer() {
@@ -112,9 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
     forceShowTime(); // 強制顯示時間
     updateGameTimeDisplay();
     
+    // 不再自動開始計時，等待遊戲手動調用
     if (isMiniGamePage()) {
-        startGameTimer();
-        console.log('進入遊戲頁面，開始計時');
+        console.log('進入遊戲頁面，等待遊戲開始才計時');
     } else {
         console.log('非遊戲頁面，不計時');
     }
@@ -129,9 +145,8 @@ window.addEventListener('beforeunload', function() {
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         endGameTimer();
-    } else if (isMiniGamePage()) {
-        startGameTimer();
     }
+    // 不再自動重新開始計時，避免在說明頁面時計時
 });
 
 // 每秒更新顯示

@@ -89,6 +89,7 @@ try {
             <a href="user_management.php">用戶管理</a>
             <a href="ability_analysis.php">能力分析</a>
             <a href="test_results.php">測試結果</a>
+            <a href="custom_score_trend.php">趨勢分析</a>
         </div>
         
         <div class="welcome-section">
