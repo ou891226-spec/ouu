@@ -31,8 +31,9 @@ $highScore = 0;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>追蹤犯人遊戲</title>
-  <link rel="stylesheet" href="css/prisoner.css">
+  <link rel="stylesheet" href="css/prisoner.css?v=<?php echo time(); ?>">
     <script src="js/unified-game-tracker.js"></script>
+    <script src="js/game-exit-handler.js"></script>
     <script>
         // 從資料庫獲取的難度設定
         const difficultySettings = <?php echo json_encode($difficulties); ?>;
@@ -40,7 +41,34 @@ $highScore = 0;
         // 初始化遊戲追蹤器
         document.addEventListener("DOMContentLoaded", function() {
             gameTracker.init("記憶力", 6);
+            
+            // 配置遊戲退出處理器
+            gameExitHandler.updateConfig({
+                memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                gameType: '記憶力',
+                gameId: 6,
+                difficulty: 'easy'
+            });
+            
+            // 設置獲取玩家操作時間的函數
+            gameExitHandler.setPlayerPlayTimeFunction(function() {
+                return typeof playerPlayTime !== 'undefined' ? Math.round(playerPlayTime) : 0;
+            });
         });
+        
+        // 在遊戲開始時啟動退出追蹤
+        function startGameTracking() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+            }
+        }
+        
+        // 在遊戲結束時停止退出追蹤
+        function endGameTracking() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.endGame();
+            }
+        }
     </script>
 </head>
 <body>
@@ -81,9 +109,9 @@ $highScore = 0;
             <span style="font-size:2rem;vertical-align:middle;">🎮</span>
             <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
         </h2>
-        <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-            <div id="prisoner-video-container" style="text-align:center;margin-bottom:2.5rem;">
-                <video id="prisoner-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+        <div class="help-content" style="margin-top:1.5rem;padding:0 1.5rem;">
+            <div id="prisoner-video-container" style="text-align:center;margin-bottom:1.5rem;">
+                <video id="prisoner-current-video" width="100%" height="auto" controls style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                     <source src="gd/prisoner1.mp4" type="video/mp4">
                     您的瀏覽器不支援影片播放。
                 </video>
@@ -96,7 +124,7 @@ $highScore = 0;
                     </button>
                 </div>
                 
-                <div id="prisoner-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                <div id="prisoner-instruction-text" class="game-instruction-text">
                     先選擇遊戲的難度，每個難度只要得分超過20分(含)就會過關。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，答對會加2分，答錯不扣分，在限制時間內得到規定的分數通過關卡。
                 </div>
                 

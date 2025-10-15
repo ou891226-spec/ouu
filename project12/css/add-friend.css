@@ -183,7 +183,11 @@ body {
     margin-bottom: 48px;
     text-align: center;
 }
-.back-friendlist-btn {
+.back-friendlist-btn,
+.back-friendlist-btn-notfound,
+.back-friendlist-btn-success,
+.back-friendlist-btn-already,
+.back-friendlist-btn-pending {
     font-size: 2rem;
     font-weight: bold;
     padding: 18px 48px;
@@ -195,7 +199,11 @@ body {
     margin-top: 18px;
     transition: background 0.2s;
 }
-.back-friendlist-btn:hover {
+.back-friendlist-btn:hover,
+.back-friendlist-btn-notfound:hover,
+.back-friendlist-btn-success:hover,
+.back-friendlist-btn-already:hover,
+.back-friendlist-btn-pending:hover {
     background: #99ccff;
 }
 .invite-modal-btns {

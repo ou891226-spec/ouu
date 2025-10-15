@@ -111,9 +111,9 @@ try {
         ];
     }
     
-    // 如果沒有數據，生成一些示例數據
+    // 如果沒有數據，返回空陣列
     if (empty($trend_data)) {
-        $trend_data = generateSampleTrendData();
+        $trend_data = [];
     }
     
     echo json_encode([

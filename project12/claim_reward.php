@@ -291,9 +291,9 @@ try {
         
         if (!$has_achievement) {
           // 添加成就
-          $add_achievement_sql = "INSERT INTO member_achievements (member_id, achievement_id, earned_date) VALUES (?, ?, NOW())";
+          $add_achievement_sql = "INSERT INTO member_achievements (member_id, achievement_id, achievement_name, earned_date) VALUES (?, ?, ?, NOW())";
           $stmt = $pdo->prepare($add_achievement_sql);
-          $stmt->execute([$member_id, $achievement['achievement_id']]);
+          $stmt->execute([$member_id, $achievement['achievement_id'], $achievement_name]);
           file_put_contents('debug.log', 'achievement_added: ' . $achievement_name . PHP_EOL, FILE_APPEND);
         }
       }

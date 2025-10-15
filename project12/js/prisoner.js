@@ -19,7 +19,11 @@ let passScore = 20;
 let gameTime = 60;
 let isPaused = false;
 let gameState = 'ready';
-let gameStartTime = 0; // 記錄遊戲開始時間 
+let gameStartTime = 0; // 記錄遊戲開始時間
+let playerPlayTime = 0; // 累計玩家實際操作時間（秒）
+let playerTurnStartTime = 0; // 記錄玩家回合開始時間
+let pauseStartTime = 0; // 暫停開始時間
+let totalPauseTime = 0; // 累計暫停時間 
 
 const memberIdInput = document.getElementById('member-id'); 
 const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
@@ -56,7 +60,13 @@ function startGame() {
   timerElement.textContent = timeLeft;
   gameStartTime = Date.now(); // 記錄遊戲開始時間
   startBtn.style.display = 'none';
-  gameState = 'sequence'; 
+  gameState = 'sequence';
+  
+  // 啟動遊戲退出追蹤
+  if (typeof startGameTracking === 'function') {
+    startGameTracking();
+  }
+  
   nextRound();
 }
 
@@ -68,6 +78,10 @@ function resetGame() {
   holes.forEach(hole => hole.classList.remove('active'));
   messageDiv.textContent = '';
   clearInterval(gameInterval);
+  playerPlayTime = 0; // 重置玩家實際操作時間
+  playerTurnStartTime = 0; // 重置玩家回合開始時間
+  totalPauseTime = 0; // 重置暫停時間
+  pauseStartTime = 0; // 重置暫停開始時間
 }
 
 function updateTimer() {
@@ -135,6 +149,7 @@ function showSequence() {
 function playerTurn() {
   messageDiv.textContent = '換你出馬抓住犯人囉！';
   gameState = 'player_turn'; 
+  playerTurnStartTime = Date.now(); // 記錄玩家回合開始時間
   gameInterval = setInterval(updateTimer, 1000);
   holes.forEach(hole => {
     hole.addEventListener('click', checkPlayerHit);
@@ -160,6 +175,13 @@ function checkPlayerHit(event) {
 
 function checkSequence() {
   clearInterval(gameInterval);
+  
+  // 累計玩家實際操作時間（不包括犯人出現的時間）
+  if (playerTurnStartTime > 0) {
+    const roundPlayTime = (Date.now() - playerTurnStartTime) / 1000;
+    playerPlayTime += roundPlayTime;
+    playerTurnStartTime = 0; // 重置回合開始時間
+  }
   
   messageDiv.textContent = '';
   let isCorrect = sequence.every((val, index) => val === playerSequence[index]);
@@ -205,8 +227,21 @@ difficultyOptions.forEach(option => {
 
 function endGame(success, isManualExit = false) {
   clearInterval(gameInterval);
+  
+  // 累計最後一輪的玩家實際操作時間
+  if (playerTurnStartTime > 0) {
+    const finalRoundPlayTime = (Date.now() - playerTurnStartTime) / 1000;
+    playerPlayTime += finalRoundPlayTime;
+    playerTurnStartTime = 0;
+  }
+  
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
   pauseBGM(); 
+  
+  // 停止遊戲退出追蹤
+  if (typeof endGameTracking === 'function') {
+    endGameTracking();
+  }
   
   sendScoreToServer(score, level, success, isManualExit); 
   
@@ -233,8 +268,8 @@ function showEndModal(success, finalScore, level) {
   difficultyText.textContent = '難度：' + (level === 3 ? '簡單' : level === 4 ? '普通' : '困難');
   gameScoreText.textContent = '遊戲分數：' + finalScore;
   
-  // 計算總遊戲時間（秒）- 從遊戲開始到結束
-  const totalPlayTime = gameStartTime > 0 ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
+  // 使用累計的玩家實際操作時間（不包括犯人出現的時間）
+  const totalPlayTime = Math.round(playerPlayTime);
   playTimeText.textContent = '遊戲時間：' + totalPlayTime + '秒';
   
   const rewardScore = success ? 20 : 0;
@@ -256,6 +291,14 @@ function togglePause() {
 
   if (isPaused) {
     clearInterval(gameInterval);
+    
+    // 暫停時累計當前回合的操作時間
+    if (playerTurnStartTime > 0) {
+      const pausePlayTime = (Date.now() - playerTurnStartTime) / 1000;
+      playerPlayTime += pausePlayTime;
+      playerTurnStartTime = 0; // 重置回合開始時間
+    }
+    
     holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
     messageDiv.textContent = '已暫停，犯人躲起來囉，請按繼續遊戲抓住他!';
     
@@ -267,6 +310,9 @@ function togglePause() {
     gameState = 'paused';
 
   } else {
+    // 恢復遊戲時重新開始計時
+    playerTurnStartTime = Date.now();
+    
     gameInterval = setInterval(updateTimer, 1000);
     holes.forEach(hole => {
       hole.addEventListener('click', checkPlayerHit);
@@ -400,9 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function sendScoreToServer(score, level, is_passed, isManualExit = false) {
   const difficultyText = level === 3 ? 'easy' : level === 4 ? 'normal' : 'hard';
   
-  // 計算總遊戲時間（秒）- 從遊戲開始到結束
-  const actualPlayTime = gameStartTime > 0 ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
-  console.log('遊戲時間計算:', { gameStartTime, currentTime: Date.now(), actualPlayTime });
+  // 使用累計的玩家實際操作時間（不包括犯人出現的時間）
+  const actualPlayTime = Math.round(playerPlayTime);
+  console.log('遊戲時間計算:', { playerPlayTime, actualPlayTime });
   
   const data = {
     member_id: memberId,
@@ -425,14 +471,28 @@ function sendScoreToServer(score, level, is_passed, isManualExit = false) {
     .then(res => res.json())
     .then(result => {
       if (result.success) {
-        console.log("✅ 成績已儲存");
+        console.log("成績已儲存");
         // 立即更新主頁面分數
         if (window.forceRefreshScore) {
           setTimeout(() => {
             window.forceRefreshScore();
           }, 1000); // 1秒後更新，確保資料庫已保存
         }
-      } 
-
+      }
+      
+      // 關鍵：停止遊戲追蹤，防止重複記錄
+      if (typeof endGameTracking === 'function') {
+        endGameTracking();
+        console.log('遊戲追蹤已停止，防止重複記錄');
+      }
+    })
+    .catch(error => {
+      console.error('儲存錯誤：', error);
+      
+      // 即使失敗也要停止追蹤
+      if (typeof endGameTracking === 'function') {
+        endGameTracking();
+        console.log('保存失敗，但已停止追蹤以防重複');
+      }
     });
 }

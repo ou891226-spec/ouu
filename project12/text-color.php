@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     
                     <!-- 說明文字 -->
-                    <div id="textcolor-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                    <div id="textcolor-instruction-text" class="game-instruction-text">
                         根據文字的意思選擇正確的顏色
                     </div>
                     
@@ -763,7 +763,7 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     difficulty: difficulty,
                     score: recordScore,
                     play_time: playTime,
-                    is_manual_exit: isManualExit,
+                    is_manual_exit: false, // 🔑 正常結束，不是手動退出
                     is_passed: isPassed
                 })
             })
@@ -774,9 +774,21 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 } else {
                     console.error('遊戲記錄保存失敗:', data.message);
                 }
+                
+                // 🔑 關鍵：停止遊戲追蹤，防止重複記錄
+                if (typeof gameExitHandler !== 'undefined') {
+                    gameExitHandler.endGame();
+                    console.log('遊戲追蹤已停止，防止重複記錄');
+                }
             })
             .catch(error => {
                 console.error('保存遊戲記錄時發生錯誤:', error);
+                
+                // 🔑 即使失敗也要停止追蹤
+                if (typeof gameExitHandler !== 'undefined') {
+                    gameExitHandler.endGame();
+                    console.log('保存失敗，但已停止追蹤以防重複');
+                }
             });
             
             // 注意：不需要在遊戲結束時清除成就快取，這會導致成就資料丟失
@@ -1085,9 +1097,30 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                 });
             });
         });
+        
+        // 🔑 遊戲開始時啟動追蹤
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.startGame();
+            console.log('遊戲追蹤已啟動');
+        }
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
     <script src="js/achievements.js"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '反應力',
+                    gameId: 5,
+                    difficulty: '<?= isset($_GET["difficulty"]) ? $_GET["difficulty"] : "easy" ?>'
+                });
+                console.log('遊戲退出處理器已配置');
+            }
+        });
+    </script>
 </body>
 </html>

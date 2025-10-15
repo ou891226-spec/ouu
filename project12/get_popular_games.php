@@ -130,7 +130,7 @@ try {
             [
                 'game_type' => '2048',
                 'title' => '2048',
-                'img' => 'img/2048.png',
+                'img' => 'img/game_20481.png',
                 'link' => '2048ht.php',
                 'total_plays' => 0,
                 'unique_players' => 0,
@@ -140,7 +140,7 @@ try {
             [
                 'game_type' => '記憶力',
                 'title' => '翻牌對對樂',
-                'img' => 'img/card.jpg',
+                'img' => 'img/card1.png',
                 'link' => 'Memory-Game.php',
                 'total_plays' => 0,
                 'unique_players' => 0,
@@ -150,7 +150,7 @@ try {
             [
                 'game_type' => '接金蛋遊戲',
                 'title' => '接金蛋',
-                'img' => 'img/egg.jpg',
+                'img' => 'img/egg1.png',
                 'link' => 'Catch-Egg-Game.php',
                 'total_plays' => 0,
                 'unique_players' => 0,

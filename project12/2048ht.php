@@ -238,7 +238,7 @@ exit;
                     </div>
                     
                     <!-- 說明文字 -->
-                    <div id="2048-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                    <div id="2048-instruction-text" class="game-instruction-text">
                         先選擇遊戲困難度
                     </div>
                     
@@ -630,9 +630,30 @@ exit;
         // 頁面加載時檢測
         document.addEventListener('DOMContentLoaded', checkTouchDevice);
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
     <script src="js/game.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '算術邏輯力',
+                    gameId: 4,
+                    difficulty: 'easy'
+                });
+                // 立即啟動遊戲退出追蹤，因為用戶已經進入遊戲頁面
+                gameExitHandler.startGame();
+                console.log('遊戲退出處理器已配置並啟動');
+            }
+            
+            // 遊戲開始時啟動追蹤（在真正開始遊戲時調用）
+            // 注意：這裡不應該在頁面載入時就啟動追蹤
+            // 應該在用戶點擊開始遊戲按鈕時才啟動
+        });
+    </script>
 </body>
 </html>

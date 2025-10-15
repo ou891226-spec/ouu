@@ -201,28 +201,28 @@ $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div id="notfound-modal" class="invite-modal" style="display:none;">
         <div class="invite-modal-content">
             <div class="invite-modal-text" style="font-size:2rem;">查無此帳號，請重新輸入帳號</div>
-            <button class="back-friendlist-btn">返回好友列表</button>
+            <button class="back-friendlist-btn-notfound">返回好友列表</button>
         </div>
     </div>
     <!-- 已送出邀請 Modal -->
     <div id="success-modal" class="invite-modal" style="display:none;">
         <div class="invite-modal-content">
             <div class="invite-modal-text" style="font-size:2rem;">您已成功送出好友邀請！</div>
-            <button class="back-friendlist-btn">返回好友列表</button>
+            <button class="back-friendlist-btn-success">返回好友列表</button>
         </div>
     </div>
     <!-- 已經是好友 Modal -->
     <div id="already-friend-modal" class="invite-modal" style="display:none;">
         <div class="invite-modal-content">
             <div class="invite-modal-text" style="font-size:2rem; color:#000000;">您與此用戶已經是好友了！</div>
-            <button class="back-friendlist-btn">返回好友列表</button>
+            <button class="back-friendlist-btn-already">返回好友列表</button>
         </div>
     </div>
     <!-- 已送出邀請 Modal -->
     <div id="pending-invite-modal" class="invite-modal" style="display:none;">
         <div class="invite-modal-content">
             <div class="invite-modal-text" style="font-size:2rem; color:#000000;">已送出邀請，等待對方確認好友</div>
-            <button class="back-friendlist-btn">返回好友列表</button>
+            <button class="back-friendlist-btn-pending">返回好友列表</button>
         </div>
     </div>
     <script>
@@ -267,12 +267,24 @@ $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
         xhr.send('q=' + encodeURIComponent(q));
     };
 
-    // 關閉查無此帳號
-    document.querySelectorAll('.back-friendlist-btn').forEach(function(btn){
-        btn.onclick = function() {
-            window.location.href = 'add-friend.php';
-        };
-    });
+    // 設定不同的返回按鈕導航行為
+    // 查無此帳號的返回按鈕 → 導向 add-friend.php
+    document.querySelector('.back-friendlist-btn-notfound').onclick = function() {
+        window.location.href = 'add-friend.php';
+    };
+    
+    // 其他成功/錯誤訊息的返回按鈕 → 導向 friend.php
+    document.querySelector('.back-friendlist-btn-success').onclick = function() {
+        window.location.href = 'friend.php';
+    };
+    
+    document.querySelector('.back-friendlist-btn-already').onclick = function() {
+        window.location.href = 'friend.php';
+    };
+    
+    document.querySelector('.back-friendlist-btn-pending').onclick = function() {
+        window.location.href = 'friend.php';
+    };
 
     // 原本邀請 modal 的「否」按鈕
     document.querySelector('.invite-modal-no').onclick = function() {

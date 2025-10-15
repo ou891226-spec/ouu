@@ -984,12 +984,11 @@ h1 {
 /* === 遊戲說明 help modal 樣式（完全比照 HTML 版）=== */
 #help-modal .modal-content {
     background: #fff;
-    padding: 3.8rem 3.2rem 3.2rem 3.2rem;
-    border-radius: 2rem;
+    padding: 2rem 2.5rem 2rem 2.5rem;
+    border-radius: 1.5rem;
     text-align: left;
-    width: 95%;
-    max-width: 700px;
-    min-height: 600px;
+    width: 90%;
+    max-width: 600px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18);
     position: relative;
     margin: 0 auto;
@@ -997,24 +996,25 @@ h1 {
 }
 #help-modal h2 {
     text-align: center;
-    font-size: 2.6rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     letter-spacing: 0.05em;
     color: #222;
     line-height: 1.2;
 }
 #help-modal .help-content {
     text-align: left;
-    margin: 1.5rem 0 0.5rem 0;
+    margin: 1rem 0 0.5rem 0;
 }
 #help-modal .help-content h3 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    margin: 1.5rem 0 0.8rem 0;
-    color: #222;
+    margin: 1rem 0 0.5rem 0;
+    color: #0066cc;
     letter-spacing: 0.01em;
-    line-height: 1.5;
+    line-height: 1.4;
+    text-align: left;
 }
 #help-modal .help-content ul {
     list-style: disc inside;
@@ -1022,12 +1022,13 @@ h1 {
     margin-bottom: 1rem;
 }
 #help-modal .help-content ul li {
-    color: #222;
-    line-height: 2.1;
-    margin-bottom: 0.8rem;
-    font-size: 1.3rem;
+    color: #0066cc;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
     font-weight: 400;
     position: relative;
+    text-align: left;
     padding-left: 0.5em;
     word-break: break-all;
 }
@@ -1036,11 +1037,12 @@ h1 {
     font-size: 1.1em;
 }
 #help-modal .help-content p {
-    font-size: 1.5rem;
-    color: #222;
-    margin-bottom: 1.2rem;
+    font-size: 1.2rem;
+    color: #0066cc;
+    margin-bottom: 0.8rem;
     margin-left: 0.2rem;
-    line-height: 2.1;
+    line-height: 1.6;
+    text-align: left;
 }
 #help-modal .close-btn {
     position: absolute;
@@ -1066,11 +1068,12 @@ h1 {
 }
 @media (max-width: 600px) {
     #help-modal .modal-content {
-        padding: 1.2rem 0.5rem 1.2rem 0.5rem;
-        max-width: 98vw;
+        padding: 1rem 0.8rem 1rem 0.8rem;
+        max-width: 95vw;
     }
     #help-modal h2 {
-        font-size: 1.3rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
     #help-modal .close-btn {
         width: 2rem;
@@ -1088,12 +1091,11 @@ h1 {
 }
 #help-modal .modal-content {
     background: #fff !important;
-    padding: 3.8rem 3.2rem 3.2rem 3.2rem !important;
-    border-radius: 2rem !important;
+    padding: 2rem 2.5rem 2rem 2.5rem !important;
+    border-radius: 1.5rem !important;
     text-align: left !important;
-    width: 95% !important;
-    max-width: 700px !important;
-    min-height: 600px !important;
+    width: 90% !important;
+    max-width: 600px !important;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18) !important;
     position: relative !important;
     margin: 0 auto !important;
@@ -1279,8 +1281,10 @@ h1 {
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */

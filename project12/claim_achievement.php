@@ -98,9 +98,9 @@ try {
         
         try {
             // 授予成就
-            $grant_sql = "INSERT INTO member_achievements (member_id, achievement_id) VALUES (?, ?)";
+            $grant_sql = "INSERT INTO member_achievements (member_id, achievement_id, achievement_name) VALUES (?, ?, ?)";
             $grant_stmt = $pdo->prepare($grant_sql);
-            $grant_stmt->execute([$member_id, $achievement['achievement_id']]);
+            $grant_stmt->execute([$member_id, $achievement['achievement_id'], $achievement['achievement_name']]);
             
             // 標記任務為已領取
             $update_sql = "UPDATE member_tasks SET claimed_date = NOW() WHERE member_id = ? AND task_id = ?";

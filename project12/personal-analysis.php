@@ -106,15 +106,15 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
           <span class="stat-value" id="logicGames">0</span>
         </div>
         <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">反應力平均分數：</span>
+          <span class="stat-label">反應力平均時間：</span>
           <span class="stat-value" id="reactionAvg">0</span>
         </div>
         <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">記憶力平均分數：</span>
+          <span class="stat-label">記憶力平均時間：</span>
           <span class="stat-value" id="memoryAvg">0</span>
         </div>
         <div class="stat-item" style="text-align: center !important;">
-          <span class="stat-label">邏輯力平均分數：</span>
+          <span class="stat-label">邏輯力平均時間：</span>
           <span class="stat-value" id="logicAvg">0</span>
         </div>
       </div>
@@ -160,16 +160,55 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
         <div class="description" id="description"></div>
         <div class="suggestions" id="suggestions"></div>
         
-        <!-- AI分析標識 -->
+        <!-- AI分析時間 -->
         <div id="aiIndicator" style="display: none; text-align: center; margin-top: 15px;">
-          <span style="
+          <div id="analysisTime" style="color: white; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 分隔線 -->
+    <div style="margin: 40px 0; border-top: 2px solid #e0e0e0;"></div>
+    
+    <!-- 歷史記錄區域 -->
+    <div class="analysis-history">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; color: #333;">📜 分析歷史記錄</h3>
+        <button onclick="toggleHistorySection()" id="toggleHistoryBtn" style="
+          background: linear-gradient(45deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        ">
+          <span id="toggleIcon">▼</span> 展開歷史記錄
+        </button>
+      </div>
+      
+      <div id="historyContainer" style="display: none;">
+        <div id="historyLoading" style="text-align: center; padding: 40px; display: none;">
+          <div style="color: #ffffff; background-color:rgb(237, 174, 57); padding: 8px 16px; border-radius: 4px; display: inline-block;">載入中...</div>
+        </div>
+        
+        <div id="historyList" style="max-width: 900px; margin: 0 auto;">
+          <!-- 歷史記錄將在這裡動態顯示 -->
+        </div>
+        
+        <div id="loadMoreContainer" style="text-align: center; margin-top: 20px; display: none;">
+          <button onclick="loadMoreHistory()" class="ai-btn" style="
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
-          ">✨ AI智能分析</span>
+            cursor: pointer;
+          ">載入更多</button>
         </div>
       </div>
     </div>
@@ -199,7 +238,7 @@ let trendChart = null;
 
 // 載入能力分析數據
 function loadAbilityAnalysis() {
-  fetch('get_ability_analysis.php')
+  fetch('get_ability_analysis_baseline.php')
     .then(response => response.json())
     .then(data => {
       if (data.success) {
@@ -252,17 +291,18 @@ function createRadarChart(analysisData) {
     radarChart.destroy();
   }
   
+  // 使用基準時間效率數據，如果沒有數據則使用備用分數
+  const reactionValue = analysisData.reaction > 0 ? analysisData.reaction : (analysisData.backup_scores?.reaction || 0);
+  const memoryValue = analysisData.memory > 0 ? analysisData.memory : (analysisData.backup_scores?.memory || 0);
+  const logicValue = analysisData.logic > 0 ? analysisData.logic : (analysisData.backup_scores?.logic || 0);
+  
   radarChart = new Chart(ctx, {
     type: 'radar',
     data: {
       labels: ['反應力', '記憶力', '算術邏輯力'],
       datasets: [{
-        label: '能力強度',
-        data: [
-          analysisData.reaction,
-          analysisData.memory,
-          analysisData.logic
-        ],
+        label: '加權分數',
+        data: [reactionValue, memoryValue, logicValue],
         backgroundColor: 'rgba(255, 159, 64, 0.2)',
         borderColor: 'rgba(255, 159, 64, 1)',
         borderWidth: 2,
@@ -280,7 +320,10 @@ function createRadarChart(analysisData) {
           beginAtZero: true,
           max: 100,
           ticks: {
-            stepSize: 20
+            stepSize: 20,
+            callback: function(value) {
+              return value + '%';
+            }
           }
         }
       },
@@ -292,7 +335,19 @@ function createRadarChart(analysisData) {
         tooltip: {
           callbacks: {
             label: function(context) {
-              return context.label + ': ' + context.parsed.r + '%';
+              const label = context.dataset.label;
+              const value = context.parsed.r.toFixed(1);
+              const baselineData = analysisData.baseline_data;
+              
+              if (baselineData) {
+                const category = ['reaction', 'memory', 'logic'][context.dataIndex];
+                const baseline = baselineData[category];
+                if (baseline && baseline.total_plays > 0) {
+                  const timeWeight = (1 + ((baseline.baseline_time - baseline.avg_time) / baseline.baseline_time)).toFixed(2);
+                  return `${label}: ${value}% (基準: ${baseline.baseline_time.toFixed(1)}s, 實際: ${baseline.avg_time.toFixed(1)}s, 時間加權: ${timeWeight})`;
+                }
+              }
+              return `${label}: ${value}%`;
             }
           }
         }
@@ -467,14 +522,22 @@ function updateAnalysisReport(data) {
       `<strong>改進建議：</strong>${suggestionsText}`;
   }
   
-  // 顯示是否為AI分析
+  // 顯示分析時間
   const aiIndicator = document.getElementById('aiIndicator');
+  const analysisTime = document.getElementById('analysisTime');
   if (isAIEnhanced) {
     aiIndicator.style.display = 'block';
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    analysisTime.textContent = `分析時間：${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${hours}:${minutes}`;
   } else {
     aiIndicator.style.display = 'none';
   }
 }
+
+// 全局變量保存當前分析數據
+let currentAnalysisData = null;
 
 // 生成AI分析 - 使用 Google GenAI
 async function generateAIAnalysis() {
@@ -494,34 +557,47 @@ async function generateAIAnalysis() {
       throw new Error('無法獲取用戶數據');
     }
     
+    // 保存當前數據（用於後續保存）
+    currentAnalysisData = userData.data;
+    
     // 使用 Google GenAI 進行分析
     const aiResponse = await callGoogleGenAI(userData.data);
     
-        // 顯示AI分析結果
+    // 顯示AI分析結果
     updateAnalysisReport(aiResponse);
-        
-        // 顯示成功訊息
-    loading.innerHTML = '<span style="color: #ffffff; background-color: #4CAF50; padding: 4px 8px; border-radius: 4px;">✅ AI分析完成</span>';
-        
-        // 3秒後隱藏載入訊息並恢復按鈕
-        setTimeout(() => {
-          loading.style.display = 'none';
-          btn.style.display = 'inline-block';
-          btn.innerHTML = '🔄 重新生成AI分析';
-        }, 3000);
+    
+    // 保存分析結果到數據庫
+    await saveAnalysisToDatabase(userData.data, aiResponse);
+    
+    // 重新載入歷史記錄（如果已展開）
+    if (isHistoryExpanded) {
+      historyLoaded = false; // 重置載入狀態
+      loadAnalysisHistory(true);
+      historyLoaded = true;
+    }
+    
+    // 顯示成功訊息
+    loading.innerHTML = '<span style="color: #ffffff; background-color: #4CAF50; padding: 4px 8px; border-radius: 4px;">✅ AI分析完成並已保存</span>';
+    
+    // 3秒後隱藏載入訊息並恢復按鈕
+    setTimeout(() => {
+      loading.style.display = 'none';
+      btn.style.display = 'inline-block';
+      btn.innerHTML = '🔄 重新生成AI分析';
+    }, 3000);
         
   } catch (error) {
-      console.error('AI分析錯誤:', error);
-      
-      // 顯示錯誤訊息
+    console.error('AI分析錯誤:', error);
+    
+    // 顯示錯誤訊息
     loading.innerHTML = '<span style="color: #ffffff; background-color: #f44336; padding: 4px 8px; border-radius: 4px;">❌ AI分析失敗: ' + error.message + '</span>';
-      
-      // 3秒後恢復按鈕
-      setTimeout(() => {
-        loading.style.display = 'none';
-        btn.style.display = 'inline-block';
-        btn.innerHTML = '🤖 生成AI智能分析';
-      }, 3000);
+    
+    // 3秒後恢復按鈕
+    setTimeout(() => {
+      loading.style.display = 'none';
+      btn.style.display = 'inline-block';
+      btn.innerHTML = '🤖 生成AI智能分析';
+    }, 3000);
   }
 }
 
@@ -574,6 +650,229 @@ async function callGenAIThroughBackend(userData) {
     }
 }
 
+// 保存分析結果到數據庫
+async function saveAnalysisToDatabase(userData, aiResponse) {
+  try {
+    const dataToSave = {
+      reaction: userData.reaction,
+      memory: userData.memory,
+      logic: userData.logic,
+      stats: userData.stats,
+      report: aiResponse
+    };
+    
+    const response = await fetch('save_ai_analysis.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSave)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('AI分析已保存，ID:', result.analysis_id);
+    } else {
+      console.error('保存失敗:', result.message);
+    }
+  } catch (error) {
+    console.error('保存分析時發生錯誤:', error);
+  }
+}
+
+// 載入歷史記錄
+let historyOffset = 0;
+const historyLimit = 5;
+
+async function loadAnalysisHistory(reset = false) {
+  if (reset) {
+    historyOffset = 0;
+    document.getElementById('historyList').innerHTML = '';
+  }
+  
+  const loading = document.getElementById('historyLoading');
+  loading.style.display = 'block';
+  
+  try {
+    const response = await fetch(`get_ai_analysis_history.php?limit=${historyLimit}&offset=${historyOffset}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      displayHistoryRecords(result.records);
+      
+      // 更新偏移量
+      historyOffset += historyLimit;
+      
+      // 顯示或隱藏"載入更多"按鈕
+      const loadMoreBtn = document.getElementById('loadMoreContainer');
+      if (result.has_more) {
+        loadMoreBtn.style.display = 'block';
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+      
+      // 如果沒有記錄，顯示提示
+      if (result.total_count === 0) {
+        document.getElementById('historyList').innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: #999;">
+            <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+            <div style="font-size: 18px;">尚無AI分析記錄</div>
+            <div style="font-size: 14px; margin-top: 10px;">點擊「能力分析報告」標籤頁生成第一份AI分析吧！</div>
+          </div>
+        `;
+      }
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    console.error('載入歷史記錄失敗:', error);
+    document.getElementById('historyList').innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #f44336;">
+        載入失敗：${error.message}
+      </div>
+    `;
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+// 顯示歷史記錄
+function displayHistoryRecords(records) {
+  const container = document.getElementById('historyList');
+  
+  records.forEach(record => {
+    const recordCard = createHistoryCard(record);
+    container.appendChild(recordCard);
+  });
+}
+
+// 創建歷史記錄卡片
+function createHistoryCard(record) {
+  const card = document.createElement('div');
+  card.className = 'history-card';
+  card.style.cssText = `
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  `;
+  
+  // 準備建議內容
+  let suggestionsHtml = '';
+  if (record.suggestions && Array.isArray(record.suggestions) && record.suggestions.length > 0) {
+    suggestionsHtml = '<ul style="margin: 10px 0; padding-left: 20px;">' + 
+      record.suggestions.map(s => `<li style="margin: 5px 0;">${s}</li>`).join('') + 
+      '</ul>';
+  } else if (typeof record.suggestions === 'string') {
+    suggestionsHtml = `<p style="margin: 10px 0;">${record.suggestions}</p>`;
+  }
+  
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+      <div>
+        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 22px; font-weight: 700; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+          ${record.ai_enhanced ? '✨ ' : ''}${record.player_type || 'AI分析報告'}
+        </h4>
+        <div style="color: #7f8c8d; font-size: 14px; font-weight: 500;">
+          <span>${record.formatted_time}</span>
+          <span style="margin-left: 12px; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">${record.time_ago}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; border-left: 4px solid #667eea;">
+      <div style="color: #495057; font-size: 15px; line-height: 1.7; font-weight: 500;">
+        ${record.description || '無描述'}
+      </div>
+    </div>
+    
+    <div style="margin: 20px 0;">
+      <strong style="color: #2c3e50; font-size: 16px; font-weight: 700;">🎯 能力分數</strong>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px;">
+        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(255, 99, 132, 0.1) 0%, rgba(255, 99, 132, 0.05) 100%); border-radius: 15px; border: 2px solid rgba(255, 99, 132, 0.2); transition: all 0.3s ease;">
+          <div style="font-size: 14px; color: #e74c3c; font-weight: 600; margin-bottom: 8px;">⚡ 反應力</div>
+          <div style="font-size: 24px; font-weight: 800; color: #e74c3c; margin: 8px 0; text-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);">${record.reaction_score}</div>
+          <div style="font-size: 12px; color: #95a5a6; font-weight: 500;">${record.reaction_games}次</div>
+        </div>
+        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(54, 162, 235, 0.1) 0%, rgba(54, 162, 235, 0.05) 100%); border-radius: 15px; border: 2px solid rgba(54, 162, 235, 0.2); transition: all 0.3s ease;">
+          <div style="font-size: 14px; color: #3498db; font-weight: 600; margin-bottom: 8px;">🧠 記憶力</div>
+          <div style="font-size: 24px; font-weight: 800; color: #3498db; margin: 8px 0; text-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);">${record.memory_score}</div>
+          <div style="font-size: 12px; color: #95a5a6; font-weight: 500;">${record.memory_games}次</div>
+        </div>
+        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, rgba(75, 192, 192, 0.1) 0%, rgba(75, 192, 192, 0.05) 100%); border-radius: 15px; border: 2px solid rgba(75, 192, 192, 0.2); transition: all 0.3s ease;">
+          <div style="font-size: 14px; color: #1abc9c; font-weight: 600; margin-bottom: 8px;">🔢 邏輯力</div>
+          <div style="font-size: 24px; font-weight: 800; color: #1abc9c; margin: 8px 0; text-shadow: 0 2px 4px rgba(26, 188, 156, 0.3);">${record.logic_score}</div>
+          <div style="font-size: 12px; color: #95a5a6; font-weight: 500;">${record.logic_games}次</div>
+        </div>
+      </div>
+    </div>
+    
+    ${suggestionsHtml ? `
+      <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-radius: 15px; border-left: 4px solid #f39c12;">
+        <strong style="color: #d68910; font-size: 16px; font-weight: 700;">💡 改進建議</strong>
+        <div style="margin-top: 10px;">
+          ${suggestionsHtml}
+        </div>
+      </div>
+    ` : ''}
+  `;
+  
+  // 添加懸停效果
+  card.addEventListener('mouseenter', () => {
+    card.style.transform = 'translateY(-8px) scale(1.02)';
+    card.style.boxShadow = '0 20px 40px rgba(0,0,0,0.15)';
+    card.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+  });
+  
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'translateY(0) scale(1)';
+    card.style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)';
+    card.style.borderColor = 'rgba(255,255,255,0.2)';
+  });
+  
+  return card;
+}
+
+// 載入更多歷史記錄
+function loadMoreHistory() {
+  loadAnalysisHistory(false);
+}
+
+// 切換歷史記錄區域的顯示/隱藏
+let isHistoryExpanded = false;
+let historyLoaded = false;
+
+function toggleHistorySection() {
+  const historyContainer = document.getElementById('historyContainer');
+  const toggleBtn = document.getElementById('toggleHistoryBtn');
+  const toggleIcon = document.getElementById('toggleIcon');
+  
+  isHistoryExpanded = !isHistoryExpanded;
+  
+  if (isHistoryExpanded) {
+    historyContainer.style.display = 'block';
+    toggleIcon.textContent = '▲';
+    toggleBtn.innerHTML = '<span id="toggleIcon">▲</span> 收起歷史記錄';
+    
+    // 第一次展開時載入歷史記錄
+    if (!historyLoaded) {
+      loadAnalysisHistory(true);
+      historyLoaded = true;
+    }
+  } else {
+    historyContainer.style.display = 'none';
+    toggleIcon.textContent = '▼';
+    toggleBtn.innerHTML = '<span id="toggleIcon">▼</span> 展開歷史記錄';
+  }
+}
+
 // 顯示分析區塊（類似遊戲分類的切換功能）
 function showAnalysisSection(section) {
   // 隱藏所有內容區塊
@@ -608,15 +907,20 @@ function updateDetailedStats(data) {
   const logicAvg = document.getElementById('logicAvg');
   const detailedStats = document.getElementById('detailedStats');
   
+  // 更新遊戲次數
   if (reactionGames) reactionGames.textContent = data.stats.reaction_games;
   if (memoryGames) memoryGames.textContent = data.stats.memory_games;
   if (logicGames) logicGames.textContent = data.stats.logic_games;
-  if (reactionAvg) reactionAvg.textContent = data.stats.reaction_avg;
-  if (memoryAvg) memoryAvg.textContent = data.stats.memory_avg;
-  if (logicAvg) logicAvg.textContent = data.stats.logic_avg;
+  
+  // 更新平均時間（顯示為秒數）
+  if (reactionAvg) reactionAvg.textContent = data.stats.reaction_avg + 's';
+  if (memoryAvg) memoryAvg.textContent = data.stats.memory_avg + 's';
+  if (logicAvg) logicAvg.textContent = data.stats.logic_avg + 's';
+  
   
   if (detailedStats) detailedStats.style.display = 'block';
 }
+
 
 // 頁面載入時執行
 document.addEventListener('DOMContentLoaded', function() {
@@ -852,4 +1156,5 @@ function togglePassword() {
 }
 
 </body>
+</html> 
 </html> 

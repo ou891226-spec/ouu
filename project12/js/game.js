@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameTracker.init("算術邏輯力", 4);
             }
             
+            // 遊戲退出追蹤已在頁面載入時啟動
+            
             // 開始總遊戲時間計時
             if (typeof window.manualStartGameTimer !== 'undefined') {
                 window.manualStartGameTimer();
@@ -999,32 +1001,49 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('傳入的 play_time 值:', play_time);
         console.log('是否為數字:', !isNaN(play_time));
         console.log('=== 調試信息結束 ===');
-        const res = await fetch('api/game_result.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                member_id,
-                score,
-                difficulty,
-                play_time,
-                is_manual_exit: isManualExit,
-                game_type: '算術邏輯力',
-                game_id: 4,
-                is_passed: score > 0
-            })
-        });
-        const result = await res.json();
-        console.log('API回應', result);
-        if (!result.success) {
-            alert('儲存紀錄失敗: ' + result.message);
-        } else {
-            // 立即更新主頁面分數
-            if (window.forceRefreshScore) {
-                setTimeout(() => {
-                    window.forceRefreshScore();
-                }, 1000); // 1秒後更新，確保資料庫已保存
+        
+        try {
+            const res = await fetch('api/game_result.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    member_id,
+                    score,
+                    difficulty,
+                    play_time,
+                    is_manual_exit: false, // 正常結束，不是手動退出
+                    game_type: '算術邏輯力',
+                    game_id: 4,
+                    is_passed: score > 0
+                })
+            });
+            const result = await res.json();
+            console.log('API回應', result);
+            if (!result.success) {
+                alert('儲存紀錄失敗: ' + result.message);
+            } else {
+                // 立即更新主頁面分數
+                if (window.forceRefreshScore) {
+                    setTimeout(() => {
+                        window.forceRefreshScore();
+                    }, 1000); // 1秒後更新，確保資料庫已保存
+                }
+            }
+            
+            // 關鍵：停止遊戲追蹤，防止重複記錄
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.endGame();
+                console.log('遊戲追蹤已停止，防止重複記錄');
+            }
+        } catch (error) {
+            console.error('保存遊戲記錄時發生錯誤:', error);
+            
+            // 即使失敗也要停止追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.endGame();
+                console.log('保存失敗，但已停止追蹤以防重複');
             }
         }
         

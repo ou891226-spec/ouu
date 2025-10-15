@@ -726,16 +726,17 @@ button:hover {
 
 #help-modal .help-content {
     text-align: left;
-    margin: 1.5rem 0 0.5rem 0;
+    margin: 1rem 0 0.3rem 0;
 }
 
 #help-modal .help-content h3 {
-    font-size: 1.18rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin: 1.2rem 0 0.5rem 0;
-    color: #222;
+    margin: 0.8rem 0 0.4rem 0;
+    color: #0066cc;
     letter-spacing: 0.01em;
-    line-height: 1.5;
+    line-height: 1.4;
+    text-align: left;
 }
 
 #help-modal .help-content ul {
@@ -745,14 +746,15 @@ button:hover {
 }
 
 #help-modal .help-content ul li {
-    color: #222;
-    line-height: 2.1;
-    margin-bottom: 0.5rem;
-    font-size: 1.08rem;
+    color: #0066cc;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
     font-weight: 400;
     position: relative;
     padding-left: 0.5em;
     word-break: break-all;
+    text-align: left;
 }
 
 #help-modal .help-content ul li::marker {
@@ -761,11 +763,12 @@ button:hover {
 }
 
 #help-modal .help-content p {
-    font-size: 1.08rem;
-    color: #222;
-    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    color: #0066cc;
+    margin-bottom: 0.5rem;
     margin-left: 0.2rem;
-    line-height: 2.1;
+    line-height: 1.5;
+    text-align: left;
 }
 
 #help-modal .close-btn {
@@ -859,9 +862,12 @@ span highlight-text{
 #vegetable-instruction-text {
     min-width: 300px;
     flex: 3;
-    text-align: center;
+    text-align: left;
     padding: 0 20px;
     line-height: 1.4;
+    font-size: 1.3rem;
+    color: #0066cc;
+    font-weight: bold;
 }
 
 /* 算菜錢遊戲按鈕容器樣式 */
@@ -952,8 +958,10 @@ span highlight-text{
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */

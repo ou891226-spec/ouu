@@ -4,7 +4,11 @@ ini_set('max_execution_time', 30); // 30 秒執行時間限制
 ini_set('memory_limit', '128M'); // 128MB 記憶體限制
 
 require_once 'check_login.php';
-require_once 'avatar_helper.php';
+require_once __DIR__ . '/avatar_helper.php';
+
+// 檢查並修復當前用戶的任務 - 已移除auto_task_fix.php依賴
+// 用戶任務分配已整合到register.php和daily_reset.php中
+
 $account = isset($_SESSION['account']) ? $_SESSION['account'] : '訪客';
 $name = isset($_SESSION['name']) ? $_SESSION['name'] : '使用者';
 

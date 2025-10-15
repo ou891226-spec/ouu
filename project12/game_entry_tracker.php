@@ -7,7 +7,7 @@
  * 3. 如果玩家沒有操作，則更新為 EXITED
  */
 
-require_once 'db_connect.php';
+require_once __DIR__ . '/db_connect.php';
 
 /**
  * 記錄遊戲進入（初始化為 PENDING 狀態）
@@ -64,15 +64,18 @@ function recordGameEntry($member_id, $game_type, $difficulty = 'easy', $game_id 
             throw new Exception("無法獲取插入記錄的ID");
         }
         
-        // 記錄行為軌跡（暫時跳過，避免 session 問題）
-        // if (function_exists('logGameBehavior')) {
-        //     try {
-        //         logGameBehavior($member_id, $game_type, 0, 0, $difficulty, 'game_entered');
-        //     } catch (Exception $e) {
-        //         error_log("記錄行為軌跡失敗: " . $e->getMessage());
-        //         // 不拋出異常，繼續執行
-        //     }
-        // }
+        // 記錄行為軌跡
+        if (file_exists(__DIR__ . '/log_game_behavior.php')) {
+            require_once __DIR__ . '/log_game_behavior.php';
+        }
+        if (function_exists('logGameBehavior')) {
+            try {
+                logGameBehavior($member_id, $game_type, 0, 0, $difficulty, 'game_entered');
+            } catch (Exception $e) {
+                error_log("記錄行為軌跡失敗: " . $e->getMessage());
+                // 不拋出異常，繼續執行
+            }
+        }
         
         error_log("遊戲進入記錄: 用戶{$member_id}, 遊戲{$game_type}, 記錄ID{$record_id}");
         
@@ -127,15 +130,20 @@ function updateGameRecord($record_id, $score, $play_time, $status = 'completed')
                 // 根據遊戲類型更新對應的分類分數
                 updateCategoryScore($record['member_id'], $record['game_type'], $score);
                 
-                // 記錄行為軌跡（暫時跳過，避免 session 問題）
-                // if (function_exists('logGameBehavior')) {
-                //     try {
-                //         logGameBehavior($record['member_id'], $record['game_type'], $play_time, $score, null, $status);
-                //     } catch (Exception $e) {
-                //         error_log("記錄行為軌跡失敗: " . $e->getMessage());
-                //         // 不拋出異常，繼續執行
-                //     }
-                // }
+                // 記錄行為軌跡
+                if (file_exists(__DIR__ . '/log_game_behavior.php')) {
+                    require_once __DIR__ . '/log_game_behavior.php';
+                }
+                if (function_exists('logGameBehavior')) {
+                    try {
+                        // 根據狀態決定行為類型
+                        $action_type = ($status === 'completed') ? 'game_complete' : 'game_failed';
+                        logGameBehavior($record['member_id'], $record['game_type'], $play_time, $score, null, $action_type);
+                    } catch (Exception $e) {
+                        error_log("記錄行為軌跡失敗: " . $e->getMessage());
+                        // 不拋出異常，繼續執行
+                    }
+                }
             }
             
             error_log("遊戲記錄更新: 記錄ID{$record_id}, 分數{$score}, 時間{$play_time}秒, 狀態{$status}");
@@ -198,15 +206,25 @@ function markGameExit($record_id) {
         if ($result) {
             // 獲取記錄詳情用於行為記錄
             $detail_stmt = $pdo->prepare("
-                SELECT member_id, game_type, play_time 
+                SELECT member_id, game_type, play_time, difficulty 
                 FROM game_records 
                 WHERE record_id = ?
             ");
             $detail_stmt->execute([$record_id]);
             $record = $detail_stmt->fetch();
             
-            if ($record && function_exists('logGameBehavior')) {
-                logGameBehavior($record['member_id'], $record['game_type'], $record['play_time'], 0, null, 'game_exit');
+            if ($record) {
+                // 記錄行為軌跡
+                if (file_exists(__DIR__ . '/log_game_behavior.php')) {
+                    require_once __DIR__ . '/log_game_behavior.php';
+                }
+                if (function_exists('logGameBehavior')) {
+                    try {
+                        logGameBehavior($record['member_id'], $record['game_type'], $record['play_time'], 0, $record['difficulty'], 'game_exit');
+                    } catch (Exception $e) {
+                        error_log("記錄退出行為失敗: " . $e->getMessage());
+                    }
+                }
             }
             
             error_log("遊戲退出標記: 記錄ID{$record_id}");
@@ -377,7 +395,28 @@ function processGameResult($data) {
             error_log("已更新會員分數: member_id=$member_id, 增加分數=$final_score, 遊戲類型=$game_type");
         }
         
-        // 6. 跳過每日任務檢查（避免登入檢查問題）
+        // 6. 記錄行為軌跡
+        if (file_exists(__DIR__ . '/log_game_behavior.php')) {
+            require_once __DIR__ . '/log_game_behavior.php';
+        }
+        if (function_exists('logGameBehavior')) {
+            try {
+                // 根據最終狀態決定行為類型
+                if ($final_status === 'completed') {
+                    $action_type = 'game_complete';
+                } elseif ($final_status === 'failed') {
+                    $action_type = 'game_failed';
+                } else {
+                    $action_type = 'game_exit';
+                }
+                logGameBehavior($member_id, $game_type, $play_time, $final_score, $difficulty, $action_type);
+            } catch (Exception $e) {
+                error_log("記錄行為軌跡失敗: " . $e->getMessage());
+                // 不拋出異常，繼續執行
+            }
+        }
+        
+        // 7. 跳過每日任務檢查（避免登入檢查問題）
         $completed_tasks = [];
         
         // 提交交易
@@ -409,10 +448,10 @@ function processGameResult($data) {
 
 /**
  * 清理長時間停留在 entered 狀態的記錄（視為玩家退出）
- * @param int $timeout_minutes 超時時間（分鐘，預設30分鐘）
+ * @param int $timeout_minutes 超時時間（分鐘，預設10分鐘）
  * @return int 清理的記錄數量
  */
-function cleanupExpiredGameEntries($timeout_minutes = 30) {
+function cleanupExpiredGameEntries($timeout_minutes = 10) {
     global $pdo;
     
     try {

@@ -30,32 +30,32 @@ if ($game_type_filter) {
 if ($game_name_filter) {
     // 根據遊戲名稱篩選，需要結合game_type和game_id
     switch ($game_name_filter) {
-        case '接金蛋':
+        case '看字選色':
             $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 1";
             break;
-        case '節奏遊戲':
-            $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 6";
-            break;
-        case '看字選色':
+        case '接金蛋':
             $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 2";
-            break;
-        case '翻牌對對樂':
-            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 5";
-            break;
-        case '圖片線索問答':
-            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 8";
-            break;
-        case '追蹤犯人':
-            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 7";
             break;
         case '算菜錢':
             $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 3";
             break;
-        case '數字排排樂':
-            $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 10";
-            break;
         case '2048':
             $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 4";
+            break;
+        case '翻牌對對樂':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 5";
+            break;
+        case '追蹤犯人':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 6";
+            break;
+        case '節奏遊戲':
+            $where_conditions[] = "gr.game_type = '反應力' AND gr.game_id = 7";
+            break;
+        case '線索遊戲':
+            $where_conditions[] = "gr.game_type = '記憶力' AND gr.game_id = 8";
+            break;
+        case '數字排排樂':
+            $where_conditions[] = "gr.game_type = '算術邏輯力' AND gr.game_id = 10";
             break;
     }
 }
@@ -298,13 +298,15 @@ $game_type_to_name = [
         </div>
         
         <div class="nav">
-            <a href="game_records.php" class="active">📊 遊戲紀錄</a>
+            <a href="game_records.php" class="active">🎮 遊戲紀錄</a>
             <a href="user_behavior.php">👤 行為軌跡</a>
             <a href="question_management.php">🎯 遊戲管理</a>
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
+            <a href="ai_analysis_history.php">🤖 AI分析歷史</a>
             <a href="test_results.php">📈 測試結果</a>
             <a href="custom_score_trend.php">📊 趨勢分析</a>
+            <a href="baseline_time_management.php">📊 雷達圖分析</a>
             <a href="delete_test_records.php" style="color: #dc3545;">🗑️ 刪除測試記錄</a>
         </div>
         

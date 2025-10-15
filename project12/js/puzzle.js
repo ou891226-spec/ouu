@@ -447,6 +447,12 @@ async function showResultModal(resultType) {
         } else {
             console.warn('saveGameResult函數不存在，跳過保存');
         }
+        
+        // 關鍵：停止遊戲追蹤，防止重複記錄
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('遊戲追蹤已停止，防止重複記錄');
+        }
     } catch (error) {
         console.error('保存puzzle遊戲結果失敗:', error);
     }
@@ -489,6 +495,8 @@ function startGame() {
     if (typeof gameTracker !== 'undefined') {
         gameTracker.init("算術邏輯力", 10);
     }
+    
+    // 遊戲退出追蹤已在頁面載入時啟動
     
     modalOverlay.classList.add('hidden');
     boardElement.style.display = 'grid';

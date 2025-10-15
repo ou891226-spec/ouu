@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 session_start();
 include("DB_open.php");
-require_once "avatar_helper.php";
+require_once __DIR__ . "/avatar_helper.php";
 
 // 如果已經登入，直接跳轉到主頁
 if (isset($_SESSION['member_id']) && !empty($_SESSION['member_id'])) {
@@ -97,6 +97,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // 登入任務不再自動完成，需要用戶手動完成
                 // 移除自動完成登入任務的邏輯
+                
+                // 檢查並修復用戶任務 - 已移除auto_task_fix.php依賴
+                // 用戶任務分配已整合到register.php和daily_reset.php中
 
                 // 直接跳轉到主頁，不顯示alert
                 header('Location: index.php');
@@ -151,6 +154,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } catch (Exception $e) {
                     error_log("記錄登入行為失敗: " . $e->getMessage());
                 }
+                
+                // 檢查並修復用戶任務 - 已移除auto_task_fix.php依賴
+                // 用戶任務分配已整合到register.php和daily_reset.php中
 
                 // 直接跳轉到主頁，不顯示alert
                 header('Location: index.php');

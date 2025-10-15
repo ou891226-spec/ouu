@@ -27,7 +27,7 @@ foreach ($settings as $setting) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>節奏遊戲</title>
-    <link rel="stylesheet" href="css/rhythm_game.css">
+    <link rel="stylesheet" href="css/rhythm_game.css?v=<?php echo time(); ?>">
     <script src="js/unified-game-tracker.js"></script>
     <script>
         // 初始化遊戲追蹤器
@@ -71,9 +71,9 @@ foreach ($settings as $setting) {
                     <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                     <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
                 </h2>
-                <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
-                    <div id="rhythm-video-container" style="text-align:center;margin-bottom:2.5rem;">
-                        <video id="rhythm-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <div class="help-content" style="margin-top:1.5rem;padding:0 1.5rem;">
+                    <div id="rhythm-video-container" style="text-align:center;margin-bottom:1.5rem;">
+                        <video id="rhythm-current-video" width="100%" height="auto" controls style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                             <source src="gd/rhythm1.mp4" type="video/mp4">
                             您的瀏覽器不支援影片播放。
                         </video>
@@ -86,7 +86,7 @@ foreach ($settings as $setting) {
                             </button>
                         </div>
                         
-                        <div id="rhythm-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                        <div id="rhythm-instruction-text" class="game-instruction-text">
                             一進去先選擇遊戲難度
                         </div>
                         
@@ -136,8 +136,27 @@ foreach ($settings as $setting) {
         <audio id="fail-sfx" src="audio/fail.m4a" preload="auto"></audio>
         <audio id="tap-sfx" src="audio/tap.m4a" preload="auto"></audio>
     </div>    
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
     <script src="js/get-score.js?v=<?php echo time(); ?>"></script>
     <script src="js/rhythm_game.js?v=<?php echo time(); ?>"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '反應力',
+                    gameId: 7,
+                    difficulty: 'easy'
+                });
+                console.log('遊戲退出處理器已配置');
+            }
+            
+            // 遊戲開始時啟動追蹤（在真正開始遊戲時調用）
+            // 注意：這裡不應該在頁面載入時就啟動追蹤
+            // 應該在用戶選擇難度並開始遊戲時才啟動
+        });
+    </script>
 </body>
 </html>

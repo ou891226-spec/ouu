@@ -405,22 +405,20 @@ document.addEventListener('mousemove', (e) => {
 let touchStartX = 0;
 let isTouching = false;
 
-// 觸控開始
-basket.addEventListener('touchstart', (e) => {
-    if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+// 觸控開始 - 簡化版本
+game.addEventListener('touchstart', (e) => {
+    if (gameStarted && !gamePaused) {
         isTouching = true;
         touchStartX = e.touches[0].clientX;
         e.preventDefault();
-        e.stopPropagation();
         console.log('觸控開始:', touchStartX);
     }
 }, { passive: false });
 
-// 觸控移動
+// 觸控移動 - 簡化版本
 document.addEventListener('touchmove', (e) => {
-    if (isTouching && touchStartX !== 0 && gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+    if (isTouching && gameStarted && !gamePaused) {
         e.preventDefault();
-        e.stopPropagation();
         
         const gameRect = game.getBoundingClientRect();
         const touchX = e.touches[0].clientX - gameRect.left;
@@ -430,16 +428,8 @@ document.addEventListener('touchmove', (e) => {
         let newLeft = touchX - (basketWidth / 2);
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
         
-        // 使用 transform 提升效能
         basket.style.transform = `translateX(${newLeft}px)`;
         basket.style.left = '0px';
-        
-        console.log('觸控移動:', {
-            touchX: touchX,
-            newLeft: newLeft,
-            basketWidth: basketWidth,
-            maxLeft: maxLeft
-        });
     }
 }, { passive: false });
 
@@ -863,9 +853,21 @@ function endGame(isWin = false, isManualExit = false) {
                 }, 1000); // 1秒後更新，確保資料庫已保存
             }
         }
+        
+        // 關鍵：停止遊戲追蹤，防止重複記錄
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('遊戲追蹤已停止，防止重複記錄');
+        }
     })
     .catch(error => {
         console.error('儲存遊戲結果時發生錯誤:', error);
+        
+        // 即使失敗也要停止追蹤
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('保存失敗，但已停止追蹤以防重複');
+        }
     });
     
     // 重置遊戲狀態

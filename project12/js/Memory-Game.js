@@ -764,8 +764,20 @@ async function saveMemoryGameResult(isWin, score, playTime, isManualExit = false
         } else {
             console.log('遊戲結果已儲存:', result);
         }
+        
+        // 關鍵：停止遊戲追蹤，防止重複記錄
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('遊戲追蹤已停止，防止重複記錄');
+        }
     } catch (error) {
         console.error('儲存遊戲結果時發生錯誤:', error);
+        
+        // 即使失敗也要停止追蹤
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('保存失敗，但已停止追蹤以防重複');
+        }
     }
 }
  

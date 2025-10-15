@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function getTaskIcon(taskType) {
   const iconMap = {
     'memory': 'memory_game.png',
-    'rhythm': 'complete_all_daily.png',
+    'rhythm': 'Achievement.png',
     'logic': 'Achievement.png',
     'coordination': 'complete_all_daily.png',
     'tracking': 'Achievement.png',

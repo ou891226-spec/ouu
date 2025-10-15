@@ -7,7 +7,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once "DB_open.php";
-require_once "avatar_helper.php";
+require_once __DIR__ . "/avatar_helper.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST["name"];
@@ -68,11 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // 為新用戶分配每日任務
         try {
-            // 新用戶優先分配新手任務，然後隨機分配其他任務
+            // 新用戶分配完整的每日任務（3個）
             $tasks_sql = "
-                (SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name = '遊戲新手' LIMIT 1)
-                UNION
-                (SELECT task_id FROM daily_tasks WHERE is_active = 1 AND task_name != '遊戲新手' ORDER BY RAND() LIMIT 2)
+                SELECT task_id FROM daily_tasks 
+                WHERE is_active = 1 
+                AND task_name != '遊戲新手' 
+                AND task_name NOT LIKE '%忠實玩家%'
+                ORDER BY RAND() 
+                LIMIT 3
             ";
             $tasks_stmt = $pdo->query($tasks_sql);
             $available_tasks = $tasks_stmt->fetchAll(PDO::FETCH_COLUMN);

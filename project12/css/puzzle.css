@@ -19,6 +19,7 @@ body {
     text-align: center;
     max-width: 500px; 
     width: 100%;
+    position: fixed;
 }
 
 
@@ -480,4 +481,166 @@ h1 {
 .score-board span {
     font-size: 20px;
     font-weight: bold;
+}
+
+/* ==================== 響應式設計 (RWD) ==================== */
+
+/* 平板設備 (768px 以下) */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+    
+    .score-board {
+        font-size: 18px;
+        padding: 8px 15px;
+        gap: 15px;
+    }
+    
+    .score-board span {
+        font-size: 18px;
+    }
+    
+    .game-container {
+        max-width: 90%;
+        padding: 15px;
+    }
+    
+    #puzzle-board {
+        max-width: 100%;
+    }
+    
+    .control-buttons {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .control-buttons button {
+        padding: 10px 15px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+    
+    .win-title {
+        font-size: 32px;
+    }
+    
+    .win-details-container {
+        font-size: 18px;
+    }
+    
+    .win-btn {
+        font-size: 20px;
+        padding: 8px 16px;
+    }
+}
+
+/* 手機設備 (480px 以下) */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+    
+    .score-board {
+        font-size: 16px;
+        padding: 6px 10px;
+        gap: 10px;
+        flex-direction: column;
+    }
+    
+    .score-board span {
+        font-size: 16px;
+    }
+    
+    .game-container {
+        max-width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+    }
+    
+    #puzzle-board {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    
+    .control-buttons {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .control-buttons button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        min-width: auto;
+    }
+    
+    .win-title {
+        font-size: 28px;
+    }
+    
+    .win-details-container {
+        font-size: 16px;
+        padding: 10px;
+    }
+    
+    .win-detail {
+        padding: 6px 0;
+    }
+    
+    .win-score-box {
+        font-size: 18px;
+    }
+    
+    .win-fail-message {
+        font-size: 18px;
+    }
+    
+    .modal-body.win-buttons {
+        flex-direction: column;
+        gap: 10px;
+        padding: 0;
+    }
+    
+    .win-btn {
+        font-size: 18px;
+        padding: 10px 20px;
+        width: 100%;
+    }
+    
+    .header-control.close-only {
+        width: 45px;
+        height: 45px;
+        font-size: 32px;
+    }
+}
+
+/* 超小型手機 (360px 以下) */
+@media (max-width: 360px) {
+    h1 {
+        font-size: 20px;
+    }
+    
+    .score-board {
+        font-size: 14px;
+    }
+    
+    .score-board span {
+        font-size: 14px;
+    }
+    
+    #puzzle-board {
+        transform: scale(0.9);
+    }
+    
+    .win-title {
+        font-size: 24px;
+    }
 }

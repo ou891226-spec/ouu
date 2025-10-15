@@ -344,19 +344,19 @@ function togglePassword() {
     <div class="game-grid">
       <div class="game-block">
         <div class="game-item">
-          <a href="Memory-Game-2P.php"><img src="img/card.jpg" alt="翻牌對對樂"></a>
+          <a href="Memory-Game-2P.php"><img src="img/card1.png" alt="翻牌對對樂"></a>
         </div>
         <div class="game-title">翻牌對對樂-雙人</div>
       </div>
       <div class="game-block">
         <div class="game-item">
-          <a href="rhythm_game_multiplayer.php"><img src="img/rhythm.jpg" alt="節奏遊戲"></a>
+          <a href="rhythm_game_multiplayer.php"><img src="img/rhythm1.png" alt="節奏遊戲"></a>
         </div>
         <div class="game-title">節奏遊戲-雙人</div>
       </div>
       <div class="game-block">
         <div class="game-item">
-          <a href="vegetable_cost_2P.php"><img src="img/vegetable.jpg" alt="算菜錢"></a>
+          <a href="vegetable_cost_2P.php"><img src="img/vegetable1.png" alt="算菜錢"></a>
         </div>
         <div class="game-title">算菜錢-雙人</div>
       </div>

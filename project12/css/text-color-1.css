@@ -369,10 +369,11 @@ button:hover {
 }
 
 #help-modal .help-content h3 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
-    color: #333;
+    color: #0066cc;
     margin-bottom: 10px;
+    text-align: left;
 }
 
 #help-modal .help-content ul {
@@ -381,10 +382,11 @@ button:hover {
 }
 
 #help-modal .help-content ul li {
-    font-size: 16px;
-    color: #666;
+    font-size: 18px;
+    color: #0066cc;
     margin-bottom: 8px;
     line-height: 1.5;
+    text-align: left;
 }
 
 #help-modal .help-content ul li::marker {
@@ -392,10 +394,11 @@ button:hover {
 }
 
 #help-modal .help-content p {
-    font-size: 16px;
-    color: #666;
+    font-size: 18px;
+    color: #0066cc;
     line-height: 1.6;
     margin-bottom: 15px;
+    text-align: left;
 }
 
 #help-modal .close-btn {
@@ -591,8 +594,10 @@ button:hover {
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */
@@ -604,9 +609,11 @@ button:hover {
 #textcolor-instruction-text {
     min-width: 300px;
     flex: 3;
-    text-align: center;
+    text-align: left;
     padding: 0 20px;
     line-height: 1.4;
+    font-size: 1.3rem;
+    color: #0066cc;
 }
 
 /* 看字選色遊戲按鈕容器樣式 */
@@ -620,7 +627,7 @@ button:hover {
     #textcolor-instruction-text {
         min-width: 250px;
         flex: 2;
-        font-size: 20px;
+        font-size: 1.3rem;
     }
 }
 /* 難度選擇彈窗專屬樣式 - 與算菜錢遊戲一致 */

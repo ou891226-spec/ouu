@@ -1195,7 +1195,7 @@ async function saveGameResult(bonusScore, playTime, isManualExit = false) {
                 difficulty: currentDifficulty,
                 score: bonusScore,
                 play_time: playTime,
-                is_manual_exit: isManualExit
+                is_manual_exit: false // 正常結束，不是手動退出
             })
         });
         
@@ -1210,6 +1210,12 @@ async function saveGameResult(bonusScore, playTime, isManualExit = false) {
             const textResponse = await response.text();
             console.error('收到非JSON響應:', textResponse);
             throw new Error('服務器返回了非JSON格式的響應');
+        }
+        
+        // 關鍵：停止遊戲追蹤，防止重複記錄
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('遊戲追蹤已停止，防止重複記錄');
         }
         
         const result = await response.json();

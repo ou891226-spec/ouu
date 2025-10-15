@@ -1,87 +1,102 @@
 <?php
+/**
+ * 檢查每日重置狀態
+ * 檢查是否需要執行每日重置，並返回相應的狀態
+ */
+
+// 使用輸出淨化工具
+require_once 'output_cleaner.php';
+initCleanOutput();
+
+session_start();
 require_once 'db.php';
 
 // 設定台灣時區
 date_default_timezone_set('Asia/Taipei');
 
-// 檢查是否需要執行每日重置
-function checkAndExecuteDailyReset() {
-    global $pdo;
+try {
+    // 檢查今日是否已經執行過重置
+    $check_sql = "SELECT last_reset_date FROM system_settings WHERE setting_key = 'daily_reset'";
+    $check_stmt = $pdo->prepare($check_sql);
+    $check_stmt->execute();
+    $last_reset = $check_stmt->fetch();
     
-    try {
-        // 檢查最後重置時間
-        $last_reset_sql = "
-            SELECT MAX(created_at) as last_reset 
-            FROM daily_reset_log 
-            WHERE DATE(created_at) = CURDATE()
+    $today = date('Y-m-d');
+    $needs_reset = false;
+    
+    if (!$last_reset || $last_reset['last_reset_date'] !== $today) {
+        // 需要執行重置
+        $needs_reset = true;
+        
+        // 執行每日重置
+        include_once 'daily_reset.php';
+        
+        // 更新重置日期
+        $update_sql = "
+            INSERT INTO system_settings (setting_key, setting_value, last_reset_date) 
+            VALUES ('daily_reset', 'completed', ?) 
+            ON DUPLICATE KEY UPDATE 
+            setting_value = 'completed', 
+            last_reset_date = ?
         ";
-        $stmt = $pdo->prepare($last_reset_sql);
-        $stmt->execute();
-        $result = $stmt->fetch();
+        $update_stmt = $pdo->prepare($update_sql);
+        $update_stmt->execute([$today, $today]);
         
-        $today = date('Y-m-d');
-        $last_reset = $result['last_reset'] ?? null;
-        
-        // 如果今天還沒有重置過，執行重置
-        if (!$last_reset || date('Y-m-d', strtotime($last_reset)) !== $today) {
-            // 捕獲 daily_reset.php 的輸出，防止干擾 JSON
-            ob_start();
-            include 'daily_reset.php';
-            $reset_output = ob_get_clean();
+        outputCleanJson([
+            'success' => true,
+            'message' => '每日重置已執行',
+            'reset_date' => $today
+        ]);
+    } else {
+        // 今日已執行過重置
+        outputCleanJson([
+            'success' => true,
+            'message' => '今日重置已完成',
+            'reset_date' => $today
+        ]);
+    }
+    
+} catch (Exception $e) {
+    // 如果 system_settings 表不存在，創建它
+    if (strpos($e->getMessage(), "doesn't exist") !== false) {
+        try {
+            $create_table_sql = "
+                CREATE TABLE IF NOT EXISTS system_settings (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    setting_key VARCHAR(100) UNIQUE NOT NULL,
+                    setting_value TEXT,
+                    last_reset_date DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            ";
+            $pdo->exec($create_table_sql);
             
-            // 記錄重置時間
-            $log_sql = "INSERT INTO daily_reset_log (created_at) VALUES (NOW())";
-            $log_stmt = $pdo->prepare($log_sql);
-            $log_stmt->execute();
+            // 重新執行重置檢查
+            $today = date('Y-m-d');
+            include_once 'daily_reset.php';
             
-            return true;
+            $insert_sql = "INSERT INTO system_settings (setting_key, setting_value, last_reset_date) VALUES ('daily_reset', 'completed', ?)";
+            $insert_stmt = $pdo->prepare($insert_sql);
+            $insert_stmt->execute([$today]);
+            
+            outputCleanJson([
+                'success' => true,
+                'message' => '每日重置已執行（首次）',
+                'reset_date' => $today
+            ]);
+            
+        } catch (Exception $e2) {
+            outputCleanJson([
+                'success' => false,
+                'message' => '系統初始化失敗：' . $e2->getMessage()
+            ]);
         }
-        
-        return false;
-        
-    } catch (Exception $e) {
-        error_log("檢查每日重置失敗: " . $e->getMessage());
-        return false;
+    } else {
+        outputCleanJson([
+            'success' => false,
+            'message' => '檢查每日重置失敗：' . $e->getMessage()
+        ]);
     }
-}
-
-// 創建重置日誌表（如果不存在）
-function createResetLogTable() {
-    global $pdo;
-    
-    $create_table_sql = "
-        CREATE TABLE IF NOT EXISTS daily_reset_log (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            created_at DATETIME NOT NULL,
-            INDEX idx_created_at (created_at)
-        )
-    ";
-    
-    try {
-        $pdo->exec($create_table_sql);
-    } catch (Exception $e) {
-        error_log("創建重置日誌表失敗: " . $e->getMessage());
-    }
-}
-
-// 執行檢查
-createResetLogTable();
-$reset_executed = checkAndExecuteDailyReset();
-
-// 設置 JSON 響應頭
-header('Content-Type: application/json; charset=utf-8');
-
-if ($reset_executed) {
-    echo json_encode([
-        'success' => true,
-        'message' => '每日重置已執行',
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
-} else {
-    echo json_encode([
-        'success' => true,
-        'message' => '今日已重置過',
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
 }
 ?>

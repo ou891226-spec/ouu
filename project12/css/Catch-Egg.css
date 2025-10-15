@@ -58,12 +58,12 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 35px;
-  margin: 15px auto;
-  padding: 15px;
+  gap: 25px;
+  margin: 10px auto;
+  padding: 10px;
   background-color: #f0f8ff;
-  border-radius: 12px;
-  max-width: 800px;
+  border-radius: 8px;
+  max-width: 600px;
   flex-wrap: wrap;
   border: 2px solid #e0e8ff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -72,28 +72,28 @@ h1 {
 .guide-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 1.4rem;
+  gap: 8px;
+  font-size: 1.2rem;
   color: #333;
-  padding: 8px 12px;
+  padding: 6px 10px;
   line-height: 1.3;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid #ddd;
-  min-width: 180px;
+  min-width: 150px;
   justify-content: center;
 }
 
 .guide-icon {
-  width: 35px;
-  height: 35px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
 .guide-icon[src*="bomb.png"] {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
 }
 
 .guide-icon.bomb {
@@ -145,7 +145,7 @@ h1 {
   left: auto;
   border-radius: 20px;
   cursor: grab;
-  touch-action: none;
+  touch-action: manipulation;
   pointer-events: auto;
   user-select: none;
   z-index: 1000;
@@ -154,7 +154,6 @@ h1 {
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
  
@@ -570,15 +569,16 @@ button {
 /* help-content 樣式（比照 Memory-Game） */
 .help-content {
   text-align: left;
-  margin: 1.5rem 0 0.5rem 0;
+  margin: 1rem 0 0.3rem 0;
 }
 .help-content h3 {
-  font-size: 1.18rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin: 1.2rem 0 0.5rem 0;
-  color: #222;
+  margin: 0.8rem 0 0.4rem 0;
+  color: #0066cc;
   letter-spacing: 0.01em;
-  line-height: 1.5;
+  line-height: 1.4;
+  text-align: left;
 }
 .help-content ul {
   list-style: disc inside;
@@ -586,25 +586,27 @@ button {
   margin-bottom: 1rem;
 }
 .help-content ul li {
-  color: #222;
-  line-height: 2.1;
-  margin-bottom: 0.5rem;
-  font-size: 1.08rem;
+  color: #0066cc;
+  line-height: 1.5;
+  margin-bottom: 0.3rem;
+  font-size: 1.1rem;
   font-weight: 400;
   position: relative;
   padding-left: 0.5em;
   word-break: break-all;
+  text-align: left;
 }
 .help-content ul li::marker {
   color: #ff69b4;
   font-size: 1.1em;
 }
 .help-content p {
-  font-size: 1.08rem;
-  color: #222;
-  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+  color: #0066cc;
+  margin-bottom: 0.5rem;
   margin-left: 0.2rem;
-  line-height: 2.1;
+  line-height: 1.5;
+  text-align: left;
 }
 
 /* 返回按鈕容器 */
@@ -856,8 +858,10 @@ button {
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */
@@ -880,6 +884,10 @@ button {
     min-width: 450px !important;
     max-width: 600px !important;
     padding: 0 15px !important;
+    text-align: left !important;
+    font-size: 1.3rem !important;
+    color: #0066cc !important;
+    font-weight: bold !important;
 }
 
 /* 接金蛋遊戲按鈕容器樣式 */
@@ -899,6 +907,7 @@ button {
 /* 接金蛋遊戲說明視窗內容緊湊化 */
 #egg-help-modal .modal-content h2 {
     margin-bottom: 1rem !important;
+    color: #222 !important;
 }
 
 #egg-help-modal .help-content {
@@ -920,7 +929,7 @@ button {
     #egg-instruction-text {
         min-width: 280px !important;
         flex: 2 !important;
-        font-size: 20px !important;
+        font-size: 1.3rem !important;
     }
     
     #egg-help-modal .modal-content {
@@ -1095,7 +1104,7 @@ button {
     }
     
     #egg-instruction-text {
-        font-size: 14px !important;
+        font-size: 1.3rem !important;
         min-width: auto !important;
         line-height: 1.4 !important;
     }

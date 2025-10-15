@@ -11,34 +11,16 @@ if (!isset($_SESSION['member_id']) || empty($_SESSION['member_id'])) {
     exit;
 }
 
-// 設置用戶ID變數
-$_SESSION['user_id'] = $_SESSION['member_id'];
+// 確保必要的會話變數存在
+if (!isset($_SESSION['account'])) {
+    $_SESSION['account'] = '訪客';
+}
 
-// 如果沒有設置名字或頭像，從資料庫獲取
-if (!isset($_SESSION['name']) || empty($_SESSION['name']) || !isset($_SESSION['avatar_url'])) {
-    require_once 'db.php';
-    try {
-        $sql = "SELECT member_name, avatar FROM member WHERE member_id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$_SESSION['member_id']]);
-        $result = $stmt->fetch();
-        
-        if ($result) {
-            if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
-                $_SESSION['name'] = $result['member_name'] ?? $_SESSION['account'] ?? '使用者';
-            }
-            // 強制更新頭像路徑，確保與資料庫同步
-            $_SESSION['avatar_url'] = $result['avatar'] ?? null;
-        } else {
-            if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
-                $_SESSION['name'] = $_SESSION['account'] ?? '使用者';
-            }
-        }
-    } catch (Exception $e) {
-        if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
-            $_SESSION['name'] = $_SESSION['account'] ?? '使用者';
-        }
-        error_log("check_login.php 獲取用戶資料錯誤: " . $e->getMessage());
-    }
+if (!isset($_SESSION['name'])) {
+    $_SESSION['name'] = '您好';
+}
+
+if (!isset($_SESSION['avatar_url'])) {
+    $_SESSION['avatar_url'] = 'img/big.jpg';
 }
 ?>

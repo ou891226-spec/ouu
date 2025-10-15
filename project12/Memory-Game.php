@@ -205,7 +205,7 @@ $colors = $stmt->fetchAll();
                         </button>
                     </div>
                     
-                    <div id="instruction-text" class="game-instruction-text" style="font-size:24px;text-align:center; min-width: 180px;">
+                    <div id="instruction-text" class="game-instruction-text">
                         先選擇主題，再選擇難度
                     </div>
                     
@@ -251,8 +251,29 @@ $colors = $stmt->fetchAll();
         const memberId = <?php echo $_SESSION['member_id'] ?? 0; ?>;
         localStorage.setItem('member_id', memberId);
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
     <script src="js/get-score.js?v=<?php echo time(); ?>"></script>
     <script src="js/Memory-Game.js?v=<?php echo time(); ?>"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '記憶力',
+                    gameId: 5,
+                    difficulty: '<?= isset($_GET["difficulty"]) ? $_GET["difficulty"] : "easy" ?>'
+                });
+                console.log('遊戲退出處理器已配置');
+            }
+            
+            // 遊戲開始時啟動追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+        });
+    </script>
 </body>
 </html> 

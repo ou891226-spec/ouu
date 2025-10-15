@@ -65,6 +65,13 @@ function startGame() {
   resetGame();
   setDifficulty(currentDifficulty);
   gameRunning = true;
+  
+  // 啟動遊戲退出追蹤
+  if (typeof gameExitHandler !== 'undefined') {
+    gameExitHandler.startGame();
+    console.log('遊戲退出追蹤已啟動');
+  }
+  
   spawnNoteWithRhythm();
   moveInterval = setInterval(moveNotes, 16);
   startTime = Date.now();
@@ -278,7 +285,7 @@ function endGame(isManualExit = false) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       member_id: sendMemberId,
-      game_type: "反應力",
+      game_type: "節奏遊戲",
       game_id: 7,
       difficulty: currentDifficulty,
       score: recordScore,
@@ -300,9 +307,21 @@ function endGame(isManualExit = false) {
     } else {
       console.error('儲存失敗：', data.message);
     }
+    
+    // 關鍵：停止遊戲追蹤，防止重複記錄
+    if (typeof gameExitHandler !== 'undefined') {
+      gameExitHandler.endGame();
+      console.log('遊戲追蹤已停止，防止重複記錄');
+    }
   })
   .catch(error => {
     console.error('Fetch error:', error);
+    
+    // 即使失敗也要停止追蹤
+    if (typeof gameExitHandler !== 'undefined') {
+      gameExitHandler.endGame();
+      console.log('保存失敗，但已停止追蹤以防重複');
+    }
   });
 
   if (isPassed && currentDifficulty === 'normal') {

@@ -78,13 +78,15 @@ try {
         </div>
         
         <div class="nav">
-            <a href="game_records.php">📊 遊戲紀錄</a>
+            <a href="game_records.php">🎮 遊戲紀錄</a>
             <a href="user_behavior.php">👤 行為軌跡</a>
             <a href="question_management.php" class="active">🎯 遊戲管理</a>
             <a href="user_management.php">👥 用戶管理</a>
             <a href="ability_analysis.php">🧠 能力分析</a>
+            <a href="ai_analysis_history.php">🤖 AI分析歷史</a>
             <a href="test_results.php">📈 測試結果</a>
             <a href="custom_score_trend.php">📊 趨勢分析</a>
+            <a href="baseline_time_management.php">📊 雷達圖分析</a>
         </div>
         
         <div class="content">

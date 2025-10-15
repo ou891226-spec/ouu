@@ -41,7 +41,7 @@ function checkAndGrantAchievements($member_id, $game_type = null, $score = 0, $p
                     $chinese_game_type = '算術邏輯力';
                     break;
                 case 'rhythm_game':
-                    $chinese_game_type = '反應力';
+                    $chinese_game_type = '節奏遊戲';
                     break;
                 case 'prisoner_game':
                     $chinese_game_type = '記憶力';
@@ -92,9 +92,9 @@ function grantAchievement($member_id, $achievement_id, $achievement_name, $icon)
         
         if (!$exists) {
             // 授予成就
-            $sql = "INSERT INTO member_achievements (member_id, achievement_id) VALUES (?, ?)";
+            $sql = "INSERT INTO member_achievements (member_id, achievement_id, achievement_name) VALUES (?, ?, ?)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$member_id, $achievement_id]);
+            $stmt->execute([$member_id, $achievement_id, $achievement_name]);
             
                          // 記錄成就獲得（只在非API請求時輸出）
              if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {

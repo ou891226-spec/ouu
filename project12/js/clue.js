@@ -74,18 +74,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function showResultModal(pass, score, difficulty, pass_bounce) {
       resultModal.style.display = 'flex';
       if (pass) {
-        modalTitle.textContent = '恭喜破關';
+        modalTitle.textContent = '🎉恭喜破關';
         const gameTimeSec = Math.floor((Date.now() - gameStartTime) / 1000);
         modalContent.innerHTML = `
+          <div style="margin:12px 0;"><strong>答對題數：</strong>${score}/5</div>
+          <div style="margin:12px 0;"><strong>過關條件：</strong>3題</div>
           <div style="margin:12px 0;">難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</div>
           <div style="margin:12px 0;">遊戲時間：${gameTimeSec}秒</div>
-          <div style="margin:12px 0;">過關分數：+${pass_bounce}</div>
+          <div style="margin:12px 0;"><strong>獲得分數：+</strong>${pass_bounce}分</div>
         `;
       } else {
-        modalTitle.textContent = '遊戲失敗';
+        modalTitle.textContent = '⏰遊戲結束';
         modalContent.innerHTML = `
-          <div style="margin:12px 0;">難度：${difficulty === 'easy' ? '簡單' : difficulty === 'normal' ? '普通' : '困難'}</div>
-          <div style="margin:12px 0;">未在時間內達成分數</div>
+          <div style="margin:12px 0;"><strong>答對題數：</strong>${score}/5</div>
+          <div style="margin:12px 0;"><strong>過關條件：</strong>3題</div>
+          <div style="margin:12px 0;">未達成目標分數!</div>
         `;
       }
       
@@ -106,8 +109,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let timeLeft = 0;
     let questionShown = false;
     let gameStartTime = Date.now(); // 記錄遊戲開始時間
-    let clueCorrect = 0; // 追蹤答對的題數
-    let clueTotal = 0; // 追蹤總題數
+    // 從 DOM 元素中獲取初始值
+    let clueCorrect = parseInt(document.getElementById('correct-count')?.getAttribute('data-initial') || 0); // 追蹤答對的題數
+    let clueTotal = 5 - parseInt(document.getElementById('remaining-count')?.getAttribute('data-initial') || 5); // 追蹤總題數（5 - 剩餘題數）
     let questionTimeout = null; // 新增：問題超時計時器
     const main = document.querySelector('.main-container');
     const difficulty = new URLSearchParams(window.location.search).get('difficulty');
@@ -122,9 +126,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const passCount = document.getElementById('pass-count');
         const remainingCount = document.getElementById('remaining-count');
         
-        if (correctCount) correctCount.textContent = clueCorrect;
+        // 從 DOM 元素中獲取當前值，而不是使用 JavaScript 變數
+        if (correctCount) {
+            // 優先使用 data-initial 屬性，如果沒有則使用 textContent
+            const currentCorrect = parseInt(correctCount.getAttribute('data-initial')) || parseInt(correctCount.textContent) || 0;
+            clueCorrect = currentCorrect; // 同步 JavaScript 變數
+            correctCount.textContent = currentCorrect;
+        }
         if (passCount) passCount.textContent = 3; // 過關題數固定為3題
-        if (remainingCount) remainingCount.textContent = Math.max(0, 5 - clueTotal); // 剩餘題數 = 5 - 已答題數
+        if (remainingCount) {
+            // 優先使用 data-initial 屬性，如果沒有則使用 textContent
+            const currentRemaining = parseInt(remainingCount.getAttribute('data-initial')) || parseInt(remainingCount.textContent) || 5;
+            clueTotal = 5 - currentRemaining; // 同步 JavaScript 變數
+            remainingCount.textContent = currentRemaining;
+        }
+        
+        // 更新全局變數
+        window.clueCorrect = clueCorrect;
+        window.clueTotal = clueTotal;
     }
 
     function updateTimeDisplay() {
@@ -265,6 +284,26 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 更新狀態欄
             updateStatusBar();
+            
+            // 如果有 session 數據，更新 DOM 元素的 data-initial 屬性
+            if (res.session_data) {
+                const correctCountEl = document.getElementById('correct-count');
+                const remainingCountEl = document.getElementById('remaining-count');
+                
+                if (correctCountEl && remainingCountEl) {
+                    correctCountEl.setAttribute('data-initial', res.session_data.clue_correct);
+                    remainingCountEl.setAttribute('data-initial', Math.max(0, 5 - res.session_data.clue_total));
+                    
+                    // 同步更新 JavaScript 變數
+                    clueCorrect = res.session_data.clue_correct;
+                    clueTotal = res.session_data.clue_total;
+                    window.clueCorrect = clueCorrect;
+                    window.clueTotal = clueTotal;
+                    
+                    console.log('從 session 更新分數 - 答對:', res.session_data.clue_correct, '總題數:', res.session_data.clue_total);
+                }
+            }
+            
             // 選項
             const opts = [currentQuestion.option_1, currentQuestion.option_2, currentQuestion.option_3, currentQuestion.option_4];
             const btns = document.querySelectorAll('.option-btn');
@@ -375,4 +414,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1200);
         };
     });
+    
+    // 🔑 遊戲開始時啟動追蹤
+    if (typeof gameExitHandler !== 'undefined') {
+        gameExitHandler.startGame();
+        console.log('遊戲追蹤已啟動');
+    }
 }); 

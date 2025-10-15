@@ -158,7 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>接金蛋遊戲</title>
-    <link rel="stylesheet" href="css/Catch-Egg.css" type="text/css">
+    <link rel="stylesheet" href="css/Catch-Egg.css?v=<?php echo time(); ?>" type="text/css">
+    <script src="js/Catch-Egg.js?v=<?php echo time(); ?>"></script>
     <script>
         // 設置會員ID供JavaScript使用
         window.memberId = <?php echo $_SESSION['member_id'] ?? 'null'; ?>;
@@ -296,10 +297,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:2.5rem;padding:0 2rem;">
+            <div class="help-content" style="margin-top:1.5rem;padding:0 1.5rem;">
                 <!-- 影片播放區域 -->
-                <div id="egg-video-container" style="text-align:center;margin-bottom:2.5rem;">
-                    <video id="egg-current-video" width="100%" height="auto" controls style="max-width:700px;width:80%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <div id="egg-video-container" style="text-align:center;margin-bottom:1.5rem;">
+                    <video id="egg-current-video" width="100%" height="auto" controls style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/egg1.mp4" type="video/mp4">
                         您的瀏覽器不支援視頻播放。
                     </video>
@@ -315,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     </div>
                     
                     <!-- 說明文字 -->
-                    <div id="egg-instruction-text" class="game-instruction-text" style="font-size:24px;flex:1;text-align:center;">
+                    <div id="egg-instruction-text" class="game-instruction-text">
                     先選擇遊戲困難度
                     </div>
                     
@@ -392,9 +393,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             window.difficultySettings = difficultySettings;
         }
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
-    <script src="js/Catch-Egg.js"></script>
-    <!-- <script src="js/auto-save-time-fixed.js"></script> --> <!-- 移除：此腳本是為2048遊戲設計的 -->
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '反應力',
+                    gameId: 2,
+                    difficulty: 'easy'
+                });
+                console.log('遊戲退出處理器已配置');
+            }
+            
+            // 遊戲開始時啟動追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+        });
+    </script>
 </body>
 </html> 

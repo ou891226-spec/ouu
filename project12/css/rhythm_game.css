@@ -290,11 +290,11 @@ h1 {
 /* === 遊戲說明 info-modal 樣式（與翻牌遊戲一致）=== */
 #info-modal .modal-content {
     background: #fff;
-    padding: 0px 20px;
-    border-radius: 2rem;
+    padding: 1.2rem 1.5rem 0.8rem 1.5rem;
+    border-radius: 1.2rem;
     text-align: left;
-    width: 95%;
-    max-width: 500px;
+    width: 90%;
+    max-width: 550px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.18);
     position: relative;
     margin: 0 auto;
@@ -303,25 +303,27 @@ h1 {
 
 #info-modal h2 {
     text-align: center;
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 900;
     letter-spacing: 0.05em;
     color: #222;
     line-height: 1.2;
+    margin-bottom: 1.2rem;
 }
 
 #info-modal .help-content {
     text-align: left;
-    margin: 1.5rem 0 0.5rem 0;
+    margin: 0.8rem 0 0.2rem 0;
 }
 
 #info-modal .help-content h3 {
-    font-size: 1.18rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    margin: 1.2rem 0 0.5rem 0;
-    color: #222;
+    margin: 0.8rem 0 0.4rem 0;
+    color: #0066cc;
     letter-spacing: 0.01em;
-    line-height: 1.5;
+    line-height: 1.4;
+    text-align: left;
 }
 
 #info-modal .help-content ul {
@@ -331,12 +333,13 @@ h1 {
 }
 
 #info-modal .help-content ul li {
-    color: #222;
-    line-height: 2.1;
-    margin-bottom: 0.5rem;
-    font-size: 1.08rem;
+    color: #0066cc;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
     font-weight: 400;
     position: relative;
+    text-align: left;
     padding-left: 0.5em;
     word-break: break-all;
 }
@@ -347,11 +350,12 @@ h1 {
 }
 
 #info-modal .help-content p {
-    font-size: 1.08rem;
-    color: #222;
-    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    color: #0066cc;
+    margin-bottom: 0.5rem;
     margin-left: 0.2rem;
-    line-height: 2.1;
+    line-height: 1.5;
+    text-align: left;
 }
 
 #info-modal .close-btn {
@@ -622,8 +626,10 @@ h1 {
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */
@@ -635,9 +641,12 @@ h1 {
 #rhythm-instruction-text {
     min-width: 300px;
     flex: 3;
-    text-align: center;
+    text-align: left;
     padding: 0 20px;
     line-height: 1.4;
+    font-size: 1.3rem;
+    color: #0066cc;
+    font-weight: bold;
 }
 
 /* 節奏遊戲按鈕容器樣式 */
@@ -698,7 +707,7 @@ h1 {
 
 /* 統一的說明文字顏色 - 增加優先級 */
 #info-modal .game-instruction-text {
-    color: #3b82f6 !important;
+    color: #0066cc !important;
     font-weight: bold !important;
 }
 
@@ -711,7 +720,7 @@ h1 {
 #info-modal #rhythm-instruction-text {
     min-width: 320px !important;
     flex: 3 !important;
-    text-align: center !important;
+    text-align: left !important;
     padding: 20px 20px !important;
     line-height: 1.4 !important;
 }

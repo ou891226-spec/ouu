@@ -269,8 +269,10 @@ body {
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
-    color: #3b82f6;
+    color: #0066cc;
     font-weight: bold;
+    text-align: left;
+    font-size: 1.3rem;
 }
 
 /* 統一的步驟指示器顏色 */
@@ -282,9 +284,12 @@ body {
 #clue-instruction-text {
     min-width: 300px;
     flex: 3;
-    text-align: center;
+    text-align: left;
     padding: 0 20px;
     line-height: 1.4;
+    font-size: 1.3rem;
+    color: #0066cc;
+    font-weight: bold;
 }
 
 /* 圖片線索遊戲按鈕容器樣式 */

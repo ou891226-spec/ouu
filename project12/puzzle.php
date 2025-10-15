@@ -130,7 +130,25 @@ $member_id = $_SESSION['member_id'] ?? 1;
             gameTracker.init("算術邏輯力", 10);
         });
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
+    <script src="js/get-score.js"></script>
     <script src="js/puzzle.js"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '算術邏輯力',
+                    gameId: 10,
+                    difficulty: '<?= isset($_GET["difficulty"]) ? $_GET["difficulty"] : "easy" ?>'
+                });
+                // 立即啟動遊戲退出追蹤，因為用戶已經進入遊戲頁面
+                gameExitHandler.startGame();
+                console.log('遊戲退出處理器已配置並啟動');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -192,7 +192,7 @@ SELECT d.task_id, d.task_name, d.task_description, d.task_type, d.reward_points,
            WHEN (
                -- 節拍大師：完成節奏遊戲
                (d.task_name = '節拍大師' OR d.task_description LIKE '%節奏遊戲%') AND
-               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力' AND game_id = 6) >= 1
+               (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '節奏遊戲' AND game_id = 7) >= 1
            ) THEN 'completed'
            WHEN (
                -- 算數專家：完成算菜錢遊戲

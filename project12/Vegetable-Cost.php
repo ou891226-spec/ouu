@@ -93,7 +93,7 @@ if (!isset($_SESSION['member_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>算菜錢遊戲</title>
-    <link rel="stylesheet" href="css/Vegetable-Cost.css">
+    <link rel="stylesheet" href="css/Vegetable-Cost.css?v=<?php echo time(); ?>">
     <script src="js/unified-game-tracker.js"></script>
 </head>
 <body>
@@ -188,10 +188,10 @@ if (!isset($_SESSION['member_id'])) {
                 <span style="font-size:2rem;vertical-align:middle;">🎮</span>
                 <span style="font-weight:bold;vertical-align:middle;">遊戲說明</span>
             </h2>
-            <div class="help-content" style="margin-top:2.5rem;padding:0 1rem;">
+            <div class="help-content" style="margin-top:1.5rem;padding:0 1rem;">
                 <!-- 影片播放區域 -->
-                <div id="vegetable-video-container" style="text-align:center;margin-bottom:2.5rem;">
-                    <video id="vegetable-current-video" width="100%" height="auto" controls preload="none" style="max-width:900px;width:95%;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                <div id="vegetable-video-container" style="text-align:center;margin-bottom:1.5rem;">
+                    <video id="vegetable-current-video" width="100%" height="auto" controls preload="none" style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/vegetable1.mp4" type="video/mp4">
                         您的瀏覽器不支援視頻播放。
                     </video>
@@ -207,7 +207,7 @@ if (!isset($_SESSION['member_id'])) {
                     </div>
                     
                     <!-- 說明文字 -->
-                    <div id="vegetable-instruction-text" class="game-instruction-text" style="font-size:26px;flex:3;text-align:center;min-width:300px;">
+                    <div id="vegetable-instruction-text" class="game-instruction-text">
                         先選擇遊戲困難度
                     </div>
                     
@@ -242,9 +242,30 @@ if (!isset($_SESSION['member_id'])) {
             }
         }
     </script>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
     <script src="js/Vegetable-Cost.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
+    <script>
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '算術邏輯力',
+                    gameId: 3,
+                    difficulty: 'easy'
+                });
+                console.log('遊戲退出處理器已配置');
+            }
+            
+            // 遊戲開始時啟動追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+        });
+    </script>
 </body>
 </html> 

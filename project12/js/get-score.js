@@ -1,8 +1,25 @@
 function fetchUserScore() {
   console.log('開始獲取分數...');
   
-  // 檢查元素是否存在
-  const scoreElement = document.getElementById('scoreValue');
+  // 檢查是否在遊戲頁面，如果是則跳過分數更新
+  const isGamePage = window.location.pathname.includes('prisoner.php') ||
+                     window.location.pathname.includes('clue.php') ||
+                     window.location.pathname.includes('rhythm_game.php') ||
+                     window.location.pathname.includes('Memory-Game.php') ||
+                     window.location.pathname.includes('Catch-Egg-Game.php') ||
+                     window.location.pathname.includes('Vegetable-Cost.php') ||
+                     window.location.pathname.includes('2048ht.php') ||
+                     window.location.pathname.includes('puzzle.php') ||
+                     window.location.pathname.includes('text-color.php');
+  
+  if (isGamePage) {
+    console.log('檢測到遊戲頁面，跳過總分更新');
+    return;
+  }
+  
+  // 檢查元素是否存在（只尋找 scoreValue 元素）
+  let scoreElement = document.getElementById('scoreValue');
+  
   if (!scoreElement) {
     console.log('找不到 scoreValue 元素，可能不在主頁面，跳過分數更新');
     return;

@@ -76,7 +76,8 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             $member_id = $_SESSION['member_id'];
             $play_time = $_POST['game_time'] ?? (isset($_SESSION['game_start_time']) ? 
                 time() - $_SESSION['game_start_time'] : 0);
-            $isManualExit = isset($_POST['is_manual_exit']) && $_POST['is_manual_exit'] === '1';
+            // 🔑 AJAX 結束是正常結束，不是手動退出
+            $isManualExit = false;
             
             $gameData = [
                 'member_id' => $member_id,
@@ -392,8 +393,57 @@ if (isset($_POST['user_answer']) && isset($_POST['correct_answer'])) {
         exit;
     }
     
-    // 繼續下一題，重定向到遊戲頁面
-    header('Location: clue.php?difficulty=' . urlencode($difficulty));
+    // 繼續下一題，返回 JSON 數據而不是重新載入頁面
+    // 獲取新題目（使用正確的表格名稱）
+    $used_ids = $_SESSION['used_question_ids'];
+    $placeholders = implode(',', array_fill(0, count($used_ids), '?'));
+    $sql = 'SELECT * FROM questions WHERE difficulty = ? ' . (count($used_ids) ? 'AND question_id NOT IN (' . $placeholders . ') ' : '') . 'ORDER BY RAND() LIMIT 1';
+    $params = array_merge([$difficulty], $used_ids);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $question = $stmt->fetch();
+    
+    if ($question) {
+        $_SESSION['used_question_ids'][] = $question['question_id'];
+        
+        // 返回新題目的 JSON 數據
+        echo json_encode([
+            'end' => false,
+            'question' => [
+                'question_id' => $question['question_id'],
+                'question_text' => $question['question_text'],
+                'image_path' => $question['image_path'],
+                'option_1' => $question['option_1'],
+                'option_2' => $question['option_2'],
+                'option_3' => $question['option_3'],
+                'option_4' => $question['option_4'],
+                'correct_answer_text' => $question['correct_answer_text'],
+                'display_time' => $question['display_time']
+            ],
+            'session_data' => [
+                'clue_total' => $_SESSION['clue_total'],
+                'clue_correct' => $_SESSION['clue_correct']
+            ]
+        ]);
+    } else {
+        // 沒有更多題目，遊戲結束
+        $pass = $_SESSION['clue_correct'] >= 3;
+        $score = $_SESSION['clue_correct'];
+        
+        // 查詢 pass_bounce
+        $game_id = 8;
+        $stmt2 = $pdo->prepare('SELECT pass_bounce FROM difficulty_settings WHERE game_id = ? AND difficulty = ? LIMIT 1');
+        $stmt2->execute([$game_id, $difficulty]);
+        $pass_bounce = ($row = $stmt2->fetch()) ? (int)$row['pass_bounce'] : 0;
+        
+        echo json_encode([
+            'end' => true,
+            'pass' => $pass,
+            'score' => $score,
+            'difficulty' => $difficulty,
+            'pass_bounce' => $pass_bounce
+        ]);
+    }
     exit;
 }
 
@@ -676,7 +726,7 @@ if (!$difficulty) {
                         </div>
                         
                         <!-- 說明文字 -->
-                        <div id="clue-instruction-text" class="game-instruction-text" style="font-size:24px;flex:3;text-align:center;min-width:300px;">
+                        <div id="clue-instruction-text" class="game-instruction-text">
                             選擇難度後即可進入到遊戲畫面
                         </div>
                         
@@ -953,22 +1003,34 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
                     const remainingCountEl = document.getElementById('remaining-count');
                     
                     if (correctCountEl && remainingCountEl) {
-                        // 從data-initial屬性獲取初始值，確保與session同步
-                        let currentCorrect = parseInt(correctCountEl.getAttribute('data-initial')) || 0;
-                        let currentTotal = <?= $_SESSION['clue_total'] ?? 0 ?> + 1; // 當前總題數（包含這題）
+                        // 從當前 DOM 元素獲取值，而不是重新計算
+                        let currentCorrect = parseInt(correctCountEl.getAttribute('data-initial')) || parseInt(correctCountEl.textContent) || 0;
+                        let currentTotal = parseInt(remainingCountEl.getAttribute('data-initial')) || parseInt(remainingCountEl.textContent) || 5;
+                        currentTotal = 5 - currentTotal; // 轉換為已答題數
                         
                         if (isCorrect) {
                             currentCorrect++;
                         }
+                        currentTotal++; // 總題數加1
                         
                         // 剩餘題數 = 總題數(5) - 當前總題數
-                        let currentRemaining = 5 - currentTotal;
+                        let currentRemaining = Math.max(0, 5 - currentTotal);
                         
                         correctCountEl.textContent = currentCorrect;
                         remainingCountEl.textContent = currentRemaining;
                         
+                        // 更新data-initial屬性以保持同步
+                        correctCountEl.setAttribute('data-initial', currentCorrect);
+                        remainingCountEl.setAttribute('data-initial', currentRemaining);
+                        
                         console.log('更新計數器 - 答對:', currentCorrect, '總題數:', currentTotal, '剩餘:', currentRemaining);
                         console.log('Session數據 - 總題數:', <?= $_SESSION['clue_total'] ?? 0 ?>, '答對數:', <?= $_SESSION['clue_correct'] ?? 0 ?>);
+                        
+                        // 通知全局變數更新
+                        if (typeof window !== 'undefined') {
+                            window.clueCorrect = currentCorrect;
+                            window.clueTotal = currentTotal;
+                        }
                     }
                     
                     // 顯示結果區塊
@@ -983,32 +1045,12 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
                         questionBlock.style.display = 'none';
                     }
                     
-                    // 提交答案
-                    const form = document.getElementById('answer-form');
-                    if (form) {
-                        // 創建隱藏輸入來傳遞用戶答案
-                        const userInput = document.createElement('input');
-                        userInput.type = 'hidden';
-                        userInput.name = 'user_answer';
-                        userInput.value = selectedValue;
-                        form.appendChild(userInput);
-                        
-                        // 創建隱藏輸入來傳遞正確答案
-                        const correctInput = document.createElement('input');
-                        correctInput.type = 'hidden';
-                        correctInput.name = 'correct_answer';
-                        correctInput.value = correctAnswer;
-                        form.appendChild(correctInput);
-                        
-                        // 創建隱藏輸入來傳遞難度
-                        const difficultyInput = document.createElement('input');
-                        difficultyInput.type = 'hidden';
-                        difficultyInput.name = 'difficulty';
-                        difficultyInput.value = difficulty;
-                        form.appendChild(difficultyInput);
-                        
-                        // 提交表單
-                        form.submit();
+                    // 使用 AJAX 提交答案，而不是表單提交
+                    if (typeof loadQuestion === 'function') {
+                        // 延遲後載入下一題（讓 js/clue.js 處理）
+                        setTimeout(function() {
+                            loadQuestion(selectedValue);
+                        }, 1200);
                     }
                 });
             });
@@ -1084,7 +1126,7 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
                         difficulty: difficulty,
                         score: currentScore >= 3 ? 50 : 0, // 根據是否過關給分
                         play_time: playTime,
-                        is_manual_exit: true,
+                        is_manual_exit: false, // 🔑 改為 false，這是正常結束
                         is_passed: currentScore >= 3
                     };
                     
@@ -1101,13 +1143,25 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
                     .then(response => response.json())
                     .then(data => {
                         console.log('遊戲記錄保存結果:', data);
-                        // 顯示結果頁面
-                        showResultPage(currentScore >= 3, currentScore, difficulty, currentScore >= 3 ? 50 : 0);
+                        
+                        // 🔑 關鍵：停止遊戲追蹤，防止重複記錄
+                        if (typeof gameExitHandler !== 'undefined') {
+                            gameExitHandler.endGame();
+                            console.log('✅ 遊戲追蹤已停止，防止重複記錄');
+                        }
+                        
+                        // 不顯示結果頁面，讓 js/clue.js 處理結果顯示
                     })
                     .catch(error => {
                         console.error('保存遊戲記錄失敗:', error);
-                        // 即使保存失敗也顯示結果頁面
-                        showResultPage(currentScore >= 3, currentScore, difficulty, currentScore >= 3 ? 50 : 0);
+                        
+                        // 🔑 即使失敗也要停止追蹤
+                        if (typeof gameExitHandler !== 'undefined') {
+                            gameExitHandler.endGame();
+                            console.log('⚠️ 保存失敗，但已停止追蹤以防重複');
+                        }
+                        
+                        // 不顯示結果頁面，讓 js/clue.js 處理結果顯示
                     });
                 });
             }
@@ -1225,21 +1279,21 @@ $image_path = 'img/' . $question['image_path']; // 修正為 img/clue/
             <button id="resetBtn" class="blue-btn">重新開始</button>
         </div>
     </div>
+    <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/clue.js"></script>
     <script src="js/auto-save-time-fixed.js"></script>
     <script>
-        // 頁面離開時標記遊戲退出
-        window.addEventListener('beforeunload', function() {
-            if (typeof gameTracker !== 'undefined' && gameTracker.currentRecordId) {
-                gameTracker.exitGame();
-            }
-        });
-        
-        // 頁面隱藏時也標記退出
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && typeof gameTracker !== 'undefined' && gameTracker.currentRecordId) {
-                gameTracker.exitGame();
+        // 配置遊戲退出處理器
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.updateConfig({
+                    memberId: <?= $_SESSION['member_id'] ?? 'null' ?>,
+                    gameType: '記憶力',
+                    gameId: 8,
+                    difficulty: '<?= $difficulty ?? "easy" ?>'
+                });
+                console.log('✅ 遊戲退出處理器已配置');
             }
         });
         
