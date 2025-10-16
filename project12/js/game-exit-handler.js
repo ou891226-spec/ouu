@@ -34,11 +34,20 @@ class GameExitHandler {
      */
     handlePageExit() {
         if (!this.isGameActive) {
+            console.log('遊戲退出處理器：遊戲未激活，跳過處理');
+            return;
+        }
+        
+        // 檢查是否已經有遊戲結果被保存
+        if (window.gameResultSaved) {
+            console.log('遊戲退出處理器：遊戲結果已保存，跳過重複記錄');
+            this.isGameActive = false;
             return;
         }
         
         // 立即停止追蹤，防止重複觸發
         this.isGameActive = false;
+        console.log('遊戲退出處理器：開始處理頁面退出');
         
         // 使用 sendBeacon 確保請求能發送
         if (navigator.sendBeacon) {

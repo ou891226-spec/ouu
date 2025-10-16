@@ -64,24 +64,29 @@ try {
         require_once $base_path . '/game_entry_tracker.php';
     }
     
-    // 檢查是否為重複的強制退出記錄
-    if (isset($data['is_manual_exit']) && $data['is_manual_exit'] === true) {
-        // 檢查最近3秒內是否已有相同用戶的強制退出記錄
+    // 修復：改進重複記錄檢測邏輯
+    if (isset($data['member_id'])) {
+        // 檢查最近10秒內是否已有相同用戶、相同遊戲類型、相同難度的記錄
+        // 這樣可以避免誤判，允許用戶快速重複玩不同遊戲
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as count FROM game_records 
-            WHERE member_id = ? AND status = 'failed' 
-            AND play_date >= DATE_SUB(NOW(), INTERVAL 3 SECOND)
+            WHERE member_id = ? 
+            AND game_type = ?
+            AND difficulty = ?
+            AND play_date >= DATE_SUB(NOW(), INTERVAL 10 SECOND)
         ");
-        $stmt->execute([$data['member_id']]);
+        $stmt->execute([$data['member_id'], $data['game_type'] ?? '', $data['difficulty'] ?? 'easy']);
         $duplicate_count = $stmt->fetch()['count'];
         
         if ($duplicate_count > 0) {
-            // 發現重複記錄，直接返回成功但不寫入數據庫
-            error_log('檢測到重複的強制退出記錄，跳過寫入: member_id=' . $data['member_id']);
+            // 發現重複記錄，記錄詳細信息並跳過處理
+            error_log('檢測到重複記錄，跳過處理: member_id=' . $data['member_id'] . ', game_type=' . ($data['game_type'] ?? '') . ', difficulty=' . ($data['difficulty'] ?? '') . ', 重複數量=' . $duplicate_count);
+            
+            // 跳過重複記錄，返回成功但不插入新記錄
             echo json_encode([
                 'success' => true,
-                'message' => '重複記錄已跳過',
-                'duplicate' => true
+                'message' => '檢測到重複記錄，已跳過',
+                'duplicate_detected' => true
             ]);
             exit();
         }

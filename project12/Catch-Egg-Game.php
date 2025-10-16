@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>接金蛋遊戲</title>
     <link rel="stylesheet" href="css/Catch-Egg.css?v=<?php echo time(); ?>" type="text/css">
     <script src="js/Catch-Egg.js?v=<?php echo time(); ?>"></script>

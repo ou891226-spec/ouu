@@ -1,21 +1,43 @@
-// 遊戲變數
-const game = document.getElementById('game');
-const basket = document.getElementById('basket');
-const scoreBoard = document.getElementById('score');
-const timerDisplay = document.getElementById('timer');
-const difficultyModal = document.getElementById('difficulty-modal');
-const gameScreen = document.getElementById('game-container');
-const pauseBtn = document.getElementById('pauseBtn');
-const resumeBtn = document.getElementById('resumeBtn');
-const endBtn = document.getElementById('endBtn');
-const resetBtn = document.getElementById('resetBtn');
-const countdownOverlay = document.getElementById('countdownOverlay');
+// 遊戲變數 - 在 DOM 載入後初始化
+let game, basket, scoreBoard, timerDisplay, difficultyModal, gameScreen, pauseBtn, resumeBtn, endBtn, resetBtn, countdownOverlay, highScoreElement;
 
-// 音頻元素
-// const bgm = document.getElementById('bgm'); // 背景音樂已移除
-const catchSound = document.getElementById('catchSound');
-const bombSound = document.getElementById('bombSound');
-const gameOverSound = document.getElementById('gameOverSound');
+// 初始化遊戲元素
+function initGameElements() {
+    game = document.getElementById('game');
+    basket = document.getElementById('basket');
+    scoreBoard = document.getElementById('score');
+    timerDisplay = document.getElementById('timer');
+    difficultyModal = document.getElementById('difficulty-modal');
+    gameScreen = document.getElementById('game-container');
+    pauseBtn = document.getElementById('pauseBtn');
+    resumeBtn = document.getElementById('resumeBtn');
+    endBtn = document.getElementById('endBtn');
+    resetBtn = document.getElementById('resetBtn');
+    countdownOverlay = document.getElementById('countdownOverlay');
+    
+    // 初始化音頻元素
+    catchSound = document.getElementById('catchSound');
+    bombSound = document.getElementById('bombSound');
+    gameOverSound = document.getElementById('gameOverSound');
+    
+    // 初始化其他元素
+    highScoreElement = document.getElementById('high-score');
+    
+    console.log('遊戲元素初始化完成:', {
+        game: !!game,
+        basket: !!basket,
+        scoreBoard: !!scoreBoard,
+        timerDisplay: !!timerDisplay,
+        difficultyModal: !!difficultyModal,
+        gameScreen: !!gameScreen,
+        catchSound: !!catchSound,
+        bombSound: !!bombSound,
+        gameOverSound: !!gameOverSound
+    });
+}
+
+// 音頻元素 - 在 DOM 載入後初始化
+let catchSound, bombSound, gameOverSound;
 
 // 音效播放函數 - 高效能版本
 function playCatchSound() {
@@ -107,7 +129,10 @@ function selectDifficulty(difficulty) {
         }
     }
     console.log('最終目標分數:', passScore);
-    document.getElementById('high-score').textContent = passScore;
+    const highScoreElement = document.getElementById('high-score');
+    if (highScoreElement) {
+        highScoreElement.textContent = passScore;
+    }
     
     // 仍然保存最高分數用於統計，但不顯示
     const savedHighScore = localStorage.getItem(`egg_highscore_${difficulty}`);
@@ -129,50 +154,28 @@ function selectDifficulty(difficulty) {
         timeLeft = 120;
         totalTime = 120;
     }
-    fetch("api/game_result.php", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest"
-        },
-        body: JSON.stringify({
-            action: "start_game",
-            member_id: window.memberId || localStorage.getItem('member_id') || 8,
-            difficulty: difficulty,
-            game_id: 2,
-            game_type: "反應力"
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('difficulty-modal').style.display = 'none';
-            // 倒數期間隱藏所有按鈕
-            document.getElementById('endBtn').classList.add('hidden');
-            document.getElementById('resetBtn').classList.add('hidden');
-            document.getElementById('pauseBtn').classList.add('hidden');
-            document.getElementById('resumeBtn').classList.add('hidden');
-            showCountdown(startGameTimer);
-        } else {
-            console.error('遊戲開始失敗:', data.message);
-            alert('遊戲開始失敗: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('網路錯誤:', error);
-        // 即使網路錯誤也繼續遊戲
-        document.getElementById('difficulty-modal').style.display = 'none';
-        document.getElementById('endBtn').classList.add('hidden');
-        document.getElementById('resetBtn').classList.add('hidden');
-        document.getElementById('pauseBtn').classList.add('hidden');
-        document.getElementById('resumeBtn').classList.add('hidden');
-        showCountdown(startGameTimer);
-    });
-}
+    
+    // 重置游戏保存标志
+    window.gameResultSaved = false;
+    
+    // 直接开始游戏，不发送开始记录
+    if (difficultyModal) difficultyModal.style.display = 'none';
+    // 倒數期間隱藏所有按鈕
+    if (endBtn) endBtn.classList.add('hidden');
+    if (resetBtn) resetBtn.classList.add('hidden');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
+    showCountdown(startGameTimer);
+};  
 
 // 更新分數顯示
 function updateScore() {
-    document.getElementById('score').textContent = score;
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) {
+        scoreElement.textContent = score;
+    } else {
+        console.error('score 元素未找到，無法更新分數');
+    }
     
     // 更新最高分數記錄（但不顯示，只保存用於統計）
     if (score > highScore) {
@@ -202,6 +205,23 @@ function updateScore() {
  
 // 顯示開始倒數
 function showCountdown(callback) {
+    // 檢查元素是否存在
+    if (!countdownOverlay) {
+        console.error('countdownOverlay 元素未找到');
+        callback();
+        return;
+    }
+    if (!basket) {
+        console.error('basket 元素未找到');
+        callback();
+        return;
+    }
+    if (!game) {
+        console.error('game 元素未找到');
+        callback();
+        return;
+    }
+    
     countdownOverlay.style.display = 'block';
     // 倒數期間禁用籃子滑動
     basket.style.pointerEvents = 'none';
@@ -227,8 +247,11 @@ function showCountdown(callback) {
                 game.removeChild(countdownElement);
             }
             // 倒數結束後啟用籃子滑動
-            basket.style.pointerEvents = 'auto';
-            basket.style.cursor = 'grab';
+            if (basket) {
+                basket.style.pointerEvents = 'auto';
+                basket.style.cursor = 'grab';
+                console.log('倒數結束，籃子已啟用觸控');
+            }
             callback();
         }
     }, 1000);
@@ -236,11 +259,30 @@ function showCountdown(callback) {
 
 // 開始遊戲
 function startGameTimer() {
+    // 檢查必要的元素是否存在
+    if (!scoreBoard) {
+        console.error('scoreBoard 元素未找到');
+        return;
+    }
+    if (!timerDisplay) {
+        console.error('timerDisplay 元素未找到');
+        return;
+    }
+    
     score = 0;
     updateScore();
-    document.getElementById('timer').textContent = timeLeft;
+    if (timerDisplay) {
+        timerDisplay.textContent = timeLeft;
+    }
     gameStarted = true;
     gamePaused = false;
+    
+    // 🔑 確保籃子可以操作
+    if (basket) {
+        basket.style.pointerEvents = 'auto';
+        basket.style.cursor = 'grab';
+    }
+    
     pauseBtn.classList.remove('hidden');
     resumeBtn.classList.add('hidden');
     endBtn.classList.remove('hidden');
@@ -293,7 +335,7 @@ function startGameTimer() {
     countdown = setInterval(() => {
         if (!gamePaused) {
             timeLeft--;
-            document.getElementById('timer').textContent = timeLeft;
+            if (timerDisplay) timerDisplay.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(itemInterval);
                 clearInterval(countdown);
@@ -346,11 +388,11 @@ function resetGame() {
     }
   });
  
-    document.getElementById('difficulty-modal').style.display = 'flex';
-    document.getElementById('endBtn').classList.add('hidden');
-    document.getElementById('resetBtn').classList.add('hidden');
-    document.getElementById('pauseBtn').classList.add('hidden');
-    document.getElementById('resumeBtn').classList.add('hidden');
+    if (difficultyModal) difficultyModal.style.display = 'flex';
+    if (endBtn) endBtn.classList.add('hidden');
+    if (resetBtn) resetBtn.classList.add('hidden');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (resumeBtn) resumeBtn.classList.add('hidden');
 
   // 自動置中籃子 - 使用絕對位置而不是百分比
   const centerBasket = () => {
@@ -373,106 +415,145 @@ function resetGame() {
   basket.style.cursor = 'grab';
 }
  
-// 籃子滑鼠拖曳
+// 籃子控制變數
 let isDragging = false;
-basket.addEventListener('mousedown', (e) => {
-    if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
-        isDragging = true;
-        e.preventDefault();
-    }
-});
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-document.addEventListener('mousemove', (e) => {
-    if (isDragging && gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
-        e.preventDefault();
-        const gameRect = game.getBoundingClientRect();
-        const mouseX = e.clientX - gameRect.left;
-        const basketWidth = basket.offsetWidth;
-        const maxLeft = game.offsetWidth - basketWidth;
-        
-        let newLeft = mouseX - (basketWidth / 2);
-        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-        
-        // 使用 transform 提升效能
-        basket.style.transform = `translateX(${newLeft}px)`;
-        basket.style.left = '0px';
-    }
-});
-
-// 籃子觸控拖曳 - 修正版本
 let touchStartX = 0;
 let isTouching = false;
 
-// 觸控開始 - 簡化版本
-game.addEventListener('touchstart', (e) => {
-    if (gameStarted && !gamePaused) {
-        isTouching = true;
-        touchStartX = e.touches[0].clientX;
-        e.preventDefault();
-        console.log('觸控開始:', touchStartX);
+// 初始化籃子控制事件
+function initBasketControls() {
+    // 重新獲取元素，確保 DOM 已載入
+    basket = document.getElementById('basket');
+    game = document.getElementById('game');
+    
+    if (!basket || !game) {
+        console.error('無法初始化籃子控制：元素未找到', {
+            basket: !!basket,
+            game: !!game
+        });
+        return;
     }
-}, { passive: false });
-
-// 觸控移動 - 簡化版本
-document.addEventListener('touchmove', (e) => {
-    if (isTouching && gameStarted && !gamePaused) {
-        e.preventDefault();
-        
-        const gameRect = game.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - gameRect.left;
-        const basketWidth = basket.offsetWidth;
-        const maxLeft = game.offsetWidth - basketWidth;
-        
-        let newLeft = touchX - (basketWidth / 2);
-        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-        
-        basket.style.transform = `translateX(${newLeft}px)`;
-        basket.style.left = '0px';
-    }
-}, { passive: false });
-
-// 觸控結束
-document.addEventListener('touchend', (e) => {
-    if (isTouching) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('觸控結束');
-        isTouching = false;
-        touchStartX = 0;
-    }
-}, { passive: false });
-
-// 觸控取消
-document.addEventListener('touchcancel', (e) => {
-    if (isTouching) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('觸控取消');
-        isTouching = false;
-        touchStartX = 0;
-    }
-}, { passive: false });
-
-// 鍵盤左右鍵移動
-document.addEventListener('keydown', (e) => {
-    if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
-        const currentLeft = parseInt(basket.style.left) || 0;
-        const moveDistance = 10;
-        const maxLeft = game.offsetWidth - basket.offsetWidth;
-        
-        if (e.key === 'ArrowLeft') {
-            const newLeft = Math.max(0, currentLeft - moveDistance);
-            basket.style.transform = `translateX(${newLeft}px)`;
-            basket.style.left = '0px';
-        } else if (e.key === 'ArrowRight') {
-            const newLeft = Math.min(maxLeft, currentLeft + moveDistance);
+    
+    // 籃子滑鼠拖曳
+    basket.addEventListener('mousedown', (e) => {
+        if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+            isDragging = true;
+            e.preventDefault();
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging && gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+            e.preventDefault();
+            const gameRect = game.getBoundingClientRect();
+            const mouseX = e.clientX - gameRect.left;
+            const basketWidth = basket.offsetWidth;
+            const maxLeft = game.offsetWidth - basketWidth;
+            
+            let newLeft = mouseX - (basketWidth / 2);
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            
+            // 使用 transform 提升效能
             basket.style.transform = `translateX(${newLeft}px)`;
             basket.style.left = '0px';
         }
-    }
-});
+    });
+
+    // 籃子觸控拖曳 - 手機優化版本
+    // 觸控開始 - 綁定在整個遊戲區域
+    game.addEventListener('touchstart', (e) => {
+        // 先阻止預設行為
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+            isTouching = true;
+            touchStartX = e.touches[0].clientX;
+            console.log('觸控開始:', touchStartX);
+        }
+    }, { passive: false });
+
+    // 觸控移動 - 綁定在整個遊戲區域
+    game.addEventListener('touchmove', (e) => {
+        // 先阻止預設滾動行為（關鍵修復！）
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 然後再檢查是否需要移動籃子
+        if (isTouching && gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+            const gameRect = game.getBoundingClientRect();
+            const touchX = e.touches[0].clientX - gameRect.left;
+            const basketWidth = basket.offsetWidth;
+            const maxLeft = game.offsetWidth - basketWidth;
+            
+            let newLeft = touchX - (basketWidth / 2);
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            
+            basket.style.transform = `translateX(${newLeft}px)`;
+            basket.style.left = '0px';
+            
+            console.log('觸控移動:', touchX, '籃子位置:', newLeft);
+        }
+    }, { passive: false });
+
+    // 觸控結束 - 綁定在整個遊戲區域
+    game.addEventListener('touchend', (e) => {
+        // 先阻止預設行為
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isTouching) {
+            console.log('觸控結束');
+            isTouching = false;
+            touchStartX = 0;
+        }
+    }, { passive: false });
+
+    // 觸控取消 - 綁定在整個遊戲區域
+    game.addEventListener('touchcancel', (e) => {
+        // 先阻止預設行為
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isTouching) {
+            console.log('觸控取消');
+            isTouching = false;
+            touchStartX = 0;
+        }
+    }, { passive: false });
+
+    // 鍵盤左右鍵移動
+    document.addEventListener('keydown', (e) => {
+        if (gameStarted && !gamePaused && basket.style.pointerEvents !== 'none') {
+            const currentLeft = parseInt(basket.style.left) || 0;
+            const moveDistance = 10;
+            const maxLeft = game.offsetWidth - basket.offsetWidth;
+            
+            if (e.key === 'ArrowLeft') {
+                const newLeft = Math.max(0, currentLeft - moveDistance);
+                basket.style.transform = `translateX(${newLeft}px)`;
+                basket.style.left = '0px';
+            } else if (e.key === 'ArrowRight') {
+                const newLeft = Math.min(maxLeft, currentLeft + moveDistance);
+                basket.style.transform = `translateX(${newLeft}px)`;
+                basket.style.left = '0px';
+            }
+        }
+    });
+    
+    console.log('籃子控制事件已初始化');
+    console.log('觸控事件綁定狀態:', {
+        gameElement: !!game,
+        basketElement: !!basket,
+        gameStarted: gameStarted,
+        gamePaused: gamePaused,
+        basketPointerEvents: basket ? basket.style.pointerEvents : 'N/A'
+    });
+}
 
 // 優化的碰撞檢測函數
 function checkItemCollision(item, itemLeft, itemWidth, itemTop) {
@@ -821,6 +902,13 @@ function endGame(isWin = false, isManualExit = false) {
         showEggGameOver(false, score, targetScore, 0);
     }
     
+    // 防止重复保存
+    if (window.gameResultSaved) {
+        console.log('游戏结果已保存，跳过重复保存');
+        return;
+    }
+    window.gameResultSaved = true;
+    
     // 只保存獎勵分數到資料庫
     const memberId = window.memberId || localStorage.getItem('member_id') || 8;
     fetch("api/game_result.php", {
@@ -873,12 +961,15 @@ function endGame(isWin = false, isManualExit = false) {
     // 重置遊戲狀態
     gameStarted = false;
     gamePaused = false;
-    document.getElementById('difficulty-modal').style.display = 'none';
+    if (difficultyModal) difficultyModal.style.display = 'none';
 }
 
 // 說明彈窗控制
 function showEggHelp() {
-    document.getElementById('egg-help-modal').classList.remove('hidden');
+    const helpModal = document.getElementById('egg-help-modal');
+    if (helpModal) {
+        helpModal.classList.remove('hidden');
+    }
     
     // 初始化視頻播放邏輯
     initEggVideoPlayback();
@@ -902,7 +993,10 @@ function closeEggHelpModal() {
     }
     
     // 隱藏說明彈窗
-    document.getElementById('egg-help-modal').classList.add('hidden');
+    const helpModal = document.getElementById('egg-help-modal');
+    if (helpModal) {
+        helpModal.classList.add('hidden');
+    }
 }
 
 // 初始化接金蛋視頻連續播放
@@ -1032,9 +1126,14 @@ function goToEggFirstStep() {
 
 // 結束彈窗控制
 function showEggGameOver(isWin, score, targetScore, bonusScore) {
-    document.getElementById('difficulty-modal').style.display = 'none';
+    if (difficultyModal) difficultyModal.style.display = 'none';
     const modal = document.getElementById('egg-game-over-modal');
     const title = document.getElementById('egg-game-over-title');
+    
+    if (!modal || !title) {
+        console.error('遊戲結束彈窗元素未找到');
+        return;
+    }
     
     // 計算遊戲時間（總時間減去剩餘時間）
     // 確保 totalTime 有正確的值
@@ -1057,22 +1156,29 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
     const bonusRow = document.getElementById('egg-bonus-row');
     const failMessage = document.getElementById('egg-fail-message');
     
-    document.getElementById('egg-gameover-difficulty').textContent = difficultyName;
+    const difficultyElement = document.getElementById('egg-gameover-difficulty');
+    if (difficultyElement) difficultyElement.textContent = difficultyName;
     
     if (isWin) {
         // 勝利時：顯示難度、遊戲分數、遊戲時間、過關分數
-        document.getElementById('egg-gameover-score').textContent = score;
-        document.getElementById('egg-gameover-time').textContent = playTime + '秒';
-        document.getElementById('egg-gameover-bonus').textContent = '+' + bonusScore;
+        const scoreElement = document.getElementById('egg-gameover-score');
+        const timeElement = document.getElementById('egg-gameover-time');
+        const bonusElement = document.getElementById('egg-gameover-bonus');
+        if (scoreElement) scoreElement.textContent = score;
+        if (timeElement) timeElement.textContent = playTime + '秒';
+        if (bonusElement) bonusElement.textContent = '+' + bonusScore;
         if (scoreRow) scoreRow.style.display = 'block';
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
         if (failMessage) failMessage.style.display = 'none';
     } else {
         // 失敗時：顯示難度、遊戲分數、遊戲時間、過關分數+0、失敗訊息
-        document.getElementById('egg-gameover-score').textContent = score;
-        document.getElementById('egg-gameover-time').textContent = playTime + '秒';
-        document.getElementById('egg-gameover-bonus').textContent = '+0';
+        const scoreElement = document.getElementById('egg-gameover-score');
+        const timeElement = document.getElementById('egg-gameover-time');
+        const bonusElement = document.getElementById('egg-gameover-bonus');
+        if (scoreElement) scoreElement.textContent = score;
+        if (timeElement) timeElement.textContent = playTime + '秒';
+        if (bonusElement) bonusElement.textContent = '+0';
         if (scoreRow) scoreRow.style.display = 'block';
         if (timeRow) timeRow.style.display = 'block';
         if (bonusRow) bonusRow.style.display = 'block';
@@ -1083,7 +1189,10 @@ function showEggGameOver(isWin, score, targetScore, bonusScore) {
 }
 
 function eggReplayGame() {
-    document.getElementById('egg-game-over-modal').classList.add('hidden');
+    const gameOverModal = document.getElementById('egg-game-over-modal');
+    if (gameOverModal) {
+        gameOverModal.classList.add('hidden');
+    }
     resetGame();
 }
 
@@ -1093,12 +1202,19 @@ function eggReturnToMain() {
 
 // 初始化
 window.onload = function() {
+    // 🔑 首先初始化所有遊戲元素
+    initGameElements();
+    
     // 確保初始變量設定
     totalTime = 60; // 默認簡單模式時間
     timeLeft = 60;
     
     // 初始化過關分數顯示（默認簡單模式）
-    document.getElementById('high-score').textContent = '200'; // 簡單模式的過關分數
+    if (highScoreElement) {
+        highScoreElement.textContent = '200'; // 簡單模式的過關分數
+    } else {
+        console.error('high-score 元素未找到');
+    }
     
     // 初始化最高分數記錄（用於統計，不顯示）
     const savedHighScore = localStorage.getItem('egg_highscore_easy');
@@ -1108,7 +1224,12 @@ window.onload = function() {
         highScore = 0;
     }
     
-    document.getElementById('difficulty-modal').style.display = 'flex';
+    const difficultyModalElement = document.getElementById('difficulty-modal');
+    if (difficultyModalElement) {
+        difficultyModalElement.style.display = 'flex';
+    } else {
+        console.error('difficulty-modal 元素未找到');
+    }
     if (pauseBtn) pauseBtn.onclick = pauseGame;
     if (resumeBtn) resumeBtn.onclick = resumeGame;
     if (endBtn) endBtn.onclick = () => endGame(false, true); // 手動退出
@@ -1121,8 +1242,20 @@ window.onload = function() {
         console.log('接金蛋關閉按鈕事件已綁定');
     }
     
+    // 初始化籃子控制事件
+    initBasketControls();
+    
     // 初始化籃子位置 - 多次嘗試確保正確置中
     const initBasketPosition = () => {
+        // 重新獲取元素，確保 DOM 已載入
+        if (!basket) basket = document.getElementById('basket');
+        if (!game) game = document.getElementById('game');
+        
+        if (!basket || !game) {
+            console.error('無法初始化籃子位置：元素未找到');
+            return;
+        }
+        
         const basketWidth = basket.offsetWidth;
         const gameWidth = game.offsetWidth;
         if (basketWidth > 0 && gameWidth > 0) {

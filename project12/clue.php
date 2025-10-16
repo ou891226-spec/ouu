@@ -90,30 +90,33 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
                 'game_id' => 8
             ];
             
-            // 直接調用API處理函數，避免curl問題
+            // 添加調試日誌
+            error_log("圖片線索遊戲數據準備: " . json_encode($gameData));
+            
+            // 🔑 修復：直接調用processGameResult函數，確保數據正確保存
             try {
-                require_once 'api/game_result.php';
-                
                 // 檢查資料庫連接
-                global $pdo;
                 if (!$pdo) {
                     error_log("圖片線索遊戲：資料庫連接失敗");
+                    throw new Exception("資料庫連接失敗");
+                }
+                
+                // 直接調用processGameResult函數
+                $result = processGameResult($gameData);
+                
+                if (!$result || !$result['success']) {
+                    error_log("圖片線索問答API處理失敗: " . ($result['message'] ?? '未知錯誤'));
+                    throw new Exception("遊戲結果處理失敗: " . ($result['message'] ?? '未知錯誤'));
                 } else {
-                    // 直接調用processGameResult函數
-                    $result = processGameResult($gameData);
-                    
-                    if (!$result || !$result['success']) {
-                        error_log("圖片線索問答API處理失敗: " . ($result['message'] ?? '未知錯誤'));
-                    } else {
-                        error_log("圖片線索遊戲結果儲存成功: record_id=" . ($result['record_id'] ?? 'unknown'));
-                    }
+                    error_log("圖片線索遊戲結果儲存成功: record_id=" . ($result['record_id'] ?? 'unknown') . ", status=" . ($result['status'] ?? 'unknown'));
                 }
             } catch (Exception $e) {
                 error_log("圖片線索遊戲結果處理失敗: " . $e->getMessage());
+                // 不拋出異常，讓遊戲繼續進行
             }
             
-                // 清除記錄ID，防止重複更新
-                unset($_SESSION['clue_record_id']);
+            // 清除記錄ID，防止重複更新
+            unset($_SESSION['clue_record_id']);
         }
         
         // 清空 session（保留防重复标志）

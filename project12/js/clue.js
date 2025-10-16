@@ -92,8 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
       
-      // 保存游戏记录（防重复机制在saveGameRecord内部）
-      saveGameRecord(pass, score, pass_bounce, false);
+      // 修復：確保遊戲記錄被正確保存
+      // 遊戲記錄應該在 clue.php 的 AJAX 處理中保存，這裡只是顯示結果
+      console.log('顯示遊戲結果，記錄應已在後端保存');
     }
     document.getElementById('play-again-btn').onclick = function() { 
         window.location.href = 'clue.php'; 
@@ -126,19 +127,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const passCount = document.getElementById('pass-count');
         const remainingCount = document.getElementById('remaining-count');
         
-        // 從 DOM 元素中獲取當前值，而不是使用 JavaScript 變數
+        // 將 JavaScript 變數的值更新到 DOM 元素
         if (correctCount) {
-            // 優先使用 data-initial 屬性，如果沒有則使用 textContent
-            const currentCorrect = parseInt(correctCount.getAttribute('data-initial')) || parseInt(correctCount.textContent) || 0;
-            clueCorrect = currentCorrect; // 同步 JavaScript 變數
-            correctCount.textContent = currentCorrect;
+            correctCount.textContent = clueCorrect;
+            correctCount.setAttribute('data-initial', clueCorrect);
         }
-        if (passCount) passCount.textContent = 3; // 過關題數固定為3題
+        if (passCount) {
+            passCount.textContent = 3; // 過關題數固定為3題
+        }
         if (remainingCount) {
-            // 優先使用 data-initial 屬性，如果沒有則使用 textContent
-            const currentRemaining = parseInt(remainingCount.getAttribute('data-initial')) || parseInt(remainingCount.textContent) || 5;
-            clueTotal = 5 - currentRemaining; // 同步 JavaScript 變數
+            const currentRemaining = Math.max(0, 5 - clueTotal);
             remainingCount.textContent = currentRemaining;
+            remainingCount.setAttribute('data-initial', currentRemaining);
         }
         
         // 更新全局變數
@@ -207,6 +207,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 檢查是否達到過關條件（答對3題）
         if (clueCorrect >= 3) {
+            // 🔑 立即停止退出處理器，防止覆蓋正確結果
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.endGame();
+                console.log('超時答對3題，立即停止退出處理器追蹤');
+            }
+            
             // 達到過關條件，結束遊戲
             setTimeout(function(){
                 const pass = true;
@@ -235,6 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userAns !== null && userAns !== 'timeout') {
             data.append('user_answer', userAns);
             data.append('correct_answer', correctAnswer);
+            console.log('傳送答案到後端:', {user_answer: userAns, correct_answer: correctAnswer});
         }
         
         // 如果是遊戲結束，傳送遊戲時間
@@ -250,6 +257,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => res.json())
         .then(res => {
             if (res.end) {
+                // 遊戲結束時停止退出處理器追蹤，防止覆蓋正確結果
+                if (typeof gameExitHandler !== 'undefined') {
+                    gameExitHandler.endGame();
+                    console.log('遊戲結束，已停止退出處理器追蹤');
+                }
                 showResultModal(res.pass, res.score, res.difficulty, res.pass_bounce);
                 return;
             }
@@ -348,7 +360,13 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (difficulty === 'hard') pass_bounce = 100;
         }
         
-        // 手動退出時直接保存記錄，傳遞 isManualExit = true
+        // 手動結束遊戲時停止退出處理器追蹤
+        if (typeof gameExitHandler !== 'undefined') {
+            gameExitHandler.endGame();
+            console.log('手動結束遊戲，已停止退出處理器追蹤');
+        }
+        
+        // 手動退出時保存記錄，傳遞 isManualExit = true
         saveGameRecord(pass, currentScore, pass_bounce, true);
         
         // 顯示結果
@@ -394,16 +412,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 檢查是否達到過關條件（答對3題）
             if (clueCorrect >= 3) {
-                // 達到過關條件，結束遊戲
+                // 🔑 立即停止退出處理器，防止覆蓋正確結果
+                if (typeof gameExitHandler !== 'undefined') {
+                    gameExitHandler.endGame();
+                    console.log('答對3題，立即停止退出處理器追蹤');
+                }
+                
+                // 關鍵修復：即使達到過關條件，也要先傳遞答案給後端
+                console.log('答對3題，先傳遞答案給後端再顯示結果');
                 setTimeout(function(){
-                    const pass = true;
-                    const score = clueCorrect;
-                    let pass_bounce = 0;
-                    if (difficulty === 'easy') pass_bounce = 20;
-                    else if (difficulty === 'normal') pass_bounce = 50;
-                    else if (difficulty === 'hard') pass_bounce = 100;
-                    
-                    showResultModal(pass, score, difficulty, pass_bounce);
+                    loadQuestion(userAns); // 傳遞最後一題的答案
                 }, 1200);
                 return;
             }
