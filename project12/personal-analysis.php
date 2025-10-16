@@ -483,11 +483,11 @@ function createTrendChart(trendData) {
 // 初始化空的報告區域
 function initializeEmptyReport() {
   document.getElementById('playerType').innerHTML = 
-    '<strong>玩家類型：</strong><span style="color: #ccc;">請點擊上方按鈕生成AI分析</span>';
+    '<strong>玩家類型：</strong><span style="color: #999; font-size: 15px;">點擊上方「🤖 生成AI智能分析」按鈕，AI將為您生成個人化的能力分析報告</span>';
   document.getElementById('description').innerHTML = 
-    '<strong>分析說明：</strong><span style="color: #ccc;">等待AI分析...</span>';
+    '<strong>分析說明：</strong><span style="color: #999; font-size: 15px;">AI會根據您的遊戲表現，提供溫暖、親切的分析</span>';
   document.getElementById('suggestions').innerHTML = 
-    '<strong>改進建議：</strong><span style="color: #ccc;">AI將為您提供個性化建議</span>';
+    '<strong>改進建議：</strong><span style="color: #999; font-size: 15px;">AI將為您推薦適合的遊戲，幫助您提升各項能力</span>';
   
   // 隱藏AI分析標識
   const aiIndicator = document.getElementById('aiIndicator');

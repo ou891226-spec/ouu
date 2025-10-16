@@ -285,7 +285,7 @@ function endGame(isManualExit = false) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       member_id: sendMemberId,
-      game_type: "節奏遊戲",
+      game_type: "反應力",
       game_id: 7,
       difficulty: currentDifficulty,
       score: recordScore,
