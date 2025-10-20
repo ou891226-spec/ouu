@@ -194,7 +194,7 @@ function markGameExit($record_id) {
     global $pdo;
     
     try {
-        // 更新記錄狀態為退出
+        // 更新記錄狀態為退出（包含刷新/關閉/主動退出等所有非正常結束）
         $stmt = $pdo->prepare("
             UPDATE game_records 
             SET status = 'exited', updated_at = NOW()
@@ -301,9 +301,9 @@ function processGameResult($data) {
         $final_score = $score;
         
         if ($is_manual_exit) {
-            // 手動退出：直接視為失敗，分數為 0
+            // 手動退出：視為退出，分數為 0
             $score = 0; // 強制設為 0 分
-            $final_status = 'failed';
+            $final_status = 'exited';
         } else {
             // 正常遊戲結束：根據是否通過判斷
             if ($is_passed !== null) {

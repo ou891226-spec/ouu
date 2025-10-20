@@ -49,7 +49,7 @@ h1 {
 }
  
 .score-board span {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: #333;
 }
  
@@ -147,7 +147,7 @@ h1 {
   background-position: center;
   position: absolute;
   bottom: 0.3px;
-  left: auto;
+  left: 0px; /* 與 JS 控制一致：搭配 translateX 置中與移動 */
   border-radius: 20px;
   cursor: grab;
   touch-action: none;
@@ -389,7 +389,7 @@ button {
 
 .modal-content h2 {
   color: #333;
-  font-size: 1.8rem;
+  font-size: 40px;
   margin-bottom: 1.5rem;
 }
 
@@ -510,7 +510,7 @@ button {
   padding: 30px;
   border-radius: 15px;
   width: 90%;
-  max-width: 400px;
+  max-width: 500px;
   position: relative;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   animation: modalPop 0.3s ease-out;
@@ -524,10 +524,10 @@ button {
   color: #333;
 }
 #difficulty-modal .difficulty-btn {
-  padding: 20px;
+  padding: 15px;
   border: none;
-  border-radius: 12px;
-  font-size: 18px;
+  border-radius: 8px;
+  font-size: 40px;
   color: #111;
   font-weight: bold;
   cursor: pointer;
@@ -536,7 +536,9 @@ button {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin: 10px 0;
+  margin: 15px 0;
+  max-width: 400px;
+  margin-left: 50px;
 }
 #difficulty-modal .difficulty-btn:hover {
   color: #111;
@@ -544,14 +546,14 @@ button {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 #difficulty-modal .difficulty-btn.easy {
-  background-color: #4CAF50;
+  background-color: #40F55B;
 }
 #difficulty-modal .difficulty-btn.normal {
-  background-color: #FFCC00;
+  background-color: #FFE75C;
   color: #222;
 }
 #difficulty-modal .difficulty-btn.hard {
-  background-color: #F44336;
+  background-color: #FF2A2A;
 }
 
 /* help-button 問號圖示樣式 */
@@ -680,7 +682,7 @@ button {
   }
   
   .score-board span {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   
   #game {
@@ -764,7 +766,7 @@ button {
   }
   
   .score-board span {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
   
   #game {
@@ -829,13 +831,17 @@ button {
   }
 }
 
-/* 統一的按鈕顏色方案 */
+/* 統一的按鈕顏色方案 - 更新為照片中的樣式 */
 .game-step-button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    font-size: 18px;
+    padding: 10px 25px;
+    font-weight: bold;
+    min-width: 110px;
 }
 
 .game-step-button:hover {
@@ -865,13 +871,52 @@ button {
 .game-instruction-text {
     color: #0066cc;
     font-weight: bold;
-    text-align: left;
+    text-align: center;
     font-size: 1.3rem;
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 0 20px;
+    line-height: 1.4;
 }
 
 /* 統一的步驟指示器顏色 */
 .game-step-indicator {
     color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 說明頁面底部按鈕區域樣式 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 接金蛋遊戲按鈕容器樣式 */
+#egg-prev-step-btn,
+#egg-next-step-btn {
+    flex-shrink: 0;
+}
+
+#egg-prev-step-btn {
+    margin-right: auto;
+}
+
+#egg-next-step-btn {
+    margin-left: auto;
 }
 
 /* 接金蛋遊戲破關畫面行間距 */
@@ -887,7 +932,7 @@ button {
 #egg-instruction-text {
     flex: 4 !important;
     min-width: 450px !important;
-    max-width: 600px !important;
+    max-width: 500px !important;
     padding: 0 15px !important;
     text-align: left !important;
     font-size: 1.3rem !important;
@@ -904,7 +949,7 @@ button {
 /* 接金蛋遊戲說明視窗樣式 */
 #egg-help-modal .modal-content {
     width: 85% !important;
-    max-width: 650px !important;
+    max-width: 500px !important;
     min-height: auto !important;
     padding: 1rem 1.5rem !important;
 }
@@ -990,7 +1035,7 @@ button {
     }
     
     .score-board span {
-        font-size: 0.9rem !important;
+      font-size: 0.8rem !important;
     }
     
     .score-guide {

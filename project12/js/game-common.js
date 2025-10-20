@@ -106,7 +106,18 @@ function getCurrentMemberId() {
         return parseInt(window.memberId);
     }
     
-    // 3. 從 localStorage 獲取
+    // 3. 從隱藏的 input 字段獲取（支持兩種格式）
+    // 優先查找 name="member_id"
+    let hiddenInput = document.querySelector('input[name="member_id"]');
+    // 如果找不到，嘗試查找 id="member-id"
+    if (!hiddenInput) {
+        hiddenInput = document.getElementById('member-id');
+    }
+    if (hiddenInput && hiddenInput.value) {
+        return parseInt(hiddenInput.value);
+    }
+    
+    // 4. 從 localStorage 獲取
     const memberIdFromStorage = localStorage.getItem('member_id');
     if (memberIdFromStorage) {
         return parseInt(memberIdFromStorage);

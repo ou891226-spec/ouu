@@ -611,3 +611,34 @@
     font-size: 16px;
   }
 }
+
+/* 头像信息提示样式 */
+.avatar-info {
+  text-align: center;
+  margin: 8px 0 12px 0;
+  padding: 8px 16px;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 12px;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.4;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.avatar-info small {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+/* 手机版头像信息 */
+@media (max-width: 768px) {
+  .avatar-info {
+    font-size: 10px;
+    padding: 6px 12px;
+    margin: 6px 0 10px 0;
+  }
+  
+  .avatar-info small {
+    font-size: 9px;
+  }
+}

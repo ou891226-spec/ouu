@@ -916,6 +916,9 @@ function showNotification(message, type = 'success') {
       </form>
     </div>
   </div>
+  <div class="avatar-info">
+    <small>📝 支援 JPG、PNG、GIF 格式 | 💾 建議小於 2MB，最大 5MB</small>
+  </div>
   <div class="profile-greeting">
     <?php echo isset($name) ? htmlspecialchars($name) : '使用者'; ?>，您好!
   </div>

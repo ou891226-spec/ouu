@@ -7,7 +7,7 @@ const difficultyOptions = document.querySelectorAll('.difficulty-option');
 const messageDiv = document.getElementById('message');
 const pauseBtn = document.getElementById('pause-btn');
 const gameBGM = document.getElementById('game-bgm');
-const targetScoreElement = document.getElementById('target-score'); 
+const targetScoreElement = document.getElementById('target-score');
 
 let score = 0;
 let timeLeft = 60;
@@ -15,22 +15,96 @@ let sequence = [];
 let playerSequence = [];
 let gameInterval;
 let level = 3;
-let passScore = 20; 
+let passScore = 20;
 let gameTime = 60;
 let isPaused = false;
+
+// 遊戲進入跟踪
+let currentGameRecordId = null;
+
+// 記錄遊戲進入
+// 修正點 1: 讓函式接收一個 'difficulty' 參數
+function trackGameEntry(difficulty) {
+    const gameData = {
+        game_type: '記憶力',
+        game_id: 6,
+        difficulty: difficulty || 'easy' // 使用傳入的參數
+    };
+
+    fetch('start_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(gameData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.record_id) {
+            currentGameRecordId = data.record_id;
+            console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+        }
+    })
+    .catch(error => {
+        console.error('記錄遊戲進入失敗:', error);
+    });
+}
+
+// 記錄遊戲退出
+function trackGameExit() {
+    if (!currentGameRecordId) return;
+
+    const exitData = {
+        record_id: currentGameRecordId
+    };
+
+    // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+    } else {
+        // 備用方案：使用 fetch
+        fetch('mark_game_exit.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(exitData)
+        }).catch(error => {
+            console.error('記錄遊戲退出失敗:', error);
+        });
+    }
+}
 let gameState = 'ready';
-let gameStartTime = 0; // 記錄遊戲開始時間
+let prisonerGameStartTime = 0; // 記錄遊戲開始時間（重命名避免衝突）
 let playerPlayTime = 0; // 累計玩家實際操作時間（秒）
 let playerTurnStartTime = 0; // 記錄玩家回合開始時間
 let pauseStartTime = 0; // 暫停開始時間
-let totalPauseTime = 0; // 累計暫停時間 
 
-const memberIdInput = document.getElementById('member-id'); 
+// 頁面加載時初始化
+window.addEventListener('load', function() {
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
+});
+let totalPauseTime = 0; // 累計暫停時間
+
+const memberIdInput = document.getElementById('member-id');
 const memberId = memberIdInput ? parseInt(memberIdInput.value) : 1;
 
 startBtn.addEventListener('click', startGame);
 
 function startGame() {
+  // 開始時間追踪
+  if (typeof manualStartGameTimer === 'function') {
+    manualStartGameTimer();
+    console.log('已開始遊戲時間追蹤');
+  }
+
   // 根據難度等級獲取對應的難度名稱
   let difficultyName;
   if (level === 3) {
@@ -40,7 +114,17 @@ function startGame() {
   } else if (level === 5) {
     difficultyName = 'hard';
   }
-  
+
+  // 記錄遊戲進入（在開始遊戲時）
+  // 修正點 2: 將 'difficultyName' 傳遞給函式
+  trackGameEntry(difficultyName);
+
+  // 啟動遊戲退出處理器追蹤
+  if (typeof gameExitHandler !== 'undefined') {
+      gameExitHandler.startGame();
+      console.log('遊戲追蹤已啟動');
+  }
+
   // 從資料庫設定中獲取時間和分數
   if (typeof difficultySettings !== 'undefined' && difficultySettings[difficultyName]) {
     gameTime = difficultySettings[difficultyName].time_limit;
@@ -50,23 +134,23 @@ function startGame() {
     gameTime = 30;
     passScore = 20;
   }
-  
-  targetScoreElement.textContent = passScore; 
-  
+
+  targetScoreElement.textContent = passScore;
+
   playBGM();
 
   resetGame();
   timeLeft = gameTime;
   timerElement.textContent = timeLeft;
-  gameStartTime = Date.now(); // 記錄遊戲開始時間
+  prisonerGameStartTime = Date.now(); // 記錄遊戲開始時間
   startBtn.style.display = 'none';
   gameState = 'sequence';
-  
+
   // 啟動遊戲退出追蹤
   if (typeof startGameTracking === 'function') {
     startGameTracking();
   }
-  
+
   nextRound();
 }
 
@@ -121,8 +205,8 @@ function getRandomHoles(num) {
 }
 
 function showSequence() {
-  clearInterval(gameInterval); 
-  gameState = 'sequence'; 
+  clearInterval(gameInterval);
+  gameState = 'sequence';
   let i = 0;
   messageDiv.textContent = '看仔細了...犯人準備出現囉';
   const sequenceInterval = setInterval(() => {
@@ -148,7 +232,7 @@ function showSequence() {
 
 function playerTurn() {
   messageDiv.textContent = '換你出馬抓住犯人囉！';
-  gameState = 'player_turn'; 
+  gameState = 'player_turn';
   playerTurnStartTime = Date.now(); // 記錄玩家回合開始時間
   gameInterval = setInterval(updateTimer, 1000);
   holes.forEach(hole => {
@@ -175,14 +259,14 @@ function checkPlayerHit(event) {
 
 function checkSequence() {
   clearInterval(gameInterval);
-  
+
   // 累計玩家實際操作時間（不包括犯人出現的時間）
   if (playerTurnStartTime > 0) {
     const roundPlayTime = (Date.now() - playerTurnStartTime) / 1000;
     playerPlayTime += roundPlayTime;
     playerTurnStartTime = 0; // 重置回合開始時間
   }
-  
+
   messageDiv.textContent = '';
   let isCorrect = sequence.every((val, index) => val === playerSequence[index]);
   if (isCorrect) {
@@ -194,8 +278,8 @@ function checkSequence() {
     if (score >= passScore) {
       setTimeout(() => {
         endGame(true);
-      }, 500); 
-      return; 
+      }, 500);
+      return;
     }
 
   } else {
@@ -227,24 +311,30 @@ difficultyOptions.forEach(option => {
 
 function endGame(success, isManualExit = false) {
   clearInterval(gameInterval);
-  
+
+  // 結束時間追踪
+  if (typeof manualEndGameTimer === 'function') {
+    manualEndGameTimer();
+    console.log('已結束遊戲時間追蹤');
+  }
+
   // 累計最後一輪的玩家實際操作時間
   if (playerTurnStartTime > 0) {
     const finalRoundPlayTime = (Date.now() - playerTurnStartTime) / 1000;
     playerPlayTime += finalRoundPlayTime;
     playerTurnStartTime = 0;
   }
-  
+
   holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
-  pauseBGM(); 
-  
+  pauseBGM();
+
   // 停止遊戲退出追蹤
   if (typeof endGameTracking === 'function') {
     endGameTracking();
   }
-  
-  sendScoreToServer(score, level, success, isManualExit); 
-  
+
+  sendScoreToServer(score, level, success, isManualExit);
+
   showEndModal(success, score, level);
 }
 
@@ -267,14 +357,14 @@ function showEndModal(success, finalScore, level) {
 
   difficultyText.textContent = '難度：' + (level === 3 ? '簡單' : level === 4 ? '普通' : '困難');
   gameScoreText.textContent = '遊戲分數：' + finalScore;
-  
+
   // 使用累計的玩家實際操作時間（不包括犯人出現的時間）
   const totalPlayTime = Math.round(playerPlayTime);
   playTimeText.textContent = '遊戲時間：' + totalPlayTime + '秒';
-  
+
   const rewardScore = success ? 20 : 0;
   gainedScoreText.textContent = '獲得分數：+' + rewardScore;
-  
+
   finalMessageText.textContent = success ? '成功達成目標！' : '未達成目標分數！';
 
   modal.style.display = 'flex';
@@ -287,21 +377,21 @@ function togglePause() {
     return;
   }
 
-  isPaused = !isPaused; 
+  isPaused = !isPaused;
 
   if (isPaused) {
     clearInterval(gameInterval);
-    
+
     // 暫停時累計當前回合的操作時間
     if (playerTurnStartTime > 0) {
       const pausePlayTime = (Date.now() - playerTurnStartTime) / 1000;
       playerPlayTime += pausePlayTime;
       playerTurnStartTime = 0; // 重置回合開始時間
     }
-    
+
     holes.forEach(hole => hole.removeEventListener('click', checkPlayerHit));
     messageDiv.textContent = '已暫停，犯人躲起來囉，請按繼續遊戲抓住他!';
-    
+
     pauseBGM();
 
     pauseBtn.textContent = '繼續遊戲';
@@ -312,14 +402,14 @@ function togglePause() {
   } else {
     // 恢復遊戲時重新開始計時
     playerTurnStartTime = Date.now();
-    
+
     gameInterval = setInterval(updateTimer, 1000);
     holes.forEach(hole => {
       hole.addEventListener('click', checkPlayerHit);
     });
     messageDiv.textContent = '換你出馬抓住犯人囉！';
-    
-    playBGM(); 
+
+    playBGM();
 
     pauseBtn.textContent = '暫停遊戲';
     pauseBtn.classList.remove('resume-btn');
@@ -361,23 +451,23 @@ function initPrisonerVideoPlayback() {
   const stepIndicator = document.getElementById('prisoner-step-indicator');
   const nextStepBtn = document.getElementById('prisoner-next-step-btn');
   const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
-  
+
   if (!video || !instructionText || !stepIndicator || !nextStepBtn || !prevStepBtn) {
     console.error('找不到犯人遊戲說明元素');
     return;
   }
-  
-  video.src = 'gd/prisoner1.mp4'; 
-  instructionText.textContent = '先選擇遊戲的難度，每個難度只要得分超過20分(含)就會過關。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，';
+
+  video.src = 'gd/prisoner1.mp4';
+  instructionText.textContent = '先選擇遊戲的難度。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，';
   stepIndicator.textContent = '步驟 1/2';
-  
+
   video.setAttribute('data-current-video', 'prisoner1');
-  
+
   nextStepBtn.style.display = 'block';
   prevStepBtn.style.display = 'none';
-  
+
   video.load();
-  
+
   const nextStepButton = document.getElementById('prisoner-next-step-button');
   if (nextStepButton) {
     nextStepButton.onclick = goToPrisonerNextStep;
@@ -390,15 +480,15 @@ function goToPrisonerNextStep() {
   const stepIndicator = document.getElementById('prisoner-step-indicator');
   const nextStepBtn = document.getElementById('prisoner-next-step-btn');
   const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
-  
-  video.src = 'gd/prisoner2.mp4'; 
+
+  video.src = 'gd/prisoner2.mp4';
   video.setAttribute('data-current-video', 'prisoner2');
   instructionText.innerHTML = '玩家依照犯人出現的順序點擊洞口，答對會加2分，答錯不扣分，在限制時間內得到規定的分數通過關卡。';
   stepIndicator.textContent = '步驟 2/2';
-  
+
   nextStepBtn.style.display = 'none';
   prevStepBtn.style.display = 'block';
-  
+
   video.load();
   video.play();
 }
@@ -409,15 +499,15 @@ function goToPrisonerPrevStep() {
   const stepIndicator = document.getElementById('prisoner-step-indicator');
   const nextStepBtn = document.getElementById('prisoner-next-step-btn');
   const prevStepBtn = document.getElementById('prisoner-prev-step-btn');
-  
-  video.src = 'gd/prisoner1.mp4'; 
+
+  video.src = 'gd/prisoner1.mp4';
   video.setAttribute('data-current-video', 'prisoner1');
-  instructionText.textContent = '先選擇遊戲的難度，每個難度只要得分超過20分(含)就會過關。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，';
+  instructionText.textContent = '先選擇遊戲的難度。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，';
   stepIndicator.textContent = '步驟 1/2';
-  
+
   nextStepBtn.style.display = 'block';
   prevStepBtn.style.display = 'none';
-  
+
   video.load();
   video.play();
 }
@@ -431,7 +521,7 @@ function closeInfoModal() {
     video.pause();
     video.currentTime = 0;
   }
-  
+
   document.getElementById('info-modal').style.display = 'none';
 }
 
@@ -445,17 +535,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function sendScoreToServer(score, level, is_passed, isManualExit = false) {
   const difficultyText = level === 3 ? 'easy' : level === 4 ? 'normal' : 'hard';
-  
+
   // 使用累計的玩家實際操作時間（不包括犯人出現的時間）
   const actualPlayTime = Math.round(playerPlayTime);
   console.log('遊戲時間計算:', { playerPlayTime, actualPlayTime });
-  
+
   const data = {
     member_id: memberId,
     game_type: "記憶力",
     game_id: 6,
     difficulty: difficultyText,
-        score: score, 
+        score: score,
         play_time: actualPlayTime,
         is_passed: is_passed,
         is_manual_exit: isManualExit,
@@ -479,20 +569,26 @@ function sendScoreToServer(score, level, is_passed, isManualExit = false) {
           }, 1000); // 1秒後更新，確保資料庫已保存
         }
       }
-      
+
       // 關鍵：停止遊戲追蹤，防止重複記錄
       if (typeof endGameTracking === 'function') {
         endGameTracking();
         console.log('遊戲追蹤已停止，防止重複記錄');
       }
+
+      // 遊戲結束後清理記錄ID
+      currentGameRecordId = null;
     })
     .catch(error => {
       console.error('儲存錯誤：', error);
-      
+
       // 即使失敗也要停止追蹤
       if (typeof endGameTracking === 'function') {
         endGameTracking();
         console.log('保存失敗，但已停止追蹤以防重複');
       }
+
+      // 遊戲結束後清理記錄ID
+      currentGameRecordId = null;
     });
 }

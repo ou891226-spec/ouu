@@ -228,31 +228,31 @@ exit;
                     </video>
                 </div>
                 
-                <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:center;align-items:center;margin:0.5rem 1rem 1rem 1rem; gap: 20px;">
+                <!-- 說明文字區域 -->
+                <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                    <div id="2048-instruction-text" class="game-instruction-text">
+                        先選擇遊戲困難度
+                    </div>
+                </div>
+                
+                <!-- 按鈕和步驟指示器區域 -->
+                <div class="help-modal-footer" style="display: flex !important; justify-content: space-between !important; align-items: center !important; position: relative !important;">
                     <!-- 上一步按鈕 -->
-                    <div id="2048-prev-step-btn" style="display:none;">
-                        <button id="2048-prev-step-button" onclick="goTo2048PrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                    <div id="2048-prev-step-btn" style="display:none; margin-right: auto !important; order: 1 !important;">
+                        <button id="2048-prev-step-button" onclick="goTo2048PrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
                     
-                    <!-- 說明文字 -->
-                    <div id="2048-instruction-text" class="game-instruction-text">
-                        先選擇遊戲困難度
-                    </div>
+                    <!-- 進度指示器 -->
+                    <span id="2048-step-indicator" class="game-step-indicator" style="position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; order: 2 !important;">步驟 1/2</span>
                     
                     <!-- 下一步按鈕 -->
-                    <div id="2048-next-step-btn" style="margin-left:2rem;">
-                        <button id="2048-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                    <div id="2048-next-step-btn" style="margin-left: auto !important; order: 3 !important;">
+                        <button id="2048-next-step-button" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
-                </div>
-                
-                <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1rem;margin-bottom:1rem;">
-                    <span id="2048-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
         </div>
@@ -646,7 +646,7 @@ exit;
                     difficulty: 'easy'
                 });
                 // 立即啟動遊戲退出追蹤，因為用戶已經進入遊戲頁面
-                gameExitHandler.startGame();
+                // 遊戲追蹤將在真正開始遊戲時啟動
                 console.log('遊戲退出處理器已配置並啟動');
             }
             

@@ -164,7 +164,7 @@ h1 {
 .difficulty-option {
     color: black;
     margin: 10px;
-    padding: 15px 20px;
+    padding: 15px 5px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 40px;
@@ -177,7 +177,6 @@ h1 {
   /* 各別難度的背景顏色 */
 .difficulty-option.easy {
   background-color: #40F55B; /* 淺綠色 */
-  margin-bottom: 20px;
 }
 
 .difficulty-option.easy:hover {
@@ -186,7 +185,6 @@ h1 {
 
 .difficulty-option.medium {
   background-color: #FFE75C; /* 黃色 */
-  margin-bottom: 20px;
 }
 
 .difficulty-option.medium:hover {

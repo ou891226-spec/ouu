@@ -5,7 +5,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f4f7; /* 柔和的淺灰色背景 */
+    background-color: #f0f4f7;
     margin: 0;
     padding: 20px;
 }
@@ -17,7 +17,7 @@ body {
     border-radius: 15px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 500px; 
+    max-width: 500px;
     width: 100%;
     position: fixed;
 }
@@ -26,19 +26,18 @@ body {
 h1 {
   font-size: 32px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 
 /* --- 計分板樣式 --- */
 .score-board {
     background-color: #eee;
-    padding: 10px 20px;
+    padding: 10px 10px;
     border-radius: 8px;
-    /* 關鍵修正: 讓內容居中 */
     display: flex;
-    justify-content: center; /* 將項目水平置中 */
-    gap: 20px; /* 保持項目之間的間距 */
+    justify-content: center;
+    gap: 5px;
     margin-bottom: 20px;
     font-size: 24px;
     font-weight: bold;
@@ -57,21 +56,19 @@ h1 {
     font-size: 24px;
     font-weight: bold;
 }
-/* --- 計分板樣式結束 --- */
-
 
 /* 遊戲板佈局 */
 .game-board {
     display: grid;
-    gap: 8px; 
+    gap: 8px;
     width: 100%;
     max-width: 480px;
-    aspect-ratio: 1 / 1; 
-    border: 5px solid #607D8B; 
+    aspect-ratio: 1 / 1;
+    border: 5px solid #607D8B;
     border-radius: 8px;
     padding: 5px;
     margin: 0 0 20px 0;
-    text-align: center; 
+    text-align: center;
 }
 
 /* 數字方塊樣式 */
@@ -79,66 +76,54 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #FFEB3B; 
-    color: #333; 
+    background-color: #FFEB3B;
+    color: #333;
     font-weight: bold;
     border-radius: 10px;
     cursor: pointer;
-    user-select: none; 
+    user-select: none;
     transition: background-color 0.1s, transform 0.1s;
 }
 
 /* 空白方塊樣式 */
 .empty {
-    background-color: #E0E0E0; 
+    background-color: #E0E0E0;
     cursor: default;
 }
 
 /* --- 控制按鈕樣式 --- */
 .controls {
     display: flex;
-    justify-content: space-between; 
+    justify-content: space-between;
     gap: 10px;
     margin-top: 20px;
 }
 
 .btn {
-    padding: 10px 20px; 
+    padding: 10px 20px;
     font-size: 25px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
-    color: #fff; 
+    color: #fff;
     transition: background-color 0.2s;
-    flex-grow: 1; 
+    flex-grow: 1;
     min-width: 90px;
 }
 
 
-.orange-btn { /* 暫停遊戲 */
-    background-color: #FFA500; /* 橘色 */
-}
-.green-btn { /* 繼續遊戲 */
-    background-color: #4CAF50; /* 綠色 */
-}
-
-
-.red-btn { /* 結束遊戲 */
-    background-color: #f44336; /* 紅色 */
-}
-
-
-.blue-btn { /* 重新開始 */
-    background-color: #03A9F4; /* 藍色 */
-}
+.orange-btn { background-color: #FFA500; }
+.green-btn { background-color: #4CAF50; }
+.red-btn { background-color: #f44336; }
+.blue-btn { background-color: #03A9F4; }
 
 
 /* 成功訊息樣式 */
 .message {
     margin-top: 20px;
     padding: 15px;
-    background-color: #4CAF50; 
+    background-color: #4CAF50;
     color: white;
     border-radius: 8px;
     font-size: 1.3em;
@@ -146,118 +131,103 @@ h1 {
 }
 
 .hidden {
-    display: none !important; 
+    display: none !important;
 }
 
-/* --- 彈跳視窗樣式 (保持不變) --- */
+/* --- 彈跳視窗樣式 --- */
 .modal-overlay {
-    position: fixed; 
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); 
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; 
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: #ffffff;
     padding: 30px 40px;
-    padding-bottom: 30px;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 400px; 
+    max-width: 450px;
     text-align: center;
+    position: relative;
 }
 
-/* --- 彈跳視窗標頭樣式 --- */
-
-
+/* 彈跳視窗標頭 */
 .modal-header {
     display: flex;
-    /* 讓左右按鈕與標題之間有空間 */
-    justify-content: space-between; 
-    /* 關鍵修正: 讓所有內容垂直置中對齊 (這是讓標題上移的關鍵) */
-    align-items: center; 
-    width: 100%; 
-    padding: 0 ; 
-    margin-bottom: 15px; /* 標題與下方難度按鈕的間距 */
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 15px;
 }
 
 .modal-header h2 {
-    /* 讓標題不會被左右按鈕擠壓 */
-    flex-shrink: 0; 
+    flex-shrink: 0;
     text-align: center;
-    font-size: 40px; /* 調整字體大小 */
+    font-size: 40px;
     font-weight: bold;
     color: #333;
-    /* 移除所有預設邊距，讓 align-items: center 才能生效 */
-    margin: 0; 
+    margin: 0;
     margin-top: 50px;
-    padding: 0; 
+    padding: 0;
 }
 
 .header-control {
-    /* 讓圖標和文字垂直排列 */
     display: flex;
-    flex-direction: column; 
-    /* 容器內的圖標和文字居中 */
-    align-items: center; 
+    flex-direction: column;
+    align-items: center;
     cursor: pointer;
     user-select: none;
     padding: 0;
     border-radius: 5px;
     transition: background-color 0.2s;
-    flex-shrink: 0; 
-    
+    flex-shrink: 0;
 }
 
 .modal-icon {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 43px;       
-    height: 43px;      
-    border-radius: 50%; 
-    border: 3px solid #222; /* 圓圈邊框 */
-    background-color: #fff; /* 圓圈背景色 */
-    font-size: 1.6rem;   
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    border: 3px solid #222;
+    background-color: #fff;
+    font-size: 1.6rem;
     font-weight: bold;
-    color: #222;       
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-    margin-bottom: 2px; /* 縮小與下方文字的間距 */
+    color: #222;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2px;
 }
 
-.back-icon {
-    color: #222; 
-}
-
-
-.help-icon {
+.back-icon, .help-icon, .close-icon {
     color: #222;
 }
 
 .close-icon {
-    color: #111; 
-    width: 43px;       
-    height: 43px; 
+    width: 43px;
+    height: 43px;
     font-weight: 900;
 }
 
 .modal-body {
     display: flex;
-    flex-direction: column; 
-    gap: 15px; 
+    flex-direction: column;
+    gap: 15px;
 }
 
 .modal-btn {
-    width: 95%;
+    width: 80%;
     padding: 15px 20px;
-    margin-left: 10px;
+    margin-left: 40px;
     font-size: 40px;
     font-weight: bold;
     color: black;
@@ -267,197 +237,160 @@ h1 {
     transition: background-color 0.2s;
 }
 
-.modal-btn[data-difficulty-name="簡單"] {
-    background-color: #40F55B; 
-}
-.modal-btn[data-difficulty-name="簡單"]:hover {
-    background-color: #29b33e;
-}
+.modal-btn[data-difficulty-name="簡單"] { background-color: #40F55B; }
+.modal-btn[data-difficulty-name="簡單"]:hover { background-color: #29b33e; }
+.modal-btn[data-difficulty-name="普通"] { background-color: #FFE75C; }
+.modal-btn[data-difficulty-name="普通"]:hover { background-color: #bea30e; }
+.modal-btn[data-difficulty-name="困難"] { background-color: #FF2A2A; }
+.modal-btn[data-difficulty-name="困難"]:hover { background-color: #e17055; }
 
-.modal-btn[data-difficulty-name="普通"] {
-    background-color: #FFE75C; 
-}
-.modal-btn[data-difficulty-name="普通"]:hover {
-    background-color: #bea30e;
-}
+/* 說明彈窗樣式 */
+.modal-content.help-modal-content { padding: 20px; }
 
-.modal-btn[data-difficulty-name="困難"] {
-    background-color: #FF2A2A; 
-}
-.modal-btn[data-difficulty-name="困難"]:hover {
-    background-color: #e17055;
-}
-
-/* --- 幫助視窗專用樣式 --- */
-
-/* 讓幫助視窗的內文靠左對齊並調整字體大小 */
-.modal-body.help-body {
-    text-align: left; /* 讓文字靠左對齊 */
-    font-size: 1.2em;
-    color: #333;
-    padding-top: 10px;
-    line-height: 1.5;
-}
-
-.modal-body.help-body p {
-    margin: 10px 0;
-}
-
-/* 列表樣式調整 */
-.modal-body.help-body ul {
-    list-style-type: none; /* 移除點 */
-    padding-left: 0;
-    margin-left: 20px;
-}
-
-.modal-body.help-body li {
-    margin-bottom: 5px;
-    position: relative;
-    padding-left: 15px;
-}
-
-.modal-body.help-body li::before {
-    content: "•"; /* 使用圓點作為列表符號 */
-    color: #FFA500; /* 橘色點 */
-    font-weight: bold;
-    display: inline-block;
-    width: 1em;
-    margin-left: -1em;
-}
-
-/* 隱藏控制項樣式 (用於讓標頭置中) */
-.invisible-control {
-    visibility: hidden; /* 讓它佔位，但不可見 */
-}
-.invisible-icon {
-    border: none !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    color: transparent !important;
-}
-.header-control.close-only {
-    width: 40px; /* 調整大小以適應 X */
-    height: 40px;
-    background-color: transparent; /* 移除背景顏色 */
-    box-shadow: none; /* 移除陰影 */
-    border-radius: 50%; /* 保持圓角，但因背景透明所以看不到圓圈 */
+.help-header-new {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0;
+    gap: 10px;
+    margin-bottom: 20px;
 }
-
-.help-header {
-    display: flex;
-    /* 讓左右按鈕與標題之間有空間 */
-    justify-content: space-between; 
-    /* 關鍵修正: 讓所有內容垂直置中對齊 (這是讓標題上移的關鍵) */
-    align-items: center; 
-    width: 100%; 
-    padding: 0 ; 
-    margin-bottom: 15px; /* 標題與下方難度按鈕的間距 */
-}
-
-.help-header h2 {
-    /* 讓標題不會被左右按鈕擠壓 */
-    flex-shrink: 0; 
-    text-align: center;
-    font-size: 40px; /* 調整字體大小 */
+.help-header-new h2 {
+    font-size: 28px;
     font-weight: bold;
-    color: #333;
-    /* 移除所有預設邊距，讓 align-items: center 才能生效 */
+    color: #222;
     margin: 0;
-    margin-left: 80px; 
-    padding: 0; 
 }
+.help-header-icon { font-size: 28px; }
 
-.modal-content.help-modal-content {
+.video-container {
     position: relative;
-    /* 調整 padding，讓內容不至於被右上角的 X 遮擋 */
-    padding-top: 50px; 
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    margin-bottom: 25px;
+    border-radius: 10px;
 }
-
-/* 將 X 按鈕絕對定位到右上角 */
+.video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+.image-gallery {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+.gallery-img {
+    width: calc(33% - 10px);
+    max-width: 130px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid #ddd;
+    object-fit: cover;
+}
+.gallery-label {
+    font-size: 20px;
+    font-weight: bold;
+    color: #444;
+    margin: 0;
+    padding: 2px 0;
+    text-align: center;
+}
+.help-description {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #0066cc;
+    line-height: 1.4;
+    text-align: left;
+    min-height: 90px;
+    padding: 20px;
+    flex: 3;
+}
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+.help-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+.help-nav-btn {
+    font-size: 18px;
+    padding: 10px 25px;
+    border-radius: 8px;
+    flex-grow: 0;
+    min-width: 110px;
+}
+.help-nav-btn.next {
+    background-color: #3b82f6;
+    margin-left: auto;
+}
+.help-nav-btn.prev {
+    background-color: #6b7280;
+    margin-right: auto;
+}
 .close-button-absolute {
     position: absolute;
-    top: 15px;      /* 距離頂部 15px */
-    right: 15px;    /* 距離右側 15px */
+    top: 10px;
+    right: 15px;
     cursor: pointer;
-    z-index: 10;    /* 確保它在最上層 */
-    padding: 5px;   /* 增加點擊區域 */
-    transition: color 0.2s;
+    z-index: 10;
 }
-
 .close-icon-only {
-    font-size: 30px; /* 放大 X 符號 */
-    color: #333; /* 可以根據需求調整顏色，例如 #F44336 (紅色) */
-    font-weight: bold;
-    line-height: 1; /* 確保 X 垂直居中 */
-    cursor: pointer;
-    -webkit-user-select: none; /* 防止選取 X 文本 */
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    font-size: 36px;
+    font-weight: 900;
+    color: #111;
+    border-radius: 50%;
 }
 
-/* 確保 hover 效果能看到 */
-.header-control.close-only:hover {
-    background-color: rgba(0, 0, 0, 0.1); /* hover 時顯示一個淺色背景 */
-    cursor: pointer;
-}
-
-/* 標題樣式 */
+/* 過關彈窗 */
 .win-title {
     font-size: 40px;
     color: #333;
     margin-bottom: 10px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
-
-/* 數據顯示容器 */
 .win-details-container {
     padding: 15px;
     border-radius: 8px;
-    text-align: center; 
+    text-align: center;
     font-size: 20px;
     font-weight: 500;
 }
-
-/* 每一行數據 */
-.win-detail {
-    padding: 8px 0;
-}
-.win-detail:last-child {
-    border-bottom: none;
-}
-
-/* 分數顯示區塊 */
+.win-detail { padding: 8px 0; }
 .win-score-box {
     font-size: 20px;
     padding: 8px 0;
 }
-
 .win-fail-message {
     font-weight: bold;
     text-align: center;
     font-size: 20px;
-    margin-top: 10px; 
-    margin-bottom: 20px;
+    margin: 10px 0 20px 0;
     color: #333;
 }
-
-/* 通關按鈕佈局 */
 .modal-body.win-buttons {
     display: flex;
-    /* 關鍵修正：水平並排 */
-    flex-direction: row; 
-    /* 讓按鈕在彈窗內容中置中 */
+    flex-direction: row;
     justify-content: center;
-    gap: 15px; /* 按鈕之間的間距 */
-    padding: 0 10px; /* 內邊距，防止按鈕緊貼邊緣 */
+    gap: 15px;
+    padding: 0 10px;
 }
-
-/* 通關按鈕基礎樣式 */
 .win-btn {
     padding: 10px 20px;
     font-size: 25px;
@@ -466,181 +399,82 @@ h1 {
     cursor: pointer;
     transition: background-color 0.2s;
 }
-
 .win-btn.retry-btn {
-    background-color: #F91519; 
+    background-color: #F91519;
     color: white;
 }
-
 .win-btn.back-btn {
-    background-color: #1d3557; 
+    background-color: #1d3557;
     color: white;
 }
-
-/* 修正：確保計分板的字體大小和粗細 */
 .score-board span {
     font-size: 20px;
     font-weight: bold;
 }
 
+/* --- 提示按鈕樣式 --- */
+.solution-btn {
+    flex-grow: 0; /* 不要佔滿剩餘空間 */
+    padding: 5px 15px;
+    font-size: 16px;
+    min-width: auto;
+    color: black;
+    background-color: #9bd0ff; /* 藍色 */
+    margin-left: 20px; /* 與計時器間隔 */
+}
+.solution-btn:hover {
+    background-color: #4fa9ee;
+}
+
+/* --- 完成圖彈窗內的 game-board 樣式微調 --- */
+#solution-board {
+    margin: 20px auto; /* 上下邊距 */
+    border-color: #607D8B; /* 綠色邊框以示區別 */
+    max-width: 300px; /* 限制最大寬度 */
+}
+
+/* 關閉按鈕寬度調整 */
+#close-solution-btn {
+    width: 100%;
+}
+
 /* ==================== 響應式設計 (RWD) ==================== */
-
-/* 平板設備 (768px 以下) */
 @media (max-width: 768px) {
-    h1 {
-        font-size: 28px;
-        margin-bottom: 15px;
-    }
-    
-    .score-board {
-        font-size: 18px;
-        padding: 8px 15px;
-        gap: 15px;
-    }
-    
-    .score-board span {
-        font-size: 18px;
-    }
-    
-    .game-container {
-        max-width: 90%;
-        padding: 15px;
-    }
-    
-    #puzzle-board {
-        max-width: 100%;
-    }
-    
-    .control-buttons {
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .control-buttons button {
-        padding: 10px 15px;
-        font-size: 14px;
-        min-width: 100px;
-    }
-    
-    .win-title {
-        font-size: 32px;
-    }
-    
-    .win-details-container {
-        font-size: 18px;
-    }
-    
-    .win-btn {
-        font-size: 20px;
-        padding: 8px 16px;
-    }
+    h1 { font-size: 28px; margin-bottom: 15px; }
+    .score-board { font-size: 18px; padding: 8px 15px; gap: 15px; }
+    .score-board span { font-size: 18px; }
+    .game-container { max-width: 90%; padding: 15px; }
+    #game-board { max-width: 100%; } /* 修正 */
+    .controls { gap: 10px; flex-wrap: wrap; } /* 修正 */
+    .controls button { padding: 10px 15px; font-size: 14px; min-width: 100px; } /* 修正 */
+    .win-title { font-size: 32px; }
+    .win-details-container { font-size: 18px; }
+    .win-btn { font-size: 20px; padding: 8px 16px; }
 }
 
-/* 手機設備 (480px 以下) */
 @media (max-width: 480px) {
-    body {
-        padding: 10px;
-    }
-    
-    h1 {
-        font-size: 24px;
-        margin-bottom: 12px;
-    }
-    
-    .score-board {
-        font-size: 16px;
-        padding: 6px 10px;
-        gap: 10px;
-        flex-direction: column;
-    }
-    
-    .score-board span {
-        font-size: 16px;
-    }
-    
-    .game-container {
-        max-width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-    }
-    
-    #puzzle-board {
-        max-width: 100%;
-        margin: 0 auto;
-    }
-    
-    .control-buttons {
-        flex-direction: column;
-        gap: 8px;
-        width: 100%;
-    }
-    
-    .control-buttons button {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        min-width: auto;
-    }
-    
-    .win-title {
-        font-size: 28px;
-    }
-    
-    .win-details-container {
-        font-size: 16px;
-        padding: 10px;
-    }
-    
-    .win-detail {
-        padding: 6px 0;
-    }
-    
-    .win-score-box {
-        font-size: 18px;
-    }
-    
-    .win-fail-message {
-        font-size: 18px;
-    }
-    
-    .modal-body.win-buttons {
-        flex-direction: column;
-        gap: 10px;
-        padding: 0;
-    }
-    
-    .win-btn {
-        font-size: 18px;
-        padding: 10px 20px;
-        width: 100%;
-    }
-    
-    .header-control.close-only {
-        width: 45px;
-        height: 45px;
-        font-size: 32px;
-    }
+    body { padding: 10px; }
+    h1 { font-size: 24px; margin-bottom: 12px; }
+    .score-board { font-size: 16px; padding: 6px 10px; gap: 10px; flex-direction: column; }
+    .score-board span { font-size: 16px; }
+    .game-container { max-width: 100%; padding: 12px; border-radius: 10px; }
+    #game-board { max-width: 100%; margin: 0 auto; } /* 修正 */
+    .controls { flex-direction: column; gap: 8px; width: 100%; } /* 修正 */
+    .controls button { width: 100%; padding: 12px; font-size: 16px; min-width: auto; } /* 修正 */
+    .win-title { font-size: 28px; }
+    .win-details-container { font-size: 16px; padding: 10px; }
+    .win-detail { padding: 6px 0; }
+    .win-score-box { font-size: 18px; }
+    .win-fail-message { font-size: 18px; }
+    .modal-body.win-buttons { flex-direction: column; gap: 10px; padding: 0; }
+    .win-btn { font-size: 18px; padding: 10px 20px; width: 100%; }
+    .gallery-img { width: calc(50% - 8px); max-width: 100px; }
+    .help-description { font-size: 1em; }
 }
 
-/* 超小型手機 (360px 以下) */
 @media (max-width: 360px) {
-    h1 {
-        font-size: 20px;
-    }
-    
-    .score-board {
-        font-size: 14px;
-    }
-    
-    .score-board span {
-        font-size: 14px;
-    }
-    
-    #puzzle-board {
-        transform: scale(0.9);
-    }
-    
-    .win-title {
-        font-size: 24px;
-    }
+    h1 { font-size: 20px; }
+    .score-board, .score-board span { font-size: 14px; }
+    #game-board { transform: scale(0.9); } /* 修正 */
+    .win-title { font-size: 24px; }
 }

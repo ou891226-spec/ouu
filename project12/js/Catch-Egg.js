@@ -1,6 +1,62 @@
 // 遊戲變數 - 在 DOM 載入後初始化
 let game, basket, scoreBoard, timerDisplay, difficultyModal, gameScreen, pauseBtn, resumeBtn, endBtn, resetBtn, countdownOverlay, highScoreElement;
 
+// 遊戲進入跟踪
+let currentGameRecordId = null;
+
+// 記錄遊戲進入
+function trackGameEntry() {
+    const gameData = {
+        game_type: '反應力',
+        game_id: 2,
+        difficulty: currentDifficulty || 'easy'
+    };
+    
+    fetch('start_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(gameData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.record_id) {
+            currentGameRecordId = data.record_id;
+            console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+        }
+    })
+    .catch(error => {
+        console.error('記錄遊戲進入失敗:', error);
+    });
+}
+
+// 記錄遊戲退出
+function trackGameExit() {
+    if (!currentGameRecordId) return;
+    
+    const exitData = {
+        record_id: currentGameRecordId
+    };
+    
+    // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+    } else {
+        // 備用方案：使用 fetch
+        fetch('mark_game_exit.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(exitData)
+        }).catch(error => {
+            console.error('記錄遊戲退出失敗:', error);
+        });
+    }
+}
+
 // 初始化遊戲元素
 function initGameElements() {
     game = document.getElementById('game');
@@ -116,6 +172,7 @@ let currentDifficulty = 'easy';
 function selectDifficulty(difficulty) {
     currentDifficulty = difficulty;
     
+    
     // 從資料庫設定獲取目標分數
     let passScore = 200; // 預設值
     console.log('選擇難度:', difficulty);
@@ -155,17 +212,17 @@ function selectDifficulty(difficulty) {
         totalTime = 120;
     }
     
-    // 重置游戏保存标志
+    // 重置
     window.gameResultSaved = false;
     
-    // 直接开始游戏，不发送开始记录
+    // 直接開始遊戲，不發送開始記錄
     if (difficultyModal) difficultyModal.style.display = 'none';
     // 倒數期間隱藏所有按鈕
     if (endBtn) endBtn.classList.add('hidden');
     if (resetBtn) resetBtn.classList.add('hidden');
     if (pauseBtn) pauseBtn.classList.add('hidden');
     if (resumeBtn) resumeBtn.classList.add('hidden');
-    showCountdown(startGameTimer);
+    showCountdown(startEggGame);
 };  
 
 // 更新分數顯示
@@ -257,8 +314,8 @@ function showCountdown(callback) {
     }, 1000);
 }
 
-// 開始遊戲
-function startGameTimer() {
+// 開始遊戲（避免與時間統計腳本同名函式衝突）
+function startEggGame() {
     // 檢查必要的元素是否存在
     if (!scoreBoard) {
         console.error('scoreBoard 元素未找到');
@@ -269,6 +326,12 @@ function startGameTimer() {
         return;
     }
     
+    // 開始時間追踪
+    if (typeof manualStartGameTimer === 'function') {
+        manualStartGameTimer();
+        console.log('已開始遊戲時間追蹤');
+    }
+    
     score = 0;
     updateScore();
     if (timerDisplay) {
@@ -276,6 +339,15 @@ function startGameTimer() {
     }
     gameStarted = true;
     gamePaused = false;
+    
+    // 記錄遊戲進入（在真正開始遊戲時）
+    trackGameEntry();
+    
+    // 啟動遊戲退出處理器追蹤
+    if (typeof gameExitHandler !== 'undefined') {
+        gameExitHandler.startGame();
+        console.log('遊戲追蹤已啟動');
+    }
     
     // 🔑 確保籃子可以操作
     if (basket) {
@@ -309,14 +381,14 @@ function startGameTimer() {
         }).catch(e => console.log('遊戲開始音效預熱失敗:', e));
     }
 
-    // 確保籃子置中
+    // 確保籃子置中（統一使用 translateX + left:0 模式）
     const centerBasketForGame = () => {
       const basketWidth = basket.offsetWidth;
       const gameWidth = game.offsetWidth;
       if (basketWidth > 0 && gameWidth > 0) {
         const centerLeft = (gameWidth - basketWidth) / 2;
-        basket.style.transform = 'none';
-        basket.style.left = centerLeft + 'px';
+        basket.style.transform = `translateX(${centerLeft}px)`;
+        basket.style.left = '0px';
         console.log('遊戲開始時籃子置中:', centerLeft);
       } else {
         setTimeout(centerBasketForGame, 50);
@@ -851,6 +923,13 @@ function resumeGame() {
 function endGame(isWin = false, isManualExit = false) {
     gameStarted = false;  // 重置遊戲狀態
     gamePaused = false;   // 重置暫停狀態
+    
+    // 結束時間追踪
+    if (typeof manualEndGameTimer === 'function') {
+        manualEndGameTimer();
+        console.log('已結束遊戲時間追蹤');
+    }
+    
     clearInterval(itemInterval);
     clearInterval(countdown);
     
@@ -947,6 +1026,9 @@ function endGame(isWin = false, isManualExit = false) {
             gameExitHandler.endGame();
             console.log('遊戲追蹤已停止，防止重複記錄');
         }
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
     })
     .catch(error => {
         console.error('儲存遊戲結果時發生錯誤:', error);
@@ -956,6 +1038,9 @@ function endGame(isWin = false, isManualExit = false) {
             gameExitHandler.endGame();
             console.log('保存失敗，但已停止追蹤以防重複');
         }
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
     });
     
     // 重置遊戲狀態
@@ -1049,9 +1134,9 @@ function handleEggVideoEnd() {
         // 第一個視頻播完，等待用戶點擊下一步
         console.log('第一個接金蛋視頻播完，等待用戶點擊下一步');
     } else if (currentVideo === 'egg2') {
-        // 第二個視頻播完，自動回到第一個
-        console.log('第二個接金蛋視頻播完，自動回到第一個');
-        goToEggFirstStep();
+        // 第二個視頻播完，停留在第二步，不自動回到第一步
+        console.log('第二個接金蛋視頻播完，停留在第二步');
+        // 移除自動循環，讓用戶可以手動選擇上一步或關閉說明
     }
 }
 
@@ -1204,6 +1289,14 @@ function eggReturnToMain() {
 window.onload = function() {
     // 🔑 首先初始化所有遊戲元素
     initGameElements();
+    
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
     
     // 確保初始變量設定
     totalTime = 60; // 默認簡單模式時間

@@ -594,13 +594,17 @@ line-height: 1 !important;
     border-color: #000 !important;
 }
 
-/* 統一的按鈕顏色方案 */
+/* 統一的按鈕顏色方案 - 更新為照片中的樣式 */
 .game-step-button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    font-size: 18px;
+    padding: 10px 25px;
+    font-weight: bold;
+    min-width: 110px;
 }
 
 .game-step-button:hover {
@@ -630,31 +634,64 @@ line-height: 1 !important;
 .game-instruction-text {
     color: #0066cc;
     font-weight: bold;
-    text-align: left;
+    text-align: center;
     font-size: 1.3rem;
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 0 20px;
+    line-height: 1.4;
 }
 
 /* 統一的步驟指示器顏色 */
 .game-step-indicator {
     color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 說明頁面底部按鈕區域樣式 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6b7280;
+    font-size: 18px;
+    text-align: center;
 }
 
 /* 犯人遊戲特定的說明文字樣式 */
 #prisoner-instruction-text {
-    min-width: 300px;
-    flex: 3;
-    text-align: left;
+    text-align: center;
     padding: 0 20px;
     line-height: 1.4;
     font-size: 1.3rem;
     color: #0066cc;
     font-weight: bold;
+    margin: 0 auto;
+    max-width: 600px;
 }
 
 /* 犯人遊戲按鈕容器樣式 */
 #prisoner-prev-step-btn,
 #prisoner-next-step-btn {
     flex-shrink: 0;
+}
+
+#prisoner-prev-step-btn {
+    margin-right: auto;
+}
+
+#prisoner-next-step-btn {
+    margin-left: auto;
 }
 
 /* 犯人遊戲說明文字容器響應式設計 */

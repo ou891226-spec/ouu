@@ -59,10 +59,12 @@ function isMiniGamePage() {
         '/Memory-Game-2P.php',
         '/prisoner.php',
         '/rhythm_game.php',
+        '/rhythm_game_multiplayer.php',
         '/text-color.php',
         '/clue.php',
         '/river.php',
-        '/river.index.php'
+        '/river.index.php',
+        '/puzzle.php'
     ];
     
     const isGame = miniGamePages.some(page => currentPath.includes(page));

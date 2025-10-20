@@ -155,7 +155,7 @@ try {
         FROM game_records gr
         LEFT JOIN games g ON gr.game_id = g.game_id
         WHERE gr.game_type IS NOT NULL
-        AND (gr.play_time > 0 OR gr.score > 0)
+        AND (gr.play_time > 0 OR gr.score > 0 OR gr.status = 'exited')
         AND NOT (gr.game_id = 10 AND g.game_name = '數字排排樂' AND gr.difficulty = 'hard')
         $game_exit_where_clause
         GROUP BY gr.game_id, gr.game_type, g.game_name

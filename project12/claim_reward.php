@@ -40,8 +40,10 @@ try {
       d.task_name,
       d.task_description,
       CASE 
-        WHEN mt.claimed_date IS NOT NULL THEN 'claimed'
-        WHEN mt.completed_date IS NOT NULL THEN 'completed'
+        -- 修正：只有當領取日期是今天時，狀態才是 'claimed'
+        WHEN mt.claimed_date IS NOT NULL AND DATE(mt.claimed_date) = CURDATE() THEN 'claimed'
+        -- 修正：只有當完成日期是今天時，狀態才是 'completed' (尚未領取)
+        WHEN mt.completed_date IS NOT NULL AND DATE(mt.completed_date) = CURDATE() THEN 'completed'
         -- 動態判斷累積型任務是否已達成
         WHEN (
             -- 遊戲大師：完成25個關卡
@@ -67,6 +69,16 @@ try {
             -- 遊戲愛好者：完成15局遊戲
             (d.task_name = '遊戲愛好者' OR d.task_description LIKE '%完成15局%' OR d.task_description LIKE '%15局%') AND
             (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 15
+        ) THEN 'completed'
+        WHEN (
+            -- 遊戲專家：正常玩完30局遊戲
+            (d.task_name = '遊戲專家' OR d.task_description LIKE '%正常玩完30局遊戲%' OR d.task_description LIKE '%30局%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 30
+        ) THEN 'completed'
+        WHEN (
+            -- 遊戲之神：完成100局遊戲
+            (d.task_name = '遊戲之神' OR d.task_description LIKE '%完成100局遊戲%' OR d.task_description LIKE '%100局%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 100
         ) THEN 'completed'
         WHEN (
             -- 持久戰士：累積遊戲時間達到目標
@@ -165,6 +177,118 @@ try {
                  AND DATE(play_date) < CURDATE()
              )) >= 1
         ) THEN 'completed'
+        WHEN (
+            -- 分數效率：平均每局獲得50分以上
+            (d.task_name = '分數效率' OR d.task_description LIKE '%平均每局獲得50分以上%') AND
+            (SELECT COALESCE(AVG(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 50
+        ) THEN 'completed'
+        WHEN (
+            -- 高分專家：平均每局獲得100分以上
+            (d.task_name = '高分專家' OR d.task_description LIKE '%平均每局獲得100分以上%') AND
+            (SELECT COALESCE(AVG(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 100
+        ) THEN 'completed'
+        WHEN (
+            -- 分數王者：總分達到5000分
+            (d.task_name = '分數王者' OR d.task_description LIKE '%總分達到5000分%') AND
+            (SELECT COALESCE(SUM(score), 0) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 5000
+        ) THEN 'completed'
+        WHEN (
+            -- 平衡玩家：每種類型遊戲都完成至少1局
+            (d.task_name = '平衡玩家' OR d.task_description LIKE '%每種類型遊戲都完成至少1局%') AND
+            (SELECT COUNT(DISTINCT CASE 
+                WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
+                ELSE game_type 
+            END) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 3
+        ) THEN 'completed'
+        WHEN (
+            -- 全面發展：每種類型遊戲都完成至少3局
+            (d.task_name = '全面發展' OR d.task_description LIKE '%每種類型遊戲都完成至少3局%') AND
+            (SELECT COUNT(*) FROM (
+                SELECT CASE 
+                    WHEN game_type IN ('記憶力', '翻牌對對樂', '圖片線索問答', '追蹤犯人遊戲') THEN '記憶力'
+                    WHEN game_type IN ('反應力', '接金蛋遊戲', '看字選色遊戲', '節奏遊戲') THEN '反應力'
+                    WHEN game_type IN ('算術邏輯力', '2048', '算菜錢遊戲', '數字排排樂', '邏輯力') THEN '算術邏輯力'
+                    ELSE game_type 
+                END as game_category, COUNT(*) as count
+                FROM game_records 
+                WHERE member_id = mt.member_id 
+                AND DATE(play_date) = CURDATE()
+                GROUP BY game_category
+                HAVING count >= 3
+            ) as qualified_categories) >= 3
+        ) THEN 'completed'
+        WHEN (
+            -- 線索專家：完成圖片線索問答遊戲
+            (d.task_name = '線索專家' OR d.task_description LIKE '%圖片線索問答%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力' AND game_id = 8) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 拼圖大師：完成數字排排樂遊戲
+            (d.task_name = '拼圖大師' OR d.task_description LIKE '%數字排排樂%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 10) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 色彩專家：完成看字選色遊戲
+            (d.task_name = '色彩專家' OR d.task_description LIKE '%看字選色%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '反應力' AND game_id = 1) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 數字大師：完成2048遊戲
+            (d.task_name = '數字大師' OR d.task_description LIKE '%2048%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 4) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 記憶專家：完成翻牌對對樂遊戲
+            (d.task_name = '記憶專家' OR d.task_description LIKE '%翻牌對對樂%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '記憶力' AND game_id = 5) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 節拍大師：完成節奏遊戲
+            (d.task_name = '節拍大師' OR d.task_description LIKE '%節奏遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '節奏遊戲' AND game_id = 7) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 算數專家：完成算菜錢遊戲
+            (d.task_name = '算數專家' OR d.task_description LIKE '%算菜錢%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND game_type = '算術邏輯力' AND game_id = 3) >= 1
+        ) THEN 'completed'
+        WHEN (
+            -- 簡單專家：完成10局簡單難度遊戲
+            (d.task_name = '簡單專家' OR d.task_description LIKE '%完成10局簡單難度遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'easy') >= 10
+        ) THEN 'completed'
+        WHEN (
+            -- 普通大師：完成10局普通難度遊戲
+            (d.task_name = '普通大師' OR d.task_description LIKE '%完成10局普通難度遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'normal') >= 10
+        ) THEN 'completed'
+        WHEN (
+            -- 困難王者：完成5局困難難度遊戲
+            (d.task_name = '困難王者' OR d.task_description LIKE '%完成5局困難難度遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND difficulty = 'hard') >= 5
+        ) THEN 'completed'
+        WHEN (
+            -- 快速完成：5分鐘內完成3局遊戲
+            (d.task_name = '快速完成' OR d.task_description LIKE '%5分鐘內完成3局遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 300) >= 3
+        ) THEN 'completed'
+        WHEN (
+            -- 效率專家：10分鐘內完成5局遊戲
+            (d.task_name = '效率專家' OR d.task_description LIKE '%10分鐘內完成5局遊戲%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 600) >= 5
+        ) THEN 'completed'
+        WHEN (
+            -- 連續勝利：連續正常玩完5局遊戲
+            (d.task_name = '連續勝利' OR d.task_description LIKE '%連續正常玩完5局遊戲%' OR d.task_description LIKE '%連續.*5局%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE()) >= 5
+        ) THEN 'completed'
+        WHEN (
+            -- 時間挑戰者：正常玩完3局遊戲，每局時間不超過1分鐘
+            (d.task_name = '時間挑戰者' OR d.task_description LIKE '%每局時間不超過1分鐘%' OR d.task_description LIKE '%3局遊戲.*1分鐘%') AND
+            (SELECT COUNT(*) FROM game_records WHERE member_id = mt.member_id AND DATE(play_date) = CURDATE() AND play_time <= 60) >= 3
+        ) THEN 'completed'
         ELSE 'pending'
       END as dynamic_status
     FROM member_tasks mt
@@ -183,14 +307,41 @@ try {
   
   // 檢查是否已完成（支援動態狀態）
   $is_completed = $task_record['completed_date'] || $task_record['dynamic_status'] === 'completed';
+  
+  // 如果動態狀態檢查失敗，進行額外的動態檢查
+  if (!$is_completed) {
+    // 針對「數字大師」任務進行特殊檢查
+    if ($task_record['task_name'] === '數字大師' || strpos($task_record['task_description'], '2048') !== false) {
+      $check_stmt = $pdo->prepare("
+        SELECT COUNT(*) as count FROM game_records 
+        WHERE member_id = ? AND DATE(play_date) = CURDATE() 
+        AND game_type = '算術邏輯力' AND game_id = 4
+      ");
+      $check_stmt->execute([$member_id]);
+      $game_count = $check_stmt->fetch()['count'];
+      
+      if ($game_count >= 1) {
+        $is_completed = true;
+      }
+    }
+  }
+  
   if (!$is_completed) {
     echo json_encode(['success' => false, 'message' => '任務尚未完成']);
     exit;
   }
   
+  // 檢查是否已領取（只檢查今天的領取記錄）
   if ($task_record['claimed_date']) {
-    echo json_encode(['success' => false, 'message' => '獎勵已領取過']);
-    exit;
+    // 檢查領取日期是否是今天
+    $claimed_date = new DateTime($task_record['claimed_date']);
+    $today = new DateTime('today');
+    
+    if ($claimed_date->format('Y-m-d') === $today->format('Y-m-d')) {
+      echo json_encode(['success' => false, 'message' => '獎勵已領取過']);
+      exit;
+    }
+    // 如果不是今天領取的，允許繼續（因為是新的一天的任務）
   }
   
   // 更新為已領取
@@ -202,7 +353,7 @@ try {
   
   if ($updated_rows > 0) {
     // 獲取任務對應的成就
-    $achievement_sql = "SELECT reward_achievement FROM daily_tasks WHERE task_id = ?";
+    $achievement_sql = "SELECT task_name, reward_achievement FROM daily_tasks WHERE task_id = ?";
     $stmt = $pdo->prepare($achievement_sql);
     $stmt->execute([$task_id]);
     $task_info = $stmt->fetch();
@@ -283,8 +434,8 @@ try {
       }
       
       if ($achievement) {
-        // 檢查是否已經獲得過這個成就
-        $check_member_achievement_sql = "SELECT COUNT(*) FROM member_achievements WHERE member_id = ? AND achievement_id = ?";
+        // 檢查今天是否已經獲得過這個成就
+        $check_member_achievement_sql = "SELECT COUNT(*) FROM member_achievements WHERE member_id = ? AND achievement_id = ? AND DATE(earned_date) = CURDATE()";
         $stmt = $pdo->prepare($check_member_achievement_sql);
         $stmt->execute([$member_id, $achievement['achievement_id']]);
         $has_achievement = $stmt->fetchColumn() > 0;

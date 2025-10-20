@@ -59,7 +59,7 @@ $highScore = 0;
         // 在遊戲開始時啟動退出追蹤
         function startGameTracking() {
             if (typeof gameExitHandler !== 'undefined') {
-                gameExitHandler.startGame();
+                // 遊戲追蹤將在真正開始遊戲時啟動
             }
         }
         
@@ -117,26 +117,31 @@ $highScore = 0;
                 </video>
             </div>
             
-            <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
-                <div id="prisoner-prev-step-btn" style="display:none;">
-                    <button id="prisoner-prev-step-button" onclick="goToPrisonerPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+            <!-- 說明文字區域 -->
+            <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                <div id="prisoner-instruction-text" class="game-instruction-text">
+                    先選擇遊戲的難度，每個難度只要得分超過20分(含)就會過關。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，答對會加2分，答錯不扣分，在限制時間內得到規定的分數通過關卡。
+                </div>
+            </div>
+            
+            <!-- 按鈕和步驟指示器區域 -->
+            <div class="help-modal-footer" style="display: flex !important; justify-content: space-between !important; align-items: center !important; position: relative !important;">
+                <!-- 上一步按鈕 -->
+                <div id="prisoner-prev-step-btn" style="display:none; margin-right: auto !important; order: 1 !important;">
+                    <button id="prisoner-prev-step-button" onclick="goToPrisonerPrevStep()" class="game-step-button prev-step">
                         上一步
                     </button>
                 </div>
                 
-                <div id="prisoner-instruction-text" class="game-instruction-text">
-                    先選擇遊戲的難度，每個難度只要得分超過20分(含)就會過關。選擇難度後遊戲會開始，畫面上有九個洞，洞會輪流出現犯人，請玩家記住犯人出現的順序，等犯人出現完畢後，玩家再依照犯人出現的順序點擊洞口，答對會加2分，答錯不扣分，在限制時間內得到規定的分數通過關卡。
-                </div>
+                <!-- 進度指示器 -->
+                <span id="prisoner-step-indicator" class="game-step-indicator" style="position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; order: 2 !important;">步驟 1/2</span>
                 
-                <div id="prisoner-next-step-btn" style="margin-left:2rem;">
-                    <button id="prisoner-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                <!-- 下一步按鈕 -->
+                <div id="prisoner-next-step-btn" style="margin-left: auto !important; order: 3 !important;">
+                    <button id="prisoner-next-step-button" class="game-step-button next-step">
                         下一步
                     </button>
                 </div>
-            </div>
-            
-            <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                <span id="prisoner-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
             </div>
         </div>
       </div>
@@ -211,6 +216,7 @@ $highScore = 0;
   </div>
   <audio id="game-bgm" src="audio/prisoner.mp3" loop></audio>
 
+  <script src="js/auto-save-time-fixed.js"></script>
   <script src="js/game-common.js"></script>
   <script src="js/get-score.js"></script>
   <script src="js/prisoner.js?v=<?php echo time(); ?>"></script>

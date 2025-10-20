@@ -307,7 +307,9 @@ $game_type_to_name = [
             <a href="test_results.php">📈 測試結果</a>
             <a href="custom_score_trend.php">📊 趨勢分析</a>
             <a href="baseline_time_management.php">📊 雷達圖分析</a>
+            <!--
             <a href="delete_test_records.php" style="color: #dc3545;">🗑️ 刪除測試記錄</a>
+            -->
         </div>
         
         <div class="filters">

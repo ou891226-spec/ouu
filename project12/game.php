@@ -82,6 +82,9 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       </form>
     </div>
   </div>
+  <div class="avatar-info">
+    <small>📝 支援 JPG、PNG、GIF 格式 | 💾 建議小於 2MB，最大 5MB</small>
+  </div>
   <div class="profile-greeting">
     <?php echo htmlspecialchars($name); ?>，您好!
   </div>
@@ -171,6 +174,18 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
         <a href="rhythm_game.php"><img src="img/rhythm1.png" alt="節奏遊戲"></a>
       </div>
       <div class="game-title">節奏遊戲</div>
+    </div>
+    <div class="game-block">
+      <div class="game-item" data-title="圖片線索問答">
+        <a href="clue.php"><img src="img/clue11.png" alt="圖片線索問答"></a>
+      </div>
+      <div class="game-title">圖片線索問答</div>
+    </div>
+    <div class="game-block">
+      <div class="game-item" data-title="數字排排樂">
+        <a href="puzzle.php"><img src="img/puzzle1.png" alt="數字排排樂"></a>
+      </div>
+      <div class="game-title">數字排排樂</div>
     </div>
   </div>
 </div>

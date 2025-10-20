@@ -407,9 +407,9 @@ button:hover {
     right: 20px;
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 36px;
     cursor: pointer;
-    color: #999;
+    color: #111;
     font-weight: bold;
     line-height: 1;
     padding: 0;
@@ -560,13 +560,17 @@ button:hover {
     text-align: center;
 }
 
-/* 統一的按鈕顏色方案 */
+/* 統一的按鈕顏色方案 - 更新為照片中的樣式 */
 .game-step-button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    font-size: 18px;
+    padding: 10px 25px;
+    font-weight: bold;
+    min-width: 110px;
 }
 
 .game-step-button:hover {
@@ -603,23 +607,52 @@ button:hover {
 /* 統一的步驟指示器顏色 */
 .game-step-indicator {
     color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 說明頁面底部按鈕區域樣式 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6b7280;
+    font-size: 18px;
+    text-align: center;
 }
 
 /* 看字選色遊戲特定的說明文字樣式 */
 #textcolor-instruction-text {
-    min-width: 300px;
-    flex: 3;
-    text-align: left;
+    text-align: center;
     padding: 0 20px;
     line-height: 1.4;
     font-size: 1.3rem;
     color: #0066cc;
+    margin: 0 auto;
+    max-width: 600px;
 }
 
 /* 看字選色遊戲按鈕容器樣式 */
 #textcolor-prev-step-btn,
 #textcolor-next-step-btn {
     flex-shrink: 0;
+}
+
+#textcolor-prev-step-btn {
+    margin-right: auto;
+}
+
+#textcolor-next-step-btn {
+    margin-left: auto;
 }
 
 /* 看字選色遊戲說明文字容器響應式設計 */
@@ -680,7 +713,7 @@ button:hover {
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: #222;
+  color: #666;
   font-size: 18px;
   font-weight: 500;
   background: none;
@@ -698,7 +731,7 @@ button:hover {
 .difficulty-title {
   flex: 1;
   text-align: center;
-  font-size: 2rem;
+  font-size: 40px;
   font-weight: bold;
   color: #222;
   letter-spacing: 1px;
@@ -712,7 +745,7 @@ button:hover {
   background: none;
   border: none;
   cursor: pointer;
-  color: #222;
+  color: #666;
   font-size: 18px;
   font-weight: 500;
   gap: 0;
@@ -738,8 +771,8 @@ button:hover {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 20px;
-  font-size: 1.6rem;
+  border-radius: 8px;
+  font-size: 40px;
   font-weight: bold;
   padding: 28px 0 18px 0;
   cursor: pointer;
@@ -765,27 +798,27 @@ button:hover {
 
 /* 9. 顏色主題與懸停效果 */
 .easy-mode {
-  background: #7bc96f;
+  background: #40F55B;
   color: #222;
 }
 .easy-mode:hover {
-  background: #6bb85e;
+  background: #29b33e;
 }
 
 .normal-mode {
-  background: #ffe066;
+  background: #FFE75C;
   color: #222;
 }
 .normal-mode:hover {
-  background: #ffd23b;
+  background: #bea30e;
 }
 
 .hard-mode {
-  background: #f25f5c;
+  background: #FF2A2A;
   color: #000000;
 }
 .hard-mode:hover {
-  background: #d94340;
+  background: #e17055;
 }
 
 /* 10. 手機板響應式調整 */

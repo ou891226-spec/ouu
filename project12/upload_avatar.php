@@ -52,15 +52,19 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-// 檢查檔案大小
-if ($file['size'] > 20 * 1024 * 1024) {
+// 檢查檔案大小（調整為更保守的限制）
+$max_size_mb = 5; // 降低到5MB，更適合頭像
+$max_size_bytes = $max_size_mb * 1024 * 1024;
+
+if ($file['size'] > $max_size_bytes) {
     $file_size_mb = round($file['size'] / (1024 * 1024), 2);
     echo json_encode([
         'success' => false, 
         'message' => '⚠️ 檔案太大！',
-        'suggestion' => "您的檔案大小為 {$file_size_mb}MB，請選擇小於 20MB 的圖片。",
-        'max_size' => '20MB',
-        'current_size' => $file_size_mb . 'MB'
+        'suggestion' => "您的檔案大小為 {$file_size_mb}MB，請選擇小於 {$max_size_mb}MB 的圖片。建議使用小於 2MB 的圖片以獲得最佳上傳體驗。",
+        'max_size' => $max_size_mb . 'MB',
+        'current_size' => $file_size_mb . 'MB',
+        'recommended_size' => '小於 2MB'
     ]);
     exit;
 }

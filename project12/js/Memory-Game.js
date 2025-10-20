@@ -136,8 +136,8 @@ function initVideoPlayback() {
     video.setAttribute('data-current-video', 'card1');
     
     // 顯示「上一步」和「下一步」按鈕
-    document.getElementById('prev-step-button').style.display = 'none';
-    document.getElementById('next-step-button').style.display = 'block';
+    document.getElementById('prev-step-btn').style.display = 'none';
+    document.getElementById('next-step-btn').style.display = 'block';
     
     updateInstructionUI('card1');
     
@@ -202,19 +202,19 @@ function goToPrevStep() {
 function updateInstructionUI(videoName) {
     const instructionText = document.getElementById('instruction-text');
     const stepIndicator = document.getElementById('step-indicator');
-    const prevStepButton = document.getElementById('prev-step-button');
-    const nextStepButton = document.getElementById('next-step-button');
+    const prevStepBtn = document.getElementById('prev-step-btn');
+    const nextStepBtn = document.getElementById('next-step-btn');
     
     if (videoName === 'card1') {
         instructionText.textContent = '先選擇主題，再選擇難度';
         stepIndicator.textContent = '步驟 1/2';
-        prevStepButton.style.display = 'none';
-        nextStepButton.style.display = 'block';
+        prevStepBtn.style.display = 'none';
+        nextStepBtn.style.display = 'block';
     } else if (videoName === 'card2') {
         instructionText.innerHTML = '點卡片翻面，比對圖案<br>在時間內完成配對！';
         stepIndicator.textContent = '步驟 2/2';
-        prevStepButton.style.display = 'block';
-        nextStepButton.style.display = 'none';
+        prevStepBtn.style.display = 'block';
+        nextStepBtn.style.display = 'none';
     }
 }
 
@@ -264,9 +264,17 @@ function selectDifficulty(difficulty) {
     document.getElementById('timer').textContent = timeLeft;
     document.getElementById('difficulty-modal').classList.add('hidden');
     document.getElementById('game-container').classList.remove('hidden');
+    
+    // 開始時間追踪
+    if (typeof manualStartGameTimer === 'function') {
+        manualStartGameTimer();
+        console.log('已開始遊戲時間追蹤');
+    }
+    
     // === 新增 ===
     gameStartTimestamp = Date.now();
     // ===========
+    
     initializeGame();
 }
 
@@ -598,6 +606,15 @@ function startPreviewCountdown() {
             previewCountdown.classList.add('hidden');
             hideAllCards();
             
+            // 記錄遊戲進入（在真正開始遊戲時）
+            trackGameEntry();
+            
+            // 啟動遊戲退出處理器追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+            
             // 開始計時
             startTimer();
            
@@ -642,6 +659,12 @@ function resumeGame() {
 // 結束遊戲
 function endGame(isManualExit = false) {
     console.log('endGame 函數被調用，isManualExit:', isManualExit);
+    
+    // 結束時間追踪
+    if (typeof manualEndGameTimer === 'function') {
+        manualEndGameTimer();
+        console.log('已結束遊戲時間追蹤');
+    }
     
     if (gameTimer) {
         clearInterval(gameTimer);
@@ -770,6 +793,9 @@ async function saveMemoryGameResult(isWin, score, playTime, isManualExit = false
             gameExitHandler.endGame();
             console.log('遊戲追蹤已停止，防止重複記錄');
         }
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
     } catch (error) {
         console.error('儲存遊戲結果時發生錯誤:', error);
         
@@ -778,9 +804,13 @@ async function saveMemoryGameResult(isWin, score, playTime, isManualExit = false
             gameExitHandler.endGame();
             console.log('保存失敗，但已停止追蹤以防重複');
         }
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
     }
 }
- 
+
+
 // 獲取當前會員ID
 function getCurrentMemberId() {
     // 嘗試從多個來源獲取會員ID
@@ -789,15 +819,26 @@ function getCurrentMemberId() {
     const memberIdFromUrl = urlParams.get('member_id');
     if (memberIdFromUrl) return memberIdFromUrl;
     
-    // 2. 從 localStorage 獲取
+    // 2. 從隱藏的 input 字段獲取（支持兩種格式）
+    // 優先查找 name="member_id"
+    let hiddenInput = document.querySelector('input[name="member_id"]');
+    // 如果找不到，嘗試查找 id="member-id"
+    if (!hiddenInput) {
+        hiddenInput = document.getElementById('member-id');
+    }
+    if (hiddenInput && hiddenInput.value) {
+        return hiddenInput.value;
+    }
+    
+    // 3. 從 localStorage 獲取
     const memberIdFromStorage = localStorage.getItem('member_id');
     if (memberIdFromStorage) return memberIdFromStorage;
     
-    // 3. 從 sessionStorage 獲取
+    // 4. 從 sessionStorage 獲取
     const memberIdFromSession = sessionStorage.getItem('member_id');
     if (memberIdFromSession) return memberIdFromSession;
     
-    // 4. 如果都找不到，返回預設值（用於測試）
+    // 5. 如果都找不到，返回預設值（用於測試）
     console.warn('無法獲取會員ID，使用預設值');
     return 23; // 預設測試會員ID
 }
@@ -948,9 +989,73 @@ function returnToMain() {
     }
 }
  
+// 遊戲進入跟踪
+let currentGameRecordId = null;
+
+// 記錄遊戲進入
+function trackGameEntry() {
+    const gameData = {
+        game_type: '記憶力',
+        game_id: 5,
+        difficulty: currentDifficulty || 'easy'
+    };
+    
+    fetch('start_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(gameData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.record_id) {
+            currentGameRecordId = data.record_id;
+            console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+        }
+    })
+    .catch(error => {
+        console.error('記錄遊戲進入失敗:', error);
+    });
+}
+
+// 記錄遊戲退出
+function trackGameExit() {
+    if (!currentGameRecordId) return;
+    
+    const exitData = {
+        record_id: currentGameRecordId
+    };
+    
+    // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+    } else {
+        // 備用方案：使用 fetch
+        fetch('mark_game_exit.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(exitData)
+        }).catch(error => {
+            console.error('記錄遊戲退出失敗:', error);
+        });
+    }
+}
+
 // 頁面載入時初始化
 window.onload = function() {
     initSounds(); // 初始化音效
+    
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
     
     // 添加音效預熱機制
     const prewarmAudio = () => {

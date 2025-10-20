@@ -112,6 +112,9 @@ $avatar_url = isset($_SESSION['avatar_url']) && $_SESSION['avatar_url'] ? htmlsp
       </form>
     </div>
   </div>
+  <div class="avatar-info">
+    <small>📝 支援 JPG、PNG、GIF 格式 | 💾 建議小於 2MB，最大 5MB</small>
+  </div>
   <div class="profile-greeting">
     <?php echo htmlspecialchars($name); ?>，您好!
   </div>

@@ -191,37 +191,37 @@ if (!isset($_SESSION['member_id'])) {
             <div class="help-content" style="margin-top:1.5rem;padding:0 1rem;">
                 <!-- 影片播放區域 -->
                 <div id="vegetable-video-container" style="text-align:center;margin-bottom:1.5rem;">
-                    <video id="vegetable-current-video" width="100%" height="auto" controls preload="none" style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                    <video id="vegetable-current-video" width="100%" height="auto" controls style="max-width:400px;width:60%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <source src="gd/vegetable1.mp4" type="video/mp4">
                         您的瀏覽器不支援視頻播放。
                     </video>
                 </div>
                 
-                <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                <!-- 說明文字區域 -->
+                <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                    <div id="vegetable-instruction-text" class="game-instruction-text">
+                        先選擇遊戲困難度
+                    </div>
+                </div>
+                
+                <!-- 按鈕和步驟指示器區域 -->
+                <div class="help-modal-footer" style="display: flex !important; justify-content: space-between !important; align-items: center !important; position: relative !important;">
                     <!-- 上一步按鈕 -->
-                    <div id="vegetable-prev-step-btn" style="display:none;">
+                    <div id="vegetable-prev-step-btn" style="display:none; margin-right: auto !important; order: 1 !important;">
                         <button id="vegetable-prev-step-button" onclick="goToVegetablePrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
                     
-                    <!-- 說明文字 -->
-                    <div id="vegetable-instruction-text" class="game-instruction-text">
-                        先選擇遊戲困難度
-                    </div>
+                    <!-- 進度指示器 -->
+                    <span id="vegetable-step-indicator" class="game-step-indicator" style="position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; order: 2 !important;">步驟 1/2</span>
                     
                     <!-- 下一步按鈕 -->
-                    <div id="vegetable-next-step-btn" style="margin-left:1rem;">
+                    <div id="vegetable-next-step-btn" style="margin-left: auto !important; order: 3 !important;">
                         <button id="vegetable-next-step-button" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
-                </div>
-                
-                <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="vegetable-step-indicator" class="game-step-indicator" style="font-size:20px;">步驟 1/2</span>
                 </div>
             </div>
             <span class="close-btn">×</span>
@@ -262,7 +262,7 @@ if (!isset($_SESSION['member_id'])) {
             
             // 遊戲開始時啟動追蹤
             if (typeof gameExitHandler !== 'undefined') {
-                gameExitHandler.startGame();
+                // 遊戲追蹤將在真正開始遊戲時啟動
                 console.log('遊戲追蹤已啟動');
             }
         });

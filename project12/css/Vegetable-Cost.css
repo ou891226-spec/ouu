@@ -358,7 +358,7 @@ button:hover {
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: #222;
+  color: #666;
   font-size: 18px;
   font-weight: 500;
   background: none;
@@ -388,7 +388,7 @@ button:hover {
   background: none;
   border: none;
   cursor: pointer;
-  color: #222;
+  color: #666;
   font-size: 18px;
   font-weight: 500;
   gap: 0;
@@ -413,8 +413,8 @@ button:hover {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 20px;
-  font-size: 1.6rem;
+  border-radius: 8px;
+  font-size: 40px;
   font-weight: bold;
   padding: 28px 0 18px 0;
   cursor: pointer;
@@ -437,25 +437,25 @@ button:hover {
   font-weight: 500;
 }
 .easy-mode {
-  background: #7bc96f;
+  background: #40F55B;
   color: #222;
 }
 .easy-mode:hover {
-  background: #6bb85e;
+  background: #29b33e;
 }
 .normal-mode {
-  background: #ffe066;
+  background: #FFE75C;
   color: #222;
 }
 .normal-mode:hover {
-  background: #ffd23b;
+  background: #bea30e;
 }
 .hard-mode {
-  background: #f25f5c;
+  background: #FF2A2A;
   color: #000000;
 }
 .hard-mode:hover {
-  background: #d94340;
+  background: #e17055;
 }
 
 @media (max-width: 600px) {
@@ -703,7 +703,7 @@ button:hover {
 /* === 遊戲說明 help-modal 樣式（與犯人遊戲一致）=== */
 #help-modal .modal-content {
     background: #fff;
-    padding: 2.8rem 2.8rem 2.2rem 2.8rem;
+    padding: 20px;
     border-radius: 2rem;
     text-align: left;
     width: 95%;
@@ -976,5 +976,74 @@ span highlight-text{
 
 .gameover-info .gameover-row:last-child {
     margin-bottom: 0;
+}
+
+/* 算菜錢遊戲說明頁面按鈕樣式 */
+.game-step-button {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    padding: 14px 28px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+}
+
+.game-step-button.prev-step {
+    background-color: #6b7280;
+    color: white;
+}
+
+.game-step-button.next-step {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* 算菜錢遊戲說明頁面佈局 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#vegetable-prev-step-btn {
+    margin-right: auto;
+}
+
+#vegetable-next-step-btn {
+    margin-left: auto;
+}
+
+/* 算菜錢遊戲說明頁面強制佈局 */
+#help-modal .help-modal-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative !important;
+}
+
+#help-modal .help-modal-footer #vegetable-prev-step-btn {
+    margin-right: auto !important;
+}
+
+#help-modal .help-modal-footer #vegetable-step-indicator {
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+#help-modal .help-modal-footer #vegetable-next-step-btn {
+    margin-left: auto !important;
 }
 

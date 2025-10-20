@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOverModal = document.getElementById('game-over-modal');
             this.targetScoreElement = document.getElementById('target-score');
             
+            // 遊戲進入跟踪
+            this.currentGameRecordId = null;
+            
             // 觸控相關變數
             this.touchStartX = 0;
             this.touchStartY = 0;
@@ -39,8 +42,69 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setupWinModalListeners();
             this.setupGameOverModalListeners();
             
+            // 添加頁面關閉事件監聽器
+            window.addEventListener('beforeunload', () => this.trackGameExit());
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && this.currentGameRecordId) {
+                    this.trackGameExit();
+                }
+            });
+            
             // 從資料庫讀取最高分數 - 功能已移除
             // this.loadBestScore();
+        }
+
+        // 記錄遊戲進入
+        trackGameEntry() {
+            const gameData = {
+                game_type: '算術邏輯力',
+                game_id: 4,
+                difficulty: this.difficulty || 'easy'
+            };
+            
+            fetch('start_game.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(gameData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.record_id) {
+                    this.currentGameRecordId = data.record_id;
+                    console.log('遊戲進入記錄成功，ID:', this.currentGameRecordId);
+                }
+            })
+            .catch(error => {
+                console.error('記錄遊戲進入失敗:', error);
+            });
+        }
+
+        // 記錄遊戲退出
+        trackGameExit() {
+            if (!this.currentGameRecordId) return;
+            
+            const exitData = {
+                record_id: this.currentGameRecordId
+            };
+            
+            // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+            } else {
+                // 備用方案：使用 fetch
+                fetch('mark_game_exit.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(exitData)
+                }).catch(error => {
+                    console.error('記錄遊戲退出失敗:', error);
+                });
+            }
         }
 
         init() {
@@ -927,6 +991,15 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameStartTime = Date.now();
             console.log('遊戲重置，新的開始時間:', this.gameStartTime);
             
+            // 記錄遊戲進入（在真正開始遊戲時）
+            this.trackGameEntry();
+            
+            // 啟動遊戲退出處理器追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+            
             // 重新創建遊戲板
             this.createBoard();
             
@@ -1037,6 +1110,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameExitHandler.endGame();
                 console.log('遊戲追蹤已停止，防止重複記錄');
             }
+            
+            // 遊戲結束後清理記錄ID
+            this.currentGameRecordId = null;
         } catch (error) {
             console.error('保存遊戲記錄時發生錯誤:', error);
             
@@ -1045,6 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameExitHandler.endGame();
                 console.log('保存失敗，但已停止追蹤以防重複');
             }
+            
+            // 遊戲結束後清理記錄ID
+            this.currentGameRecordId = null;
         }
         
         // 檢查並更新任務狀態

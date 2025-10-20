@@ -384,7 +384,6 @@ try {
                                 <th>🎭 玩家類型</th>
                                 <th>📊 能力分數</th>
                                 <th>📝 分析說明</th>
-                                <th>✅ 狀態</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -416,13 +415,6 @@ try {
                                         <div class="description" title="<?php echo htmlspecialchars($record['description']); ?>">
                                             <?php echo htmlspecialchars($record['description']); ?>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <?php if ($record['ai_enhanced']): ?>
-                                            <span class="ai-enhanced">🤖 AI增強</span>
-                                        <?php else: ?>
-                                            <span style="color: #666; font-size: 12px;">📋 標準</span>
-                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

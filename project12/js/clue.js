@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 獲取難度參數（必須在 trackGameEntry 之前）
+    const difficulty = new URLSearchParams(window.location.search).get('difficulty');
+    
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
+    
     // 新增 modal HTML
     const modalHtml = `
 <div id="result-modal" style="display:none;position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);align-items:center;justify-content:center;">
@@ -18,6 +29,62 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasSavedRecord = false;
     let saveRequestInProgress = false; // 请求进行中标志
     let gameSessionId = Date.now(); // 游戏会话ID，用于标识单次游戏
+    
+    // 遊戲進入跟踪
+    let currentGameRecordId = null;
+
+    // 記錄遊戲進入
+    function trackGameEntry() {
+        const gameData = {
+            game_type: '記憶力',
+            game_id: 8,
+            difficulty: difficulty || 'easy'
+        };
+        
+        fetch('start_game.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(gameData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.record_id) {
+                currentGameRecordId = data.record_id;
+                console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+            }
+        })
+        .catch(error => {
+            console.error('記錄遊戲進入失敗:', error);
+        });
+    }
+
+    // 記錄遊戲退出
+    function trackGameExit() {
+        if (!currentGameRecordId) return;
+        
+        const exitData = {
+            record_id: currentGameRecordId
+        };
+        
+        // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+        } else {
+            // 備用方案：使用 fetch
+            fetch('mark_game_exit.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(exitData)
+            }).catch(error => {
+                console.error('記錄遊戲退出失敗:', error);
+            });
+        }
+    }
 
     // 保存游戏记录的函数
     function saveGameRecord(pass, score, pass_bounce, isManualExit = false) {
@@ -36,6 +103,9 @@ document.addEventListener('DOMContentLoaded', function() {
         hasSavedRecord = true;
         saveRequestInProgress = true;
         console.log('开始保存游戏记录...', {pass, score, pass_bounce, gameSessionId});
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
         
         const gameTime = Math.floor((Date.now() - gameStartTime) / 1000);
         const data = new URLSearchParams();
@@ -115,7 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let clueTotal = 5 - parseInt(document.getElementById('remaining-count')?.getAttribute('data-initial') || 5); // 追蹤總題數（5 - 剩餘題數）
     let questionTimeout = null; // 新增：問題超時計時器
     const main = document.querySelector('.main-container');
-    const difficulty = new URLSearchParams(window.location.search).get('difficulty');
     
     // 將變數設為全局，供結束遊戲按鈕使用
     window.clueCorrect = clueCorrect;
@@ -329,6 +398,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 初始化狀態欄
     updateStatusBar();
+    
+    // 記錄遊戲進入（在真正開始遊戲時）
+    trackGameEntry();
     
     // 初始載入不送答案
     loadQuestion();

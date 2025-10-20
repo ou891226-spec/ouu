@@ -20,11 +20,9 @@ $member_id = $_SESSION['member_id'] ?? 1;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>數字排排樂</title>
     <link rel="stylesheet" href="css/puzzle.css">
-    <meta name="member_id" content="<?php echo $member_id; ?>">
     <script src="js/unified-game-tracker.js"></script>
 </head>
 <body>
-    <!-- 隱藏的會員ID輸入框，供JavaScript使用 -->
     <input type="hidden" name="member_id" value="<?php echo $member_id; ?>">
 
     <div id="difficulty-modal-overlay" class="modal-overlay">
@@ -51,30 +49,46 @@ $member_id = $_SESSION['member_id'] ?? 1;
 
     <div id="help-modal-overlay" class="modal-overlay hidden">
         <div class="modal-content help-modal-content">
-        
             <div class="close-button-absolute" id="help-modal-close-button"> 
-                <span class="close-icon-only">X</span>
+                <span class="close-icon-only">&times;</span>
             </div>
         
-            <div class="help-header">
-                <h2>🎮遊戲說明</h2>
+            <div class="help-header-new">
+                <span class="help-header-icon">🎮</span>
+                <h2>遊戲說明</h2>
             </div>
         
-            <div class="modal-body help-body">
-                <p><strong>遊戲目標：</strong></p>
-                <p>您的目標是將數字方塊按順序排列，最終形成從1到N-1的數字，最後一個是空白格。</p>
-            
-                <p><strong>如何移動：</strong></p>
-                <ul>
-                    <li><strong>點擊：</strong>點擊與空白格相鄰的方塊。</li>
-                    <li><strong>滑動/拖曳：</strong>在遊戲區域內，朝著空白格的方向滑動或拖曳。</li>
-                </ul>
-            
-                <p><strong>計分方式：</strong></p>
-                <ul>
-                    <li><strong>步數：</strong>記錄您移動方塊的總次數。</li>
-                    <li><strong>時間：</strong>記錄您完成遊戲所花費的總時間。</li>
-                </ul>
+            <div class="modal-body help-body-new">
+                <div id="help-page-1" class="help-page">
+                    <div class="video-container">
+                        <video id="help-video" class="help-video-player" src="gd/puzzle.mp4" title="遊戲玩法影片" width="100%" controls playsinline>
+                            您的瀏覽器不支援此影片。
+                        </video>
+                    </div>
+                    <p class="help-description">
+                        先選擇遊戲難度，遊戲開始後，<br>透過點擊或滑動，<br>與空格相鄰的方塊來移動它們，<br>將所有數字由 1 開始順序排好。
+                    </p>
+                </div>
+
+                <div id="help-page-2" class="help-page hidden">
+                    <div class="image-gallery">
+                        <img src="img/puzzle_easy.jpg" alt="遊戲示意圖1" class="gallery-img">
+                        <img src="img/puzzle_normal.jpg" alt="遊戲示意圖2" class="gallery-img">
+                        <img src="img/puzzle_hard.jpg" alt="遊戲示意圖3" class="gallery-img">
+                        <p class="gallery-label">簡單</p>
+                        <p class="gallery-label">普通</p>
+                        <p class="gallery-label">困難</p>
+                    </div>
+                    <p class="help-description">
+                        隨著難度選擇的不同，方格數量會增加，<br>在指定步數內完成拼圖即可過關。
+                    </p>
+                </div>
+            </div>
+
+            <div class="help-modal-footer">
+                <button id="help-back-btn" class="btn help-nav-btn prev hidden">上一步</button>
+                <span id="help-page-indicator" class="help-step-indicator">步驟 1/2</span>
+                <button id="help-next-btn" class="btn help-nav-btn next">下一步</button>
             </div>
         </div>
     </div>
@@ -86,7 +100,6 @@ $member_id = $_SESSION['member_id'] ?? 1;
             <div class="win-details-container">
                 <div class="win-detail">難度：<span id="win-difficulty-name">--</span></div>
                 <div class="win-detail">總移動步數：<span id="win-move-count">--</span></div>
-                <div class="win-detail">剩餘步數：<span id="win-moves-left">--</span></div>
                 <div class="win-detail">遊戲時間：<span id="win-time-elapsed">--</span></div>
                 <div class="win-detail">獲得分數：<span id="win-score">+0 分</span></div>
             </div>
@@ -102,16 +115,26 @@ $member_id = $_SESSION['member_id'] ?? 1;
         </div>
     </div>
 
+    <div id="solution-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>完成參考圖</h2>
+            <div id="solution-board" class="game-board"></div>
+            <div class="modal-body">
+                <button id="close-solution-btn" class="btn blue-btn">關閉</button>
+            </div>
+        </div>
+    </div>
+
     <div class="game-container">
         <h1>數字排排樂</h1>
 
         <div id="score-board" class="score-board hidden">
-            <span>剩餘步數: <span id="move-count" class="green-text">--</span></span>
+            <span>總移動步數: <span id="move-count" class="green-text">0</span></span>
             <span>遊戲時間: <span id="time-elapsed" class="red-text">0 秒</span></span>
+            <button id="show-solution-btn" class="btn solution-btn">💡 完成參考圖</button>
         </div>
 
-        <div id="game-board" class="game-board">
-            </div>
+        <div id="game-board" class="game-board"></div>
         
         <div class="controls game-controls">
             <button id="pause-continue-button" class="btn orange-btn">暫停遊戲</button> 
@@ -130,6 +153,7 @@ $member_id = $_SESSION['member_id'] ?? 1;
             gameTracker.init("算術邏輯力", 10);
         });
     </script>
+    <script src="js/auto-save-time-fixed.js"></script>
     <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
@@ -145,7 +169,7 @@ $member_id = $_SESSION['member_id'] ?? 1;
                     difficulty: '<?= isset($_GET["difficulty"]) ? $_GET["difficulty"] : "easy" ?>'
                 });
                 // 立即啟動遊戲退出追蹤，因為用戶已經進入遊戲頁面
-                gameExitHandler.startGame();
+                // 遊戲追蹤將在真正開始遊戲時啟動
                 console.log('遊戲退出處理器已配置並啟動');
             }
         });

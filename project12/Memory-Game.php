@@ -98,6 +98,8 @@ $colors = $stmt->fetchAll();
     </script>
 </head>
 <body>
+    <input type="hidden" name="member_id" value="<?php echo $_SESSION['member_id'] ?? 1; ?>">
+    
     <!-- 遊戲主畫面 -->
     <div id="game-container" class="game-container hidden">
         <h1>翻牌對對樂</h1>
@@ -198,26 +200,31 @@ $colors = $stmt->fetchAll();
                     </video>
                 </div>
                 
-                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
-                    <div id="prev-step-btn">
-                        <button id="prev-step-button" onclick="goToPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                <!-- 說明文字區域 -->
+                <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                    <div id="instruction-text" class="game-instruction-text">
+                        先選擇主題，再選擇難度
+                    </div>
+                </div>
+                
+                <!-- 按鈕和步驟指示器區域 -->
+                <div class="help-modal-footer" style="display: flex !important; justify-content: space-between !important; align-items: center !important; position: relative !important;">
+                    <!-- 上一步按鈕 -->
+                    <div id="prev-step-btn" style="display:none; margin-right: auto !important; order: 1 !important;">
+                        <button id="prev-step-button" onclick="goToPrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
                     
-                    <div id="instruction-text" class="game-instruction-text">
-                        先選擇主題，再選擇難度
-                    </div>
+                    <!-- 進度指示器 -->
+                    <span id="step-indicator" class="game-step-indicator" style="position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; order: 2 !important;">步驟 1/2</span>
                     
-                    <div id="next-step-btn">
-                        <button id="next-step-button" onclick="goToNextStep()" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                    <!-- 下一步按鈕 -->
+                    <div id="next-step-btn" style="margin-left: auto !important; order: 3 !important;">
+                        <button id="next-step-button" onclick="goToNextStep()" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
-                </div>
-                
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
             <span class="close-btn" onclick="closeHelpModal()">×</span>
@@ -251,6 +258,7 @@ $colors = $stmt->fetchAll();
         const memberId = <?php echo $_SESSION['member_id'] ?? 0; ?>;
         localStorage.setItem('member_id', memberId);
     </script>
+    <script src="js/auto-save-time-fixed.js"></script>
     <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
     <script src="js/get-score.js?v=<?php echo time(); ?>"></script>
@@ -270,7 +278,7 @@ $colors = $stmt->fetchAll();
             
             // 遊戲開始時啟動追蹤
             if (typeof gameExitHandler !== 'undefined') {
-                gameExitHandler.startGame();
+                // 遊戲追蹤將在真正開始遊戲時啟動
                 console.log('遊戲追蹤已啟動');
             }
         });

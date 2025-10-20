@@ -38,6 +38,62 @@ let isAnswering = false; // 防止重複回答
 // 獲取會員ID
 let memberId = window.phpMemberId || 8;
 
+// 遊戲進入跟踪
+let currentGameRecordId = null;
+
+// 記錄遊戲進入
+function trackGameEntry() {
+    const gameData = {
+        game_type: '算術邏輯力',
+        game_id: 3,
+        difficulty: currentDifficulty || 'easy'
+    };
+    
+    fetch('start_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(gameData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.record_id) {
+            currentGameRecordId = data.record_id;
+            console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+        }
+    })
+    .catch(error => {
+        console.error('記錄遊戲進入失敗:', error);
+    });
+}
+
+// 記錄遊戲退出
+function trackGameExit() {
+    if (!currentGameRecordId) return;
+    
+    const exitData = {
+        record_id: currentGameRecordId
+    };
+    
+    // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+    } else {
+        // 備用方案：使用 fetch
+        fetch('mark_game_exit.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(exitData)
+        }).catch(error => {
+            console.error('記錄遊戲退出失敗:', error);
+        });
+    }
+}
+
 // 食材資料庫（從資料庫 AJAX 取得）
 let ingredients = {};
 
@@ -883,6 +939,15 @@ function loadQuestion() {
 function startGame() {
     debugLog('開始遊戲');
     
+    // 記錄遊戲進入（在真正開始遊戲時）
+    trackGameEntry();
+    
+    // 啟動遊戲退出處理器追蹤
+    if (typeof gameExitHandler !== 'undefined') {
+        gameExitHandler.startGame();
+        console.log('遊戲追蹤已啟動');
+    }
+    
     // 初始化遊戲追蹤器 - 在真正開始遊戲時才開始計時
     if (typeof gameTracker !== 'undefined') {
         gameTracker.init("算術邏輯力", 3);
@@ -1217,6 +1282,9 @@ async function saveGameResult(bonusScore, playTime, isManualExit = false) {
             gameExitHandler.endGame();
             console.log('遊戲追蹤已停止，防止重複記錄');
         }
+        
+        // 遊戲結束後清理記錄ID
+        currentGameRecordId = null;
         
         const result = await response.json();
         console.log('儲存結果回應:', result);
@@ -1589,6 +1657,7 @@ function selectDifficulty(difficulty) {
     debugLog('選擇難度: ' + difficulty);
     currentDifficulty = difficulty;
     
+    
     // 顯示該難度的過關分數
     let passScore = 0;
     if (window.difficultySettings && window.difficultySettings[difficulty]) {
@@ -1628,6 +1697,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 正確設定會員ID
     memberId = window.phpMemberId || (document.getElementById('member-id') ? parseInt(document.getElementById('member-id').value) : 8);
     console.log('會員ID設定為:', memberId);
+    
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
     
     document.getElementById('help-modal').classList.add('hidden'); // 強制一開始隱藏
     await fetchIngredients();

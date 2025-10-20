@@ -80,25 +80,28 @@ foreach ($settings as $setting) {
                     </div>
                     
                     <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
-                        <div id="rhythm-prev-step-btn" style="display:none;">
-                            <button id="rhythm-prev-step-button" onclick="goToRhythmPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
-                                上一步
-                            </button>
-                        </div>
-                        
                         <div id="rhythm-instruction-text" class="game-instruction-text">
                             一進去先選擇遊戲難度
-                        </div>
-                        
-                        <div id="rhythm-next-step-btn" style="margin-left:10px;">
-                            <button id="rhythm-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
-                                下一步
-                            </button>
                         </div>
                     </div>
                     
                     <div style="text-align:center;margin-bottom:10px;">
-                        <span id="rhythm-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
+                        <div id="rhythm-step-controls" style="display:flex; justify-content:space-between; align-items:center; width:100%; padding: 0 10px;">
+        
+                            <div id="rhythm-prev-step-btn" style="display:none;">
+                                <button id="rhythm-prev-step-button" onclick="goToRhythmPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                                    上一步
+                                </button>
+                            </div>
+        
+                            <span id="rhythm-step-indicator" class="game-step-indicator" style="font-size:18px; position:absolute; left:50%; transform:translateX(-50%);">步驟 1/2</span>
+        
+                            <div id="rhythm-next-step-btn" style="margin-left:auto;">
+                                <button id="rhythm-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                                    下一步
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -136,6 +139,7 @@ foreach ($settings as $setting) {
         <audio id="fail-sfx" src="audio/fail.m4a" preload="auto"></audio>
         <audio id="tap-sfx" src="audio/tap.m4a" preload="auto"></audio>
     </div>    
+    <script src="js/auto-save-time-fixed.js"></script>
     <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js?v=<?php echo time(); ?>"></script>
     <script src="js/get-score.js?v=<?php echo time(); ?>"></script>

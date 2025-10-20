@@ -243,31 +243,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </video>
                 </div>
                 
-                <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                <!-- 說明文字區域 -->
+                <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                    <div id="textcolor-instruction-text" class="game-instruction-text">
+                        根據文字的意思選擇正確的顏色
+                    </div>
+                </div>
+                
+                <!-- 按鈕和步驟指示器區域 -->
+                <div class="help-modal-footer">
                     <!-- 上一步按鈕 -->
                     <div id="textcolor-prev-step-btn" style="display:none;">
-                        <button id="textcolor-prev-step-button" onclick="goToTextColorPrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                        <button id="textcolor-prev-step-button" onclick="goToTextColorPrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
                     
-                    <!-- 說明文字 -->
-                    <div id="textcolor-instruction-text" class="game-instruction-text">
-                        根據文字的意思選擇正確的顏色
-                    </div>
+                    <!-- 進度指示器 -->
+                    <span id="textcolor-step-indicator" class="game-step-indicator">步驟 1/2</span>
                     
                     <!-- 下一步按鈕 -->
-                    <div id="textcolor-next-step-btn" style="margin-left:2rem;">
-                        <button id="textcolor-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                    <div id="textcolor-next-step-btn">
+                        <button id="textcolor-next-step-button" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
-                </div>
-                
-                <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="textcolor-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
         </div>
@@ -313,11 +313,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         let colors = <?php echo json_encode($all_colors); ?>;
         let correctColor = '';
         let difficulty = '<?php echo $difficulty; ?>';
+        
+        // 遊戲進入跟踪
+        let currentGameRecordId = null;
+
+        // 記錄遊戲進入
+        function trackGameEntry() {
+            const gameData = {
+                game_type: '反應力',
+                game_id: 1,
+                difficulty: difficulty || 'easy'
+            };
+            
+            fetch('start_game.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(gameData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.record_id) {
+                    currentGameRecordId = data.record_id;
+                    console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+                }
+            })
+            .catch(error => {
+                console.error('記錄遊戲進入失敗:', error);
+            });
+        }
+
+        // 記錄遊戲退出
+        function trackGameExit() {
+            if (!currentGameRecordId) return;
+            
+            const exitData = {
+                record_id: currentGameRecordId
+            };
+            
+            // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+            } else {
+                // 備用方案：使用 fetch
+                fetch('mark_game_exit.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(exitData)
+                }).catch(error => {
+                    console.error('記錄遊戲退出失敗:', error);
+                });
+            }
+        }
         let distractionInterval = null;
         let questionTimer = null;
         let questionTimeLeft = 5;
         let startTime = null;
         let endTime = null;
+
+        // 頁面加載時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加頁面關閉事件監聽器
+            window.addEventListener('beforeunload', trackGameExit);
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && currentGameRecordId) {
+                    trackGameExit();
+                }
+            });
+        });
 
         // 從 PHP 傳入的難度設定
         const difficultySettings = <?php echo json_encode($difficulty_settings); ?>;
@@ -624,6 +691,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (gameStarted) return;
 
             console.log('Starting game with difficulty: ' + difficulty); // 除錯用
+            
+            // 開始時間追踪
+            if (typeof manualStartGameTimer === 'function') {
+                manualStartGameTimer();
+                console.log('已開始遊戲時間追蹤');
+            }
+            
+            // 記錄遊戲進入（在開始遊戲時）
+            trackGameEntry();
+            
+            // 啟動遊戲退出處理器追蹤
+            if (typeof gameExitHandler !== 'undefined') {
+                gameExitHandler.startGame();
+                console.log('遊戲追蹤已啟動');
+            }
+            
             gameStarted = true;
             score = 0;
             scoreEl.textContent = '0';
@@ -712,6 +795,13 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
 
         function endGame(isManualExit = false) {
             gameStarted = false;
+            
+            // 結束時間追踪
+            if (typeof manualEndGameTimer === 'function') {
+                manualEndGameTimer();
+                console.log('已結束遊戲時間追蹤');
+            }
+            
             clearInterval(timer);
             if (distractionInterval) {
                 clearInterval(distractionInterval);
@@ -780,6 +870,9 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     gameExitHandler.endGame();
                     console.log('遊戲追蹤已停止，防止重複記錄');
                 }
+                
+                // 遊戲結束後清理記錄ID
+                currentGameRecordId = null;
             })
             .catch(error => {
                 console.error('保存遊戲記錄時發生錯誤:', error);
@@ -789,6 +882,9 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
                     gameExitHandler.endGame();
                     console.log('保存失敗，但已停止追蹤以防重複');
                 }
+                
+                // 遊戲結束後清理記錄ID
+                currentGameRecordId = null;
             });
             
             // 注意：不需要在遊戲結束時清除成就快取，這會導致成就資料丟失
@@ -1100,10 +1196,11 @@ document.getElementById('pauseBtn').addEventListener('click', togglePauseGame);
         
         // 🔑 遊戲開始時啟動追蹤
         if (typeof gameExitHandler !== 'undefined') {
-            gameExitHandler.startGame();
+            // 遊戲追蹤將在真正開始遊戲時啟動
             console.log('遊戲追蹤已啟動');
         }
     </script>
+    <script src="js/auto-save-time-fixed.js"></script>
     <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>

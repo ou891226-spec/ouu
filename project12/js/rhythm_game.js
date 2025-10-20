@@ -28,11 +28,78 @@ let notes = [];
 let score = 0;
 let gameTime = 60;
 let gameRunning = false;
+
+// 遊戲進入跟踪
+let currentGameRecordId = null;
+
+// 記錄遊戲進入
+function trackGameEntry() {
+    const gameData = {
+        game_type: '反應力',
+        game_id: 7,
+        difficulty: currentDifficulty || 'easy'
+    };
+    
+    fetch('start_game.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(gameData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.record_id) {
+            currentGameRecordId = data.record_id;
+            console.log('遊戲進入記錄成功，ID:', currentGameRecordId);
+        }
+    })
+    .catch(error => {
+        console.error('記錄遊戲進入失敗:', error);
+    });
+}
+
+// 記錄遊戲退出
+function trackGameExit() {
+    if (!currentGameRecordId) return;
+    
+    const exitData = {
+        record_id: currentGameRecordId
+    };
+    
+    // 使用 navigator.sendBeacon 確保在頁面關閉時也能發送請求
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon('mark_game_exit.php', JSON.stringify(exitData));
+    } else {
+        // 備用方案：使用 fetch
+        fetch('mark_game_exit.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(exitData)
+        }).catch(error => {
+            console.error('記錄遊戲退出失敗:', error);
+        });
+    }
+}
 let paused = false;
 let rhythmPattern = [];
 let rhythmIndex = 0;
 let passScore = 200;
 let perfectCount = 0, goodCount = 0, missCount = 0;
+
+// 頁面加載時初始化
+window.addEventListener('load', function() {
+    // 添加頁面關閉事件監聽器
+    window.addEventListener('beforeunload', trackGameExit);
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && currentGameRecordId) {
+            trackGameExit();
+        }
+    });
+});
 let currentDifficulty = 'easy';
 let noteTimeoutId = null;
 let moveInterval = null;
@@ -65,6 +132,15 @@ function startGame() {
   resetGame();
   setDifficulty(currentDifficulty);
   gameRunning = true;
+  
+  // 開始時間追踪
+  if (typeof manualStartGameTimer === 'function') {
+    manualStartGameTimer();
+    console.log('已開始遊戲時間追蹤');
+  }
+  
+  // 記錄遊戲進入（在開始遊戲時）
+  trackGameEntry();
   
   // 啟動遊戲退出追蹤
   if (typeof gameExitHandler !== 'undefined') {
@@ -258,6 +334,12 @@ function endGame(isManualExit = false) {
   console.log("Pass Score:", passScore);
   console.log("Is game passed?", score >= passScore);
 
+  // 結束時間追踪
+  if (typeof manualEndGameTimer === 'function') {
+    manualEndGameTimer();
+    console.log('已結束遊戲時間追蹤');
+  }
+
   const gameDuration = 60 - gameTime;
   const isPassed = score >= passScore;
 
@@ -313,6 +395,9 @@ function endGame(isManualExit = false) {
       gameExitHandler.endGame();
       console.log('遊戲追蹤已停止，防止重複記錄');
     }
+    
+    // 遊戲結束後清理記錄ID
+    currentGameRecordId = null;
   })
   .catch(error => {
     console.error('Fetch error:', error);
@@ -322,6 +407,9 @@ function endGame(isManualExit = false) {
       gameExitHandler.endGame();
       console.log('保存失敗，但已停止追蹤以防重複');
     }
+    
+    // 遊戲結束後清理記錄ID
+    currentGameRecordId = null;
   });
 
   if (isPassed && currentDifficulty === 'normal') {

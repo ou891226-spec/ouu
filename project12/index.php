@@ -170,6 +170,9 @@ try {
       </form>
     </div>
   </div>
+  <div class="avatar-info">
+    <small>📝 支援 JPG、PNG、GIF 格式 | 💾 建議小於 2MB，最大 5MB</small>
+  </div>
   <div class="profile-greeting">
     <?php echo htmlspecialchars($name); ?>，您好!
   </div>
@@ -618,6 +621,15 @@ function checkPendingTasks() {
       } else if (hasPendingTasks) {
         // 有進行中的任務 - 普通動畫
         bell.classList.add('has-pending');
+      }
+      
+      // 如果任務彈窗是打開的，也更新彈窗內容
+      const missionModal = document.getElementById('missionModal');
+      if (missionModal && missionModal.style.display === 'flex') {
+        console.log('任務彈窗已打開，更新任務內容');
+        if (window.loadDailyTasks) {
+          window.loadDailyTasks();
+        }
       }
     })
     .catch(error => {

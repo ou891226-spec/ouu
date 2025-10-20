@@ -208,8 +208,17 @@ if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
     $all_ids = $pdo->prepare('SELECT question_id FROM questions WHERE difficulty = ?');
     $all_ids->execute([$difficulty]);
     $all_ids = $all_ids->fetchAll(PDO::FETCH_COLUMN);
+    
     // 排除已出現過的題目
-    $used_ids = $_SESSION['used_question_ids'];
+    $used_ids = $_SESSION['used_question_ids'] ?? [];
+    
+    // 檢查是否所有題目都已使用完畢
+    if (count($used_ids) >= count($all_ids)) {
+        // 重置已使用的題目列表，重新開始
+        $_SESSION['used_question_ids'] = [];
+        $used_ids = [];
+    }
+    
     $placeholders = implode(',', array_fill(0, count($used_ids), '?'));
     $sql = 'SELECT * FROM questions WHERE difficulty = ? ' . (count($used_ids) ? 'AND question_id NOT IN (' . $placeholders . ') ' : '') . 'ORDER BY RAND() LIMIT 1';
     $params = array_merge([$difficulty], $used_ids);
@@ -398,7 +407,19 @@ if (isset($_POST['user_answer']) && isset($_POST['correct_answer'])) {
     
     // 繼續下一題，返回 JSON 數據而不是重新載入頁面
     // 獲取新題目（使用正確的表格名稱）
-    $used_ids = $_SESSION['used_question_ids'];
+    $used_ids = $_SESSION['used_question_ids'] ?? [];
+    
+    // 檢查是否所有題目都已使用完畢
+    $all_ids = $pdo->prepare('SELECT question_id FROM questions WHERE difficulty = ?');
+    $all_ids->execute([$difficulty]);
+    $all_ids = $all_ids->fetchAll(PDO::FETCH_COLUMN);
+    
+    if (count($used_ids) >= count($all_ids)) {
+        // 重置已使用的題目列表，重新開始
+        $_SESSION['used_question_ids'] = [];
+        $used_ids = [];
+    }
+    
     $placeholders = implode(',', array_fill(0, count($used_ids), '?'));
     $sql = 'SELECT * FROM questions WHERE difficulty = ? ' . (count($used_ids) ? 'AND question_id NOT IN (' . $placeholders . ') ' : '') . 'ORDER BY RAND() LIMIT 1';
     $params = array_merge([$difficulty], $used_ids);
@@ -513,7 +534,7 @@ if (!$difficulty) {
                 flex-direction: column;
                 align-items: center;
                 text-decoration: none;
-                color: #222;
+                color: #666;
                 font-size: 18px;
                 font-weight: 500;
                 background: none;
@@ -545,7 +566,7 @@ if (!$difficulty) {
                 background: none;
                 border: none;
                 cursor: pointer;
-                color: #222;
+                color: #666;
                 font-size: 18px;
                 font-weight: 500;
                 gap: 0;
@@ -571,8 +592,8 @@ if (!$difficulty) {
                 align-items: center;
                 justify-content: center;
                 border: none;
-                border-radius: 20px;
-                font-size: 1.6rem;
+                border-radius: 8px;
+                font-size: 40px;
                 font-weight: bold;
                 padding: 28px 0 18px 0;
                 cursor: pointer;
@@ -598,27 +619,27 @@ if (!$difficulty) {
 
             /* 顏色主題與懸停效果 */
             .easy-mode {
-                background: #7bc96f;
+                background: #40F55B;
                 color: #222;
             }
             .easy-mode:hover {
-                background: #6bb85e;
+                background: #29b33e;
             }
 
             .normal-mode {
-                background: #ffe066;
+                background: #FFE75C;
                 color: #222;
             }
             .normal-mode:hover {
-                background: #ffd23b;
+                background: #bea30e;
             }
 
             .hard-mode {
-                background: #f25f5c;
+                background: #FF2A2A;
                 color: #000000;
             }
             .hard-mode:hover {
-                background: #d94340;
+                background: #e17055;
             }
 
             /* 手機板響應式調整 */
@@ -645,12 +666,12 @@ if (!$difficulty) {
             #help-modal-bg.active { display: flex; }
             #help-modal {
                 background: #fff; border-radius: 18px; box-shadow: 0 6px 28px rgba(0,0,0,0.2);
-                padding: 36px 32px 28px 32px; max-width: 560px; width: 560px; text-align: left; position: relative;
+                padding: 36px 32px 28px 32px; max-width: 500px; width: 500px; text-align: left; position: relative;
             }
             #help-modal h3 { margin-top: 0; font-size: 2rem; font-weight: bold; }
             #help-modal p { font-size: 1.5rem; color: #333; line-height: 2.0; margin-bottom: 0; }
             #help-modal .close-btn {
-                position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.6rem; color: #888; cursor: pointer;
+                position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 36px; color: #111; cursor: pointer; border-radius: 50%;
             }
             #help-modal .close-btn:hover { color: #222; }
         </style>
@@ -719,32 +740,31 @@ if (!$difficulty) {
                         </video>
                     </div>
                     
-                    <!-- 說明文字和按鈕區域 (並排顯示) -->
-                    <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                    <!-- 說明文字區域 -->
+                    <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                        <div id="clue-instruction-text" class="game-instruction-text">
+                            選擇難度後即可進入到遊戲畫面
+                        </div>
+                    </div>
+                    
+                    <!-- 按鈕和步驟指示器區域 -->
+                    <div class="help-modal-footer" style="display: flex !important; justify-content: space-between !important; align-items: center !important; position: relative !important;">
                         <!-- 上一步按鈕 -->
-                        <div id="clue-prev-step-btn" style="display:none;">
-                            <button id="clue-prev-step-button" onclick="goToCluePrevStep()" class="game-step-button prev-step" style="padding:14px 28px;font-size:20px;">
+                        <div id="clue-prev-step-btn" style="display:none; margin-right: auto !important; order: 1 !important;">
+                            <button id="clue-prev-step-button" onclick="goToCluePrevStep()" class="game-step-button prev-step">
                                 上一步
                             </button>
                         </div>
                         
-                        <!-- 說明文字 -->
-                        <div id="clue-instruction-text" class="game-instruction-text">
-                            選擇難度後即可進入到遊戲畫面
-                        </div>
+                        <!-- 進度指示器 -->
+                        <span id="clue-step-indicator" class="game-step-indicator" style="position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; order: 2 !important; font-size: 18px !important">步驟 1/2</span>
                         
                         <!-- 下一步按鈕 -->
-                        <div id="clue-next-step-btn" style="margin-left:2rem;">
-                            <button id="clue-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                        <div id="clue-next-step-btn" style="margin-left: auto !important; order: 3 !important;">
+                            <button id="clue-next-step-button" class="game-step-button next-step">
                                 下一步
                             </button>
-                            </button>
                         </div>
-                    </div>
-                    
-                    <!-- 進度指示器 -->
-                    <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                        <span id="clue-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                     </div>
                 </div>
             </div>
@@ -906,7 +926,15 @@ if (!isset($_SESSION['used_question_ids']) || count($_SESSION['used_question_ids
 
 
 // 排除已出現過的題目
-$used_ids = $_SESSION['used_question_ids'];
+$used_ids = $_SESSION['used_question_ids'] ?? [];
+
+// 檢查是否所有題目都已使用完畢
+if (count($used_ids) >= count($all_ids)) {
+    // 重置已使用的題目列表，重新開始
+    $_SESSION['used_question_ids'] = [];
+    $used_ids = [];
+}
+
 $placeholders = implode(',', array_fill(0, count($used_ids), '?'));
 $sql = 'SELECT * FROM questions WHERE difficulty = ? ' . (count($used_ids) ? 'AND question_id NOT IN (' . $placeholders . ') ' : '') . 'ORDER BY RAND() LIMIT 1';
 $params = array_merge([$difficulty], $used_ids);

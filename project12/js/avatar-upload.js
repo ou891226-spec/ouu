@@ -24,15 +24,18 @@ function previewAndUploadAvatar(event) {
     return;
   }
 
-  // 檢查檔案大小（手機使用 20MB 限制）
-  const maxSize = 20 * 1024 * 1024; // 統一使用 20MB
+  // 檢查檔案大小（調整為更保守的限制）
+  const maxSizeMB = 5; // 降低到5MB，更適合頭像
+  const maxSize = maxSizeMB * 1024 * 1024;
+  
   if (file.size > maxSize) {
     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
     showAvatarUploadError({
       message: '⚠️ 檔案太大！',
-      suggestion: `您的檔案大小為 ${fileSizeMB}MB，請選擇小於 20MB 的圖片。`,
-      max_size: '20MB',
-      current_size: fileSizeMB + 'MB'
+      suggestion: `您的檔案大小為 ${fileSizeMB}MB，請選擇小於 ${maxSizeMB}MB 的圖片。建議使用小於 2MB 的圖片以獲得最佳上傳體驗。`,
+      max_size: maxSizeMB + 'MB',
+      current_size: fileSizeMB + 'MB',
+      recommended_size: '小於 2MB'
     });
     return;
   }
@@ -178,6 +181,11 @@ function showAvatarUploadError(data) {
     errorContent += `<div class="error-size">檔案大小限制：${data.max_size}（目前：${data.current_size}）</div>`;
   }
   
+  // 添加推薦大小信息
+  if (data.recommended_size) {
+    errorContent += `<div class="error-recommended">💡 推薦：${data.recommended_size} 的圖片上傳更快更穩定</div>`;
+  }
+  
   // 添加關閉按鈕
   errorContent += `
     <div class="error-actions">
@@ -253,7 +261,8 @@ function showAvatarUploadError(data) {
       .error-suggestion,
       .error-tip,
       .error-formats,
-      .error-size {
+      .error-size,
+      .error-recommended {
         margin: 12px 0;
         padding: 16px;
         background: #f9fafb;
@@ -262,6 +271,12 @@ function showAvatarUploadError(data) {
         font-size: 15px;
         color: #4b5563;
         line-height: 1.5;
+      }
+      
+      .error-recommended {
+        background: #f0f9ff;
+        border-color: #bae6fd;
+        color: #0369a1;
       }
       
       .error-actions {
@@ -320,7 +335,8 @@ function showAvatarUploadError(data) {
         .error-suggestion,
         .error-tip,
         .error-formats,
-        .error-size {
+        .error-size,
+        .error-recommended {
           font-size: 14px;
           padding: 14px;
         }

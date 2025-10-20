@@ -12,22 +12,38 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem('missionShownToday'); // 重置今日顯示標記
   }
   
-  // 如果今天還沒載入過任務，才載入
-  if (!hasLoadedToday) {
-    console.log("開始載入每日任務...");
+  // 立即載入任務數據
+  console.log("開始載入每日任務...");
+  loadDailyTasks();
+  localStorage.setItem('missionLoadedToday', 'true');
+  
+  // 設置定期刷新任務（每15秒）
+  console.log("設置定期刷新定時器（每15秒）");
+  const refreshInterval = setInterval(() => {
+    console.log("定期刷新任務數據...");
     loadDailyTasks();
-    localStorage.setItem('missionLoadedToday', 'true');
-  } else {
-    console.log("今天已經載入過任務，跳過自動載入");
-  }
+  }, 15000);
+  
+  // 設置快速檢查（每5秒，只在彈窗打開時刷新）
+  console.log("設置快速檢查定時器（每5秒）");
+  const quickCheckInterval = setInterval(() => {
+    const missionModal = document.getElementById('missionModal');
+    if (missionModal && missionModal.style.display === 'flex') {
+      console.log("任務彈窗已打開，執行快速刷新");
+      loadDailyTasks();
+    }
+  }, 5000);
+  
+  // 保存定時器ID以便清理
+  window.taskRefreshInterval = refreshInterval;
+  window.taskQuickCheckInterval = quickCheckInterval;
+  
+  // 設置午夜重置定時器
+  setupMidnightReset();
   
   // 檢查用戶是否選擇自動顯示每日任務彈窗，且今天還沒顯示過
   const autoShowMission = localStorage.getItem('autoShowMission') !== 'false'; // 預設為true
   const hasShownToday = localStorage.getItem('missionShownToday') === 'true';
-  
-  // 強制重新載入任務數據（無論是否已載入過）
-  console.log("強制重新載入每日任務數據");
-  loadDailyTasks();
   
   // 禁用自動彈出每日任務視窗
   console.log("已禁用自動顯示每日任務彈窗");
@@ -71,7 +87,7 @@ function getTaskIcon(taskType) {
     'social': 'friend.png',
     'speed': 'Achievement.png',
     'endurance': 'Achievement.png',
-    'reaction': 'note.png'
+    'reaction': 'complete_all_daily.png'
   };
   
   // 根據任務類型選擇更合適的圖片
@@ -87,6 +103,61 @@ function getTaskIcon(taskType) {
   console.log(`任務類型: ${taskType} -> 圖片: ${iconFile}`);
   return iconFile;
 }
+
+// 設置午夜重置定時器
+function setupMidnightReset() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0); // 設置為明天的午夜
+  
+  const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+  
+  console.log(`距離午夜重置還有 ${Math.round(timeUntilMidnight / 1000 / 60)} 分鐘`);
+  
+  // 設置定時器在午夜執行重置
+  const midnightTimer = setTimeout(() => {
+    console.log("午夜重置觸發！");
+    
+    // 重置本地儲存
+    const today = new Date().toDateString();
+    localStorage.setItem('missionLoadDate', today);
+    localStorage.setItem('missionLoadedToday', 'false');
+    localStorage.removeItem('missionShownToday');
+    
+    // 重新載入任務
+    loadDailyTasks();
+    
+    // 重新設置下一個午夜定時器
+    setupMidnightReset();
+    
+  }, timeUntilMidnight);
+  
+  // 保存定時器ID以便清理
+  window.midnightResetTimer = midnightTimer;
+}
+
+// 清理所有定時器
+function cleanupTaskTimers() {
+  if (window.taskRefreshInterval) {
+    clearInterval(window.taskRefreshInterval);
+  }
+  if (window.taskQuickCheckInterval) {
+    clearInterval(window.taskQuickCheckInterval);
+  }
+  if (window.midnightResetTimer) {
+    clearTimeout(window.midnightResetTimer);
+  }
+}
+
+// 頁面卸載時清理定時器
+window.addEventListener('beforeunload', cleanupTaskTimers);
+
+// 測試函數 - 手動觸發刷新
+window.testTaskRefresh = function() {
+  console.log("手動觸發任務刷新測試...");
+  loadDailyTasks();
+};
 
 // 載入每日任務
 function loadDailyTasks() {
@@ -131,8 +202,11 @@ function loadDailyTasks() {
       
       if (!container) {
         console.error("找不到任務容器元素 (daily-tasks-container, missionList, mission-list)");
+        console.log("當前頁面所有元素:", document.querySelectorAll('[id*="mission"], [id*="task"], [id*="daily"]'));
         return;
       }
+      
+      console.log("找到任務容器:", container.id);
       
       container.innerHTML = ""; // 清空舊內容
 

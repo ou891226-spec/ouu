@@ -240,14 +240,14 @@ body {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
+    padding: 14px 28px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
 }
 
-.game-step-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
 
 .game-step-button.prev-step {
     background-color: #6b7280;
@@ -259,13 +259,8 @@ body {
     color: white;
 }
 
-.game-step-button.prev-step:hover {
-    background-color: #4b5563;
-}
 
-.game-step-button.next-step:hover {
-    background-color: #2563eb;
-}
+
 
 /* 統一的說明文字顏色 */
 .game-instruction-text {
@@ -305,4 +300,50 @@ body {
         flex: 2;
         font-size: 20px;
     }
+}
+
+/* 圖片線索遊戲說明頁面佈局 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#clue-prev-step-btn {
+    margin-right: auto;
+}
+
+#clue-next-step-btn {
+    margin-left: auto;
+}
+
+/* 圖片線索遊戲說明頁面強制佈局 */
+#help-modal .help-modal-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative !important;
+}
+
+#help-modal .help-modal-footer #clue-prev-step-btn {
+    margin-right: auto !important;
+}
+
+#help-modal .help-modal-footer #clue-step-indicator {
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+#help-modal .help-modal-footer #clue-next-step-btn {
+    margin-left: auto !important;
 } 

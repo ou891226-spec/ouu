@@ -1247,13 +1247,17 @@ h1 {
     border-color: #000 !important;
 }
 
-/* 統一的按鈕顏色方案 */
+/* 統一的按鈕顏色方案 - 更新為照片中的樣式 */
 .game-step-button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    font-size: 18px;
+    padding: 10px 25px;
+    font-weight: bold;
+    min-width: 110px;
 }
 
 .game-step-button:hover {
@@ -1283,11 +1287,36 @@ h1 {
 .game-instruction-text {
     color: #0066cc;
     font-weight: bold;
-    text-align: left;
+    text-align: center;
     font-size: 1.3rem;
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 0 20px;
+    line-height: 1.4;
 }
 
 /* 統一的步驟指示器顏色 */
 .game-step-indicator {
     color: #6b7280;
+    font-size: 18px;
+    text-align: center;
+}
+
+/* 說明頁面底部按鈕區域樣式 */
+.help-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    height: 50px;
+}
+
+.help-modal-footer .game-step-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #6b7280;
+    font-size: 18px;
+    text-align: center;
 }

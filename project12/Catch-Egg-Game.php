@@ -306,31 +306,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     </video>
                 </div>
                 
-                <!-- 說明文字和按鈕區域 (並排顯示) -->
-                <div style="display:flex;justify-content:center;align-items:center;margin:0 1rem;margin-bottom:2rem; gap: 20px;">
+                <!-- 說明文字區域 -->
+                <div style="text-align:center;margin:0 1rem;margin-bottom:2rem;">
+                    <div id="egg-instruction-text" class="game-instruction-text">
+                        先選擇遊戲困難度
+                    </div>
+                </div>
+                
+                <!-- 按鈕和步驟指示器區域 -->
+                <div class="help-modal-footer">
                     <!-- 上一步按鈕 -->
                     <div id="egg-prev-step-btn" style="display:none;">
-                        <button id="egg-prev-step-button" onclick="goToEggPrevStep()" class="game-step-button prev-step" style="padding:10px 20px;font-size:16px;">
+                        <button id="egg-prev-step-button" onclick="goToEggPrevStep()" class="game-step-button prev-step">
                             上一步
                         </button>
                     </div>
                     
-                    <!-- 說明文字 -->
-                    <div id="egg-instruction-text" class="game-instruction-text">
-                    先選擇遊戲困難度
-                    </div>
+                    <!-- 進度指示器 -->
+                    <span id="egg-step-indicator" class="game-step-indicator">步驟 1/2</span>
                     
                     <!-- 下一步按鈕 -->
-                    <div id="egg-next-step-btn" style="margin-left:2rem;">
-                        <button id="egg-next-step-button" class="game-step-button next-step" style="padding:14px 28px;font-size:20px;">
+                    <div id="egg-next-step-btn">
+                        <button id="egg-next-step-button" class="game-step-button next-step">
                             下一步
                         </button>
                     </div>
-                </div>
-                
-                <!-- 進度指示器 -->
-                <div style="text-align:center;margin-top:1.5rem;margin-bottom:1.5rem;">
-                    <span id="egg-step-indicator" class="game-step-indicator" style="font-size:18px;">步驟 1/2</span>
                 </div>
             </div>
         </div>
@@ -393,6 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
             window.difficultySettings = difficultySettings;
         }
     </script>
+    <script src="js/auto-save-time-fixed.js"></script>
     <script src="js/game-exit-handler.js"></script>
     <script src="js/game-common.js"></script>
     <script src="js/get-score.js"></script>
@@ -409,11 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 console.log('遊戲退出處理器已配置');
             }
             
-            // 遊戲開始時啟動追蹤
-            if (typeof gameExitHandler !== 'undefined') {
-                gameExitHandler.startGame();
-                console.log('遊戲追蹤已啟動');
-            }
+            // 遊戲追蹤將在真正開始遊戲時啟動
         });
     </script>
 </body>
